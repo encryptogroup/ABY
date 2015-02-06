@@ -1,0 +1,4 @@
+# Ignore the following in this sub directory
+*.exe
+# Except this file
+!.gitignore

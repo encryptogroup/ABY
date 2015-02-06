@@ -1,0 +1,3 @@
+[submodule "src/abycore/util/Miracl"]
+	path = src/abycore/util/Miracl
+	url = https://github.com/CertiVox/MIRACL.git

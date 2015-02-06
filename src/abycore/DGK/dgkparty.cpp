@@ -1,0 +1,431 @@
+/**
+ \file 		dgkparty.cpp
+ \author 	daniel.demmler@ec-spride.de
+ \copyright __________________
+ \brief		DGKParty implementation
+ */
+
+#include "dgkparty.h"
+
+#define CHECKMT 0
+#define DEBUG 0
+#define NETDEBUG 0
+#define WINDOWSIZE 50000 //maximum size of a network packet in Byte
+
+/**
+ * initializes a DGK_Party with the asymmetric security parameter and the sharelength and exchanges public keys.
+ * @param mode - 0 = generate new key; 1 = read key
+ */
+DGKParty::DGKParty(UINT DGKbits, UINT sharelen, CSocket sock, UINT readkey) {
+
+	m_nShareLength = sharelen;
+	m_nDGKbits = DGKbits;
+	m_nBuflen = DGKbits / 8 + 1; //size of one ciphertext to send via network. DGK uses n bits == n/8 bytes
+
+#if DEBUG
+	cout << "Created party with " << DGKbits << " key bits and" << sharelen << " bit shares" << endl;
+#endif
+
+	gmp_randinit_default(m_randstate);
+	gmp_randseed_ui(m_randstate, rand());
+
+	if (readkey) {
+		readKey();
+	} else {
+		generateKey();
+	}
+
+	keyExchange(sock);
+}
+
+/**
+ * initializes a DGK_Party with the asymmetric security parameter and the sharelength.
+ * @param mode - 0 = generate new key; 1 = read key
+ * Public keys must be exchanged manually when using this constructor!
+ */
+DGKParty::DGKParty(UINT DGKbits, UINT sharelen, UINT readkey) {
+
+	m_nShareLength = sharelen;
+	m_nDGKbits = DGKbits;
+	m_nBuflen = DGKbits / 8 + 1; //size of one ciphertext to send via network. DGK uses n bits == n/8 bytes
+
+#if DEBUG
+	cout << "Created party with " << DGKbits << " key bits and" << sharelen << " bit shares" << endl;
+#endif
+
+	gmp_randinit_default(m_randstate);
+	gmp_randseed_ui(m_randstate, rand());
+
+	if (readkey) {
+		readKey();
+	} else {
+		generateKey();
+	}
+}
+
+void DGKParty::readKey() {
+#if DEBUG
+	cout << "KeyGen" << endl;
+#endif
+	dgk_readkey(m_nDGKbits, m_nShareLength, &m_localpub, &m_prv);
+#if DEBUG
+	cout << "key read." << endl;
+#endif
+}
+
+void DGKParty::generateKey() {
+#if DEBUG
+	cout << "KeyGen" << endl;
+#endif
+	dgk_keygen(m_nDGKbits, m_nShareLength, &m_localpub, &m_prv);
+#if DEBUG
+	cout << "key generated." << endl;
+#endif
+}
+
+/**
+ * deletes party and frees keys and randstate
+ */
+DGKParty::~DGKParty() {
+#if DEBUG
+	cout << "Deleting DGKParty..." << endl;
+#endif
+	gmp_randclear(m_randstate);
+	dgk_freeprvkey(m_prv);
+	dgk_freepubkey(m_localpub);
+	dgk_freepubkey(m_remotepub);
+
+}
+
+/**
+ * inputs pre-allocates byte buffers for aMT calculation.
+ * numMTs must be the total number of MTs and divisible by 2
+ */
+void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, CSocket sock) {
+	struct timeval start, end;
+
+	numMTs = numMTs / 2; // We can be both sender and receiver at the same time.
+
+	UINT shareBytes = m_nShareLength / 8;
+	UINT offset = 0;
+
+#if DEBUG
+	cout << "dgkbits: " << m_nDGKbits << " sharelen: " << m_nShareLength << endl;
+#endif
+
+	mpz_t r, x, y, z;
+	mpz_inits(r, x, y, z, NULL);
+
+	// shares for server part
+	mpz_t a[numMTs];
+	mpz_t b[numMTs];
+	mpz_t c[numMTs];
+
+	// shares for client part
+	mpz_t a1[numMTs];
+	mpz_t b1[numMTs];
+	mpz_t c1[numMTs];
+
+	for (UINT i = 0; i < numMTs; i++) {
+		mpz_inits(a[i], b[i], c[i], a1[i], b1[i], c1[i], NULL);
+	}
+
+	//allocate buffers for mpz_t ciphertext #numMTs with m_nBuflen
+	BYTE * abuf = (BYTE*) calloc(numMTs * m_nBuflen, 1);
+	BYTE * bbuf = (BYTE*) calloc(numMTs * m_nBuflen, 1);
+	BYTE * zbuf = (BYTE*) calloc(numMTs * m_nBuflen, 1);
+
+	gettimeofday(&start, NULL);
+
+	// read server a,b shares and encrypt them into buffer
+	for (UINT i = 0; i < numMTs; i++) {
+		mpz_import(x, 1, 1, shareBytes, 0, 0, bA + i * shareBytes);
+		mpz_import(y, 1, 1, shareBytes, 0, 0, bB + i * shareBytes);
+
+		dgk_encrypt_crt(r, m_localpub, m_prv, x, m_randstate);
+		mpz_export(abuf + i * m_nBuflen, NULL, -1, 1, 1, 0, r);
+		dgk_encrypt_crt(z, m_localpub, m_prv, y, m_randstate);
+		mpz_export(bbuf + i * m_nBuflen, NULL, -1, 1, 1, 0, z);
+
+	}
+
+	// send & receive encrypted values
+	int window = WINDOWSIZE;
+	int tosend = m_nBuflen * numMTs;
+	offset = 0;
+
+	while (tosend > 0) {
+
+		window = min(window, tosend);
+
+		sock.Send(abuf + offset, window);
+		sock.Receive(abuf + offset, window);
+
+		sock.Send(bbuf + offset, window);
+		sock.Receive(bbuf + offset, window);
+
+		tosend -= window;
+		offset += window;
+	}
+
+	// ----------------#############   ###############-----------------------
+	// pack ALL the packets
+
+	offset = 0;
+
+	//read shares from client byte arrays
+	for (UINT j = 0; j < numMTs; j++) {
+		mpz_import(a1[j], 1, 1, shareBytes, 0, 0, bA1 + offset);
+		mpz_import(b1[j], 1, 1, shareBytes, 0, 0, bB1 + offset);
+
+		mpz_import(x, m_nBuflen, -1, 1, 1, 0, abuf + j * m_nBuflen);
+		mpz_import(y, m_nBuflen, -1, 1, 1, 0, bbuf + j * m_nBuflen);
+
+		dbpowmod(c1[j], x, b1[j], y, a1[j], m_remotepub->n);
+
+		// pick random r for masking
+		mpz_urandomb(x, m_randstate, 2 * m_nShareLength + 1);
+
+		dgk_encrypt_fb(y, m_remotepub, x, m_randstate);
+
+		// "add" encrypted r and add to buffer
+		mpz_mul(z, c1[j], y);
+		mpz_mod(z, z, m_remotepub->n);
+		mpz_export(zbuf + j * m_nBuflen, NULL, -1, 1, 1, 0, z); // TODO maybe reuse abuf, but make sure it's cleaned properly
+
+		mpz_mul(c1[j], a1[j], b1[j]); //c = a * b
+		mpz_sub(c1[j], c1[j], x); // c = c - x
+		mpz_mod_2exp(c1[j], c1[j], m_nShareLength); // c = c mod 2^shareLength
+
+		mpz_export(bC1 + offset, NULL, 1, shareBytes, 0, 0, c1[j]);
+
+		offset += shareBytes;
+	}
+
+// ----------------#############   ###############-----------------------
+// all packets packed. exchange these packets
+
+	window = WINDOWSIZE;
+	tosend = m_nBuflen * numMTs;
+	offset = 0;
+
+	while (tosend > 0) {
+		window = min(window, tosend);
+
+		sock.Send(zbuf + offset, window);
+		sock.Receive(zbuf + offset, window);
+
+		tosend -= window;
+		offset += window;
+	}
+
+//calculate server c shares
+
+	offset = 0;
+
+	for (UINT i = 0; i < numMTs; i++) {
+
+		mpz_import(r, m_nBuflen, -1, 1, 1, 0, zbuf + i * m_nBuflen);
+		dgk_decrypt(r, m_localpub, m_prv, r);
+
+		mpz_import(a[i], 1, 1, shareBytes, 0, 0, bA + offset);
+		mpz_import(b[i], 1, 1, shareBytes, 0, 0, bB + offset);
+
+		mpz_mod_2exp(c[i], r, m_nShareLength); // c = x mod 2^shareLength == read the share from least significant bits
+		mpz_addmul(c[i], a[i], b[i]); //c = a*b + c
+		mpz_mod_2exp(c[i], c[i], m_nShareLength); // c = c mod 2^shareLength
+		mpz_export(bC + offset, NULL, 1, shareBytes, 0, 0, c[i]);
+		offset += shareBytes;
+
+	}
+
+#if CHECKMT
+	cout << "Checking MT validity with values from other party:" << endl;
+
+	mpz_t ai, bi, ci, ai1, bi1, ci1, ta, tb;
+	mpz_inits(ai, bi, ci, ai1, bi1, ci1, ta, tb, NULL);
+
+	sock.Send(bA, numMTs * shareBytes);
+	sock.Receive(bA, numMTs * shareBytes);
+	sock.Send(bB, numMTs * shareBytes);
+	sock.Receive(bB, numMTs * shareBytes);
+	sock.Send(bC, numMTs * shareBytes);
+	sock.Receive(bC, numMTs * shareBytes);
+
+	for (UINT i = 0; i < numMTs; i++) {
+
+		mpz_import(ai, 1, 1, shareBytes, 0, 0, bA + i * shareBytes);
+		mpz_import(bi, 1, 1, shareBytes, 0, 0, bB + i * shareBytes);
+		mpz_import(ci, 1, 1, shareBytes, 0, 0, bC + i * shareBytes);
+
+		mpz_import(ai1, 1, 1, shareBytes, 0, 0, bA1 + i * shareBytes);
+		mpz_import(bi1, 1, 1, shareBytes, 0, 0, bB1 + i * shareBytes);
+		mpz_import(ci1, 1, 1, shareBytes, 0, 0, bC1 + i * shareBytes);
+
+		mpz_add(ta, ai, ai1);
+		mpz_add(tb, bi, bi1);
+		mpz_mul(ta, ta, tb);
+		mpz_add(tb, ci, ci1);
+		mpz_mod_2exp(ta, ta, m_nShareLength);
+		mpz_mod_2exp(tb, tb, m_nShareLength);
+
+		if (mpz_cmp(ta, tb) == 0) {
+			cout << "MT is fine - i:" << i << "| " << ai << " " << bi << " " << ci << " . " << ai1 << " " << bi1 << " " << ci1 << endl;
+		} else {
+			cout << "Error in MT - i:" << i << "| " << ai << " " << bi << " " << ci << " . " << ai1 << " " << bi1 << " " << ci1 << endl;
+		}
+
+		//cout << (mpz_cmp(c1[i], a1[i]) == 0 ? "MT is fine." : "Error in MT!") << endl;
+	}
+	mpz_clears(ai, bi, ci, ai1, bi1, ci1, ta, tb, NULL);
+#endif
+
+	gettimeofday(&end, NULL);
+	printf("generating 2x %u MTs took %f\n", numMTs, getMillies(start, end));
+
+//clean up after ourselves
+	for (UINT i = 0; i < numMTs; i++) {
+		mpz_clears(a[i], b[i], c[i], a1[i], b1[i], c1[i], NULL);
+	}
+
+	mpz_clears(r, x, y, z, NULL);
+
+	free(abuf);
+	free(bbuf);
+	free(zbuf);
+}
+
+/**
+ * exchanges private keys with other party via sock, pre-calculates fixed-base representation of remote pub-key
+ */
+void DGKParty::keyExchange(CSocket sock) {
+
+//send public key
+	sendmpz_t(m_localpub->n, sock);
+	sendmpz_t(m_localpub->g, sock);
+	sendmpz_t(m_localpub->h, sock);
+
+//receive and complete public key
+	mpz_t n, g, h;
+	mpz_inits(n, g, h, NULL);
+	receivempz_t(n, sock); //n
+	receivempz_t(g, sock); //g
+	receivempz_t(h, sock); //h
+
+	dgk_complete_pubkey(m_nDGKbits, m_nShareLength, &m_remotepub, n, g, h);
+
+	// pre calculate table for fixed-base exponentiation for client
+	fbpowmod_init_g(m_remotepub->g, m_remotepub->n, 2 * m_nShareLength + 2);
+	fbpowmod_init_h(m_remotepub->h, m_remotepub->n, 400); // 2.5 * t = 2.5 * 160 = 400 bit
+
+	//free a and b
+	mpz_clears(n, g, h, NULL);
+
+#if DEBUG
+	cout << "KX done. This pubkey: " << m_localpub->n << " remotekey: " << m_remotepub->n << endl;
+#endif
+}
+
+/**
+ * send one mpz_t to sock
+ */
+void DGKParty::sendmpz_t(mpz_t t, CSocket sock, BYTE * buf) {
+
+//clear upper bytes of the buffer, so tailing bytes are zero
+	for (int i = mpz_sizeinbase(t, 256); i < m_nBuflen; i++) {
+		*(buf + i) = 0;
+	}
+
+#if NETDEBUG
+	cout << mpz_sizeinbase(t, 256) << " vs. " << m_nBuflen << endl;
+#endif
+
+	mpz_export(buf, NULL, -1, 1, 1, 0, t);
+
+//send bytes of t
+	sock.Send(buf, (uint64_t) m_nBuflen);
+
+#if NETDEBUG
+	cout << endl << "SEND" << endl;
+	for (int i = 0; i < m_nBuflen; i++) {
+		printf("%02x.", *(buf + i));
+	}
+
+	cout << endl << "sent: " << t << " with len: " << m_nBuflen << " should have been " << mpz_sizeinbase(t, 256) << endl;
+#endif
+}
+
+/**
+ * receive one mpz_t from sock. t must be initialized.
+ */
+void DGKParty::receivempz_t(mpz_t t, CSocket sock, BYTE * buf) {
+	sock.Receive(buf, (uint64_t) m_nBuflen);
+	mpz_import(t, m_nBuflen, -1, 1, 1, 0, buf);
+
+#if NETDEBUG
+	cout << endl << "RECEIVE" << endl;
+	for (int i = 0; i < m_nBuflen; i++) {
+		printf("%02x.", *(buf + i));
+	}
+
+	cout << "received: " << t << " with len: " << m_nBuflen << endl;
+#endif
+}
+
+/**
+ * send one mpz_t to sock, allocates buffer
+ */
+void DGKParty::sendmpz_t(mpz_t t, CSocket sock) {
+	unsigned int bytelen = mpz_sizeinbase(t, 256);
+	BYTE* arr = (BYTE*) malloc(bytelen);
+	mpz_export(arr, NULL, 1, 1, 1, 0, t);
+
+//send byte length
+	sock.Send(&bytelen, sizeof(bytelen));
+
+//send bytes of t
+	sock.Send(arr, (uint64_t) bytelen);
+
+	free(arr);
+#if NETDEBUG
+	cout << "sent: " << t << " with len: " << bytelen << endl;
+#endif
+}
+
+/**
+ * receive one mpz_t from sock. t must be initialized.
+ */
+void DGKParty::receivempz_t(mpz_t t, CSocket sock) {
+	unsigned int bytelen;
+
+//reiceive byte length
+	sock.Receive(&bytelen, sizeof(bytelen));
+	BYTE* arr = (BYTE*) malloc(bytelen);
+
+//receive bytes of t
+	sock.Receive(arr, (uint64_t) bytelen);
+	mpz_import(t, bytelen, 1, 1, 1, 0, arr);
+
+	free(arr);
+#if NETDEBUG
+	cout << "received: " << t << " with len: " << bytelen << endl;
+#endif
+}
+
+#if DEBUG
+void DGKParty::printBuf(BYTE* b, UINT len) {
+	for (UINT i = 0; i < len; i++) {
+		printf("%02x.", *(b + i));
+	}
+	cout << endl;
+}
+#endif
+
+/**
+ * reads a new key from disk (to be used when parameters change)
+ */
+void DGKParty::loadNewKey(UINT DGKbits, UINT sharelen) {
+	m_nDGKbits = DGKbits;
+	m_nShareLength = sharelen;
+	dgk_readkey(m_nDGKbits, m_nShareLength, &m_localpub, &m_prv);
+}
