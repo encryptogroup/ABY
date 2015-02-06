@@ -18,7 +18,7 @@
 #include "../abycore/util/parse_options.h"
 #include "../abycore/sharing/sharing.h"
 #include "../examples/aes/common/aescircuit.h"
-#include "../examples/lowmc/common/lowmccircuit.h"
+//#include "../examples/lowmc/common/lowmccircuit.h"
 
 typedef struct {
 	e_operation op;

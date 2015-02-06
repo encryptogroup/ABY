@@ -15,7 +15,8 @@ OBJECTS := $(patsubst %.cpp, %.o, ${SOURCES})
 # object files for the test cases
 OBJECTS_MILLIONAIRE_CIRC=${SRC}/examples/millionaire_prob/common/millionaire_prob.o
 OBJECTS_AES_CIRC=${SRC}/examples/aes/common/aescircuit.o
-OBJECTS_LOWMC_CIRC=${SRC}/examples/lowmc/common/lowmccircuit.o
+#OBJECTS_LOWMC_CIRC=${SRC}/examples/lowmc/common/lowmccircuit.o
+OBJECTS_LOWMC_CIRC=
 
 # directory for the Miracl library
 MIRACL_LIB_DIR=${CORE}/util/miracl_lib
