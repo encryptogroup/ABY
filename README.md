@@ -2,7 +2,7 @@
 
 ### A Framework for Efficient Mixed-Protocol Secure Two-Party Computation
 
-By *Daniel Demmler, Thomas Schneider and Michael Zohner* ([ENCRYPTO](http://www.encrypto.de), TU Darmstadt)<br> to appear at [Network and Distributed System Security Symposium (NDSS'15)](http://www.internetsociety.org/events/ndss-symposium-2015).
+By *Daniel Demmler, Thomas Schneider and Michael Zohner* ([ENCRYPTO](http://www.encrypto.de), TU Darmstadt)<br>in [Network and Distributed System Security Symposium (NDSS'15)](http://www.internetsociety.org/events/ndss-symposium-2015).
 
 ### Features
 ---
@@ -25,7 +25,7 @@ This code is provided as a experimental implementation for testing purposes and 
 
   Install these packages with your favorite package manager, e.g, `sudo apt-get install <package-name>`.
 
-* Optional packages: `doxygen` and `graphviz` to create a [Doxygen](http://www.doxygen.org) documentation of the code.
+* Optional packages: `doxygen` and `graphviz` to create your own [Doxygen](http://www.doxygen.org) documentation of the code.
 
 ### ABY Sourcecode
 ---
@@ -40,11 +40,11 @@ This code is provided as a experimental implementation for testing purposes and 
 
 #### Building the ABY Framework
 
-
 1. Clone a copy of the main ABY git repository and its submodules by running:
-```
-git clone --recursive git://github.com/encryptogroup/ABY
-```
+	```
+	git clone --recursive git://github.com/encryptogroup/ABY
+	```
+
 2. Enter the Framework directory: `cd ABY/`
 
 3. Call `make` in the root directory of ABY to compile all dependencies, tests, and examples and create the corresponding executables.
@@ -66,6 +66,10 @@ git clone --recursive git://github.com/encryptogroup/ABY
 * `make clean` - cleans all binaries plus example and test object files
 * `make cleanmore` - same as `make clean` plus ABY core object files
 * `make cleanall` - same as `make cleanmore` plus Miracl library objects
+
+
+#### Doxygen Documentation
+See the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY/docs/index.html) for further information and comments on the code.
 
 
 ### ABY Applications
