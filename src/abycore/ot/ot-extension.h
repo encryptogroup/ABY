@@ -1,7 +1,18 @@
 /**
  \file 		ot-extension.h
  \author 	michael.zohner@ec-spride.de
- \copyright __________________
+ \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
+			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
+			This program is free software: you can redistribute it and/or modify
+			it under the terms of the GNU Affero General Public License as published
+			by the Free Software Foundation, either version 3 of the License, or
+			(at your option) any later version.
+			This program is distributed in the hope that it will be useful,
+			but WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+			GNU Affero General Public License for more details.
+			You should have received a copy of the GNU Affero General Public License
+			along with this program. If not, see <http://www.gnu.org/licenses/>.
  \brief		Methods for the OT Extension routine
  */
 
@@ -53,7 +64,7 @@ static void InitAESKey(AES_KEY_CTX* ctx, BYTE* keybytes, uint32_t numkeys, crypt
 
 #define OWF_BYTES AES_BYTES
 
-class OTExtensionSender {
+class OTExtSnd {
 	/*
 	 * OT sender part
 	 * Input: 
@@ -63,7 +74,7 @@ class OTExtensionSender {
 	 * Output: was the execution successful?
 	 */
 public:
-	OTExtensionSender(uint32_t nSndVals, uint32_t nOTs, uint32_t bitlength, crypto* crypt, CSocket* sock, CBitVector& U, BYTE* keybytes, CBitVector& x0, CBitVector& x1, BYTE type,
+	OTExtSnd(uint32_t nSndVals, uint32_t nOTs, uint32_t bitlength, crypto* crypt, CSocket* sock, CBitVector& U, BYTE* keybytes, CBitVector& x0, CBitVector& x1, BYTE type,
 			int nbaseOTs = -1, int nchecks = -1, int nbaseseeds = -1) {
 		Init(nSndVals, crypt, sock, U, keybytes, nbaseOTs, nchecks, nbaseseeds);
 		m_nOTs = nOTs;
@@ -74,7 +85,7 @@ public:
 	}
 	;
 
-	OTExtensionSender(uint32_t nSndVals, crypto* crypt, CSocket* sock, CBitVector& U, BYTE* keybytes, int nbaseOTs = -1, int nchecks = -1, int nbaseseeds = -1) {
+	OTExtSnd(uint32_t nSndVals, crypto* crypt, CSocket* sock, CBitVector& U, BYTE* keybytes, int nbaseOTs = -1, int nchecks = -1, int nbaseseeds = -1) {
 		Init(nSndVals, crypt, sock, U, keybytes, nbaseOTs, nchecks, nbaseseeds);
 	}
 	;
@@ -112,7 +123,7 @@ public:
 	}
 	;
 
-	~OTExtensionSender() {
+	~OTExtSnd() {
 		free(m_vKeySeeds);
 	}
 	;
@@ -155,7 +166,7 @@ protected:
 
 	class OTSenderThread: public CThread {
 	public:
-		OTSenderThread(uint32_t id, uint32_t nOTs, OTExtensionSender* ext) {
+		OTSenderThread(uint32_t id, uint32_t nOTs, OTExtSnd* ext) {
 			senderID = id;
 			numOTs = nOTs;
 			callback = ext;
@@ -172,13 +183,13 @@ protected:
 	private:
 		uint32_t senderID;
 		uint32_t numOTs;
-		OTExtensionSender* callback;
+		OTExtSnd* callback;
 		BOOL success;
 	};
 
 };
 
-class OTExtensionReceiver {
+class OTExtRec {
 	/*
 	 * OT receiver part
 	 * Input: 
@@ -190,17 +201,17 @@ class OTExtensionReceiver {
 	 * Output: was the execution successful?
 	 */
 public:
-	OTExtensionReceiver(uint32_t nSndVals, uint32_t nOTs, uint32_t bitlength, crypto* crypt, CSocket* sock, BYTE* keybytes, CBitVector& choices, CBitVector& ret, BYTE protocol,
+	OTExtRec(uint32_t nSndVals, uint32_t nOTs, uint32_t bitlength, crypto* crypt, CSocket* sock, BYTE* keybytes, CBitVector& choices, CBitVector& ret, BYTE protocol,
 			int nbaseOTs = -1, int nbaseseeds = -1) {
 		Init(nSndVals, crypt, sock, keybytes, nbaseOTs, nbaseseeds);
 		m_nOTs = nOTs;
 		m_nChoices = choices;
 		m_nRet = ret;
 		m_nBitLength = bitlength;
-		m_bProtocol = protocol;
+		m_eOTFlav = protocol;
 	}
 	;
-	OTExtensionReceiver(uint32_t nSndVals, crypto* crypt, CSocket* sock, BYTE* keybytes, int nbaseOTs = -1, int nbaseseeds = -1) {
+	OTExtRec(uint32_t nSndVals, crypto* crypt, CSocket* sock, BYTE* keybytes, int nbaseOTs = -1, int nbaseseeds = -1) {
 		Init(nSndVals, crypt, sock, keybytes, nbaseOTs, nbaseseeds);
 	}
 	;
@@ -227,7 +238,7 @@ public:
 #endif
 	}
 
-	~OTExtensionReceiver() {
+	~OTExtRec() {
 		free(m_vKeySeedMtx);
 	}
 	;
@@ -242,7 +253,7 @@ public:
 	BOOL verifyOT(uint32_t myNumOTs);
 
 protected:
-	BYTE m_bProtocol;
+	BYTE m_eOTFlav;
 	uint32_t m_nSndVals;
 	uint32_t m_nOTs;
 	uint32_t m_nBitLength;
@@ -265,7 +276,7 @@ protected:
 
 	class OTReceiverThread: public CThread {
 	public:
-		OTReceiverThread(uint32_t id, uint32_t nOTs, OTExtensionReceiver* ext) {
+		OTReceiverThread(uint32_t id, uint32_t nOTs, OTExtRec* ext) {
 			receiverID = id;
 			numOTs = nOTs;
 			callback = ext;
@@ -282,7 +293,7 @@ protected:
 	private:
 		uint32_t receiverID;
 		uint32_t numOTs;
-		OTExtensionReceiver* callback;
+		OTExtRec* callback;
 		BOOL success;
 	};
 

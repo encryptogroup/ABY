@@ -1,7 +1,19 @@
 /**
  \file 		arithmeticcircuits.h
  \author	michael.zohner@ec-spride.de
- \copyright	________________
+ \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
+			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
+			This program is free software: you can redistribute it and/or modify
+			it under the terms of the GNU Affero General Public License as published
+			by the Free Software Foundation, either version 3 of the License, or
+			(at your option) any later version.
+			This program is distributed in the hope that it will be useful,
+			but WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+			GNU Affero General Public License for more details.
+			You should have received a copy of the GNU Affero General Public License
+			along with this program. If not, see <http://www.gnu.org/licenses/>.
+
  \brief		A collection of boolean circuits for boolean and yao sharing in the ABY framework
  */
 #ifndef __ARITHMETICCIRCUITS_H_
@@ -104,6 +116,8 @@ public:
 		return m_nCONVGates;
 	}
 	;
+
+	share* PutCONSGate(UGATE_T val, uint32_t nvals = 1, uint32_t mindepth = 0);
 	uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1, uint32_t mindepth = 0);
 	uint32_t GetMaxCommunicationRounds() {
 		return m_nMaxDepth;

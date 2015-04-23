@@ -1,25 +1,36 @@
 /**
  \file 		ot-extension.cpp
  \author 	michael.zohner@ec-spride.de
- \copyright __________________
+ \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
+			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
+			This program is free software: you can redistribute it and/or modify
+			it under the terms of the GNU Affero General Public License as published
+			by the Free Software Foundation, either version 3 of the License, or
+			(at your option) any later version.
+			This program is distributed in the hope that it will be useful,
+			but WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+			GNU Affero General Public License for more details.
+			You should have received a copy of the GNU Affero General Public License
+			along with this program. If not, see <http://www.gnu.org/licenses/>.
  \brief		Methods for the OT Extension routine
  */
 
 #include "ot-extension.h"
 
-BOOL OTExtensionReceiver::receive(uint32_t numOTs, uint32_t bitlength, CBitVector& choices, CBitVector& ret, BYTE type, uint32_t numThreads, MaskingFunction* unmaskfct) {
+BOOL OTExtRec::receive(uint32_t numOTs, uint32_t bitlength, CBitVector& choices, CBitVector& ret, BYTE type, uint32_t numThreads, MaskingFunction* unmaskfct) {
 	m_nOTs = numOTs;
 	m_nBitLength = bitlength;
 	m_nChoices = choices;
 	m_nRet = ret;
-	m_bProtocol = type;
+	m_eOTFlav = type;
 	m_fMaskFct = unmaskfct;
 	return receive(numThreads);
 }
 ;
 
 //Initialize and start numThreads OTSenderThread
-BOOL OTExtensionReceiver::receive(uint32_t numThreads) {
+BOOL OTExtRec::receive(uint32_t numThreads) {
 	if (m_nOTs == 0)
 		return true;
 
@@ -47,7 +58,7 @@ BOOL OTExtensionReceiver::receive(uint32_t numThreads) {
 	for (uint32_t i = 0; i < numThreads; i++)
 		delete rThreads[i];
 
-	if (m_bProtocol == R_OT) {
+	if (m_eOTFlav == R_OT) {
 		m_nRet.Copy(m_vTempOTMasks.GetArr(), 0, ceil_divide(m_nOTs * m_nBitLength, 8));
 		m_vTempOTMasks.delCBitVector();
 	}
@@ -62,7 +73,7 @@ BOOL OTExtensionReceiver::receive(uint32_t numThreads) {
 	return true;
 }
 
-BOOL OTExtensionReceiver::OTReceiverRoutine(uint32_t id, uint32_t myNumOTs) {
+BOOL OTExtRec::OTReceiverRoutine(uint32_t id, uint32_t myNumOTs) {
 	uint32_t myStartPos = id * myNumOTs;
 	uint32_t i = myStartPos, nProgress = myStartPos;
 	uint32_t RoundWindow = 2;
@@ -83,9 +94,9 @@ BOOL OTExtensionReceiver::OTReceiverRoutine(uint32_t id, uint32_t myNumOTs) {
 
 	// The receive buffer
 	CBitVector vRcv;
-	if (m_bProtocol == G_OT)
+	if (m_eOTFlav == G_OT)
 		vRcv.Create(OTsPerIteration * m_nBitLength * m_nSndVals);
-	else if (m_bProtocol == C_OT)	// || m_bProtocol == S_OT)
+	else if (m_eOTFlav == C_OT)	// || m_bProtocol == S_OT)
 		vRcv.Create(OTsPerIteration * m_nBitLength);
 
 	// A temporary part of the T matrix
@@ -171,7 +182,7 @@ BOOL OTExtensionReceiver::OTReceiverRoutine(uint32_t id, uint32_t myNumOTs) {
 	return TRUE;
 }
 
-void OTExtensionReceiver::BuildMatrices(CBitVector& T, CBitVector& SndBuf, uint32_t numblocks, uint32_t ctr, BYTE* ctr_buf) {
+void OTExtRec::BuildMatrices(CBitVector& T, CBitVector& SndBuf, uint32_t numblocks, uint32_t ctr, BYTE* ctr_buf) {
 	uint32_t* counter = (uint32_t*) ctr_buf;
 	uint32_t tempctr = (*counter);
 	uint32_t wd_size_bytes = 1 << (ceil_log2(m_nBaseOTs) - 3);
@@ -209,7 +220,7 @@ void OTExtensionReceiver::BuildMatrices(CBitVector& T, CBitVector& SndBuf, uint3
 	SndBuf.XORBytes(T.GetArr(), 0, rowbytelen * m_nBaseOTs);
 }
 
-void OTExtensionReceiver::HashValues(CBitVector& T, CBitVector& seedbuf, uint32_t ctr, uint32_t processedOTs) {
+void OTExtRec::HashValues(CBitVector& T, CBitVector& seedbuf, uint32_t ctr, uint32_t processedOTs) {
 	BYTE* Tptr = T.GetArr();
 	BYTE* bufptr = seedbuf.GetArr();
 
@@ -241,7 +252,7 @@ void OTExtensionReceiver::HashValues(CBitVector& T, CBitVector& seedbuf, uint32_
 }
 
 //void OTExtensionReceiver::ReceiveAndProcess(CBitVector& vRcv, CBitVector& seedbuf, int id, int ctr, int processedOTs)
-void OTExtensionReceiver::ReceiveAndProcess(uint32_t numThreads) {
+void OTExtRec::ReceiveAndProcess(uint32_t numThreads) {
 	uint32_t progress = 0;
 	uint32_t wd_size_bits = 1 << (ceil_log2(m_nBaseOTs));
 	uint32_t threadOTs = ceil_divide(PadToMultiple(m_nOTs, wd_size_bits), numThreads);
@@ -258,11 +269,11 @@ void OTExtensionReceiver::ReceiveAndProcess(uint32_t numThreads) {
 	timeval tempStart, tempEnd;
 #endif
 
-	if (m_bProtocol == G_OT)
+	if (m_eOTFlav == G_OT)
 		vRcv.Create(OTsPerIteration * m_nBitLength * m_nSndVals);
-	else if (m_bProtocol == C_OT)
+	else if (m_eOTFlav == C_OT)
 		vRcv.Create(OTsPerIteration * m_nBitLength);
-	else if (m_bProtocol == R_OT)
+	else if (m_eOTFlav == R_OT)
 		return;
 
 	while (progress < m_nOTs) {
@@ -271,13 +282,13 @@ void OTExtensionReceiver::ReceiveAndProcess(uint32_t numThreads) {
 #ifdef OTTiming
 		gettimeofday(&tempStart, NULL);
 #endif
-		if (m_bProtocol == G_OT || m_bProtocol == C_OT) {
+		if (m_eOTFlav == G_OT || m_eOTFlav == C_OT) {
 			rcvbytes = ceil_divide(processedOTs * m_nBitLength, 8);
-			if (m_bProtocol == G_OT)
+			if (m_eOTFlav == G_OT)
 				rcvbytes = rcvbytes * m_nSndVals;
 			rcvbytes = m_vSockets[csockid].Receive(vRcv.GetArr(), rcvbytes);
 
-			m_fMaskFct->UnMask(otid, processedOTs, m_nChoices, m_nRet, vRcv, m_vTempOTMasks, m_bProtocol);
+			m_fMaskFct->UnMask(otid, processedOTs, m_nChoices, m_nRet, vRcv, m_vTempOTMasks, m_eOTFlav);
 #ifdef OTTiming
 			gettimeofday(&tempEnd, NULL);
 			totalUnmaskTime += getMillies(tempStart, tempEnd);
@@ -293,7 +304,7 @@ void OTExtensionReceiver::ReceiveAndProcess(uint32_t numThreads) {
 	vRcv.delCBitVector();
 }
 
-BOOL OTExtensionReceiver::verifyOT(uint32_t NumOTs) {
+BOOL OTExtRec::verifyOT(uint32_t NumOTs) {
 	CSocket sock = m_vSockets[0];
 	CBitVector vRcvX0(NUMOTBLOCKS * AES_BITS * m_nBitLength);
 	CBitVector vRcvX1(NUMOTBLOCKS * AES_BITS * m_nBitLength);
@@ -339,7 +350,7 @@ BOOL OTExtensionReceiver::verifyOT(uint32_t NumOTs) {
 	return true;
 }
 
-BOOL OTExtensionSender::send(uint32_t numOTs, uint32_t bitlength, CBitVector& x0, CBitVector& x1, BYTE type, uint32_t numThreads, MaskingFunction* maskfct) {
+BOOL OTExtSnd::send(uint32_t numOTs, uint32_t bitlength, CBitVector& x0, CBitVector& x1, BYTE type, uint32_t numThreads, MaskingFunction* maskfct) {
 	m_nOTs = numOTs;
 	m_nBitLength = bitlength;
 	m_vValues[0] = x0;
@@ -350,7 +361,7 @@ BOOL OTExtensionSender::send(uint32_t numOTs, uint32_t bitlength, CBitVector& x0
 }
 
 //Initialize and start numThreads OTSenderThread
-BOOL OTExtensionSender::send(uint32_t numThreads) {
+BOOL OTExtSnd::send(uint32_t numThreads) {
 	if (m_nOTs == 0)
 		return true;
 
@@ -389,7 +400,7 @@ BOOL OTExtensionSender::send(uint32_t numThreads) {
 }
 
 //BOOL OTsender(int nSndVals, int nOTs, int startpos, CSocket& sock, CBitVector& U, AES_KEY* vKeySeeds, CBitVector* values, BYTE* seed)
-BOOL OTExtensionSender::OTSenderRoutine(uint32_t id, uint32_t myNumOTs) {
+BOOL OTExtSnd::OTSenderRoutine(uint32_t id, uint32_t myNumOTs) {
 	CSocket sock = m_vSockets[id];
 
 	uint32_t nProgress;
@@ -507,7 +518,7 @@ BOOL OTExtensionSender::OTSenderRoutine(uint32_t id, uint32_t myNumOTs) {
 	return TRUE;
 }
 
-void OTExtensionSender::BuildQMatrix(CBitVector& T, CBitVector& RcvBuf, uint32_t numblocks, BYTE* ctr_buf) {
+void OTExtSnd::BuildQMatrix(CBitVector& T, CBitVector& RcvBuf, uint32_t numblocks, BYTE* ctr_buf) {
 	BYTE* rcvbufptr = RcvBuf.GetArr();
 	BYTE* Tptr = T.GetArr();
 	uint32_t dummy;
@@ -540,7 +551,7 @@ void OTExtensionSender::BuildQMatrix(CBitVector& T, CBitVector& RcvBuf, uint32_t
 	}
 }
 
-void OTExtensionSender::MaskInputs(CBitVector& Q, CBitVector* seedbuf, CBitVector* snd_buf, uint32_t ctr, uint32_t processedOTs) {
+void OTExtSnd::MaskInputs(CBitVector& Q, CBitVector* seedbuf, CBitVector* snd_buf, uint32_t ctr, uint32_t processedOTs) {
 	uint32_t numhashiters = ceil_divide(m_nBitLength, m_cCrypt->get_hash_bytes());
 	uint32_t hashinbytelen = ceil_divide(m_nBaseOTs, 8);
 	uint32_t wd_size_bytes = 1 << (ceil_log2(m_nBaseOTs) - 3);
@@ -608,7 +619,7 @@ void OTExtensionSender::MaskInputs(CBitVector& Q, CBitVector* seedbuf, CBitVecto
 #endif
 }
 
-void OTExtensionSender::ProcessAndEnqueue(CBitVector* snd_buf, uint32_t id, uint32_t progress, uint32_t processedOTs) {
+void OTExtSnd::ProcessAndEnqueue(CBitVector* snd_buf, uint32_t id, uint32_t progress, uint32_t processedOTs) {
 	m_fMaskFct->Mask(progress, processedOTs, m_vValues, snd_buf, m_bProtocol);
 
 	if (m_bProtocol == R_OT)
@@ -642,7 +653,7 @@ void OTExtensionSender::ProcessAndEnqueue(CBitVector* snd_buf, uint32_t id, uint
 	m_lSendLock->Unlock();
 }
 
-void OTExtensionSender::SendBlocks(uint32_t numThreads) {
+void OTExtSnd::SendBlocks(uint32_t numThreads) {
 	OTBlock* tempBlock;
 	uint32_t progress = 0;
 	uint32_t csockid = 0;
@@ -693,7 +704,7 @@ void OTExtensionSender::SendBlocks(uint32_t numThreads) {
 #endif
 }
 
-BOOL OTExtensionSender::verifyOT(uint32_t NumOTs) {
+BOOL OTExtSnd::verifyOT(uint32_t NumOTs) {
 	CSocket sock = m_vSockets[0];
 	CBitVector vSnd(NUMOTBLOCKS * AES_BITS * m_nBitLength);
 	uint32_t processedOTBlocks, OTsPerIteration;

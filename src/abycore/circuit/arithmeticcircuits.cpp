@@ -1,7 +1,18 @@
 /**
  \file 		arithmeticcircuits.cpp
  \author	michael.zohner@ec-spride.de
- \copyright	________________
+ \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
+			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
+			This program is free software: you can redistribute it and/or modify
+			it under the terms of the GNU Affero General Public License as published
+			by the Free Software Foundation, either version 3 of the License, or
+			(at your option) any later version.
+			This program is distributed in the hope that it will be useful,
+			but WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+			GNU Affero General Public License for more details.
+			You should have received a copy of the GNU Affero General Public License
+			along with this program. If not, see <http://www.gnu.org/licenses/>.
  \brief		Arithmetic Circuit class.
  */
 
@@ -186,6 +197,12 @@ uint32_t ArithmeticCircuit::PutCONVGate(vector<uint32_t>& parentids, uint32_t mi
 	return gateid;
 }
 
+share* ArithmeticCircuit::PutCONSGate(UGATE_T val, uint32_t nvals, uint32_t mindepth) {
+	vector<uint32_t> gateid(1);
+	gateid[0] = PutConstantGate(val, nvals, mindepth);
+	return new arithshare(gateid, this);
+}
+
 uint32_t ArithmeticCircuit::PutConstantGate(UGATE_T val, uint32_t nvals, uint32_t mindepth) {
 	uint32_t gateid = m_cCircuit->PutConstantGate(m_eContext, val, nvals, m_nShareBitLen, mindepth);
 	UpdateLocalQueue(gateid);
@@ -193,7 +210,7 @@ uint32_t ArithmeticCircuit::PutConstantGate(UGATE_T val, uint32_t nvals, uint32_
 }
 
 uint32_t ArithmeticCircuit::PutB2AGate(vector<uint32_t> ina, uint32_t mindepth) {
-	return PutCONVGate(ina, mindepth);;
+	return PutCONVGate(ina, mindepth);
 }
 
 share* ArithmeticCircuit::PutB2AGate(share* ina, uint32_t mindepth) {

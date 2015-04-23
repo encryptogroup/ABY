@@ -1,7 +1,18 @@
 /**
  \file 		booleancircuits.h
  \author	michael.zohner@ec-spride.de
- \copyright	________________
+ \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
+			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
+			This program is free software: you can redistribute it and/or modify
+			it under the terms of the GNU Affero General Public License as published
+			by the Free Software Foundation, either version 3 of the License, or
+			(at your option) any later version.
+			This program is distributed in the hope that it will be useful,
+			but WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+			GNU Affero General Public License for more details.
+			You should have received a copy of the GNU Affero General Public License
+			along with this program. If not, see <http://www.gnu.org/licenses/>.
  \brief		A collection of boolean circuits for boolean and yao sharing in the ABY framework
  */
 #ifndef __BOOLEANCIRCUITS_H_
@@ -53,6 +64,8 @@ public:
 	uint32_t PutOUTGate(uint32_t parent, e_role dst);
 	vector<uint32_t> PutOUTGate(vector<uint32_t> parents, e_role dst);
 	share* PutOUTGate(share* parent, e_role dst);
+
+	share* PutCONSGate(UGATE_T val, uint32_t nvals = 1, uint32_t mindepth = 0);
 	uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1, uint32_t mindepth = 0);
 
 	uint32_t GetNumB2YGates() {
@@ -131,6 +144,7 @@ public:
 	vector<uint32_t> PutINVGate(vector<uint32_t> parentid, uint32_t mindepth = 0);
 	share* PutINVGate(share* parent, uint32_t mindepth = 0);
 
+	share* PutMinGate(share** a, uint32_t nvals, uint32_t mindepth = 0);
 	vector<uint32_t> PutMinGate(vector<vector<uint32_t> > a, uint32_t mindepth = 0);
 
 private:

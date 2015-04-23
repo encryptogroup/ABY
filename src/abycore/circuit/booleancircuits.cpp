@@ -1,7 +1,18 @@
 /**
  \file 		booleancircuits.cpp
  \author	michael.zohner@ec-spride.de
- \copyright	________________
+ \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
+			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
+			This program is free software: you can redistribute it and/or modify
+			it under the terms of the GNU Affero General Public License as published
+			by the Free Software Foundation, either version 3 of the License, or
+			(at your option) any later version.
+			This program is distributed in the hope that it will be useful,
+			but WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+			GNU Affero General Public License for more details.
+			You should have received a copy of the GNU Affero General Public License
+			along with this program. If not, see <http://www.gnu.org/licenses/>.
  \brief		A collection of boolean circuits for boolean and yao sharing in the ABY framework
  */
 
@@ -276,6 +287,10 @@ vector<uint32_t> BooleanCircuit::PutOUTGate(vector<uint32_t> parentids, e_role d
 	return gateid;
 }
 
+share* BooleanCircuit::PutCONSGate(UGATE_T val, uint32_t nvals, uint32_t mindepth) {
+	return new boolshare(PutConstantGate(val, nvals, mindepth), this);
+}
+
 uint32_t BooleanCircuit::PutConstantGate(UGATE_T val, uint32_t nvals, uint32_t mindepth) {
 	uint32_t gateid = m_cCircuit->PutConstantGate(m_eContext, val, nvals, m_nShareBitLen, mindepth);
 	UpdateLocalQueue(gateid);
@@ -452,6 +467,14 @@ vector<uint32_t> BooleanCircuit::PutAddGate(vector<uint32_t> left, vector<uint32
 }
 
 vector<uint32_t> BooleanCircuit::PutMulGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t resbitlen, uint32_t mindepth) {
+	if(a.size() != b.size()) {
+		uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals);
+		if(a.size() > b.size())
+			b.resize(a.size(), zerogate);
+		else
+			a.resize(b.size(), zerogate);
+	}
+	//cout << "a.size() = " << a.size() << ", b.size() = " << b.size() << endl;
 	uint32_t rep = a.size();
 	vector<vector<uint32_t> > vAdds(rep);
 	uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals, mindepth);
@@ -521,7 +544,17 @@ vector<uint32_t> BooleanCircuit::PutWideAddGate(vector<vector<uint32_t> > ins, u
 }
 
 vector<uint32_t> BooleanCircuit::PutSUBGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t mindepth) {
-	assert(a.size() == b.size());
+	//pad with leading zeros
+	if(a.size() != b.size()) {
+		uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals);
+		if(a.size() > b.size()) {
+			b.resize(a.size(), zerogate);
+		} else {
+			a.resize(b.size(), zerogate);
+		}
+	}
+
+	//assert(a.size() == b.size());
 	uint32_t bitlen = a.size();
 	vector<uint32_t> C(bitlen);
 	uint32_t i, bc, bxc, ainvNbxc, ainvNbxcObc, axb;
@@ -566,7 +599,7 @@ share* BooleanCircuit::PutSUBGate(share* ina, share* inb, uint32_t mindepth) {
 vector<uint32_t> BooleanCircuit::PutSizeOptimizedAddGate(vector<uint32_t> a, vector<uint32_t> b, BOOL bCarry, uint32_t mindepth) {
 	// left + right mod (2^Rep)
 	// Construct C[i] gates
-	uint32_t rep = a.size() + (!!bCarry);
+	uint32_t rep = a.size();// + (!!bCarry);
 	vector<uint32_t> C(rep);
 	uint32_t axc, bxc, acNbc;
 
@@ -877,6 +910,16 @@ vector<uint32_t> BooleanCircuit::PutELM0Gate(vector<uint32_t> val, uint32_t b) {
 }
 
 // a = values, b = indexes of each value, n = size of a and b
+share* BooleanCircuit::PutMinGate(share** a, uint32_t nvals, uint32_t mindepth) {
+	vector<vector<uint32_t> > min(nvals);
+	uint32_t i;
+	for (i = 0; i < nvals; i++) {
+		min[i] = a[i]->get_gates();
+	}
+	return new boolshare(PutMinGate(min), this);
+}
+
+// a = values, b = indexes of each value, n = size of a and b
 vector<uint32_t> BooleanCircuit::PutMinGate(vector<vector<uint32_t> > a, uint32_t mindepth) {
 	// build a balanced binary tree
 	uint32_t cmp;
@@ -894,13 +937,14 @@ vector<uint32_t> BooleanCircuit::PutMinGate(vector<vector<uint32_t> > a, uint32_
 				//	cmp = bc->PutGTTree(m_vELMs[i], m_vELMs[i+1], mindepth);
 				if (m_eContext == S_YAO) {
 					cmp = PutSizeOptimizedGEGate(m_vELMs[i], m_vELMs[i + 1]);
-					m_vELMs[j] = PutMUXGate(m_vELMs[i], m_vELMs[i + 1], cmp);
+					m_vELMs[j] = PutMUXGate(m_vELMs[i + 1], m_vELMs[i], cmp);
 				} else {
 					cmp = PutDepthOptimizedGEGate(m_vELMs[i], m_vELMs[i + 1]);
-					avec = PutCombinerGate(m_vELMs[i]);
-					bvec = PutCombinerGate(m_vELMs[j]);
-					m_vELMs[j] = PutSplitterGate(PutVectorANDGate(cmp, PutXORGate(avec, bvec)));
-					//m_vELMs[j] = PutMUXGate(m_vELMs[i], m_vELMs[i+1], cmp);
+					m_vELMs[j] = PutMUXGate(m_vELMs[i + 1], m_vELMs[i], cmp);
+					//TODO: something is off here
+					//avec = PutCombinerGate(m_vELMs[i]);
+					//bvec = PutCombinerGate(m_vELMs[j]);
+					//m_vELMs[j] = PutSplitterGate(PutVectorANDGate(cmp, PutXORGate(avec, bvec)));
 				}
 
 				i += 2;
@@ -982,6 +1026,7 @@ vector<uint32_t> BooleanCircuit::PutDepthOptimizedAddGate(vector<uint32_t> a, ve
 	}
 	if (bCARRY)	//Do I expect a carry in the most significant bit position?
 		out[rep + 1] = carry[rep - 1];
+
 	return out;
 }
 
