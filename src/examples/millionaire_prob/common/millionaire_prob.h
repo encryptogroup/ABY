@@ -1,7 +1,18 @@
 /**
  \file 		millionaire_prob.h
- \author 	Sreeram Sadasivam
- \copyright __________________
+ \author 	sreeram.sadasivam@cased.de
+ \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
+			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
+			This program is free software: you can redistribute it and/or modify
+			it under the terms of the GNU Affero General Public License as published
+			by the Free Software Foundation, either version 3 of the License, or
+			(at your option) any later version.
+			This program is distributed in the hope that it will be useful,
+			but WITHOUT ANY WARRANTY; without even the implied warranty of
+			MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+			GNU Affero General Public License for more details.
+			You should have received a copy of the GNU Affero General Public License
+			along with this program. If not, see <http://www.gnu.org/licenses/>.
  \brief		Implementation of the millionaire problem using ABY Framework.
  */
 
@@ -30,7 +41,9 @@
  \brief		This function is used for running a testing environment for solving the
  millionaire's problem
  */
-int32_t test_millionaire_prob_circuit(e_role role, char* address, seclvl seclvl, uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing);
+int32_t test_millionaire_prob_circuit(e_role role, char* address, seclvl seclvl,
+		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
+		e_sharing sharing);
 
 /**
  \param		s_alice		shared object of alice.
@@ -38,8 +51,8 @@ int32_t test_millionaire_prob_circuit(e_role role, char* address, seclvl seclvl,
  \param		bc	 		boolean circuit object.
  \brief		This function is used to build and solve the millionaire's problem.
  */
-share* BuildMillionaireProbCircuit(share *s_alice, share *s_bob, BooleanCircuit *bc);
+share* BuildMillionaireProbCircuit(share *s_alice, share *s_bob,
+		BooleanCircuit *bc);
 
-static uint32_t m_nBitLength;
 
 #endif /* __MILLIONAIREPROB_H_ */
