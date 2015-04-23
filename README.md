@@ -79,6 +79,8 @@ See the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY
 
   * The [**Millionaire's Problem**](http://en.wikipedia.org/wiki/Yao%27s_Millionaires%27_Problem) was proposed by Yao in 1982. Two parties want to find out who is richer, without revealing their actual wealth. This simple example can be used as starting point for your own ABY application.
   * Secure computation [**AES**](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), where one party inputs the key and the other party inputs a message to collaboratively encrypt.
+  * The [**Euclidean Distance**](https://en.wikipedia.org/wiki/Euclidean_distance) for two 2-dimensional coordinates.
+  * The **Minimum Euclidean Distance** for finding the closest match between one d-dimensional element and a database of n d-dimensional elements.
   * Further example applications will be added soon.
 
 #### Running Applications
