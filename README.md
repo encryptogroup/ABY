@@ -2,7 +2,7 @@
 
 ### A Framework for Efficient Mixed-Protocol Secure Two-Party Computation
 
-By *Daniel Demmler, Thomas Schneider and Michael Zohner* ([ENCRYPTO](http://www.encrypto.de), TU Darmstadt)<br>in [Network and Distributed System Security Symposium (NDSS'15)](http://www.internetsociety.org/events/ndss-symposium-2015). [http://thomaschneider.de/papers/DSZ15.pdf](Paper).
+By *Daniel Demmler, Thomas Schneider and Michael Zohner* ([ENCRYPTO](http://www.encrypto.de), TU Darmstadt)<br>in [Network and Distributed System Security Symposium (NDSS'15)](http://www.internetsociety.org/events/ndss-symposium-2015). [Paper](http://thomaschneider.de/papers/DSZ15.pdf).
 
 ### Features
 ---
