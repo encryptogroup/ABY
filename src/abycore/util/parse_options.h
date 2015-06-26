@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdint.h>
+#include <vector>
 
 enum etype {
 	T_NUM, T_STR, T_FLAG, T_DOUBLE
@@ -40,5 +41,6 @@ typedef struct {
 
 int32_t parse_options(int32_t* argcp, char*** argvp, parsing_ctx* options, uint32_t nops);
 void print_usage(std::string progname, parsing_ctx* options, uint32_t nops);
+void tokenize(const std::string& str, std::vector<uint32_t>& tokens, const std::string& delimiters = "| \t");
 
 #endif /* PARSE_OPTIONS_H_ */

@@ -99,12 +99,13 @@ public:
 	uint32_t get_hash_bytes();
 
 	void gen_common_seed(prf_state_ctx* aes_key, CSocket& sock);
+	void init_prf_state(prf_state_ctx* prf_state, uint8_t* seed);
+	void free_prf_state(prf_state_ctx* prf_state);
 private:
 	void seed_aes_key(AES_KEY_CTX* aeskey, uint8_t* seed, bc_mode mode = ECB, const uint8_t* iv = ZERO_IV, bool encrypt = true);
 	void seed_aes_key(AES_KEY_CTX* aeskey, uint32_t symseclvl, uint8_t* seed, bc_mode mode = ECB, const uint8_t* iv = ZERO_IV, bool encrypt = true);
 	void init(uint32_t symsecbits, uint8_t* seed);
-	void init_prf_state(prf_state_ctx* prf_state, uint8_t* seed);
-	void free_prf_state(prf_state_ctx* prf_state);
+
 
 	AES_KEY_CTX aes_hash_key;
 	AES_KEY_CTX aes_enc_key;

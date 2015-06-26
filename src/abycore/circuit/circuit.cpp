@@ -78,22 +78,22 @@ template<class T> void Circuit::GetOutputGateValue(uint32_t gateid, T& val) {
 	val = m_pGates[gateid].gs.val;
 }
 
-share* Circuit::PutCombinerGate(share* ina, uint32_t mindepth) {
+share* Circuit::PutCombinerGate(share* ina) {
 	share* out = create_new_share(1, this, ina->get_circuit_type());
-	out->set_gate(0, m_cCircuit->PutCombinerGate(ina->get_gates(), mindepth));
+	out->set_gate(0, m_cCircuit->PutCombinerGate(ina->get_gates()));
 	UpdateLocalQueue(out);
 	return out;
 }
 
-share* Circuit::PutSplitterGate(share* ina, uint32_t mindepth) {
+share* Circuit::PutSplitterGate(share* ina) {
 
-	share* out = create_new_share(m_cCircuit->PutSplitterGate(ina->get_gate(0), mindepth), this, ina->get_circuit_type());
+	share* out = create_new_share(m_cCircuit->PutSplitterGate(ina->get_gate(0)), this, ina->get_circuit_type());
 	UpdateLocalQueue(out);
 	return out;
 }
 
-share* Circuit::PutRepeaterGate(uint32_t nvals, share* ina, uint32_t mindepth) {
-	share* out = create_new_share(m_cCircuit->PutRepeaterGate(ina->get_gates(), nvals, mindepth), this, ina->get_circuit_type());
+share* Circuit::PutRepeaterGate(uint32_t nvals, share* ina) {
+	share* out = create_new_share(m_cCircuit->PutRepeaterGate(ina->get_gates(), nvals), this, ina->get_circuit_type());
 	UpdateLocalQueue(out);
 	return out;
 }
@@ -162,6 +162,32 @@ uint8_t* boolshare::get_clear_value() {
 }
 
 
+void boolshare::get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals) {
+	assert(m_ngateids.size() <= sizeof(uint32_t) * 8);
+	UGATE_T* outvalptr;
+	uint32_t gnvals = 1;
+
+	*nvals = 1;
+	*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], outvalptr);
+	*vec = (uint32_t*) calloc(*nvals, sizeof(uint32_t));
+
+	for (uint32_t j = 0; j < *nvals; j++) {
+		(*vec)[j] = (outvalptr[j / 64] >> (j % 64)) & 0x01;
+	}
+
+	for (uint32_t i = 1; i < m_ngateids.size(); i++) {
+		gnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], outvalptr);
+		assert(*nvals == gnvals);
+
+		for (uint32_t j = 0; j < *nvals; j++) {
+			(*vec)[j] = (*vec)[j] + (((outvalptr[j / 64] >> (j % 64)) & 0x01) << i);
+		}
+	}
+	*bitlen = m_ngateids.size();
+	//return nvals;
+}
+
+
 /* =========================== Methods for the Arithmetic share class =========================== */
 
 uint8_t* arithshare::get_clear_value() {
@@ -173,6 +199,18 @@ uint8_t* arithshare::get_clear_value() {
 	}
 	return out;
 }
+
+void arithshare::get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t* nvals) {
+	assert(m_ngateids.size() <= sizeof(uint32_t) * 8);
+
+	UGATE_T* gate_val;
+	*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
+	*vec = (uint32_t*) malloc(*nvals * sizeof(uint32_t));
+	memcpy(*vec, gate_val, *nvals * sizeof(uint32_t));
+
+	*bitlen = m_ngateids.size();
+}
+
 
 static share* create_new_share(uint32_t size, Circuit* circ, e_circuit circtype) {
 	switch (circtype) {
@@ -197,3 +235,5 @@ static share* create_new_share(vector<uint32_t> vals, Circuit* circ, e_circuit c
 		return new boolshare(vals, circ);
 	}
 }
+
+

@@ -23,7 +23,7 @@ OBJECTS_MIRACL=${MIRACL_LIB_DIR}/*.o
 # compiler settings
 CC=g++
 COMPILER_OPTIONS=-O2
-DEBUG_OPTIONS=-g3 -Wall
+DEBUG_OPTIONS=-g3 -Wall -Wextra
 BATCH=
 ARCHITECTURE = $(shell uname -m)
 ifeq (${ARCHITECTURE},x86_64)
@@ -43,8 +43,8 @@ all: ${BIN}/${EXAMPLE}.exe
 ${BIN}/${EXAMPLE}.exe: ${OBJECTS} ${OBJECTS_CORE} ${OBJECTS_MIRACL}
 	${CC} ${COMPILER_OPTIONS} ${CFLAGS} $^ ${LIBRARIES} -o $@
 
-%.o: %.cpp
-	${CC} $^ ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
+%.o: %.cpp %.h
+	${CC} $< ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 .PHONY: clean
 

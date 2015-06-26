@@ -161,6 +161,12 @@ public:
 	virtual Circuit* GetCircuitBuildRoutine() = 0;
 
 protected:
+	/**
+	 Method for evaluating Callback gate for the inputted
+	 gate object.
+	 \param gateid		Gate identifier
+	 */
+	void EvaluateCallbackGate(uint32_t gateid);
 
 	uint32_t m_nShareBitLen; /**< Bit length of shared item. */
 	GATE* m_pGates; /**< Pointer to array of Logical Gates. */

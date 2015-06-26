@@ -17,5 +17,18 @@
  */
 #include "sharing.h"
 
+void Sharing::EvaluateCallbackGate(uint32_t gateid) {
+	GATE* gate = m_pGates + gateid;
+	void (*callback)(GATE*, void*) = gate->gs.cbgate.callback;
+	void* infos = gate->gs.cbgate.infos;
+	InstantiateGate(gate);
+
+	callback(gate, infos);
+
+	for(uint32_t i = 0; i < gate->ingates.ningates; i++)
+		UsedGate(gate->ingates.inputs.parents[i]);
+	free(gate->ingates.inputs.parents);
+}
+
 //TODO switch on gate and perform SIMD gate routine
 

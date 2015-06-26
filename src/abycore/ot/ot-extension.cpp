@@ -86,7 +86,7 @@ BOOL OTExtRec::OTReceiverRoutine(uint32_t id, uint32_t myNumOTs) {
 	uint32_t processedOTBlocks = min((uint32_t) NUMOTBLOCKS, ceil_divide(myNumOTs, wd_size_bits));
 	uint32_t OTsPerIteration = processedOTBlocks * wd_size_bits;
 	uint32_t OTwindow = NUMOTBLOCKS * wd_size_bits * RoundWindow;
-	CSocket sock = m_vSockets[id];
+	CSocket* sock = m_vSockets+id;
 
 	//counter variables
 	uint32_t numblocks = ceil_divide(myNumOTs, OTsPerIteration);
@@ -144,7 +144,7 @@ BOOL OTExtRec::OTReceiverRoutine(uint32_t id, uint32_t myNumOTs) {
 		totalHshTime += getMillies(tempStart, tempEnd);
 		gettimeofday(&tempStart, NULL);
 #endif
-		sock.Send(vSnd.GetArr(), nSize);
+		sock->Send(vSnd.GetArr(), nSize);
 #ifdef OTTiming
 		gettimeofday(&tempEnd, NULL);
 		totalSndTime += getMillies(tempStart, tempEnd);
@@ -305,7 +305,7 @@ void OTExtRec::ReceiveAndProcess(uint32_t numThreads) {
 }
 
 BOOL OTExtRec::verifyOT(uint32_t NumOTs) {
-	CSocket sock = m_vSockets[0];
+	CSocket* sock = m_vSockets;
 	CBitVector vRcvX0(NUMOTBLOCKS * AES_BITS * m_nBitLength);
 	CBitVector vRcvX1(NUMOTBLOCKS * AES_BITS * m_nBitLength);
 	CBitVector* Xc;
@@ -317,8 +317,8 @@ BOOL OTExtRec::verifyOT(uint32_t NumOTs) {
 	for (uint32_t i = 0; i < NumOTs;) {
 		processedOTBlocks = min((uint32_t) NUMOTBLOCKS, ceil_divide(NumOTs - i, AES_BITS));
 		OTsPerIteration = min(processedOTBlocks * AES_BITS, NumOTs - i);
-		sock.Receive(vRcvX0.GetArr(), ceil_divide(m_nBitLength * OTsPerIteration, 8));
-		sock.Receive(vRcvX1.GetArr(), ceil_divide(m_nBitLength * OTsPerIteration, 8));
+		sock->Receive(vRcvX0.GetArr(), ceil_divide(m_nBitLength * OTsPerIteration, 8));
+		sock->Receive(vRcvX1.GetArr(), ceil_divide(m_nBitLength * OTsPerIteration, 8));
 		for (uint32_t j = 0; j < OTsPerIteration && i < NumOTs; j++, i++) {
 			if (m_nChoices.GetBitNoMask(i) == 0)
 				Xc = &vRcvX0;
@@ -332,13 +332,13 @@ BOOL OTExtRec::verifyOT(uint32_t NumOTs) {
 					cout << "Error at position i = " << i << ", k = " << k << ", with X" << (hex) << (uint32_t) m_nChoices.GetBitNoMask(i) << " = " << (uint32_t) tempXc[k]
 							<< " and res = " << (uint32_t) tempRet[k] << (dec) << endl;
 					resp = 0x00;
-					sock.Send(&resp, 1);
+					sock->Send(&resp, 1);
 					return false;
 				}
 			}
 		}
 		resp = 0x01;
-		sock.Send(&resp, 1);
+		sock->Send(&resp, 1);
 	}
 	free(tempXc);
 	free(tempRet);
@@ -401,7 +401,7 @@ BOOL OTExtSnd::send(uint32_t numThreads) {
 
 //BOOL OTsender(int nSndVals, int nOTs, int startpos, CSocket& sock, CBitVector& U, AES_KEY* vKeySeeds, CBitVector* values, BYTE* seed)
 BOOL OTExtSnd::OTSenderRoutine(uint32_t id, uint32_t myNumOTs) {
-	CSocket sock = m_vSockets[id];
+	CSocket* sock = m_vSockets+id;
 
 	uint32_t nProgress;
 	uint32_t myStartPos = id * myNumOTs;
@@ -458,7 +458,7 @@ BOOL OTExtSnd::OTSenderRoutine(uint32_t id, uint32_t myNumOTs) {
 #ifdef OTTiming
 		gettimeofday(&tempStart, NULL);
 #endif
-		sock.Receive(vRcv.GetArr(), ceil_divide(m_nBaseOTs * OTsPerIteration, 8));
+		sock->Receive(vRcv.GetArr(), ceil_divide(m_nBaseOTs * OTsPerIteration, 8));
 #ifdef OTTiming
 		gettimeofday(&tempEnd, NULL);
 		totalRcvTime += getMillies(tempStart, tempEnd);
@@ -499,8 +499,6 @@ BOOL OTExtSnd::OTSenderRoutine(uint32_t id, uint32_t myNumOTs) {
 
 	for (uint32_t i = 0; i < numsndvals; i++)
 		vSnd[i].delCBitVector();
-	if (numsndvals > 0)
-		free(vSnd);
 
 #ifdef OTTiming
 	cout << "Sender time benchmark for performing " << myNumOTs << " OTs on " << m_nBitLength << " bit strings" << endl;
@@ -705,7 +703,7 @@ void OTExtSnd::SendBlocks(uint32_t numThreads) {
 }
 
 BOOL OTExtSnd::verifyOT(uint32_t NumOTs) {
-	CSocket sock = m_vSockets[0];
+	CSocket* sock = m_vSockets;
 	CBitVector vSnd(NUMOTBLOCKS * AES_BITS * m_nBitLength);
 	uint32_t processedOTBlocks, OTsPerIteration;
 	uint32_t bytelen = ceil_divide(m_nBitLength, 8);
@@ -716,10 +714,10 @@ BOOL OTExtSnd::verifyOT(uint32_t NumOTs) {
 		OTsPerIteration = min(processedOTBlocks * AES_BITS, NumOTs - i);
 		nSnd = ceil_divide(OTsPerIteration * m_nBitLength, 8);
 		vSnd.Copy(m_vValues[0].GetArr() + ceil_divide(i * m_nBitLength, 8), 0, nSnd);
-		sock.Send(vSnd.GetArr(), nSnd);
+		sock->Send(vSnd.GetArr(), nSnd);
 		vSnd.Copy(m_vValues[1].GetArr() + ceil_divide(i * m_nBitLength, 8), 0, nSnd);
-		sock.Send(vSnd.GetArr(), nSnd);
-		sock.Receive(&resp, 1);
+		sock->Send(vSnd.GetArr(), nSnd);
+		sock->Receive(&resp, 1);
 		if (resp == 0x00) {
 			cout << "OT verification unsuccessful" << endl;
 			return false;

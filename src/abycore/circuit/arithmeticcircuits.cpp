@@ -38,14 +38,14 @@ void ArithmeticCircuit::Cleanup() {
 	//TODO implement
 }
 
-share* ArithmeticCircuit::PutMULGate(share* ina, share* inb, uint32_t mindepth) {
+share* ArithmeticCircuit::PutMULGate(share* ina, share* inb) {
 	share* shr = new arithshare(this);
-	shr->set_gate(0, PutMULGate(ina->get_gate(0), inb->get_gate(0), mindepth));
+	shr->set_gate(0, PutMULGate(ina->get_gate(0), inb->get_gate(0)));
 	return shr;
 }
 
-uint32_t ArithmeticCircuit::PutMULGate(uint32_t inleft, uint32_t inright, uint32_t mindepth) {
-	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_NON_LIN, inleft, inright, m_nRoundsAND, mindepth);
+uint32_t ArithmeticCircuit::PutMULGate(uint32_t inleft, uint32_t inright) {
+	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_NON_LIN, inleft, inright, m_nRoundsAND);
 	UpdateInteractiveQueue(gateid);
 
 	if (m_pGates[gateid].nvals != INT_MAX) {
@@ -55,15 +55,15 @@ uint32_t ArithmeticCircuit::PutMULGate(uint32_t inleft, uint32_t inright, uint32
 	return gateid;
 }
 
-uint32_t ArithmeticCircuit::PutADDGate(uint32_t inleft, uint32_t inright, uint32_t mindepth) {
-	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_LIN, inleft, inright, m_nRoundsXOR, mindepth);
+uint32_t ArithmeticCircuit::PutADDGate(uint32_t inleft, uint32_t inright) {
+	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_LIN, inleft, inright, m_nRoundsXOR);
 	UpdateLocalQueue(gateid);
 	return gateid;
 }
 
-share* ArithmeticCircuit::PutADDGate(share* ina, share* inb, uint32_t mindepth) {
+share* ArithmeticCircuit::PutADDGate(share* ina, share* inb) {
 	share* shr = new arithshare(this);
-	shr->set_gate(0, PutADDGate(ina->get_gate(0), inb->get_gate(0), mindepth));
+	shr->set_gate(0, PutADDGate(ina->get_gate(0), inb->get_gate(0)));
 	return shr;
 }
 
@@ -116,7 +116,7 @@ template<class T> uint32_t ArithmeticCircuit::PutINGate(uint32_t nvals, T val, e
 	return gateid;
 }
 
-share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role) {
+share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) {
 	share* shr = new arithshare(this);
 	shr->set_gate(0, PutINGate(nvals, val, role));
 	return shr;
@@ -184,38 +184,65 @@ share* ArithmeticCircuit::PutOUTGate(share* parent, e_role dst) {
 	return shr;
 }
 
-uint32_t ArithmeticCircuit::PutINVGate(uint32_t parentid, uint32_t mindepth) {
-	uint32_t gateid = m_cCircuit->PutINVGate(parentid, mindepth);
+uint32_t ArithmeticCircuit::PutINVGate(uint32_t parentid) {
+	uint32_t gateid = m_cCircuit->PutINVGate(parentid);
 	UpdateLocalQueue(gateid);
 	return gateid;
 }
 
-uint32_t ArithmeticCircuit::PutCONVGate(vector<uint32_t>& parentids, uint32_t mindepth) {
-	uint32_t gateid = m_cCircuit->PutCONVGate(parentids, 2, S_ARITH, m_nShareBitLen, mindepth);
+uint32_t ArithmeticCircuit::PutCONVGate(vector<uint32_t>& parentids) {
+	uint32_t gateid = m_cCircuit->PutCONVGate(parentids, 2, S_ARITH, m_nShareBitLen);
 	UpdateInteractiveQueue(gateid);
 	m_nCONVGates += m_pGates[gateid].nvals;
 	return gateid;
 }
 
-share* ArithmeticCircuit::PutCONSGate(UGATE_T val, uint32_t nvals, uint32_t mindepth) {
+//TODO: use bitlen in PutConstantGate
+share* ArithmeticCircuit::PutCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen) {
+	assert(bitlen <= m_nShareBitLen);
 	vector<uint32_t> gateid(1);
-	gateid[0] = PutConstantGate(val, nvals, mindepth);
+	gateid[0] = PutConstantGate(val, nvals);
 	return new arithshare(gateid, this);
 }
 
-uint32_t ArithmeticCircuit::PutConstantGate(UGATE_T val, uint32_t nvals, uint32_t mindepth) {
-	uint32_t gateid = m_cCircuit->PutConstantGate(m_eContext, val, nvals, m_nShareBitLen, mindepth);
+share* ArithmeticCircuit::PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals) {
+	vector<uint32_t> gateid(1);
+	gateid[0] = m_cCircuit->PutCallbackGate(in->get_gates(), rounds, callback, infos, nvals);
+	if(rounds > 0) {
+		UpdateInteractiveQueue(gateid[0]);
+	} else {
+		UpdateLocalQueue(gateid[0]);
+	}
+	return new arithshare(gateid, this);
+}
+
+
+share* ArithmeticCircuit::PutCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) {
+	//TODO
+	cerr << "Not implemented yet!" << endl;
+	return NULL; //new arithshare(0, this);
+}
+
+
+share* ArithmeticCircuit::PutCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) {
+	//TODO
+	cerr << "Not implemented yet!" << endl;
+	return NULL; //new arithshare(0, this);
+}
+
+uint32_t ArithmeticCircuit::PutConstantGate(UGATE_T val, uint32_t nvals) {
+	uint32_t gateid = m_cCircuit->PutConstantGate(m_eContext, val, nvals, m_nShareBitLen);
 	UpdateLocalQueue(gateid);
 	return gateid;
 }
 
-uint32_t ArithmeticCircuit::PutB2AGate(vector<uint32_t> ina, uint32_t mindepth) {
-	return PutCONVGate(ina, mindepth);
+uint32_t ArithmeticCircuit::PutB2AGate(vector<uint32_t> ina) {
+	return PutCONVGate(ina);
 }
 
-share* ArithmeticCircuit::PutB2AGate(share* ina, uint32_t mindepth) {
+share* ArithmeticCircuit::PutB2AGate(share* ina) {
 	share* shr = new arithshare(this);
-	shr->set_gate(0, PutCONVGate(ina->get_gates(), mindepth));
+	shr->set_gate(0, PutCONVGate(ina->get_gates()));
 	return shr;
 }
 

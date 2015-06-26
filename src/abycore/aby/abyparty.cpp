@@ -86,7 +86,7 @@ ABYParty::ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint3
 }
 
 ABYParty::~ABYParty() {
-	Cleanup();
+	//Cleanup();
 }
 
 BOOL ABYParty::Init() {
@@ -116,6 +116,10 @@ BOOL ABYParty::Init() {
 void ABYParty::Cleanup() {
 	if (m_pCircuit)
 		delete m_pCircuit;
+
+	delete m_vSharings[S_BOOL];
+	delete m_vSharings[S_YAO];
+	delete m_vSharings[S_ARITH];
 
 	for (uint32_t i = 0; i < m_nHelperThreads; i++) {
 		m_vThreads[i]->PutJob(e_Party_Stop);
@@ -478,6 +482,7 @@ void ABYParty::PrintPerformanceStatistics() {
 	m_vSharings[S_BOOL]->PrintPerformanceStatistics();
 	m_vSharings[S_YAO]->PrintPerformanceStatistics();
 	m_vSharings[S_ARITH]->PrintPerformanceStatistics();
+	cout << "Total number of gates: " << m_pCircuit->GetGateHead() << endl;
 	PrintTimings();
 }
 

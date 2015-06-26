@@ -33,6 +33,8 @@
 
 #define IsSIMDGate(gatetype) (!!((gatetype)&0x80))
 
+struct GATE;
+
 //TODO redefine outkey as UINT64_T
 struct yao_fields {
 	//The output wire key
@@ -54,12 +56,20 @@ struct combine_at_pos_gate {
 	uint32_t pos;
 };
 
+struct subset_gate {
+	uint32_t* posids;
+};
 struct splitter_fields {
 	uint32_t pos;
 };
 
 struct permutation_gate {
 	uint32_t* posids;
+};
+
+struct callback_gate {
+	void (*callback)(GATE* gate, void* infos);
+	void* infos;
 };
 
 //TODO redefine yval as UINT64_T
@@ -86,11 +96,14 @@ union gate_specific {
 	input_fields ishare;
 	//gate whose value is reconstructed
 	output_fields oshare;
+	//values for the subset gate which combines multiple different positions of one gate into another
+	subset_gate sub_pos;
 	//constant value of a gate
 	UGATE_T constval;
 	//specific field for the conversion type
 	uint32_t pos;
-
+	//callback routine that handles the evaluation. Functionality is defined by the developer
+	callback_gate cbgate;
 };
 typedef union gate_specific gs_t;
 
@@ -117,7 +130,6 @@ struct GATE {
 	gs_t gs;				// here the differences for the gates come in
 	uint32_t sharebitlen;	// bitlength of the shares in the context
 	input_gates ingates;		// the number of input gates together with the values of the input gates
-
 };
 
 string GetOpName(e_gatetype op);
@@ -141,23 +153,24 @@ public:
 	GATE* Gates() {
 		return m_pGates;
 	}
-	uint32_t PutPrimitiveGate(e_gatetype type, uint32_t inleft, uint32_t inright, uint32_t rounds, uint32_t mindepth = 0);
-	uint32_t PutNonLinearVectorGate(e_gatetype type, uint32_t choiceinput, uint32_t vectorinput, uint32_t rounds, uint32_t mindepth = 0);
-	uint32_t PutCombinerGate(vector<uint32_t>& input, uint32_t mindepth = 0);
-	vector<uint32_t> PutSplitterGate(uint32_t input, uint32_t mindepth = 0);		//, vector<uint32_t> gatelengths = NULL);
-	uint32_t PutCombineAtPosGate(vector<uint32_t>& input, uint32_t pos, uint32_t mindepth = 0);
-	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals, uint32_t mindepth = 0);
-	vector<uint32_t> PutRepeaterGate(vector<uint32_t> input, uint32_t nvals, uint32_t mindepth = 0);
+	uint32_t PutPrimitiveGate(e_gatetype type, uint32_t inleft, uint32_t inright, uint32_t rounds);
+	uint32_t PutNonLinearVectorGate(e_gatetype type, uint32_t choiceinput, uint32_t vectorinput, uint32_t rounds);
+	uint32_t PutCombinerGate(vector<uint32_t>& input);
+	vector<uint32_t> PutSplitterGate(uint32_t input);		//, vector<uint32_t> gatelengths = NULL);
+	uint32_t PutCombineAtPosGate(vector<uint32_t>& input, uint32_t pos);
+	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
+	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals);
+	vector<uint32_t> PutRepeaterGate(vector<uint32_t> input, uint32_t nvals);
 	uint32_t PutPermutationGate();
 
-	uint32_t PutOUTGate(uint32_t in, e_role dst, uint32_t rounds, uint32_t mindepth = 0);
-	vector<uint32_t> PutOUTGate(vector<uint32_t> in, e_role dst, uint32_t rounds, uint32_t mindepth = 0);
+	uint32_t PutOUTGate(uint32_t in, e_role dst, uint32_t rounds);
+	vector<uint32_t> PutOUTGate(vector<uint32_t> in, e_role dst, uint32_t rounds);
 
-	uint32_t PutINGate(e_sharing context, uint32_t nvals, uint32_t sharebitlen, e_role src, uint32_t rounds, uint32_t mindepth = 0);
-	uint32_t PutConstantGate(e_sharing context, UGATE_T val, uint32_t nvals, uint32_t sharebitlen, uint32_t mindepth = 0);
-	uint32_t PutINVGate(uint32_t in, uint32_t mindepth = 0);
-	uint32_t PutCONVGate(vector<uint32_t>& in, uint32_t nrounds, e_sharing dst, uint32_t sharebitlen, uint32_t mindepth = 0);
-
+	uint32_t PutINGate(e_sharing context, uint32_t nvals, uint32_t sharebitlen, e_role src, uint32_t rounds);
+	uint32_t PutConstantGate(e_sharing context, UGATE_T val, uint32_t nvals, uint32_t sharebitlen);
+	uint32_t PutINVGate(uint32_t in);
+	uint32_t PutCONVGate(vector<uint32_t>& in, uint32_t nrounds, e_sharing dst, uint32_t sharebitlen);
+	uint32_t PutCallbackGate(vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 	uint32_t GetGateHead() {
 		return m_nNextFreeGate;
 	}
@@ -171,9 +184,9 @@ public:
 private:
 
 	inline void InitGate(GATE* gate, e_gatetype type);
-	inline void InitGate(GATE* gate, e_gatetype type, uint32_t ina, uint32_t mindepth);
-	inline void InitGate(GATE* gate, e_gatetype type, uint32_t ina, uint32_t inb, uint32_t mindepth);
-	inline void InitGate(GATE* gate, e_gatetype type, vector<uint32_t>& inputs, uint32_t mindepth);
+	inline void InitGate(GATE* gate, e_gatetype type, uint32_t ina);
+	inline void InitGate(GATE* gate, e_gatetype type, uint32_t ina, uint32_t inb);
+	inline void InitGate(GATE* gate, e_gatetype type, vector<uint32_t>& inputs);
 
 	inline uint32_t GetNumRounds(e_gatetype type, e_sharing context);
 	inline void MarkGateAsUsed(uint32_t gateid, uint32_t uses = 1);

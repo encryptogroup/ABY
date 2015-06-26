@@ -41,7 +41,7 @@ BOOL ABYSetup::Init() {
 	uint32_t aes_key_bytes = m_cCrypt->get_aes_key_bytes();
 	np = new NaorPinkas(m_cCrypt, P_FIELD); //m_sSecLvl, m_aSeed);
 
-	m_vU.Create(symbits);
+	//m_vU.Create(symbits);
 
 	m_vKeySeedMtx = (BYTE*) malloc(symbits * m_nSndVals * aes_key_bytes);
 	m_vKeySeeds = (BYTE*) malloc(symbits * aes_key_bytes);
@@ -58,12 +58,12 @@ BOOL ABYSetup::Init() {
 	//the bit length of the DJN and DGK party is irrelevant here, since it is set for each MT Gen task independently
 	if (m_eMTGenAlg == MT_PAILLIER) {
 #ifndef BATCH
-		cout << "Creating new DJNPart with key bitlen = " << m_sSecLvl.ifcbits << endl;
+		cout << "Creating new DJNPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << endl;
 #endif
 		m_cPaillierMTGen = new DJNParty(m_cCrypt->get_seclvl().ifcbits, sizeof(UINT16_T) * 8);
 	} else if (m_eMTGenAlg == MT_DGK) {
 #ifndef BATCH
-		cout << "Creating new DGKPart with key bitlen = " << m_sSecLvl.ifcbits << endl;
+		cout << "Creating new DGKPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << endl;
 #endif
 #ifdef BENCH_PRECOMP
 		m_cDGKMTGen = (DGKParty**) malloc(sizeof(DGKParty*));
@@ -77,12 +77,19 @@ BOOL ABYSetup::Init() {
 
 void ABYSetup::Cleanup() {
 
-	m_vU.delCBitVector();
+	//m_vU.delCBitVector();
 
 	//np->Cleanup();
 	delete np;
 
+
+	//delete ot_sender;
+	//delete ot_receiver;
+
 	//delete m_cPaillierMTGen;
+
+	delete ot_sender;
+	delete ot_receiver;
 
 	free(m_vKeySeedMtx);
 	free(m_vKeySeeds);
@@ -98,6 +105,13 @@ BOOL ABYSetup::PrepareSetupPhase(vector<CSocket>& sockets) {
 		//Start Paillier key generation for the MT generation
 		m_cPaillierMTGen->keyExchange(m_vSockets[0]);
 	}
+	//OTExtSnd sender(m_nSndVals, m_cCrypt, sockptr, m_vU, m_vKeySeeds);
+	CSocket* sockptr = m_vSockets.data() + ((m_eRole!=SERVER) * m_nNumOTThreads);
+	ot_sender = new OTExtSnd(m_nSndVals, m_cCrypt, sockptr, m_vU, m_vKeySeeds);
+	sockptr = m_vSockets.data() + ((m_eRole!=CLIENT) * m_nNumOTThreads);
+	ot_receiver = new OTExtRec(m_nSndVals, m_cCrypt, sockptr, m_vKeySeedMtx);
+
+	m_vU.delCBitVector();
 	return success;
 }
 
@@ -139,8 +153,8 @@ BOOL ABYSetup::ThreadRunNPSnd(uint32_t exec) {
 	uint32_t aes_key_bytes = m_cCrypt->get_aes_key_bytes();
 	BYTE* pBuf = new BYTE[symbits * hash_bytes];
 	BOOL success;
-	m_vU.Create(symbits);		//, m_aSeed, cnt);
-	m_cCrypt->gen_rnd(m_vU.GetArr(), ceil_divide(symbits, 8));
+	m_vU.Create(symbits, m_cCrypt);		//, m_aSeed, cnt);
+	//m_cCrypt->gen_rnd(m_vU.GetArr(), ceil_divide(symbits, 8));
 
 	np->Receiver(m_nSndVals, symbits, m_vU, sock, pBuf);
 
@@ -190,7 +204,7 @@ BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
 
 		CSocket* sockptr = m_vSockets.data() + (inverse * m_nNumOTThreads);
 
-		OTExtSnd sender(m_nSndVals, m_cCrypt, sockptr, m_vU, m_vKeySeeds);
+		//OTExtSnd sender(m_nSndVals, m_cCrypt, sockptr, m_vU, m_vKeySeeds);
 
 		OTTask* task = m_vOTTasks[inverse][i]; //m_vOTTasks[inverse][0];
 		uint32_t numOTs = task->numOTs;
@@ -198,7 +212,7 @@ BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
 #ifndef BATCH
 		cout << "Starting OT sender routine for " << numOTs << " OTs" << endl;
 #endif
-		success &= sender.send(numOTs, task->bitlen, *(task->pval.sndval.X0), *(task->pval.sndval.X1), task->ottype, m_nNumOTThreads, task->mskfct);
+		success &= ot_sender->send(numOTs, task->bitlen, *(task->pval.sndval.X0), *(task->pval.sndval.X1), task->ottype, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP
 		cout << "OT sender results for bitlen = " << task->bitlen << ": " << endl;
 		cout << "X0: ";
@@ -222,14 +236,14 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 		OTTask* task = m_vOTTasks[inverse][i];
 		CSocket* sockptr = m_vSockets.data() + (inverse * m_nNumOTThreads);
 
-		OTExtRec receiver(m_nSndVals, m_cCrypt, sockptr, m_vKeySeedMtx);
+		//OTExtRec receiver(m_nSndVals, m_cCrypt, sockptr, m_vKeySeedMtx);
 
 		uint32_t numOTs = task->numOTs;
 
 #ifndef BATCH
 		cout << "Starting OT receiver routine for " << numOTs << " OTs" << endl;
 #endif
-		success &= receiver.receive(numOTs, task->bitlen, *(task->pval.rcvval.C), *(task->pval.rcvval.R), task->ottype, m_nNumOTThreads, task->mskfct);
+		success &= ot_receiver->receive(numOTs, task->bitlen, *(task->pval.rcvval.C), *(task->pval.rcvval.R), task->ottype, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP
 		cout << "OT receiver results for bitlen = " << task->bitlen << ": " << endl;
 		cout << "C: ";

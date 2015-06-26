@@ -40,11 +40,11 @@ public:
 	void Cleanup();
 	void Reset();
 
-	uint32_t PutMULGate(uint32_t left, uint32_t right, uint32_t mindepth = 0);
-	uint32_t PutADDGate(uint32_t left, uint32_t right, uint32_t mindepth = 0);
+	uint32_t PutMULGate(uint32_t left, uint32_t right);
+	uint32_t PutADDGate(uint32_t left, uint32_t right);
 
 	uint32_t PutINGate(uint32_t nvals, e_role src);
-	share* PutINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role);
+	share* PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role);
 	share* PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role);
 	share* PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role);
 	template<class T> uint32_t PutINGate(uint32_t nvals, T val);
@@ -52,59 +52,61 @@ public:
 	uint32_t PutOUTGate(uint32_t parent, e_role dst);
 	share* PutOUTGate(share* parent, e_role dst);
 
-	uint32_t PutINVGate(uint32_t parentid, uint32_t mindepth = 0);
-	uint32_t PutCONVGate(vector<uint32_t>& parentids, uint32_t mindepth = 0);
+	share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 
-	share* PutADDGate(share* ina, share* inb, uint32_t mindepth = 0);
+	uint32_t PutINVGate(uint32_t parentid);
+	uint32_t PutCONVGate(vector<uint32_t>& parentids);
 
-	share* PutSUBGate(share* ina, share* inb, uint32_t mindepth = 0) {
+	share* PutADDGate(share* ina, share* inb);
+
+	share* PutSUBGate(share* ina, share* inb) {
 		cerr << "SUB not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutANDGate(share* ina, share* inb, uint32_t mindepth = 0) {
+	share* PutANDGate(share* ina, share* inb) {
 		cerr << "AND not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutXORGate(share* ina, share* inb, uint32_t mindepth = 0) {
+	share* PutXORGate(share* ina, share* inb) {
 		cerr << "XOR not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutSubGate(share* ina, share* inb, uint32_t mindepth = 0) {
+	share* PutSubGate(share* ina, share* inb) {
 		cerr << "Sub not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutMULGate(share* ina, share* inb, uint32_t mindepth = 0);
+	share* PutMULGate(share* ina, share* inb);
 
-	share* PutGEGate(share* ina, share* inb, uint32_t mindepth = 0) {
+	share* PutGEGate(share* ina, share* inb) {
 		cerr << "GE not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutEQGate(share* ina, share* inb, uint32_t mindepth = 0) {
+	share* PutEQGate(share* ina, share* inb) {
 		cerr << "EQ not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutMUXGate(share* ina, share* inb, share* sel, uint32_t mindepth = 0) {
+	share* PutMUXGate(share* ina, share* inb, share* sel) {
 		cerr << "MUX not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutY2BGate(share* ina, uint32_t mindepth = 0) {
+	share* PutY2BGate(share* ina) {
 		cerr << "Y2B not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutB2YGate(share* ina, uint32_t mindepth = 0) {
+	share* PutB2YGate(share* ina) {
 		cerr << "B2Y not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutA2YGate(share* ina, uint32_t mindepth = 0) {
+	share* PutA2YGate(share* ina) {
 		cerr << "A2Y not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	share* PutANDVecGate(share* ina, share* inb, uint32_t mindepth) {
+	share* PutANDVecGate(share* ina, share* inb) {
 		cerr << "ANDVec Gate not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
-	uint32_t PutB2AGate(vector<uint32_t> ina, uint32_t mindepth = 0);
-	share* PutB2AGate(share* ina, uint32_t mindepth = 0);
+	uint32_t PutB2AGate(vector<uint32_t> ina);
+	share* PutB2AGate(share* ina);
 	//TODO: implement
 	//uint32_t		 		PutY2AGate(vector<uint32_t>& parentids, uint32_t mindepth=0);
 
@@ -117,8 +119,11 @@ public:
 	}
 	;
 
-	share* PutCONSGate(UGATE_T val, uint32_t nvals = 1, uint32_t mindepth = 0);
-	uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1, uint32_t mindepth = 0);
+	//share* PutCONSGate(UGATE_T val, uint32_t nvals = 1);
+	share* PutCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen);
+	share* PutCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen);
+	share* PutCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen);
+	uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1);
 	uint32_t GetMaxCommunicationRounds() {
 		return m_nMaxDepth;
 	}

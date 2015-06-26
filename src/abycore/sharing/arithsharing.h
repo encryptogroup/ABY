@@ -40,6 +40,7 @@ public:
 	;
 	/** Destructor of the class.*/
 	~ArithSharing() {
+		Reset();
 	}
 	;
 
@@ -112,7 +113,7 @@ private:
 	uint32_t m_nNumCONVs;
 
 	uint32_t m_nTypeBitLen;
-	UINT64_T m_nTypeBitMask;
+	uint64_t m_nTypeBitMask;
 
 	vector<uint32_t> m_vMTStartIdx;
 	vector<uint32_t> m_vMTIdx;

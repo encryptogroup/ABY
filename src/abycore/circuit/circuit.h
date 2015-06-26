@@ -36,25 +36,46 @@ public:
 		Init();
 	}
 	;
+	/** Destructor of the class. */
 	virtual ~Circuit() {
 	}
 	;
 
+	/**
+	 	 Method performs the initialization of member objects of the \link Circuit \endlink class. It is called from
+	 	 Constructor of the class [\link Circuit(ABYCircuit* aby, e_sharing context, e_role myrole, uint32_t bitlen, e_circuit circ) \endlink]
+	 */
 	void Init();
+
+	/** Incomplete method */
 	void Cleanup();
+
+	/** It will reset all the member objects to zero/clear them.*/
 	void Reset();
 
 	/* organizational routines */
+
+	/**
+		It is a getter method which will return the value of Bit Length of the \link share \endlink object.
+		\return Bit length of \link share \endlink Object.
+	*/
 	uint32_t GetShareBitLen() {
 		return m_nShareBitLen;
 	}
 	;
 
+	/**
+		It is a getter method which will return the value of Maximum Depth.
+	*/
 	uint32_t GetMaxDepth() {
 		return m_nMaxDepth;
 	}
 	;
-
+	/**
+		It is a getter method which returns the Local queue based on the inputed level.
+		\param lvl Required level of local queue.
+		\return Local queue on the required level
+	*/
 	deque<uint32_t> GetLocalQueueOnLvl(uint32_t lvl) {
 
 		if (lvl < m_vLocalQueueOnLvl.size())
@@ -63,6 +84,12 @@ public:
 			return EMPTYQUEUE;
 	}
 	;
+
+	/**
+		It is a getter method which returns the Interactive queue based on the inputed level.
+		\param lvl Required level of interactive queue.
+		\return Interactive queue on the required level
+	*/
 	deque<uint32_t> GetInteractiveQueueOnLvl(uint32_t lvl) {
 		if (lvl < m_vInteractiveQueueOnLvl.size())
 			return m_vInteractiveQueueOnLvl[lvl];
@@ -71,26 +98,54 @@ public:
 	}
 	;
 
+	/**
+		It is a getter method which returns the number of levels/layers in the Local queue.
+		\return Number of layers in the Local Queue.
+	*/
 	uint32_t GetNumLocalLayers() {
 		return m_vLocalQueueOnLvl.size();
 	}
+
+	/**
+		It is a getter method which returns the number of levels/layers in the Interactive queue.
+		\return Number of layers in the Interactive Queue.
+	*/
 	uint32_t GetNumInteractiveLayers() {
 		return m_vInteractiveQueueOnLvl.size();
 	}
 
+	/**
+		It is a getter method which returns the number of Input bits provided for the given party
+		\param	party Party role based on which the number of Input bits are returned.
+		\return Number of Input bits for the provided party
+	*/
 	uint32_t GetNumInputBitsForParty(e_role party) {
 		return m_vInputBits[party];
 	}
 	;
+	/**
+		It is a getter method which returns the number of Output bits provided for the given party
+		\param	party Party role based on which the number of Output bits are returned.
+		\return Number of Output bits for the provided party
+	*/
 	uint32_t GetNumOutputBitsForParty(e_role party) {
 		return m_vOutputBits[party];
 	}
 	;
-
+	/**
+		It is a getter method which returns the Input Gates provided for the given party
+		\param	party Party role based on which the Input gates are returned.
+		\return Input gates for the provided party
+	*/
 	deque<uint32_t> GetInputGatesForParty(e_role party) {
 		return m_vInputGates[party];
 	}
 	;
+	/**
+		It is a getter method which returns the Output Gates provided for the given party
+		\param	party Party role based on which the Output gates are returned.
+		\return Output gates for the provided party
+	*/
 	deque<uint32_t> GetOutputGatesForParty(e_role party) {
 		return m_vOutputGates[party];
 	}
@@ -115,30 +170,33 @@ public:
 	;
 
 	/* Common gate-building routines */
-	virtual share* PutCONSGate(UGATE_T val, uint32_t nvals = 1, uint32_t mindepth = 0) = 0;
-	virtual uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1, uint32_t mindepth = 0) = 0;
+	virtual share* PutCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen) = 0;
+	virtual share* PutCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) = 0;
+	virtual share* PutCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) = 0;
+	virtual uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1) = 0;
 
 	//virtual int 	PutINGate(int nvals, ROLE src) = 0;
-	virtual share* PutINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) = 0;
 	virtual share* PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) = 0;
 	virtual share* PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) = 0;
 
-	virtual share* PutADDGate(share* ina, share* inb, uint32_t mindepth = 0) = 0;
-	virtual share* PutSUBGate(share* ina, share* inb, uint32_t mindepth = 0) = 0;
-	virtual share* PutANDGate(share* ina, share* inb, uint32_t mindepth = 0) = 0;
-	virtual share* PutXORGate(share* ina, share* inb, uint32_t mindepth = 0) = 0;
-	virtual share* PutMULGate(share* ina, share* inb, uint32_t mindepth = 0) = 0;
-	virtual share* PutGEGate(share* ina, share* inb, uint32_t mindepth = 0) = 0;
-	virtual share* PutEQGate(share* ina, share* inb, uint32_t mindepth = 0) = 0;
-	virtual share* PutMUXGate(share* ina, share* inb, share* sel, uint32_t mindepth = 0) = 0;
-	virtual share* PutY2BGate(share* ina, uint32_t mindepth = 0) = 0;
-	virtual share* PutB2AGate(share* ina, uint32_t mindepth = 0) = 0;
-	virtual share* PutB2YGate(share* ina, uint32_t mindepth = 0) = 0;
-	virtual share* PutA2YGate(share* ina, uint32_t mindepth = 0) = 0;
-	virtual share* PutANDVecGate(share* ina, share* inb, uint32_t mindepth = 0) = 0;
-	share* PutCombinerGate(share* ina, uint32_t mindepth = 0);
-	share* PutSplitterGate(share* ina, uint32_t mindepth = 0);
-	share* PutRepeaterGate(uint32_t nvals, share* ina, uint32_t mindepth = 0);
+	virtual share* PutADDGate(share* ina, share* inb) = 0;
+	virtual share* PutSUBGate(share* ina, share* inb) = 0;
+	virtual share* PutANDGate(share* ina, share* inb) = 0;
+	virtual share* PutXORGate(share* ina, share* inb) = 0;
+	virtual share* PutMULGate(share* ina, share* inb) = 0;
+	virtual share* PutGEGate(share* ina, share* inb) = 0;
+	virtual share* PutEQGate(share* ina, share* inb) = 0;
+	virtual share* PutMUXGate(share* ina, share* inb, share* sel) = 0;
+	virtual share* PutY2BGate(share* ina) = 0;
+	virtual share* PutB2AGate(share* ina) = 0;
+	virtual share* PutB2YGate(share* ina) = 0;
+	virtual share* PutA2YGate(share* ina) = 0;
+	virtual share* PutANDVecGate(share* ina, share* inb) = 0;
+	virtual share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals) = 0;
+	share* PutCombinerGate(share* ina);
+	share* PutSplitterGate(share* ina);
+	share* PutRepeaterGate(uint32_t nvals, share* ina);
 
 	//Templates may not be virtual, hence use dummy functions
 	template<class T> uint32_t PutINGate(uint32_t nvals, T val) {
@@ -153,8 +211,10 @@ public:
 	;
 	//virtual int 	PutOUTGate(int parent, ROLE dst) = 0;
 	virtual share* PutOUTGate(share* parent, e_role dst) =0;
+	// TODO FIXME PutOUTGate seems to work only for role ALL. SERVER causes the client to segfault at src/abycore/circuit/circuit.cpp:71: UGATE_T* Circuit::GetOutputGateValue(uint32_t): Assertion `m_pGates[gateid].instantiated' failed.
 
-	virtual uint32_t PutINVGate(uint32_t parentid, uint32_t mindepth = 0) = 0;
+
+	virtual uint32_t PutINVGate(uint32_t parentid) = 0;
 	e_circuit GetCircuitType() {
 		return m_eCirctype;
 	}
@@ -167,8 +227,8 @@ protected:
 	void UpdateInteractiveQueue(share* gateid);
 	void UpdateLocalQueue(share* gateid);
 
-	ABYCircuit* m_cCircuit;
-	GATE* m_pGates;
+	ABYCircuit* m_cCircuit; /** ABYCircuit Object  */
+	GATE* m_pGates;			/** Gates vector which stores the */
 	e_sharing m_eContext;
 	e_circuit m_eCirctype;
 	e_role m_eMyRole;
@@ -235,6 +295,11 @@ public:
 		return m_nmaxbitlen;
 	}
 	;
+	uint32_t set_max_size(uint32_t maxsize) {
+		assert(maxsize >= m_ngateids.size());
+		m_nmaxbitlen = maxsize;
+	}
+	;
 	e_circuit get_circuit_type() {
 		return m_ccirc->GetCircuitType();
 	}
@@ -250,11 +315,12 @@ public:
 		for (uint32_t i = 0; i < m_ngateids.size(); i++) {
 			val += (*m_ccirc->GetOutputGateValue(m_ngateids[i]) << i);
 		}
+
 		return val;
 	}
 
 	virtual uint8_t* get_clear_value() = 0;
-	virtual uint32_t get_clear_value_vec(uint32_t** vec) = 0;
+	virtual void get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals) = 0;
 
 protected:
 	vector<uint32_t> m_ngateids;
@@ -287,29 +353,7 @@ public:
 	;				// : share() {};
 
 	uint8_t* get_clear_value();
-	uint32_t get_clear_value_vec(uint32_t** vec) {
-		assert(m_ngateids.size() <= sizeof(uint32_t) * 8);
-		UGATE_T* outvalptr;
-		uint32_t nvals = 1, gnvals = 1;
-
-		nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], outvalptr);
-		*vec = (uint32_t*) calloc(nvals, sizeof(uint32_t));
-
-		for (uint32_t j = 0; j < nvals; j++) {
-			(*vec)[j] = (outvalptr[j / 64] >> (j % 64)) & 0x01;
-		}
-
-		for (uint32_t i = 1, gnvals = nvals; i < m_ngateids.size(); i++) {
-			nvals = m_ccirc->GetOutputGateValue(m_ngateids[i], outvalptr);
-			assert(nvals == gnvals);
-
-			for (uint32_t j = 0; j < nvals; j++) {
-				(*vec)[j] = (*vec)[j] + (((outvalptr[j / 64] >> (j % 64)) & 0x01) << i);
-			}
-		}
-
-		return nvals;
-	}
+	void get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals);
 };
 
 /** Arithmetic Share Class */
@@ -332,16 +376,7 @@ public:
 	;				// : share() {};
 
 	uint8_t* get_clear_value();
-	uint32_t get_clear_value_vec(uint32_t** vec) {
-		assert(m_ngateids.size() <= sizeof(uint32_t) * 8);
-
-		UGATE_T* gate_val;
-		uint32_t nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
-		*vec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
-		memcpy(*vec, gate_val, nvals * sizeof(uint32_t));
-
-		return nvals;
-	}
+	void get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t* nvals);
 
 };
 

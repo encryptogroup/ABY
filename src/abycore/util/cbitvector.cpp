@@ -41,8 +41,9 @@ void CBitVector::Create(uint64_t bits) {
 	if (bits == 0)
 		bits = AES_BITS;
 
-	if (m_nByteSize > 0)
+	if (m_nByteSize > 0) {
 		free(m_pBits);
+	}
 
 	//TODO: check if padding to aes bits is still necessary, otherwise pad to bytes
 	int size = ceil_divide(bits, AES_BITS);
@@ -77,7 +78,7 @@ void CBitVector::Create(uint64_t numelementsDimA, uint64_t numelementsDimB, uint
 
 void CBitVector::ResizeinBytes(int newSizeBytes) {
 	BYTE* tBits = m_pBits;
-	int tSize = m_nByteSize;
+	int tSize = (m_nByteSize<newSizeBytes)? m_nByteSize:newSizeBytes; //fix for overflow condition in memcpy.
 
 	m_nByteSize = newSizeBytes;
 	m_pBits = new BYTE[m_nByteSize];
@@ -134,6 +135,15 @@ void CBitVector::SetBits(BYTE* p, uint64_t pos, uint64_t len) {
 		}
 	}
 }
+
+
+//Set bits given an offset on the bits for p which is not necessarily divisible by 8
+void CBitVector::SetBitsPosOffset(BYTE* p, int ppos, int pos, int len) {
+	for (int i = pos, j = ppos; j < ppos + len; i++, j++) {
+		m_pBits[i / 8] ^= (((p[j / 8] & (1 << (j % 8))) >> j % 8) << i % 8);
+	}
+}
+
 
 void CBitVector::SetBitsToZero(int bitpos, int bitlen) {
 	int firstlim = ceil_divide(bitpos, 8);
@@ -249,6 +259,7 @@ void CBitVector::GetBytes(BYTE* p, int pos, int len) {
 }
 
 template<class T> void CBitVector::GetBytes(T* dst, T* src, T* lim) {
+	//TODO:Warning there could be potential memory leak if the src size is less than limit.
 	while (dst != lim) {
 		*dst++ = *src++;
 	}
@@ -342,7 +353,9 @@ void CBitVector::Print(int fromBit, int toBit) {
 }
 
 void CBitVector::PrintHex(int fromByte, int toByte) {
-	for (int i = fromByte; i < toByte; i++) {
+
+	int to = toByte > (m_nByteSize) ? (m_nByteSize) : toByte;
+	for (int i = fromByte; i < to; i++) {
 		cout << setw(2) << setfill('0') << (hex) << ((unsigned int) m_pBits[i]);
 	}
 	cout << (dec) << endl;
@@ -356,7 +369,9 @@ void CBitVector::PrintHex() {
 }
 
 void CBitVector::PrintBinaryMasked(int from, int to) {
-	for (int i = from; i < to; i++) {
+	int new_to = to > (m_nByteSize<<3) ? (m_nByteSize<<3) : to;
+
+	for (int i = from; i < new_to; i++) {
 		cout << (unsigned int) GetBit(i);
 	}
 	cout << endl;
@@ -386,13 +401,16 @@ void CBitVector::PrintContent() {
 }
 
 BOOL CBitVector::IsEqual(CBitVector& vec) {
-	if (vec.GetSize() != m_nByteSize)
+	if (vec.GetSize() != m_nByteSize) {
+		cout << "Size not matching!" << endl;
 		return false;
+	}
 
 	BYTE* ptr = vec.GetArr();
 	for (int i = 0; i < m_nByteSize; i++) {
-		if (ptr[i] != m_pBits[i])
+		if (ptr[i] != m_pBits[i]) {
 			return false;
+		}
 	}
 	return true;
 }

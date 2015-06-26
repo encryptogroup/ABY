@@ -66,19 +66,21 @@ enum e_mt_gen_alg {
  */
 enum e_gatetype {
 
-	G_LIN = 0, /**< Enum for LINEAR gates (XOR in Boolean circuits, ADD in Arithmetic circuits) */
-	G_NON_LIN = 1, /**< Enum for NON-LINEAR gates (AND in Boolean circuits, MUL in Arithmetic circuits) */
-	G_NON_LIN_VEC = 2, /**< Enum for VECTOR-NON-LINEAR gates (AND-VEC in Boolsharing, MUL-VEC in Arithmeticsharing) */
-	G_IN = 3, /**< Enum for INPUT gates */
-	G_OUT = 4, /**< Enum for OUTPUT gates */
-	G_INV = 5, /**< Enum for INVERSION gates */
-	G_CONSTANT = 6, /**< Enum for CONSTANT gates */
-	G_CONV = 7, /**< Enum for CONVERSION gates (dst is used to specify the sharing to convert to) */
+	G_LIN = 0x00, /**< Enum for LINEAR gates (XOR in Boolean circuits, ADD in Arithmetic circuits) */
+	G_NON_LIN = 0x01, /**< Enum for NON-LINEAR gates (AND in Boolean circuits, MUL in Arithmetic circuits) */
+	G_NON_LIN_VEC = 0x02, /**< Enum for VECTOR-NON-LINEAR gates (AND-VEC in Boolsharing, MUL-VEC in Arithmeticsharing) */
+	G_IN = 0x03, /**< Enum for INPUT gates */
+	G_OUT = 0x04, /**< Enum for OUTPUT gates */
+	G_INV = 0x05, /**< Enum for INVERSION gates */
+	G_CONSTANT = 0x06, /**< Enum for CONSTANT gates */
+	G_CONV = 0x07, /**< Enum for CONVERSION gates (dst is used to specify the sharing to convert to) */
+	G_CALLBACK = 0x08, /**< Enum for Callback gates where the developer specifies a routine which is called upon gate evaluation */
 	G_COMBINE = 0x80, /**< Enum for COMBINER gates that combine multiple single-value gates to one multi-value gate  */
 	G_SPLIT = 0x81, /**< Enum for SPLITTER gates that split a multi-value gate to multiple single-value gates */
 	G_REPEAT = 0x82, /**< Enum for REPEATER gates that repeat the value of a single-value gate to form a new multi-value gate */
 	G_PERM = 0x83, /**< Enum for PERMUTATION gates that permute the value of multi-value gates */
 	G_COMBINEPOS = 0x84, /**< Enum for COMBINE_AT_POSITION gates that form a new multi-value gate from specific positions of old multi-value gates */
+	G_SUBSET = 0x85, /**< Enum for SUBSET gates that form a new multi-value gate from multiple positions of one multi-value gate */
 //G_YAO_BUILD 		/**< Enum for  */
 };
 
@@ -125,7 +127,31 @@ enum e_sharing {
 	S_YAO = 1, /**< Enum for performing yao sharing*/
 	S_ARITH = 2, /**< Enum for performing arithemetic sharing*/
 	S_LAST = 3, /**< Enum for indicating the last enum value. DO NOT PUT ANOTHER ENUM AFTER THIS ONE! !*/
+	S_YAO_PIPE = 4 /**< TODO Enum for performing yao sharing in pipelined mode*/
+
 };
+
+
+/**
+ \enum 	e_role
+ \brief	Defines the role of the party or the source / target for certain operations (e.g., input/output)
+ */
+enum e_role {
+	SERVER, CLIENT, ALL
+};
+
+static string get_role_name(e_role r) {
+	switch(r) {
+	case SERVER:
+		return "SERVER";
+	case CLIENT:
+		return "CLIENT";
+	case ALL:
+		return "ALL";
+	default:
+		return "NN";
+	}
+}
 
 static string get_sharing_name(e_sharing s) {
 	switch (s) {
@@ -139,6 +165,88 @@ static string get_sharing_name(e_sharing s) {
 		return "NN";
 	}
 }
+
+
+static string get_gate_type_name(e_gatetype g) {
+	switch (g) {
+	case G_LIN: return "Linear";
+	case G_NON_LIN: return "Non-Linear";
+	case G_NON_LIN_VEC: return "Vector-Non-Linear";
+	case G_IN: return "Input";
+	case G_OUT: return "Output";
+	case G_INV: return "Inversion";
+	case G_CONSTANT: return "Constant";
+	case G_CONV: return "Conversion";
+	case G_COMBINE: return "Combiner";
+	case G_SPLIT: return "Splitter";
+	case G_REPEAT: return "Repeater";
+	case G_PERM: return "Permutation";
+	case G_COMBINEPOS: return "Combiner-Position";
+	default: return "NN";
+	}
+}
+
+
+static string get_op_name(e_operation op) {
+	switch (op) {
+	case OP_XOR:
+		return "XOR";
+	case OP_AND:
+		return "AND";
+	case OP_ADD:
+		return "ADD";
+	case OP_AND_VEC:
+		return "AND_VEC";
+	case OP_SUB:
+		return "SUB";
+	case OP_MUL:
+		return "MUL";
+	case OP_MUL_VEC:
+		return "MUL_VEC";
+	case OP_CMP:
+		return "CMP";
+	case OP_EQ:
+		return "EQ";
+	case OP_MUX:
+		return "MUX";
+	case OP_IN:
+		return "IN";
+	case OP_OUT:
+		return "OUT";
+	case OP_INV:
+		return "INV";
+	case OP_CONSTANT:
+		return "CONS";
+	case OP_CONV:
+		return "CONV";
+	case OP_A2Y:
+		return "A2Y";
+	case OP_B2A:
+		return "B2A";
+	case OP_B2Y:
+		return "B2Y";
+	case OP_Y2B:
+		return "Y2B";
+	case OP_COMBINE:
+		return "CMB";
+	case OP_SPLIT:
+		return "SPL";
+	case OP_REPEAT:
+		return "REP";
+	case OP_PERM:
+		return "PERM";
+	case OP_COMBINEPOS:
+		return "CMBP";
+	default:
+		return "NN";
+	}
+}
+
+/**
+ \def 	GARBLED_TABLE_WINDOW
+ \brief	Window size of Yao's garbled circuits in pipelined execution
+ */
+#define GARBLED_TABLE_WINDOW 100000000 //1048575 //=0xFFFFF for faster modulo operation
 
 /** \var g_TruthTable
  \brief A truth-table for an AND gate

@@ -52,6 +52,7 @@ public:
 	 Destructor of the class.
 	 */
 	~YaoServerSharing() {
+		Reset();
 	}
 	;
 
@@ -122,8 +123,11 @@ private:
 
 	vector<uint32_t> m_vClientInputGate; /**< _____________*/
 	deque<input_gate_val_t> m_vPreSetInputGates;/**< _____________*/
-
 	deque<a2y_gate_pos_t> m_vPreSetA2YPositions;/**< _____________*/
+	e_role* m_vOutputDestionations; /** <  _____________*/
+	uint32_t m_nOutputDestionationsCtr;
+
+
 	//deque<uint32_t> 			m_vClientInputGate;
 
 	/**Initialising the server. */

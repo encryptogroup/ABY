@@ -147,11 +147,8 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 		} else if (gate->type == G_NON_LIN) {
 			EvaluateANDGate(gate);
 		} else if (gate->type == G_CONSTANT) {
-			//ReceiveServerKeys(gate);
-			UGATE_T constval = gate->gs.constval;
 			InstantiateGate(gate);
-			BYTE res = (BYTE) (constval * 0xFF);
-			memset(gate->gs.yval, res, m_nSecParamBytes * gate->nvals);
+			memset(gate->gs.yval, 0, m_nSecParamBytes * gate->nvals);
 		} else if (IsSIMDGate(gate->type)) {
 			//cout << "Evaluating SIMD gate" << endl;
 			EvaluateSIMDGate(localops[i]);
@@ -161,8 +158,11 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 			InstantiateGate(gate);
 			memcpy(gate->gs.yval, m_pGates[parentid].gs.yval, m_nSecParamBytes * gate->nvals);
 			UsedGate(parentid);
-		} else {
-			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << GetOpName(gate->type) << ")" << endl;
+		} else if(gate->type == G_CALLBACK) {
+			EvaluateCallbackGate(localops[i]);
+		}
+		else {
+			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
 		}
 	}
 }
@@ -202,8 +202,10 @@ void YaoClientSharing::EvaluateInteractiveOperations(uint32_t depth) {
 			}
 		} else if (gate->type == G_CONV) {
 			EvaluateConversionGate(interactiveops[i]);
+		} else if(gate->type == G_CALLBACK) {
+			EvaluateCallbackGate(interactiveops[i]);
 		} else {
-			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << GetOpName(gate->type) << ")" << endl;
+			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
 		}
 	}
 }
@@ -386,7 +388,7 @@ void YaoClientSharing::EvaluateConversionGate(uint32_t gateid) {
 		cout << "Client conversion gate with pos = " << gate->gs.pos << endl;
 #endif
 		if (parent->context == S_ARITH) {
-			uint32_t id, tval;
+			uint64_t id, tval;
 			id = gate->gs.pos >> 1;
 			tval = (val[id / GATE_T_BITS] >> (id % GATE_T_BITS)) & 0x01; //TODO: not going to work for nvals > 1
 			m_vROTSndBuf.SetBits((BYTE*) &tval, (int) m_nClientSndOTCtr, gate->nvals);
@@ -524,7 +526,8 @@ void YaoClientSharing::AssignClientInputKeys() {
 		InstantiateGate(gate);
 		//Assign the keys to the gate, TODO XOR with R-OT masks
 		for (uint32_t j = 0; j < gate->nvals; j++, m_nKeyInputRcvIdx++, offset++) {
-			m_pKeyOps->XOR(gate->gs.yval + j * m_nSecParamBytes, m_vClientKeyRcvBuf[m_vChoiceBits.GetBitNoMask(m_nKeyInputRcvIdx)].GetArr() + offset * m_nSecParamBytes,
+			m_pKeyOps->XOR(gate->gs.yval + j * m_nSecParamBytes,
+					m_vClientKeyRcvBuf[m_vChoiceBits.GetBitNoMask(m_nKeyInputRcvIdx)].GetArr() + offset * m_nSecParamBytes,
 					m_vROTMasks.GetArr() + m_nKeyInputRcvIdx * m_nSecParamBytes);
 #ifdef DEBUGYAOCLIENT
 			cout << "assigned client input key to gate " << m_vClientRcvInputKeyGates[i] << ": ";
@@ -538,8 +541,8 @@ void YaoClientSharing::AssignClientInputKeys() {
 		}
 		if (gate->type == G_IN) {
 			free(gate->gs.ishare.inval);
-		}
-		else {
+		} else {
+		//if (gate->type == G_CONV) {
 			//G_CONV
 			free(gate->ingates.inputs.parents);
 		}
@@ -558,8 +561,9 @@ void YaoClientSharing::UsedGate(uint32_t gateid) {
 	//Decrease the number of further uses of the gate
 	m_pGates[gateid].nused--;
 	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(m_pGates[gateid].gs.yval);
+	if (!m_pGates[gateid].nused && m_pGates[gateid].type != G_CONV) {
+		//free(m_pGates[gateid].gs.yval);
+		m_pGates[gateid].instantiated = false;
 	}
 }
 
@@ -606,6 +610,17 @@ void YaoClientSharing::EvaluateSIMDGate(uint32_t gateid) {
 #ifdef DEBUGCLIENT
 		cout << ", res: " << ((unsigned uint32_t) gate->gs.yval[BYTES_SSP-1] & 0x01) << " = " << ((unsigned uint32_t) gleft->gs.yval[BYTES_SSP-1] & 0x01) << " and " << ((unsigned uint32_t) gright->gs.yval[BYTES_SSP-1] & 0x01);
 #endif
+	} else if (gate->type == G_SUBSET) {
+		uint32_t idparent = gate->ingates.inputs.parent;
+		uint32_t* positions = gate->gs.sub_pos.posids; //gate->gs.combinepos.input;
+
+		InstantiateGate(gate);
+		BYTE* keyptr = gate->gs.yval;
+		for (uint32_t g = 0; g < gate->nvals; g++, keyptr += m_nSecParamBytes) {
+			memcpy(keyptr, m_pGates[idparent].gs.yval + positions[g] * m_nSecParamBytes, m_nSecParamBytes);
+		}
+		UsedGate(idparent);
+		free(positions);
 	}
 }
 
@@ -687,6 +702,8 @@ void YaoClientSharing::Reset() {
 
 	m_nANDGates = 0;
 	m_nXORGates = 0;
+
+	m_nConversionInputBits = 0;
 
 	m_nInputShareSndSize = 0;
 	m_nOutputShareSndSize = 0;

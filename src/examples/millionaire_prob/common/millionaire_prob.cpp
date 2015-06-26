@@ -104,12 +104,14 @@ int32_t test_millionaire_prob_circuit(e_role role, char* address, seclvl seclvl,
 	output = s_out->get_clear_value<uint32_t>();
 
 	cout << "Testing Millionaire's Problem in " << get_sharing_name(sharing)
-			<< " sharing: " << endl;
+				<< " sharing: " << endl;
 	cout << "\nAlice Money:\t" << alice_money;
 	cout << "\nBob Money:\t" << bob_money;
 	cout << "\nCircuit Result:\t" << (output ? ALICE : BOB);
 	cout << "\nVerify Result: \t" << ((alice_money > bob_money) ? ALICE : BOB)
-			<< "\n";
+				<< "\n";
+
+	delete party;
 	return 0;
 }
 

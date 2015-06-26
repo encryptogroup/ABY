@@ -124,7 +124,7 @@ public:
 	;
 
 	~OTExtSnd() {
-		free(m_vKeySeeds);
+		//free(m_vKeySeeds);
 	}
 	;
 	BOOL send(uint32_t numOTs, uint32_t bitlength, CBitVector& s0, CBitVector& s1, BYTE type, uint32_t numThreads, MaskingFunction* maskfct);
@@ -239,7 +239,7 @@ public:
 	}
 
 	~OTExtRec() {
-		free(m_vKeySeedMtx);
+		//free(m_vKeySeedMtx);
 	}
 	;
 

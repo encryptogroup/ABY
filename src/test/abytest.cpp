@@ -22,7 +22,7 @@ static const test_ops_t test_all_ops[] = { { OP_IO, S_BOOL, "iobool" }, { OP_XOR
 		S_BOOL, "mulbool" }, { OP_CMP, S_BOOL, "cmpbool" }, { OP_EQ, S_BOOL, "eqbool" }, { OP_MUX, S_BOOL, "muxbool" }, { OP_SUB, S_BOOL, "subbool" }, { OP_IO, S_YAO, "ioyao" }, {
 		OP_XOR, S_YAO, "xoryao" }, { OP_AND, S_YAO, "andyao" }, { OP_IO, S_ARITH, "ioarith" }, { OP_ADD, S_YAO, "addyao" }, { OP_MUL, S_YAO, "mulyao" },
 		{ OP_CMP, S_YAO, "cmpyao" }, { OP_EQ, S_YAO, "eqyao" }, { OP_MUX, S_YAO, "muxyao" }, { OP_SUB, S_YAO, "subyao" }, { OP_ADD, S_ARITH, "addarith" }, { OP_MUL, S_ARITH,
-				"mularith" }, { OP_Y2B, S_YAO, "y2b" }, { OP_B2A, S_BOOL, "b2a" }, { OP_B2Y, S_BOOL, "b2y" }, { OP_A2Y, S_ARITH, "a2y" }, { OP_AND_VEC, S_BOOL, "vec-and" } };
+				"mularith" }, { OP_Y2B, S_YAO, "y2b" }, { OP_B2A, S_BOOL, "b2a" }, { OP_B2Y, S_BOOL, "b2y" }, { OP_AND_VEC, S_BOOL, "vec-and" } };
 
 //static const test_ops_t test_single_op [] {{OP_ADD, S_BOOL, "distinct_op"}};
 
@@ -32,12 +32,13 @@ static const test_ops_t test_all_ops[] = { { OP_IO, S_BOOL, "iobool" }, { OP_XOR
  */
 int main(int argc, char** argv) {
 	e_role role;
-	uint32_t bitlen = 32, nvals = 65, secparam = 128, nthreads = 1;
+	uint32_t bitlen = 32, nvals = 65, secparam = 128, nthreads = 1, nelements=1024;
 	uint16_t port = 7766;
 	string address = "127.0.0.1";
 	bool verbose = false;
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
+	double epsilon = 1.2;
 
 	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op, &verbose);
 
@@ -45,10 +46,25 @@ int main(int argc, char** argv) {
 
 	run_tests(role, (char*) address.c_str(), seclvl, bitlen, nvals, nthreads, mt_alg, test_op, verbose);
 
+	//Test the AES circuit
+	cout << "Testing AES circuit in Boolean sharing" << endl;
 	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL);
+	cout << "Testing AES circuit in Yao sharing" << endl;
 	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_YAO);
 
-	//test_lowmc_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL, (LowMCParams*) &stp);
+	//Test the Sort-Compare-Shuffle PSI circuit
+	cout << "Testing SCS PSI circuit in Boolean sharing" << endl;
+	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_BOOL);
+	cout << "Testing SCS PSI circuit in Yao sharing" << endl;
+	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_YAO);
+
+	//Test the Phasing PSI circuit
+	cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
+	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL);
+	cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
+	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	epsilon, nthreads, mt_alg, S_YAO);
+
+	//test_min_eucliden_dist_circuit(role, (char*) address.c_str(), seclvl, nvals, 6, nthreads, mt_alg, S_ARITH, S_YAO);
 
 	cout << "All tests successfully passed" << endl;
 
@@ -80,13 +96,16 @@ bool run_tests(e_role role, char* address, seclvl seclvl, uint32_t bitlen, uint3
 	srand(seed);
 	//srand(time(NULL));
 
-	test_standard_ops(test_ops, party, bitlen, num_test_runs, nops, verbose);
-	test_vector_ops(test_ops, party, bitlen, nvals, num_test_runs, nops, verbose);
+	test_standard_ops(test_ops, party, bitlen, num_test_runs, nops, role, verbose);
+	test_vector_ops(test_ops, party, bitlen, nvals, num_test_runs, nops, role, verbose);
+
+	delete party;
 
 	return true;
 }
 
-int32_t test_standard_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t num_test_runs, uint32_t nops, bool verbose) {
+int32_t test_standard_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t num_test_runs, uint32_t nops,
+		e_role role, bool verbose) {
 	uint32_t a = 0, b = 0, c, verify, sa, sb, *avec, *bvec;
 	share *shra, *shrb, *shrres, *shrout, *shrsel;
 	vector<Sharing*>& sharings = party->GetSharings();
@@ -193,24 +212,33 @@ int32_t test_standard_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen
 
 			c = shrout->get_clear_value<uint32_t>();
 			if (!verbose)
-				cout << ", values: a = " << a << ", b = " << b << ", c = " << c << ", verify = " << verify << endl;
+				cout << get_role_name(role) << " " << test_ops[i].opname << ": values: a = " <<
+				a << ", b = " << b << ", c = " << c << ", verify = " << verify << endl;
 			party->Reset();
-			assert(verify == c);
+			//assert(verify == c);
 		}
 	}
 	return 1;
 }
 
-int32_t test_vector_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t nvals, uint32_t num_test_runs, uint32_t nops, bool verbose) {
-	uint32_t *avec, *bvec, *cvec, *verifyvec, sa, sb;
+int32_t test_vector_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t nvals, uint32_t num_test_runs,
+		uint32_t nops, e_role role, bool verbose) {
+	uint32_t *avec, *bvec, *cvec, *verifyvec, tmpbitlen, tmpnvals;
+	uint8_t *sa, *sb;
 	share *shra, *shrb, *shrres, *shrout, *shrsel;
 	vector<Sharing*>& sharings = party->GetSharings();
 	Circuit *bc, *yc, *ac;
 
+	sa = (uint8_t*) malloc(max(nvals, bitlen));
+	sb = (uint8_t*) malloc(max(nvals, bitlen));
+
 	avec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
 	bvec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
 	cvec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
+
 	verifyvec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
+
+
 
 	for (uint32_t r = 0; r < num_test_runs; r++) {
 		for (uint32_t i = 0; i < nops; i++) {
@@ -267,14 +295,31 @@ int32_t test_vector_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, 
 				for (uint32_t j = 0; j < nvals; j++)
 					verifyvec[j] = avec[j] == bvec[j];
 				break;
-				/*case OP_MUX:
-				 sa = rand() %2;
-				 sb = rand() %2;
-				 shrsel = circ->PutXORGate(circ->PutINGate(1, sa, 1, SERVER), circ->PutINGate(1, sb, 1, CLIENT));
-				 shrres = circ->PutMUXGate(shra, shrb, shrsel);
-				 verify = sa ^ sb == 0 ? b : a;
-				 break;
-				 case OP_Y2B:
+			case OP_MUX:
+				for(uint32_t j = 0; j < nvals; j++) {
+					 sa[j] = (uint8_t) (rand() & 0x01);
+					 sb[j] = (uint8_t) (rand() & 0x01);
+				}
+				shrsel = circ->PutXORGate(circ->PutINGate(nvals, sa, 1, SERVER), circ->PutINGate(nvals, sb, 1, CLIENT));
+				shrres = circ->PutMUXGate(shra, shrb, shrsel);
+				for (uint32_t j = 0; j < nvals; j++)
+					verifyvec[j] = (sa[j] ^ sb[j]) == 0 ? bvec[j] : avec[j];
+				break;
+			 /*case OP_AND_VEC:
+				for(uint32_t j = 0; j < bitlen; j++) {
+					 sa[j] = (uint8_t) (rand() & 0x01);
+					 sb[j] = (uint8_t) (rand() & 0x01);
+				}
+				shrsel = circ->PutXORGate(circ->PutINGate(1, sa, bitlen, SERVER), circ->PutINGate(1, sb, bitlen, CLIENT));
+				shrres = circ->PutXORGate(shra, shrb);
+				shrres = circ->PutANDVecGate(shra, shrsel);
+				//shrres = circ->PutMUXGate(shra, shrb, shrsel);
+				for (uint32_t j = 0; j < nvals; j++)
+					verifyvec[j] = (sa[j] ^ sb[j]) == 0 ? 0: avec[j]^bvec[j];
+				break;
+
+			 break;*/
+			/*	 case OP_Y2B:
 				 shrres = circ->PutADDGate(shra, shrb);
 				 bc = sharings[S_BOOL]->GetCircuitBuildRoutine();
 				 shrres = bc->PutY2BGate(shrres);
@@ -305,14 +350,6 @@ int32_t test_vector_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, 
 				 shrres = yc->PutADDGate(shrres, shrres);
 				 circ = yc;
 				 verify = (a*b) + (a*b);
-				 break;
-				 case OP_AND_VEC:
-				 shra = circ->PutCombinerGate(shra);
-				 //shrb = circ->PutCombinerGate(shrb);
-				 shrres = circ->PutANDVecGate(shra, shrb);
-				 //shrres = circ->PutANDGate(shra, shrb);
-				 shrres = circ->PutSplitterGate(shrres);
-				 verify = (b&0x01) * a;
 				 break;*/
 			default:
 				shrres = circ->PutADDGate(shra, shrb);
@@ -325,17 +362,28 @@ int32_t test_vector_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, 
 			party->ExecCircuit();
 
 			//cout << "Size of output: " << shrout->size() << endl;
-			shrout->get_clear_value_vec(&cvec);
+			shrout->get_clear_value_vec(&cvec, &tmpbitlen, &tmpnvals);
 
+			assert(tmpnvals == nvals);
 			party->Reset();
 			for (uint32_t j = 0; j < nvals; j++) {
 				if (!verbose)
-					cout << "\tvalues[" << j << "]: a = " << avec[j] << ", b = " << bvec[j] << ", c = " << cvec[j] << ", verify = " << verifyvec[j] << endl;
+					cout << "\t" << get_role_name(role) << " " << test_ops[i].opname << ": values[" << j <<
+					"]: a = " << avec[j] <<	", b = " << bvec[j] << ", c = " << cvec[j] << ", verify = " <<
+					verifyvec[j] << endl;
 
 				assert(verifyvec[j] == cvec[j]);
 			}
 		}
 	}
+
+	/*free(avec);
+	free(bvec);
+	free(cvec);
+	free(verifyvec);
+	free(sa);
+	free(sb);*/
+
 	return 1;
 
 }
@@ -371,58 +419,5 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 	return 1;
 }
 
-string get_op_name(e_operation op) {
-	switch (op) {
-	case OP_XOR:
-		return "XOR";
-	case OP_AND:
-		return "AND";
-	case OP_ADD:
-		return "ADD";
-	case OP_AND_VEC:
-		return "AND_VEC";
-	case OP_SUB:
-		return "SUB";
-	case OP_MUL:
-		return "MUL";
-	case OP_MUL_VEC:
-		return "MUL_VEC";
-	case OP_CMP:
-		return "CMP";
-	case OP_EQ:
-		return "EQ";
-	case OP_MUX:
-		return "MUX";
-	case OP_IN:
-		return "IN";
-	case OP_OUT:
-		return "OUT";
-	case OP_INV:
-		return "INV";
-	case OP_CONSTANT:
-		return "CONS";
-	case OP_CONV:
-		return "CONV";
-	case OP_A2Y:
-		return "A2Y";
-	case OP_B2A:
-		return "B2A";
-	case OP_B2Y:
-		return "B2Y";
-	case OP_Y2B:
-		return "Y2B";
-	case OP_COMBINE:
-		return "CMB";
-	case OP_SPLIT:
-		return "SPL";
-	case OP_REPEAT:
-		return "REP";
-	case OP_PERM:
-		return "PERM";
-	case OP_COMBINEPOS:
-		return "CMBP";
-	default:
-		return "NN";
-	}
-}
+
 

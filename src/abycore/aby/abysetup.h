@@ -146,6 +146,9 @@ private:
 
 	crypto* m_cCrypt;
 
+	OTExtSnd *ot_sender;
+	OTExtRec *ot_receiver;
+
 	/* Thread information */
 
 	enum EJobType {

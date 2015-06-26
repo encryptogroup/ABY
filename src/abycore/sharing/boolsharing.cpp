@@ -116,6 +116,7 @@ void BoolSharing::FinishSetupPhase(ABYSetup* setup) {
 void BoolSharing::InitializeMTs() {
 	m_vMTIdx.resize(m_nNumANDSizes, 0);
 	m_vMTStartIdx.resize(m_nNumANDSizes, 0);
+
 	m_vC.resize(m_nNumANDSizes);
 	m_vB.resize(m_nNumANDSizes);
 
@@ -155,13 +156,14 @@ void BoolSharing::InitializeMTs() {
 
 void BoolSharing::PrepareOnlinePhase() {
 
-	uint32_t inbits = m_cBoolCircuit->GetNumInputBitsForParty(m_eRole);
-	uint32_t outbits = m_cBoolCircuit->GetNumOutputBitsForParty(m_eRole);
+	//get #in/output bits for other party
+	uint32_t insharesndbits = m_cBoolCircuit->GetNumInputBitsForParty(m_eRole==SERVER ? CLIENT : SERVER);
+	uint32_t outsharesndbits = m_cBoolCircuit->GetNumOutputBitsForParty(m_eRole==SERVER ? CLIENT : SERVER);
 
 	//TODO: more clever size finding since this may not be known initially
-	m_vInputShareSndBuf.Create(inbits, m_cCrypto);
+	m_vInputShareSndBuf.Create(insharesndbits, m_cCrypto);
 
-	m_vOutputShareSndBuf.Create(outbits);
+	m_vOutputShareSndBuf.Create(outsharesndbits);
 	m_vInputShareRcvBuf.Create(MAXSHAREBUFSIZE);
 	m_vOutputShareRcvBuf.Create(MAXSHAREBUFSIZE);
 
@@ -183,17 +185,24 @@ void BoolSharing::ComputeMTs() {
 		m_vB[i].XORBytes(m_vC[i].GetArr(), 0, stringbytelen);
 
 		//Compute the correct C
-		if (m_vANDs[i].bitlen == 1) {
+		if (m_vANDs[i].bitlen == 1) { //for bits
 			temp.SetAND(m_vA[i].GetArr(), m_vB[i].GetArr(), 0, andbytelen);
-		} else {
-			//TODO: current solution supports only 8-bit long bit-lengths
+		} else if (m_vANDs[i].bitlen & 0x07 == 0) { //for bytes
 			uint32_t elebytelen = ceil_divide(m_vANDs[i].bitlen, 8);
 			for (uint32_t j = 0, byteidx = 0; j < m_nNumMTs[i]; j++, byteidx += elebytelen) {
 				if (m_vA[i].GetBitNoMask(j)) {
 					temp.SetBytes(m_vB[i].GetArr() + byteidx, byteidx, elebytelen);
 				}
 			}
+		} else { //for arbitrary length values
+			uint32_t elebitlen = m_vANDs[i].bitlen;
+			for (uint32_t j = 0, bitidx = 0; j < m_nNumMTs[i]; j++, bitidx += elebitlen) {
+				if (m_vA[i].GetBitNoMask(j)) {
+					temp.SetBitsPosOffset(m_vB[i].GetArr(), bitidx, bitidx, elebitlen);
+				}
+			}
 		}
+
 
 		m_vC[i].XORBytes(temp.GetArr(), 0, stringbytelen);
 		m_vC[i].XORBytes(m_vS[i].GetArr(), 0, stringbytelen);
@@ -223,7 +232,7 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 		gate = m_pGates + localops[i];
 
 #ifdef DEBUGBOOL
-		cout << "Evaluating local gate with id = " << localops[i] << " with is of type " << (uint32_t) gate->type << endl;
+		cout << "Evaluating local gate with id = " << localops[i] << " and type " << get_gate_type_name(gate->type) << endl;
 #endif
 
 		switch (gate->type) {
@@ -239,11 +248,14 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 		case G_CONV:
 			EvaluateCONVGate(localops[i]);
 			break;
+		case G_CALLBACK:
+			EvaluateCallbackGate(localops[i]);
+			break;
 		default:
 			if (IsSIMDGate(gate->type)) {
 				EvaluateSIMDGate(localops[i]);
 			} else {
-				cerr << "Non-interactive Operation not recognized: " << (uint32_t) gate->type << "(" << GetOpName(gate->type) << "), stopping execution" << endl;
+				cerr << "Non-interactive Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << "), stopping execution" << endl;
 				exit(0);
 			}
 			break;
@@ -258,7 +270,7 @@ void BoolSharing::EvaluateInteractiveOperations(uint32_t depth) {
 		GATE* gate = m_pGates + interactiveops[i];
 
 #ifdef DEBUGBOOL
-		cout << "Evaluating interactive gate with id = " << interactiveops[i] << " with is of type " << (uint32_t) gate->type << endl;
+		cout << "Evaluating interactive gate with id = " << interactiveops[i] << " and type " << get_gate_type_name(gate->type) << endl;
 #endif
 
 		switch (gate->type) {
@@ -288,8 +300,11 @@ void BoolSharing::EvaluateInteractiveOperations(uint32_t depth) {
 				ReconstructValue(interactiveops[i]);
 			}
 			break;
+		case G_CALLBACK:
+			EvaluateCallbackGate(interactiveops[i]);
+			break;
 		default:
-			cerr << "Interactive Operation not recognized: " << (uint32_t) gate->type << " (" << GetOpName(gate->type) << "), stopping execution" << endl;
+			cerr << "Interactive Operation not recognized: " << (uint32_t) gate->type << " (" << get_gate_type_name(gate->type) << "), stopping execution" << endl;
 			exit(0);
 		}
 	}
@@ -316,9 +331,14 @@ inline void BoolSharing::EvaluateConstantGate(uint32_t gateid) {
 	InstantiateGate(gate);
 	value = value * (m_eRole != CLIENT);
 
-	for (uint32_t i = 0; i < ceil_divide(gate->nvals, GATE_T_BITS); i++)
+	for (uint32_t i = 0; i < ceil_divide(gate->nvals, GATE_T_BITS); i++) {
 		gate->gs.val[i] = value;
+	}
+#ifdef DEBUGBOOL
+		cout << "Constant gate value: "<< value << endl;
+#endif
 }
+
 
 inline void BoolSharing::ShareValues(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
@@ -388,12 +408,11 @@ inline void BoolSharing::ReconstructValue(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t parentid = gate->ingates.inputs.parent;
 
-	//TODO is there any meaning in assigning the value in parentid to this gate?
 	for (uint32_t i = 0, bitstocopy = gate->nvals, len; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
 		len = min(bitstocopy, (uint32_t) GATE_T_BITS);
 #ifdef DEBUGBOOL
 		cout << "m_vOutputShareSndBuf.size = " << m_vOutputShareSndBuf.GetSize() << ", ctr = " <<m_nOutputShareSndSize << ", len = " << len << ", gate->parent = " << parentid
-		<< " and val = " << m_pGates[parentid].gs.val[i] << endl;
+		<< " and val = " << (hex) << m_pGates[parentid].gs.val[i] << (dec) << endl;
 #endif
 		m_vOutputShareSndBuf.Set<UGATE_T>(m_pGates[parentid].gs.val[i], m_nOutputShareSndSize, len);	//gate->gs.val[i], len);
 		m_nOutputShareSndSize += len;
@@ -422,20 +441,23 @@ inline void BoolSharing::SelectiveOpen(uint32_t gateid) {
 	UsedGate(idright);
 }
 
+//TODO: enable SIMD operations for VEC_ANDs
 inline void BoolSharing::SelectiveOpenVec(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t idchoice = gate->ingates.inputs.twin.left;
 	uint32_t idvector = gate->ingates.inputs.twin.right;
 
 	uint32_t pos = FindBitLenPositionInVec(gate->nvals, m_vANDs, m_nNumANDSizes);
-
-	//XOR the choice bit onto the D-vector TODO: enable SIMD operations for VEC_ANDs
+	uint32_t startpos = m_vMTIdx[pos] * m_vANDs[pos].bitlen;
+	//XOR the choice bit onto the D-vector
 	m_vD_snd[pos].XORBitNoMask(m_vMTIdx[pos], m_pGates[idchoice].gs.val[0]);
 
-	for (uint32_t i = 0, bitstocopy = gate->nvals * m_vANDs[pos].bitlen, ncopiedvals; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
+	//cout << "choice_val: " << m_pGates[idchoice].gs.val[0] << ", vec_val: " << m_pGates[idvector].gs.val[0] << " (" << gateid << ")" << endl;
+	//for (uint32_t i = 0, bitstocopy = gate->nvals * m_vANDs[pos].bitlen, ncopiedvals; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
+	for (uint32_t i = 0, bitstocopy = gate->nvals, ncopiedvals; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS, startpos+=GATE_T_BITS) {
 		ncopiedvals = min(bitstocopy, (uint32_t) GATE_T_BITS);
-		m_vE_snd[pos].XOR(m_pGates[idvector].gs.val[i], m_vMTIdx[pos] * m_vANDs[pos].bitlen, ncopiedvals); //*m_vANDs[pos].bitlen);
-		m_vMTIdx[pos]++;
+		//m_vE_snd[pos].XOR(m_pGates[idvector].gs.val[i], m_vMTIdx[pos] * m_vANDs[pos].bitlen, ncopiedvals); //*m_vANDs[pos].bitlen);
+		m_vE_snd[pos].XOR(m_pGates[idvector].gs.val[i], startpos, ncopiedvals); //*m_vANDs[pos].bitlen);
 #ifdef DEBUGBOOL
 		cout << "copying from " << m_vMTIdx[pos]*m_vANDs[pos].bitlen << " with len = " << ncopiedvals << endl;
 
@@ -443,6 +465,8 @@ inline void BoolSharing::SelectiveOpenVec(uint32_t gateid) {
 		" = " <<(hex) << m_pGates[idvector].gs.val[i] << (dec) << endl;
 #endif
 	}
+	m_vMTIdx[pos]++;
+
 	m_vANDGates[pos].push_back(gateid);
 
 	UsedGate(idchoice);
@@ -476,17 +500,20 @@ void BoolSharing::EvaluateMTs() {
 		uint32_t endpos = m_vMTIdx[i];
 		uint32_t len = endpos - startpos;
 		uint32_t startposbytes = ceil_divide(startpos, 8);
-		uint32_t startposstring = ceil_divide(m_vANDs[i].bitlen * startpos, 8);
+		uint32_t startposstringbits = startpos * m_vANDs[i].bitlen;
+		uint32_t startposstringbytes = startposbytes * m_vANDs[i].bitlen;
 		uint32_t lenbytes = ceil_divide(len, 8);
 		uint32_t stringbytelen = ceil_divide(m_vANDs[i].bitlen * len, 8);
 		uint32_t mtbytelen = ceil_divide(m_vANDs[i].bitlen, 8);
 
 		m_vD_snd[i].XORBytes(m_vD_rcv[i].GetArr() + startposbytes, startposbytes, lenbytes);
-		m_vE_snd[i].XORBytes(m_vE_rcv[i].GetArr() + startposstring, startposstring, stringbytelen);
+		m_vE_snd[i].XORBytes(m_vE_rcv[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
 
 #ifdef DEBUGBOOL
+		if(i > 0) {
 		cout << "lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
-		", startposbytes = " << startposbytes << ", startposstring = " << startposstring << endl;
+		", startposbytes = " << startposbytes << ", startposstring = " << startposstringbytes << endl;
+
 
 		cout << "A share: ";
 		m_vA[i].Print(0, len);
@@ -503,6 +530,7 @@ void BoolSharing::EvaluateMTs() {
 		m_vD_snd[i].Print(0,len);
 		cout << "E-total: ";
 		m_vE_snd[i].PrintHex(0, stringbytelen);
+		}
 #endif
 
 		if (i == 0) {
@@ -512,31 +540,62 @@ void BoolSharing::EvaluateMTs() {
 			m_vResA[i].ANDBytes(m_vE_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
 			m_vResB[i].ANDBytes(m_vD_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
 		} else {
-			for (uint32_t j = 0; j < len; j++) {
-				if (m_vA[i].GetBitNoMask(j + startpos)) { //a * e
-					m_vResA[i].SetBytes(m_vE_snd[i].GetArr() + startposstring + j * mtbytelen, startposstring + j * mtbytelen, mtbytelen);
+			if((m_vANDs[i].bitlen & 0x07) == 0) {
+				for (uint32_t j = 0; j < len; j++) {
+					if (m_vA[i].GetBitNoMask(j + startpos)) { //a * e
+						m_vResA[i].SetBytes(m_vE_snd[i].GetArr() + startposstringbytes + j * mtbytelen,
+								startposstringbytes + j * mtbytelen, mtbytelen);
+					}
+					if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * b
+						m_vResB[i].SetBytes(m_vB[i].GetArr() + startposstringbytes + j * mtbytelen,
+								startposstringbytes + j * mtbytelen, mtbytelen);
+					}
 				}
-				if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * b
-					m_vResB[i].SetBytes(m_vB[i].GetArr() + startposstring + j * mtbytelen, startposstring + j * mtbytelen, mtbytelen);
+			} else {
+				for (uint32_t j = 0; j < len; j++) {
+					if (m_vA[i].GetBitNoMask(j + startpos)) { //a * e
+						uint64_t tmp = m_vE_snd[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+						m_vResA[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+						//m_vResA[i].SetBitsPosOffset(m_vE_snd[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
+						//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+					}
+					if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * b
+						uint64_t tmp = m_vB[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+						m_vResB[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+						//m_vResB[i].SetBitsPosOffset(m_vB[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
+						//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+					}
 				}
 			}
 		}
 
-		m_vResA[i].XORBytes(m_vResB[i].GetArr() + startposstring, startposstring, stringbytelen);
-		m_vResA[i].XORBytes(m_vC[i].GetArr() + startposstring, startposstring, stringbytelen);
+		m_vResA[i].XORBytes(m_vResB[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
+		m_vResA[i].XORBytes(m_vC[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
 
 		if (m_eRole == SERVER) {
 			if (i == 0) {
 				m_vResB[i].Copy(m_vE_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
 				m_vResB[i].ANDBytes(m_vD_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
 			} else {
-				for (uint32_t j = 0; j < len; j++) {
-					if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * e
-						m_vResB[i].SetBytes(m_vE_snd[i].GetArr() + startposstring + j * mtbytelen, startposstring + j * mtbytelen, mtbytelen);
+				if((m_vANDs[i].bitlen & 0x07) == 0) {
+					for (uint32_t j = 0; j < len; j++) {
+						if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * e
+							m_vResB[i].SetBytes(m_vE_snd[i].GetArr() + startposstringbytes + j * mtbytelen,
+									startposstringbytes + j * mtbytelen, mtbytelen);
+						}
+					}
+				} else {
+					for (uint32_t j = 0; j < len; j++) {
+						if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * e
+							uint64_t tmp = m_vE_snd[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							m_vResB[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							//m_vResB[i].SetBitsPosOffset(m_vE_snd[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
+							//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+						}
 					}
 				}
 			}
-			m_vResA[i].XORBytes(m_vResB[i].GetArr() + startposstring, startposstring, stringbytelen);
+			m_vResA[i].XORBytes(m_vResB[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
 		}
 	}
 }
@@ -544,7 +603,7 @@ void BoolSharing::EvaluateMTs() {
 void BoolSharing::EvaluateANDGate() {
 	GATE* gate;
 	for (uint32_t k = 0; k < m_nNumANDSizes; k++) {
-		for (uint32_t i = 0, j, bitstocopy, len, idx = m_vMTStartIdx[k]; i < m_vANDGates[k].size(); i++) {
+		for (uint32_t i = 0, j, bitstocopy, len, idx = m_vMTStartIdx[k]*m_vANDs[k].bitlen; i < m_vANDGates[k].size(); i++) {
 			gate = m_pGates + m_vANDGates[k][i];
 			InstantiateGate(gate);
 
@@ -561,7 +620,12 @@ void BoolSharing::EvaluateANDGate() {
 				" to value: " << (hex) << m_vResA[k].Get<UGATE_T>(idx, len) << (dec) << endl;
 #endif
 				gate->gs.val[j] = m_vResA[k].Get<UGATE_T>(idx, len);
+				/*if(k > 0) {
+					cout << "res_val = " << gate->gs.val[j] << " (" << m_vANDGates[k][i] << ")" <<
+							", startpos = " << m_vMTStartIdx[k] << ", idx = " << idx << ", len = " << len << endl;
+				}*/
 				idx += len; //TODO put in for loop
+
 			}
 		}
 
@@ -600,7 +664,8 @@ void BoolSharing::AssignOutputShares() {
 			len = min(bitstocopy, (uint32_t) GATE_T_BITS);
 			gate->gs.val[j] = m_pGates[parentid].gs.val[j] ^ m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len);
 #ifdef DEBUGBOOL
-			cout << "Outshare: " << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " ^ " << m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << endl;;
+			cout << "Outshare: " << (hex) << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " ^ " <<
+					m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << (dec) << endl;
 #endif
 			rcvshareidx += len;
 		}
@@ -627,7 +692,7 @@ void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& sndbyt
 		if (mtbytelen > 0) {
 			sendbuf.push_back(m_vD_snd[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8));
 			sndbytes.push_back(mtbytelen);
-			sendbuf.push_back(m_vE_snd[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8));
+			sendbuf.push_back(m_vE_snd[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8) * m_vANDs[i].bitlen);
 			sndbytes.push_back(mtbytelen * m_vANDs[i].bitlen);
 		}
 #ifdef DEBUGBOOL
@@ -672,7 +737,7 @@ void BoolSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& r
 			//Selective openings
 			rcvbuf.push_back(m_vD_rcv[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8));
 			rcvbytes.push_back(mtbytelen);
-			rcvbuf.push_back(m_vE_rcv[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8));
+			rcvbuf.push_back(m_vE_rcv[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8) * m_vANDs[i].bitlen);
 			rcvbytes.push_back(mtbytelen * m_vANDs[i].bitlen);
 		}
 	}
@@ -771,6 +836,24 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 			UsedGate(idparent);
 		}
 		free(combinepos);
+	} else if (gate->type == G_SUBSET) {
+#ifdef DEBUGSHARING
+		cout << " which is a Subset gate" << endl;
+#endif
+		uint32_t idparent = gate->ingates.inputs.parent;
+		uint32_t* positions = gate->gs.sub_pos.posids; //gate->gs.combinepos.input;
+		uint32_t arraypos;
+		uint32_t bitpos;
+		InstantiateGate(gate);
+		memset(gate->gs.val, 0x00, ceil_divide(vsize, 8));
+
+		for (uint32_t i = 0; i < vsize; i++) {
+			arraypos = positions[i] / GATE_T_BITS;
+			bitpos = positions[i] % GATE_T_BITS;
+			gate->gs.val[i / GATE_T_BITS] |= (((m_pGates[idparent].gs.val[arraypos] >> bitpos) & 0x1) << (i % GATE_T_BITS));
+		}
+		UsedGate(idparent);
+		free(positions);
 	}
 }
 
@@ -853,6 +936,7 @@ void BoolSharing::Reset() {
 	for (uint32_t i = 0; i < m_vA.size(); i++) {
 		m_vA[i].delCBitVector();
 		m_vB[i].delCBitVector();
+		m_vC[i].delCBitVector();
 		m_vS[i].delCBitVector();
 		m_vD_snd[i].delCBitVector();
 		m_vE_snd[i].delCBitVector();

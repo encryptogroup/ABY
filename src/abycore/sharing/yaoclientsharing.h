@@ -38,6 +38,7 @@ public:
 	;
 	/** Destructor of the class.*/
 	~YaoClientSharing() {
+		Reset();
 	}
 	;
 

@@ -29,13 +29,7 @@
 
 //TODO the garbled table is addressed as uint32_t and might overflow if sufficient (>4mio AND gates) are required. Change to LONG
 
-//TODO use this to implement a pipelined style transmission later on
 
-/** 
- \def 	GARBLED_TABLE_WINDOW 
- \brief	____________________
- */
-#define GARBLED_TABLE_WINDOW 100000000
 /** 
  \def 	KEYS_PER_GATE_IN_TABLE 
  \brief	____________________
@@ -138,6 +132,9 @@ protected:
 	BooleanCircuit* m_cBoolCircuit; /**< Boolean circuit */
 
 	uint32_t m_nSecParamIters; /**< Secure_____________*/
+
+	uint64_t m_nANDWindowCtr; /**< Counts #AND gates for pipelined exec */
+	uint64_t m_nRemANDGates; /**< Remaining AND gates to be processed for pipelined exec */
 
 #ifdef FIXED_KEY_GARBLING
 	BYTE* m_bResKeyBuf; /**< _________________________*/

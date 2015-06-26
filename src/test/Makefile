@@ -15,8 +15,9 @@ OBJECTS := $(patsubst %.cpp, %.o, ${SOURCES})
 # object files for the test cases
 OBJECTS_MILLIONAIRE_CIRC=${SRC}/examples/millionaire_prob/common/millionaire_prob.o
 OBJECTS_AES_CIRC=${SRC}/examples/aes/common/aescircuit.o
-#OBJECTS_LOWMC_CIRC=${SRC}/examples/lowmc/common/lowmccircuit.o
-OBJECTS_LOWMC_CIRC=
+OBJECTS_PSI_CIRC=${SRC}/examples/psi_scs/common/*.o
+OBJECTS_PHASING_CIRC=${SRC}/examples/psi_phasing/common/*.o
+OBJECTS_HASHING_CIRC=${SRC}/examples/psi_phasing/common/hashing/*.o
 
 # directory for the Miracl library
 MIRACL_LIB_DIR=${CORE}/util/miracl_lib
@@ -47,7 +48,7 @@ EXAMPLE = test-aby
 
 all: ${BIN}/${EXAMPLE}.exe
 
-${BIN}/${EXAMPLE}.exe: ${OBJECTS_CORE} ${OBJECTS} ${OBJECTS_MILLIONAIRE_CIRC} ${OBJECTS_AES_CIRC} ${OBJECTS_LOWMC_CIRC} ${OBJECTS_MIRACL}
+${BIN}/${EXAMPLE}.exe: ${OBJECTS_CORE} ${OBJECTS} ${OBJECTS_MILLIONAIRE_CIRC} ${OBJECTS_AES_CIRC} ${OBJECTS_PSI_CIRC} ${OBJECTS_PHASING_CIRC} ${OBJECTS_HASHING_CIRC} ${OBJECTS_MIRACL}
 	${CC} ${COMPILER_OPTIONS} -o $@ ${CFLAGS} $^ ${LIBRARIES}
 
 

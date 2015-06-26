@@ -9,7 +9,7 @@ CORE=${SRC}/abycore
 # compiler settings
 CC=g++
 COMPILER_OPTIONS=-O2
-DEBUG_OPTIONS=-g3 -Wall
+DEBUG_OPTIONS=-g3 -Wall -Wextra
 BATCH=
 
 ARCHITECTURE = $(shell uname -m)
@@ -59,8 +59,8 @@ ${MIRACL_LIB_DIR}/miracl.a: ${SOURCES_MIRACL}
 
 core: ${OBJECTS_CORE}
 
-%.o:%.cpp
-	${CC} $^ ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
+%.o:%.cpp %.h
+	${CC} $< ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 # check that core is built, then call test makefile
 ${TEST}: ${OBJECTS_CORE}
