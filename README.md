@@ -81,12 +81,13 @@ See the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY
   * Secure computation [**AES**](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), where one party inputs the key and the other party inputs a message to collaboratively encrypt.
   * The [**Euclidean Distance**](https://en.wikipedia.org/wiki/Euclidean_distance) for two 2-dimensional coordinates.
   * The **Minimum Euclidean Distance** for finding the closest match between one d-dimensional element and a database of n d-dimensional elements.
+  * The [**Arithmetic Inner Product**](https://en.wikipedia.org/wiki/Dot_product#Algebraic_definition) that multiplies N values component-wise and then adds all multiplication results (modulo 16 Bit in this case).
   * Further example applications will be added soon.
 
 #### Running Applications
   * Make sure you have called `make` and the application's binary was created in `bin/`.
   * To locally execute an application, run the created executable from **two different terminals** and pass all required parameters accordingly.
-  * By default applications are tested locally (via sockets on localhost). You can run them on two different machines by specifying IP addresses and ports as parameters.
+  * By default applications are tested locally (via sockets on `localhost`). You can run them on two different machines by specifying IP addresses and ports as parameters.
   * **Example:** The Millionaire's problem requires to specify the role of the executing party. All other parameters will use default values if they are not set. You execute it locally with: `./millionaire_prob.exe -r 0` and `./millionaire_prob.exe -r 1`, each in a separate terminal.
   * You should get some debug output for you to verify the correctness of the computation.
 
