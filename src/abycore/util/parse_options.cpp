@@ -19,6 +19,32 @@
 #include "parse_options.h"
 
 /**
+ * takes a string in the Format "c i i i ..."
+ * (1 char followed by potentially many integers) and returns a vector of all i
+ * @param str the string to tokenize
+ * @param tokens the result vector of wire id
+ */
+void tokenize_verilog(const std::string& str, std::vector<uint32_t>& tokens, const std::string& delimiters) {
+
+	tokens.clear();
+
+	// Skip delimiters at beginning. Skip first two characters
+	std::string::size_type lastPos = str.find_first_not_of(delimiters, 2);
+
+	// Find first "non-delimiter".
+	std::string::size_type pos = str.find_first_of(delimiters, lastPos);
+
+	while (std::string::npos != pos || std::string::npos != lastPos) {
+		// Found a token, add it to the vector.
+		tokens.push_back(atoi(str.substr(lastPos, pos - lastPos).c_str()));
+		// Skip delimiters.  Note the "not_of"
+		lastPos = str.find_first_not_of(delimiters, pos);
+		// Find next "non-delimiter"
+		pos = str.find_first_of(delimiters, lastPos);
+	}
+}
+
+/**
  * takes a string in the Format "i|i|i|..."
  * (integers separated by '|') and returns a vector of all integers
  * @param str the string to tokenize
