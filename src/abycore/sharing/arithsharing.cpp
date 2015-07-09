@@ -35,6 +35,12 @@ void ArithSharing<T>::Init() {
 	m_nConvShareSndCtr = 0;
 	m_nConvShareRcvCtr = 0;
 
+	m_nInputShareSndCtr = 0;
+	m_nOutputShareSndCtr = 0;
+
+	m_nInputShareRcvCtr = 0;
+	m_nOutputShareRcvCtr = 0;
+
 	m_vCONVGates.clear();
 
 }

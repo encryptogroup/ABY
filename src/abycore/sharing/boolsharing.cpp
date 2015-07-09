@@ -24,6 +24,12 @@ void BoolSharing::Init() {
 
 	m_nNumANDSizes = 0;
 
+	m_nInputShareSndSize = 0;
+	m_nOutputShareSndSize = 0;
+
+	m_nInputShareRcvSize = 0;
+	m_nOutputShareRcvSize = 0;
+
 	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, S_BOOL);
 }
 

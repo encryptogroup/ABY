@@ -210,7 +210,7 @@ void prime_field::init(seclvl sp, uint8_t* seed) {
 	{
 		mpz_set_str(p, ifcp3072, 10);
 		mpz_set_str(g, ifcg3072, 10);
-		mpz_set_str(q, ifcq1024, 10);
+		mpz_set_str(q, ifcq1024, 16);
 	}
 
 	gmp_randinit_default(rnd_state);

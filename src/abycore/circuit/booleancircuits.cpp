@@ -344,7 +344,7 @@ share* BooleanCircuit::PutCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen
 share* BooleanCircuit::PutCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) {
 	share* shr = new boolshare(bitlen, this);
 	for (uint32_t i = 0; i < bitlen; i++) {
-		shr->set_gate(i, PutConstantGate((val[i/5] >> i) & 0x01, nvals));
+		shr->set_gate(i, PutConstantGate((val[i >> 5] >> i) & 0x01, nvals));
 	}
 	return shr;
 }
