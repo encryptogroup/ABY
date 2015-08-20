@@ -8,8 +8,14 @@ CORE=${SRC}/abycore
 
 # compiler settings
 CC=g++
-COMPILER_OPTIONS=-O2
-DEBUG_OPTIONS=-g3 -Wall -Wextra
+
+#Most aggressive optimizations, asserts are ignored
+#COMPILER_OPTIONS=-O3 -DNDEBUG
+#Optimizations
+#COMPILER_OPTIONS=-O2
+#DEBUG
+COMPILER_OPTIONS=-g3 -ggdb -O0 -Wall -Wextra
+
 BATCH=
 
 ARCHITECTURE = $(shell uname -m)
@@ -21,7 +27,7 @@ MIRACL_MAKE:=linux
 GNU_LIB_PATH:=i386
 endif
 
-INCLUDE=-I..  -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
+INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
 
 
 LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lglib-2.0

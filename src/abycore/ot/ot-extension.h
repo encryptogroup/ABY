@@ -39,7 +39,7 @@ const BYTE G_OT = 0x01;
 const BYTE C_OT = 0x02;
 const BYTE R_OT = 0x03;
 
-#define NUMOTBLOCKS 4096
+#define NUMOTBLOCKS 256
 
 typedef struct OTBlock_t {
 	int blockid;
@@ -308,7 +308,7 @@ inline void FixedKeyHashing(AES_KEY_CTX* aeskey, BYTE* outbuf, BYTE* inbuf, BYTE
 	memset(tmpbuf, 0, AES_BYTES);
 	memcpy(tmpbuf, (BYTE*) (&id), sizeof(int));
 
-	for (int i = 0; i < bytessecparam; i++) {
+	for (uint32_t i = 0; i < bytessecparam; i++) {
 		tmpbuf[i] = tmpbuf[i] ^ inbuf[i];
 	}
 #endif
@@ -319,7 +319,7 @@ inline void FixedKeyHashing(AES_KEY_CTX* aeskey, BYTE* outbuf, BYTE* inbuf, BYTE
 	((uint64_t*) outbuf)[0] ^= ((uint64_t*) inbuf)[0];
 	((uint64_t*) outbuf)[1] ^= ((uint64_t*) inbuf)[1];
 #else
-	for (int i = 0; i < bytessecparam; i++) {
+	for (uint32_t i = 0; i < bytessecparam; i++) {
 		outbuf[i] = outbuf[i] ^ inbuf[i];
 	}
 #endif

@@ -148,13 +148,12 @@ uint8_t* boolshare::get_clear_value() {
 
 	out = (uint8_t*) calloc(ceil_divide(m_ngateids.size(), 8) * nvals, sizeof(uint8_t));
 
-	for (uint32_t i = 0, ibytes, jbytes; i < m_ngateids.size(); i++) {
+	for (uint32_t i = 0, ibytes; i < m_ngateids.size(); i++) {
 		assert(nvals == m_ccirc->GetNumVals(m_ngateids[i]));
 		gatevals = m_ccirc->GetOutputGateValue(m_ngateids[i]);
 
 		ibytes = i / 8;
 		for (uint32_t j = 0; j < nvals; j++) {
-			jbytes = j / 8;
 			out[j * bytelen + ibytes] += (((gatevals[j / 64] >> (j % 64)) & 0x01) << (i & 0x07));
 		}
 	}
@@ -201,14 +200,27 @@ uint8_t* arithshare::get_clear_value() {
 }
 
 void arithshare::get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t* nvals) {
-	assert(m_ngateids.size() <= sizeof(uint32_t) * 8);
+	//assert(m_ngateids.size() <= sizeof(uint32_t) * 8);
 
 	UGATE_T* gate_val;
-	*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
-	*vec = (uint32_t*) malloc(*nvals * sizeof(uint32_t));
-	memcpy(*vec, gate_val, *nvals * sizeof(uint32_t));
+	*nvals = 0;
+	for(uint32_t i = 0; i < m_ngateids.size(); i++) {
+		(*nvals) += m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
+	}
+	uint32_t sharebytes = ceil_divide(m_ccirc->GetShareBitLen(), 8);
 
-	*bitlen = m_ngateids.size();
+	//*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
+	*vec = (uint32_t*) calloc(*nvals, sizeof(uint32_t));
+
+	for(uint32_t i = 0, tmpctr=0, tmpnvals; i < m_ngateids.size(); i++) {
+		tmpnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
+		cout << m_ngateids[i] << " gateval = " << gate_val[0] << ", nvals = " << *nvals << ", sharebitlen = " << m_ccirc->GetShareBitLen() << endl;
+		for(uint32_t j = 0; j < tmpnvals; j++, tmpctr++) {
+			memcpy((*vec)+tmpctr, ((uint8_t*) gate_val)+(j*sharebytes), sharebytes);
+		}
+	}
+
+	*bitlen = m_ccirc->GetShareBitLen();
 }
 
 

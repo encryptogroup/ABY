@@ -38,7 +38,7 @@ public:
 	}
 	;
 	/** Destructor of the class.*/
-	~BoolSharing() {
+	virtual ~BoolSharing() {
 	}
 	;
 

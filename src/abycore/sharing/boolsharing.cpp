@@ -193,7 +193,7 @@ void BoolSharing::ComputeMTs() {
 		//Compute the correct C
 		if (m_vANDs[i].bitlen == 1) { //for bits
 			temp.SetAND(m_vA[i].GetArr(), m_vB[i].GetArr(), 0, andbytelen);
-		} else if (m_vANDs[i].bitlen & 0x07 == 0) { //for bytes
+		} else if ((m_vANDs[i].bitlen & 0x07) == 0) { //for bytes
 			uint32_t elebytelen = ceil_divide(m_vANDs[i].bitlen, 8);
 			for (uint32_t j = 0, byteidx = 0; j < m_nNumMTs[i]; j++, byteidx += elebytelen) {
 				if (m_vA[i].GetBitNoMask(j)) {
@@ -911,6 +911,7 @@ void BoolSharing::PrintPerformanceStatistics() {
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++)
 		cout << m_vANDs[i].numgates << " (" << m_vANDs[i].bitlen << "-bit) ; ";
 	cout << "Depth: " << GetMaxCommunicationRounds() << endl;
+	cout << "XOR vals: "<< m_cBoolCircuit->GetNumXORVals() << " gates: "<< m_cBoolCircuit->GetNumXORGates() << endl;
 }
 
 void BoolSharing::Reset() {

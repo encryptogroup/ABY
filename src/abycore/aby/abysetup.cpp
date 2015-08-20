@@ -394,8 +394,9 @@ BOOL ABYSetup::WaitWorkerThreads() {
 BOOL ABYSetup::ThreadNotifyTaskDone(BOOL bSuccess) {
 	m_lock.Lock();
 	uint32_t n = --m_nWorkingThreads;
-	if (!bSuccess)
+	if (!bSuccess){
 		m_bWorkerThreadSuccess = FALSE;
+	}
 	m_lock.Unlock();
 
 	if (!n)
@@ -404,7 +405,7 @@ BOOL ABYSetup::ThreadNotifyTaskDone(BOOL bSuccess) {
 }
 
 void ABYSetup::CWorkerThread::ThreadMain() {
-	BOOL bSuccess;
+	BOOL bSuccess = FALSE;
 	for (;;) {
 		m_evt.Wait();
 

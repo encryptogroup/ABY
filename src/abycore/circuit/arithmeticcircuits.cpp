@@ -24,7 +24,7 @@ void ArithmeticCircuit::Init() {
 
 	if (m_eContext == S_ARITH) {
 		m_nRoundsAND = 1;
-		m_nRoundsXOR = 1;
+		m_nRoundsXOR = 0;
 		m_nRoundsIN.resize(2, 1);
 		m_nRoundsOUT.resize(3, 1);
 	} else { //m_tContext == S_YAO
@@ -128,8 +128,20 @@ share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitle
 	return PutINGate(nvals, *((uint32_t*) val), bitlen, role);
 }
 
+share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) {
+	uint32_t* tmpval = (uint32_t*) malloc(nvals * sizeof(uint32_t));
+	for(uint32_t i = 0; i < nvals; i++) {
+		tmpval[i] = (uint32_t) val[i];
+	}
+	assert(bitlen <= m_nShareBitLen);
+	//return PutINGate(nvals, *((uint32_t*) val), bitlen, role);
+	share* out = PutINGate(nvals, tmpval, bitlen, role);
+	free(tmpval);
+	return out;
+}
+
+
 share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) {
-//TODO check for type-size issues!
 	assert(bitlen <= m_nShareBitLen);
 	share* shr = new arithshare(this);
 	uint32_t gateid = PutINGate(nvals, role);
@@ -139,8 +151,12 @@ share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitl
 
 	if (role == m_eMyRole) {
 		GATE* gate = m_pGates + gateid;
-		gate->gs.ishare.inval = (UGATE_T*) calloc(nvals, sizeof(UGATE_T));
-		memcpy(gate->gs.ishare.inval, val, nvals * sizeof(uint32_t));
+		uint32_t sharebytelen = ceil_divide(m_nShareBitLen, 8);
+		uint32_t inbytelen = ceil_divide(bitlen, 8);
+		gate->gs.ishare.inval = (UGATE_T*) calloc(nvals, PadToMultiple(sharebytelen, sizeof(UGATE_T)));
+		for(uint32_t i = 0; i < nvals; i++) {
+			memcpy(((uint8_t*) gate->gs.ishare.inval) + i * sharebytelen, val+i, inbytelen);
+		}
 
 		gate->instantiated = true;
 	}
@@ -177,9 +193,10 @@ uint32_t ArithmeticCircuit::PutOUTGate(uint32_t parentid, e_role dst) {
 }
 
 share* ArithmeticCircuit::PutOUTGate(share* parent, e_role dst) {
-	share* shr = new arithshare(this);
-	for (uint32_t i = 0; i < parent->size(); i++)
+	share* shr = new arithshare(parent->size(), this);
+	for (uint32_t i = 0; i < parent->size(); i++) {
 		shr->set_gate(i, PutOUTGate(parent->get_gate(i), dst));
+	}
 
 	return shr;
 }
@@ -190,7 +207,7 @@ uint32_t ArithmeticCircuit::PutINVGate(uint32_t parentid) {
 	return gateid;
 }
 
-uint32_t ArithmeticCircuit::PutCONVGate(vector<uint32_t>& parentids) {
+uint32_t ArithmeticCircuit::PutCONVGate(vector<uint32_t> parentids) {
 	uint32_t gateid = m_cCircuit->PutCONVGate(parentids, 2, S_ARITH, m_nShareBitLen);
 	UpdateInteractiveQueue(gateid);
 	m_nCONVGates += m_pGates[gateid].nvals;

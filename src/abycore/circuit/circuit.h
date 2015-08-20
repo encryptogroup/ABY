@@ -230,9 +230,9 @@ protected:
 	ABYCircuit* m_cCircuit; /** ABYCircuit Object  */
 	GATE* m_pGates;			/** Gates vector which stores the */
 	e_sharing m_eContext;
-	e_circuit m_eCirctype;
 	e_role m_eMyRole;
 	uint32_t m_nShareBitLen;
+	e_circuit m_eCirctype;
 	uint32_t m_nMaxDepth;
 
 	vector<deque<uint32_t> > m_vLocalQueueOnLvl; //for locally evaluatable gates, first dimension is the level of the gates, second dimension presents the queue on which the gateids are put
@@ -269,7 +269,7 @@ public:
 	void init(Circuit* circ, uint32_t maxbitlen = 32);
 
 	/** Destructor */
-	~share() {
+	virtual ~share() {
 	}
 	;
 
@@ -295,7 +295,7 @@ public:
 		return m_nmaxbitlen;
 	}
 	;
-	uint32_t set_max_size(uint32_t maxsize) {
+	void set_max_size(uint32_t maxsize) {
 		assert(maxsize >= m_ngateids.size());
 		m_nmaxbitlen = maxsize;
 	}
@@ -328,6 +328,7 @@ protected:
 	uint32_t m_nmaxbitlen;
 };
 
+
 /** Boolean Share Class */
 class boolshare: public share {
 public:
@@ -348,9 +349,7 @@ public:
 	 */
 	/** Destructor */
 
-	~boolshare() {
-	}
-	;				// : share() {};
+	~boolshare() {};
 
 	uint8_t* get_clear_value();
 	void get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals);
@@ -359,9 +358,14 @@ public:
 /** Arithmetic Share Class */
 class arithshare: public share {
 public:
-	/** Constructor overloaded with shared length and circuit.*/
+	/** Constructor overloaded with and circuit.*/
 	arithshare(Circuit* circ) :
 			share(1, circ) {
+	}
+	;
+	/** Constructor overloaded with share length and circuit.*/
+	arithshare(uint32_t sharelen, Circuit* circ) :
+			share(sharelen, circ) {
 	}
 	;
 	/** Constructor overloaded with gates and circuit.*/

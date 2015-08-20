@@ -18,84 +18,84 @@
 
 #include "innerproduct.h"
 
-// the number of elements to multiply and add
-#define N 128
-
-int32_t test_inner_product_circuit(e_role role, char* address, seclvl seclvl, uint32_t nvals, uint32_t bitlen,
-		uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing) {
+int32_t test_inner_product_circuit(e_role role, char* address, seclvl seclvl,
+		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
+		e_sharing sharing, uint32_t num) {
 
 	/**
 	 Step 1: Create the ABYParty object which defines the basis of all the
 	 operations which are happening.	Operations performed are on the
 	 basis of the role played by this object.
 	 */
-	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads, mt_alg);
+	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads,
+			mt_alg);
 
 	/**
 	 Step 2: Get to know all the sharing types available in the program.
 	 */
-
 	vector<Sharing*>& sharings = party->GetSharings();
 
 	/**
 	 Step 3: Create the circuit object on the basis of the sharing type
 	 being inputed.
 	 */
-	ArithmeticCircuit* circ = (ArithmeticCircuit*) sharings[sharing]->GetCircuitBuildRoutine();
+	ArithmeticCircuit* circ =
+			(ArithmeticCircuit*) sharings[sharing]->GetCircuitBuildRoutine();
 
 	/**
 	 Step 4: Creating the share objects - s_x_vec, s_y_vec which
-	 are used as inputs to the computation. Also s_out  which stores the output.
+	 are used as inputs to the computation. Also, s_out which stores the output.
 	 */
 
-	share **s_x_vec, **s_y_vec, *s_out;
+	share *s_x_vec, *s_y_vec, *s_out;
 
 	/**
-	 Step 5: Allocate the x any y shared vectors.
+	 Step 5: Allocate the xvals and yvals that will hold the plaintext values.
 	 */
-
-	s_x_vec = new share*[N];
-	s_y_vec = new share*[N];
-
 	uint16_t x, y;
 
 	uint16_t output, v_sum = 0;
 
-	int i;
+	uint16_t * xvals = (uint16_t*) malloc(num * sizeof(uint16_t));
+	uint16_t * yvals = (uint16_t*) malloc(num * sizeof(uint16_t));
+
+	uint32_t i;
 	srand(time(NULL));
 
 	/**
-	 Step 6: Initialize the vectors x and y with the generated random values.
+	 Step 6: Fill the arrays xvals and yvals with the generated random values.
 	 Both parties use the same seed, to be able to verify the
 	 result. In a real example each party would only supply
 	 one input value. Copy the randomly generated vector values into the respective
-	 share objects using the circuit object method PUTInGate().
+	 share objects using the circuit object method PutINGate().
 	 Also mention who is sharing the object.
-	 The value for the party different from role is ignored,
+	 The values for the party different from role is ignored,
 	 but PutINGate() must always be called for both roles.
 	 */
-	for (i = 0; i < N; i++) {
+	for (i = 0; i < num; i++) {
 
 		x = rand();
 		y = rand();
 
 		v_sum += x * y;
 
-		s_x_vec[i] = circ->PutINGate(N, x, 16, CLIENT);
-		s_y_vec[i] = circ->PutINGate(N, y, 16, SERVER);
+		xvals[i] = x;
+		yvals[i] = y;
 	}
+
+	s_x_vec = circ->PutINGate(num, xvals, 16, SERVER);
+	s_y_vec = circ->PutINGate(num, yvals, 16, CLIENT);
 
 	/**
 	 Step 7: Call the build method for building the circuit for the
 	 problem by passing the shared objects and circuit object.
 	 Don't forget to type cast the circuit object to type of share
 	 */
-	s_out = BuildInnerProductCircuit(s_x_vec, s_y_vec, (ArithmeticCircuit*) circ);
+	s_out = BuildInnerProductCircuit(s_x_vec, s_y_vec, num,
+			(ArithmeticCircuit*) circ);
 
 	/**
-	 Step 8: Modify the output receiver based on the role played by
-	 the server and the client. This step writes the output to the
-	 shared output object based on the role.
+	 Step 8: Output the value of s_out (the computation result) to both parties
 	 */
 	s_out = circ->PutOUTGate(s_out, ALL);
 
@@ -106,7 +106,7 @@ int32_t test_inner_product_circuit(e_role role, char* address, seclvl seclvl, ui
 	party->ExecCircuit();
 
 	/**
-	 Step 10: Type casting the value to 16 bit unsigned integer for output.
+	 Step 10: Type caste the plaintext output to 16 bit unsigned integer.
 	 */
 	output = s_out->get_clear_value<uint16_t>();
 
@@ -116,33 +116,30 @@ int32_t test_inner_product_circuit(e_role role, char* address, seclvl seclvl, ui
 	delete s_x_vec;
 	delete s_y_vec;
 	delete party;
+
 	return 0;
 }
 
 /*
- Constructs the inner product circuit. N mutiplications and an addition tree with logarithmic depth.
- Works for arbitrary N
+ Constructs the inner product circuit. num multiplications and num additions.
  */
-share* BuildInnerProductCircuit(share **s_x, share **s_y, ArithmeticCircuit *ac) {
+share* BuildInnerProductCircuit(share *s_x, share *s_y, uint32_t num, ArithmeticCircuit *ac) {
+	uint32_t i;
 
-	uint32_t i, j;
+	// pairwise multiplication of all input values
+	s_x = ac->PutMULGate(s_x, s_y);
 
-	// pairwise multiplication of all inputs
-	for (i = 0; i < N; i++) {
-		s_x[i] = ac->PutMULGate(s_x[i], s_y[i]);
+	// split SIMD gate to separate wires (size many)
+	s_x = ac->PutSplitterGate(s_x);
+
+	// add up the individual multiplication results and store result on wire 0
+	// in arithmetic sharing ADD is for free, and does not add circuit depth, thus simple sequential adding
+	for (i = 1; i < num; i++) {
+		s_x->set_gate(0, ac->PutADDGate(s_x->get_gate(0), s_x->get_gate(i)));
 	}
 
-	// add all multiplication results as a tree for log depth
-	for (i = 0; i < (int) ceil(log2(N)); i++) {
+	// discard all wires, except the addition result
+	s_x->resize(1);
 
-		for (j = 0; j < N; j += (1 << (i + 1))) {
-
-			// stop at gate N (relevant if N is not a power of 2)
-			if ((j + (1 << i)) < N) {
-				s_x[j] = ac->PutADDGate(s_x[j], s_x[j + (1 << i)]);
-			}
-		}
-	}
-
-	return s_x[0];
+	return s_x;
 }

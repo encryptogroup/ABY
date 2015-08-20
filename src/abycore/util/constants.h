@@ -246,7 +246,7 @@ static string get_op_name(e_operation op) {
  \def 	GARBLED_TABLE_WINDOW
  \brief	Window size of Yao's garbled circuits in pipelined execution
  */
-#define GARBLED_TABLE_WINDOW 100000000 //1048575 //=0xFFFFF for faster modulo operation
+#define GARBLED_TABLE_WINDOW 10000000//1048575 //1048575 //=0xFFFFF for faster modulo operation
 
 /** \var g_TruthTable
  \brief A truth-table for an AND gate

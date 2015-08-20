@@ -32,7 +32,7 @@ public:
 		init(bitlength);
 	}
 	;
-	~XORMasking() {
+	virtual ~XORMasking() {
 	}
 	;
 
@@ -80,7 +80,7 @@ public:
 				{
 			int gprogress = progress * bytelen;
 			output.Copy(tmpmask.GetArr() + gprogress, gprogress, bytelen * processedOTs);
-			for (int i = progress, l = 0; i < lim; i++, l += bytelen, gprogress += bytelen) {
+			for (uint32_t i = progress, l = 0; i < lim; i++, l += bytelen, gprogress += bytelen) {
 				if (choices.GetBitNoMask(i)) {
 					//TODO make this working for single bits
 					output.XORBytes(rcv_buf.GetArr() + l, gprogress, bytelen);

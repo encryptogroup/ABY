@@ -267,14 +267,12 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 		GATE* gate = m_pGates + localops[i];
 
 #ifdef DEBUGARITH
-		cout << "Evaluating gate with id = " << localops[i] << " of type " << gate->type;
+		cout << "Evaluating gate with id = " << localops[i] << " of type " << gate->type << endl;
 #endif
 
 		if (IsSIMDGate(gate->type)) {
 			EvaluateSIMDGate(localops[i]);
-			return;
-		}
-		if (gate->type == G_LIN) {
+		} else 	if (gate->type == G_LIN) {
 #ifdef DEBUGARITH
 			cout << " which is an ADD gate" << endl;
 #endif
@@ -286,10 +284,8 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 				value = 0;
 			for (uint32_t i = 0; i < gate->nvals; i++)
 				gate->gs.val[i] = value;
-			return;
 		} else if (gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(localops[i]);
-			return;
 		} else {
 			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
 		}
@@ -883,6 +879,7 @@ void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 		uint32_t pos = gate->gs.sinput.pos;
 		uint32_t idparent = gate->ingates.inputs.parent;
 		InstantiateGate(gate);
+
 		for (uint32_t i = 0; i < vsize; i++) {
 			((T*) gate->gs.aval)[i] = ((T*) m_pGates[idparent].gs.aval)[pos + i];
 		}

@@ -245,8 +245,8 @@ CBitVector ABYParty::ExecSetupPhase() {
 }
 
 BOOL ABYParty::InitCircuit(uint32_t bitlen) {
-	//TODO only up to 2.000.000 gates can be built, is probably changing in the future
-	m_pCircuit = new ABYCircuit(2000000);
+	//TODO only up to 5.000.000 gates can be built, is probably changing in the future
+	m_pCircuit = new ABYCircuit(5000000);
 
 	//TODO change YaoSharing such that right class is passed back just given the role
 	m_vSharings.resize(3);
@@ -609,7 +609,7 @@ BOOL ABYParty::ThreadNotifyTaskDone(BOOL bSuccess) {
 }
 
 void ABYParty::CPartyWorkerThread::ThreadMain() {
-	BOOL bSuccess;
+	BOOL bSuccess = FALSE;
 	for (;;) {
 		m_evt.Wait();
 
@@ -617,10 +617,12 @@ void ABYParty::CPartyWorkerThread::ThreadMain() {
 		case e_Party_Stop:
 			return;
 		case e_Party_Comm:
-			if (threadid == 0)
+			if (threadid == 0){
 				bSuccess = m_pCallback->ThreadSendValues();
-			else
+			}
+			else{
 				bSuccess = m_pCallback->ThreadReceiveValues();
+			}
 			break;
 		}
 

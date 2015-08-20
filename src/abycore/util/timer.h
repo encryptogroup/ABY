@@ -35,7 +35,6 @@ struct aby_timings {
 	timeval tend;
 };
 
-static int m_nTimings = P_LAST - P_FIRST + 1;
 static aby_timings m_tTimes[P_LAST - P_FIRST + 1];
 using namespace std;
 

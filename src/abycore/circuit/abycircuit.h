@@ -193,10 +193,8 @@ private:
 
 	GATE* m_pGates;
 	uint32_t m_nNextFreeGate;	// points to the current first unused gate
-	uint32_t m_nSizeOfVal;
 	uint32_t m_nMaxVectorSize; 	// The maximum vector size in bits, required for correctly instantiating the 0 and 1 gates
 	uint32_t m_nMaxGates; 		// Maximal number of gates that is allowed
-
 };
 
 #endif /* __ABYCIRCUIT_H_ */

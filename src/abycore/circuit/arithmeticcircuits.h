@@ -46,6 +46,7 @@ public:
 	uint32_t PutINGate(uint32_t nvals, e_role src);
 	share* PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role);
 	share* PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role);
+	share* PutINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role);
 	share* PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role);
 	template<class T> uint32_t PutINGate(uint32_t nvals, T val);
 	template<class T> uint32_t PutINGate(uint32_t nvals, T val, e_role role);
@@ -55,7 +56,7 @@ public:
 	share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 
 	uint32_t PutINVGate(uint32_t parentid);
-	uint32_t PutCONVGate(vector<uint32_t>& parentids);
+	uint32_t PutCONVGate(vector<uint32_t> parentids);
 
 	share* PutADDGate(share* ina, share* inb);
 

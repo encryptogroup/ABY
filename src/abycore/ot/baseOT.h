@@ -37,7 +37,7 @@ public:
 		m_cPKCrypto = crypt->gen_field(ftype);
 	}
 	;
-	~BaseOT() {
+	virtual ~BaseOT() {
 		delete m_cPKCrypto;
 	}
 	;

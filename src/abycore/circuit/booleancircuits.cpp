@@ -46,6 +46,8 @@ void BooleanCircuit::Init() {
 
 	m_nB2YGates = 0;
 	m_nA2YGates = 0;
+	m_nNumXORVals = 0;
+	m_nNumXORGates = 0;
 }
 
 void BooleanCircuit::Cleanup() {
@@ -126,6 +128,8 @@ uint32_t BooleanCircuit::PutXORGate(uint32_t inleft, uint32_t inright) {
 	//cout << "inleft = " << inleft << ", inright = " << inright << endl;
 	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_LIN, inleft, inright, m_nRoundsXOR);
 	UpdateLocalQueue(gateid);
+	m_nNumXORVals += m_pGates[gateid].nvals;
+	m_nNumXORGates += 1;
 	return gateid;
 }
 
@@ -465,6 +469,13 @@ uint32_t BooleanCircuit::PutSubsetGate(uint32_t input, uint32_t* posids, uint32_
 	return gateid;
 }
 
+/**
+ * create new vector gate, built from input vector gate with len nvals
+ * place old values from indices at posids to result
+ * \param	input	gate ids
+ * \param	posids	LUT
+ * \param	nvals	the length of the vector
+ */
 share* BooleanCircuit::PutSubsetGate(share* input, uint32_t* posids, uint32_t nvals) {
 	share* out = new boolshare(input->size(), this);
 	for(uint32_t i = 0; i < input->size(); i++) {
@@ -1078,7 +1089,7 @@ vector<uint32_t> BooleanCircuit::PutMinGate(vector<vector<uint32_t> > a) {
 
 
 
-// a = values, b = indexes of each value, n = size of a and b
+// a = values, b = indicies of each value, n = size of a and b
 void BooleanCircuit::PutMinIdxGate(share** a, share** b, uint32_t nvals, share** minval_shr, share** minid_shr) {
 	vector<vector<uint32_t> > val(nvals);
 	vector<vector<uint32_t> > ids(nvals);
@@ -1098,7 +1109,7 @@ void BooleanCircuit::PutMinIdxGate(share** a, share** b, uint32_t nvals, share**
 }
 
 
-// a = values, idx = indexes of each value, n = size of a and b
+// a = values, idx = indices of each value, n = size of a and b
 void BooleanCircuit::PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<uint32_t> > idx,
 		vector<uint32_t>& minval, vector<uint32_t>& minid) {
 	// build a balanced binary tree
@@ -1245,7 +1256,8 @@ void BooleanCircuit::Reset() {
 	m_vANDs[0].numgates = 0;
 	m_nB2YGates = 0;
 	m_nA2YGates = 0;
-
+	m_nNumXORVals = 0;
+	m_nNumXORGates = 0;
 	//m_vANDs.resize(1);
 	//m_vANDs[0].bitlen = 1;
 }

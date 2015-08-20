@@ -90,7 +90,7 @@ void NaorPinkas::Receiver(uint32_t nSndVals, uint32_t nOTs, CBitVector& choices,
 	delete bc;
 	delete bg;
 
-	delete[] pBuf;
+	free(pBuf);
 	//TODO delete all field elements and numbers
 	free(PK_sigma);
 	free(pDec);

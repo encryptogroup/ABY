@@ -23,6 +23,7 @@
 #include <assert.h>
 #include "circuit.h"
 
+
 /** BooleanCircuit class. */
 class BooleanCircuit: public Circuit {
 public:
@@ -89,6 +90,13 @@ public:
 		return m_nNumANDSizes;
 	}
 	;
+	int GetNumXORVals() {
+		return m_nNumXORVals;
+	};
+
+	int GetNumXORGates() {
+		return m_nNumXORGates;
+	};
 
 	share* PutMULGate(share* ina, share* inb);
 	share* PutGEGate(share* ina, share* inb);
@@ -172,6 +180,10 @@ private:
 
 	uint32_t m_nB2YGates;
 	uint32_t m_nA2YGates;
+
+	uint32_t m_nNumXORVals;
+	uint32_t m_nNumXORGates;
+
 };
 
 #endif /* __BOOLEANCIRCUITS_H_ */

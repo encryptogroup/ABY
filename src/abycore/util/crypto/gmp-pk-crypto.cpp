@@ -185,11 +185,7 @@ uint32_t prime_field::get_size() {
 void prime_field::init(seclvl sp, uint8_t* seed) {
 	mpz_t rnd_seed;
 
-	//TODO: change to inits if working correctly
-	mpz_init(p);
-	mpz_init(g);
-	mpz_init(q);
-	mpz_init(rnd_seed);
+	mpz_inits(p, q, g, rnd_seed, NULL);
 	secparam = sp;
 
 	mpz_import(rnd_seed, secparam.symbits, 1, sizeof((seed)[0]), 0, 0, seed);
@@ -215,6 +211,7 @@ void prime_field::init(seclvl sp, uint8_t* seed) {
 
 	gmp_randinit_default(rnd_state);
 	gmp_randseed(rnd_state, rnd_seed);
+	mpz_clear(rnd_seed);
 	fe_bytelen = ceil_divide(secparam.ifcbits, 8);
 }
 
