@@ -58,10 +58,38 @@ public:
 	uint32_t PutINGate(uint32_t nvals, e_role src);
 	template<class T> uint32_t PutINGate(uint32_t nvals, T val);
 	uint32_t PutINGate(uint32_t nvals, uint64_t val, e_role role);
-	uint32_t PutINGate(uint32_t ninvals, uint32_t* val, e_role role);
-	share* PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role);
-	share* PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role);
-	share* PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role);
+	template<class T> uint32_t PutINGate(uint32_t ninvals, T* val, e_role role);
+
+	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role);
+	/* Unfortunately, a template function cannot be used due to virtual */
+	share* PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint64_t>(nvals, val, bitlen, role);
+	}
+	share* PutINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint32_t>(nvals, val, bitlen, role);
+	};
+	share* PutINGate(uint32_t nvals, uint16_t val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint16_t>(nvals, val, bitlen, role);
+	};
+	share* PutINGate(uint32_t nvals, uint8_t val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint8_t>(nvals, val, bitlen, role);
+	};
+
+
+	template<class T> share* InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role);
+	/* Unfortunately, a template function cannot be used due to virtual. Call Internal PutINGate*/
+	share* PutINGate(uint32_t nvals, uint64_t* val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint64_t>(nvals, val, bitlen, role);
+	};
+	share* PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint32_t>(nvals, val, bitlen, role);
+	};
+	share* PutINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint16_t>(nvals, val, bitlen, role);
+	};
+	share* PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint8_t>(nvals, val, bitlen, role);
+	};
 
 	uint32_t PutOUTGate(uint32_t parent, e_role dst);
 	vector<uint32_t> PutOUTGate(vector<uint32_t> parents, e_role dst);
@@ -119,7 +147,9 @@ public:
 	uint32_t PutEQGate(vector<uint32_t> a, vector<uint32_t> b);
 
 	share* PutANDVecGate(share* ina, share* inb);
-	vector<uint32_t> PutMUXGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t s, BOOL vecand = false);
+	vector<uint32_t> PutMUXGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t s, BOOL vecand = true);
+
+	share* PutVecANDMUXGate(share* a, share* b, share* s);
 	vector<uint32_t> PutVecANDMUXGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> s);
 	uint32_t PutVecANDMUXGate(uint32_t a, uint32_t b, uint32_t s);
 	uint32_t PutWideGate(e_gatetype type, vector<uint32_t> ins);
@@ -132,11 +162,17 @@ public:
 
 	share* PutRepeaterGate(share* input, uint32_t nvals);
 	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals);
-	uint32_t PutCombinerGate(vector<uint32_t>& input);
-	uint32_t PutCombineAtPosGate(vector<uint32_t>& input, uint32_t pos);
+	uint32_t PutCombinerGate(vector<uint32_t> input);
+	uint32_t PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos);
 
 	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
 	share* PutSubsetGate(share* input, uint32_t* posids, uint32_t nvals);
+
+	share* PutPermutationGate(share* input, uint32_t* positions);
+	uint32_t PutPermutationGate(vector<uint32_t> input, uint32_t* positions);
+
+	share* PutStructurizedCombinerGate(share* input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
+	uint32_t PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
 
 	share* PutSplitterGate(share* input);
 	vector<uint32_t> PutSplitterGate(uint32_t input);
@@ -170,6 +206,8 @@ public:
 	void PutMinIdxGate(share** a, share** b, uint32_t nvals, share** minval_shr, share** minid_shr);
 	void PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<uint32_t> > idx,
 			vector<uint32_t>& minval, vector<uint32_t>& minid);
+
+	void PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_t nshares, share** Sout);
 
 private:
 	void UpdateInteractiveQueue(uint32_t);

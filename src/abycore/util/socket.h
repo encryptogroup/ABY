@@ -30,7 +30,6 @@ public:
 		//Close();
 	}
 
-public:
 	BOOL Socket() {
 		BOOL success = false;
 		BOOL bOptVal = true;
@@ -80,7 +79,6 @@ public:
 		m_hSock = INVALID_SOCKET;
 	}
 
-public:
 	string GetIP() {
 		sockaddr_in addr;
 		UINT addr_len = sizeof(addr);
@@ -176,7 +174,6 @@ public:
 #else
 
 		timeval tv;
-		socklen_t len;
 
 		if (lTOSMilisec > 0) {
 			tv.tv_sec = lTOSMilisec / 1000;

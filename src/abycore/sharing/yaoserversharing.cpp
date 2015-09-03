@@ -227,15 +227,24 @@ void YaoServerSharing::EvaluateInteractiveOperations(uint32_t depth) {
 void YaoServerSharing::SendConversionValues(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	GATE* parent = m_pGates + gate->ingates.inputs.parents[0];
+
 	uint32_t pos = gate->gs.pos;
 	uint32_t id = pos >> 1;
+
 #ifdef DEBUGYAOSERVER
-	cout << "Evaluating A2Y with gateid = " << gateid << ", pos = " << pos;
+	cout << "Evaluating A2Y with gateid = " << gateid << ", parent = " <<
+			gate->ingates.inputs.parents[0] << ", pos = " << pos;
 #endif
+	assert(parent->instantiated);
+
 	//Convert server's share
 	if ((pos & 0x01) == 0) {
-		gate->gs.ishare.inval = (UGATE_T*) malloc(sizeof(UGATE_T));
-		gate->gs.ishare.inval[0] = (parent->gs.aval[id / GATE_T_BITS] >> (id % GATE_T_BITS)) & 0x01;
+		gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(gate->nvals, GATE_T_BITS), sizeof(UGATE_T));
+		for(uint32_t i = 0; i < gate->nvals; i++) {
+			//gate->gs.ishare.inval[0] = (parent->gs.aval[id / GATE_T_BITS] >> (id % GATE_T_BITS)) & 0x01;
+			gate->gs.ishare.inval[i/GATE_T_BITS] |= ((parent->gs.aval[(id+(i*parent->sharebitlen)) / GATE_T_BITS] >>
+					((id+i*parent->sharebitlen) % GATE_T_BITS)) & 0x01) << (i% GATE_T_BITS);
+		}
 #ifdef DEBUGYAOSERVER
 		cout << " (server share) with value " << (uint32_t) gate->gs.ishare.inval[0] << " (" << id / GATE_T_BITS << ", " << (id%GATE_T_BITS) <<
 		", " << parent->gs.aval[0] <<") " << gate->ingates.inputs.parents[0] << ", " << (uint64_t) parent->gs.aval << endl;
@@ -742,7 +751,7 @@ void YaoServerSharing::FinishCircuitLayer() {
 #endif
 					}
 				}
-			} else {
+			} else { //Evaluate conversion gates
 				uint32_t input = m_pGates[gateid].ingates.inputs.parents[0];
 
 				for (uint32_t k = 0; k < m_pGates[gateid].nvals; k++, linbitctr++, m_nClientInputKexIdx++, m_nClientInputKeyCtr++) {
@@ -855,8 +864,9 @@ void YaoServerSharing::UsedGate(uint32_t gateid) {
 	m_pGates[gateid].nused--;
 	//If the gate is needed in another subsequent gate, delete it
 	if (!m_pGates[gateid].nused) {
-		//free(m_pGates[gateid].gs.yinput.outKey);
-		//free(m_pGates[gateid].gs.yinput.pi);
+		free(m_pGates[gateid].gs.yinput.outKey);
+		free(m_pGates[gateid].gs.yinput.pi);
+		m_pGates[gateid].instantiated = false;
 	}
 }
 

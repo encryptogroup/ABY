@@ -21,14 +21,14 @@
 
 #include <sys/time.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define BATCH
-#define GENERATE_INPUTS
-#define INPUT_VECTORS
-//#define YAO_CIRCUIT
-//#define USE_VECTOR_AND_GATES
 //#define ZDEBUG
 //#define PRINT_PERFORMANCE_STATS
+#define USE_MULTI_MUX_GATES
+//#define MEASURE_COMMUNICATION
 
 #define MAXGATES 32000000
 
@@ -37,44 +37,6 @@
 #endif
 
 #define two_pow(e) (((uint64_t) 1) << (e))
-
-//TODO: this is bad, fix occurrences of ceil_log2 and replace by ceil_log2_min1 where log(1) = 1 is necessary. For all else use ceil_log2_real
-static int ceil_log2(int bits) {
-	if (bits == 1)
-		return 1;
-	int targetlevel = 0, bitstemp = bits;
-	while (bitstemp >>= 1)
-		++targetlevel;
-	return targetlevel + ((1 << targetlevel) < bits);
-}
-
-static int ceil_log2_min1(int bits) {
-	if (bits <= 1)
-		return 1;
-	int targetlevel = 0, bitstemp = bits;
-	while (bitstemp >>= 1)
-		++targetlevel;
-	return targetlevel + ((1 << targetlevel) < bits);
-}
-
-static int ceil_log2_real(int bits) {
-	if (bits == 1)
-		return 0;
-	int targetlevel = 0, bitstemp = bits;
-	while (bitstemp >>= 1)
-		++targetlevel;
-	return targetlevel + ((1 << targetlevel) < bits);
-}
-
-static int floor_log2(int bits) {
-	if (bits == 1)
-		return 1;
-	int targetlevel = 0;
-	while (bits >>= 1)
-		++targetlevel;
-	return targetlevel;
-}
-
 
 typedef struct SECURITYLEVELS {
 	int statbits;
@@ -144,6 +106,8 @@ template<class T>
 T sub(T a, T b, T m) {
 	return ((b) > (a)) ? (a) + (m) - (b) : (a) - (b);
 }
+
+
 #ifndef FALSE
 #define FALSE			0
 #endif
@@ -195,6 +159,48 @@ typedef int SOCKET;
 #include <iostream>
 
 using namespace std;
+
+
+//TODO: this is bad, fix occurrences of ceil_log2 and replace by ceil_log2_min1 where log(1) = 1 is necessary. For all else use ceil_log2_real
+static uint32_t ceil_log2(int bits) {
+	if (bits == 1)
+		return 1;
+	int targetlevel = 0, bitstemp = bits;
+	while (bitstemp >>= 1)
+		++targetlevel;
+	return targetlevel + ((1 << targetlevel) < bits);
+}
+
+static uint32_t ceil_log2_min1(int bits) {
+	if (bits <= 1)
+		return 1;
+	int targetlevel = 0, bitstemp = bits;
+	while (bitstemp >>= 1)
+		++targetlevel;
+	return targetlevel + ((1 << targetlevel) < bits);
+}
+
+static uint32_t ceil_log2_real(int bits) {
+	if (bits == 1)
+		return 0;
+	int targetlevel = 0, bitstemp = bits;
+	while (bitstemp >>= 1)
+		++targetlevel;
+	return targetlevel + ((1 << targetlevel) < bits);
+}
+
+static uint32_t floor_log2(int bits) {
+	if (bits == 1)
+		return 1;
+	int targetlevel = 0;
+	while (bits >>= 1)
+		++targetlevel;
+	return targetlevel;
+}
+
+
+/*compute (a-b) mod (m+1) as: b > a ? (m) - (b-1) + a : a - b	*/
+#define MOD_SUB(a, b, m) (( ((b) > (a))? (m) - ((b) -1 ) + a : a - b))
 
 #endif //__TYPEDEFS_H__
 

@@ -12,9 +12,9 @@ CC=g++
 #Most aggressive optimizations, asserts are ignored
 #COMPILER_OPTIONS=-O3 -DNDEBUG
 #Optimizations
-#COMPILER_OPTIONS=-O2
+COMPILER_OPTIONS=-O2
 #DEBUG
-COMPILER_OPTIONS=-g3 -ggdb -O0 -Wall -Wextra
+#COMPILER_OPTIONS=-g3 -ggdb -O0 -Wall -Wextra
 
 BATCH=
 

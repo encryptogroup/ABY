@@ -72,6 +72,17 @@ struct callback_gate {
 	void* infos;
 };
 
+struct and_vec_simd {
+	uint32_t bitlen;
+};
+
+struct struct_combine_gate {
+	uint32_t pos_start;
+	uint32_t pos_incr;
+	uint32_t num_in_gates;
+};
+
+
 //TODO redefine yval as UINT64_T
 //TODO store in a specific output field, stored in val right now (which also BOOL values are)
 union gate_specific {
@@ -104,6 +115,10 @@ union gate_specific {
 	uint32_t pos;
 	//callback routine that handles the evaluation. Functionality is defined by the developer
 	callback_gate cbgate;
+	//field that is used when vector ANDs are performed using SIMD gates
+	and_vec_simd avs;
+	//is used for structurized combiner gates
+	struct_combine_gate struct_comb;
 };
 typedef union gate_specific gs_t;
 
@@ -155,13 +170,14 @@ public:
 	}
 	uint32_t PutPrimitiveGate(e_gatetype type, uint32_t inleft, uint32_t inright, uint32_t rounds);
 	uint32_t PutNonLinearVectorGate(e_gatetype type, uint32_t choiceinput, uint32_t vectorinput, uint32_t rounds);
-	uint32_t PutCombinerGate(vector<uint32_t>& input);
+	uint32_t PutCombinerGate(vector<uint32_t> input);
 	vector<uint32_t> PutSplitterGate(uint32_t input);		//, vector<uint32_t> gatelengths = NULL);
-	uint32_t PutCombineAtPosGate(vector<uint32_t>& input, uint32_t pos);
+	uint32_t PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos);
 	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
+	uint32_t PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
 	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals);
 	vector<uint32_t> PutRepeaterGate(vector<uint32_t> input, uint32_t nvals);
-	uint32_t PutPermutationGate();
+	uint32_t PutPermutationGate(vector<uint32_t> input, uint32_t* positions);
 
 	uint32_t PutOUTGate(uint32_t in, e_role dst, uint32_t rounds);
 	vector<uint32_t> PutOUTGate(vector<uint32_t> in, e_role dst, uint32_t rounds);
@@ -169,7 +185,7 @@ public:
 	uint32_t PutINGate(e_sharing context, uint32_t nvals, uint32_t sharebitlen, e_role src, uint32_t rounds);
 	uint32_t PutConstantGate(e_sharing context, UGATE_T val, uint32_t nvals, uint32_t sharebitlen);
 	uint32_t PutINVGate(uint32_t in);
-	uint32_t PutCONVGate(vector<uint32_t>& in, uint32_t nrounds, e_sharing dst, uint32_t sharebitlen);
+	uint32_t PutCONVGate(vector<uint32_t> in, uint32_t nrounds, e_sharing dst, uint32_t sharebitlen);
 	uint32_t PutCallbackGate(vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 	uint32_t GetGateHead() {
 		return m_nNextFreeGate;

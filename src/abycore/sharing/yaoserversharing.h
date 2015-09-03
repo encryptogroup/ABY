@@ -23,15 +23,6 @@
 #include <algorithm>
 #include "yaosharing.h"
 
-typedef struct {
-	uint32_t gateid;
-	UGATE_T* inval;
-} input_gate_val_t;
-
-typedef struct {
-	uint32_t gateid;
-	uint32_t pos;
-} a2y_gate_pos_t;
 
 //#define DEBUGYAOSERVER
 /**

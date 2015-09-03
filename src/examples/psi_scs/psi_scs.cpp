@@ -28,7 +28,7 @@
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint32_t* bitlen, uint32_t* neles, uint32_t* secparam, string* address,
-		uint16_t* port, int32_t* test_op) {
+		uint16_t* port, int32_t* test_op, bool* useyao) {
 
 	uint32_t int_role = 0, int_port = 0;
 	bool useffc = false;
@@ -39,7 +39,8 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 			  {	(void*) bitlen, T_NUM, 'b', "Bit-length", true, false },
 			  { (void*) secparam, T_NUM, 's', "Symmetric Security Bits, default: 128", false, false },
 			  {	(void*) address, T_STR, 'a', "IP-address, default: localhost", false, false },
-			  {	(void*) &int_port, T_NUM, 'p', "Port, default: 7766", false, false } };
+			  {	(void*) &int_port, T_NUM, 'p', "Port, default: 7766", false, false },
+			  {	(void*) useyao, T_FLAG, 'y', "Use Yao's garbled circuits, default: false", false, false } };
 
 	if (!parse_options(argcp, argvp, options,
 			sizeof(options) / sizeof(parsing_ctx))) {
@@ -69,17 +70,21 @@ int main(int argc, char** argv) {
 	string address = "127.0.0.1";
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
+	bool useyao=false;
 
 	read_test_options(&argc, &argv, &role, &bitlen, &neles, &secparam, &address,
-			&port, &test_op);
+			&port, &test_op, &useyao);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
 
-	cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
-	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,	nthreads, mt_alg, S_YAO);
-	cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
-	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,	nthreads, mt_alg, S_BOOL);
+	if(useyao) {
+		cout << "Testing PSI SCS in Yao sharing" << endl;
+		test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,	nthreads, mt_alg, S_YAO);
+	} else {
+		cout << "Testing PSI SCS circuit in Boolean sharing" << endl;
+		test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,	nthreads, mt_alg, S_BOOL);
+	}
 
 	cout << "PSI circuit successfully executed" << endl;
 

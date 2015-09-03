@@ -26,7 +26,7 @@
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint32_t* bitlen, uint32_t* neles, uint32_t* secparam, string* address,
-		uint16_t* port, int32_t* test_op, double* epsilon) {
+		uint16_t* port, int32_t* test_op, double* epsilon, bool* useyao) {
 
 	uint32_t int_role = 0, int_port = 0;
 	bool useffc = false;
@@ -38,7 +38,9 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 			  {	(void*) epsilon, T_DOUBLE, 'e', "Epsilon for Cuckoo hashing (default: 1.2)", false, false },
 			  { (void*) secparam, T_NUM, 's', "Symmetric Security Bits, default: 128", false, false },
 			  {	(void*) address, T_STR, 'a', "IP-address, default: localhost", false, false },
-			  {	(void*) &int_port, T_NUM, 'p', "Port, default: 7766", false, false } };
+			  {	(void*) &int_port, T_NUM, 'p', "Port, default: 7766", false, false },
+			  {	(void*) useyao, T_FLAG, 'y', "Use Yao's garbled circuits, default: false", false, false }
+			};
 
 	if (!parse_options(argcp, argvp, options,
 			sizeof(options) / sizeof(parsing_ctx))) {
@@ -71,17 +73,23 @@ int main(int argc, char** argv) {
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 	double epsilon = 1.2;
+	bool useyao=false;
 
 	read_test_options(&argc, &argv, &role, &bitlen, &neles, &secparam, &address,
-			&port, &test_op, &epsilon);
+			&port, &test_op, &epsilon, &useyao);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
 
-	test_phasing_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,
-			epsilon, nthreads, mt_alg, S_BOOL);
-	test_phasing_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,
-			epsilon, nthreads, mt_alg, S_YAO);
+	if(useyao) {
+		test_phasing_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,
+				epsilon, nthreads, mt_alg, S_YAO);
+	} else {
+		test_phasing_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,
+				epsilon, nthreads, mt_alg, S_BOOL);
+	}
+
+
 
 	cout << "PSI circuit successfully executed" << endl;
 

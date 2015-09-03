@@ -31,7 +31,7 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 	uint32_t *srv_set, *cli_set, *circ_intersect, *ver_intersect;
 	uint32_t seqsize = 2* neles, ver_inter_ctr = 0, circ_inter_ctr = 0;
 	uint32_t nswapgates = estimateGates(neles);
-	share **shr_server_set, **shr_client_set, **shr_sel_bits, **shr_out;
+	share **shr_server_set, **shr_client_set, **shr_out;
 	assert(bitlen <= 32);
 	uint64_t mask = ((uint64_t) 1 << bitlen)-1;
 
@@ -53,7 +53,6 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 
 	shr_server_set = (share**) malloc(sizeof(share*) * neles);
 	shr_client_set = (share**) malloc(sizeof(share*) * neles);
-	shr_sel_bits = (share**) malloc(sizeof(share*) * nswapgates);
 	shr_out = (share**) malloc(sizeof(share*) * neles);
 
 	srand(time(0));//(unsigned)time(0));
@@ -95,8 +94,7 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 	//Get inputs for the selection bits of the swap gate in the waksman network
 	vector<uint32_t> selbits(nswapgates);
 	for (uint32_t i = 0; i < nswapgates; i++) {
-		//shr_sel_bits[i] = circ->PutINGate(1, SERVER);
-		selbits[i] = circ->PutINGate(1, CLIENT);
+		selbits[i] = ((share*) circ->PutINGate(1, (uint32_t) rand() % 2, 1, SERVER))->get_gate(0);
 	}
 
 	vector<uint32_t> out = BuildSCSPSICircuit(shr_server_set, shr_client_set, selbits, neles, bitlen, circ, circ, 0);
@@ -137,13 +135,13 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 		for(uint32_t i = 0; i < ver_inter_ctr; i++) {
 			assert(ver_intersect[i] == circ_intersect[i]);
 		}
+		cout << "Intersection of size " << circ_inter_ctr << " correctly computed" << endl;
 	}
 
 	free(srv_set);
 	free(cli_set);
 	free(shr_server_set);
 	free(shr_client_set);
-	free(shr_sel_bits);
 	free(shr_out);
 	free(ver_intersect);
 	free(circ_intersect);

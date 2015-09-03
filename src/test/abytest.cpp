@@ -18,13 +18,9 @@
 
 #include "abytest.h"
 
-static const test_ops_t test_all_ops[] = { { OP_IO, S_BOOL, "iobool" }, { OP_XOR, S_BOOL, "xorbool" }, { OP_AND, S_BOOL, "andbool" }, { OP_ADD, S_BOOL, "addbool" }, { OP_MUL,
-		S_BOOL, "mulbool" }, { OP_CMP, S_BOOL, "cmpbool" }, { OP_EQ, S_BOOL, "eqbool" }, { OP_MUX, S_BOOL, "muxbool" }, { OP_SUB, S_BOOL, "subbool" }, { OP_IO, S_YAO, "ioyao" }, {
-		OP_XOR, S_YAO, "xoryao" }, { OP_AND, S_YAO, "andyao" }, { OP_IO, S_ARITH, "ioarith" }, { OP_ADD, S_YAO, "addyao" }, { OP_MUL, S_YAO, "mulyao" },
-		{ OP_CMP, S_YAO, "cmpyao" }, { OP_EQ, S_YAO, "eqyao" }, { OP_MUX, S_YAO, "muxyao" }, { OP_SUB, S_YAO, "subyao" }, { OP_ADD, S_ARITH, "addarith" }, { OP_MUL, S_ARITH,
-				"mularith" }, { OP_Y2B, S_YAO, "y2b" }, { OP_B2A, S_BOOL, "b2a" }, { OP_B2Y, S_BOOL, "b2y" }, { OP_AND_VEC, S_BOOL, "vec-and" } };
 
-//static const test_ops_t test_single_op [] {{OP_ADD, S_BOOL, "distinct_op"}};
+
+//static const aby_ops_t test_single_op [] {{OP_ADD, S_BOOL, "distinct_op"}};
 
 /*
  * List of failing tests:
@@ -79,18 +75,18 @@ bool run_tests(e_role role, char* address, seclvl seclvl, uint32_t bitlen, uint3
 
 	UGATE_T val;
 
-	test_ops_t* test_ops;
+	aby_ops_t* test_ops;
 
 	if (test_op > -1) {
-		test_ops = new test_ops_t;
-		assert(test_op < sizeof(test_all_ops) / sizeof(test_ops_t));
-		test_ops->op = test_all_ops[test_op].op;
-		test_ops->opname = test_all_ops[test_op].opname;
-		test_ops->sharing = test_all_ops[test_op].sharing;
+		test_ops = new aby_ops_t;
+		assert(test_op < sizeof(m_tAllOps) / sizeof(aby_ops_t));
+		test_ops->op = m_tAllOps[test_op].op;
+		test_ops->opname = m_tAllOps[test_op].opname;
+		test_ops->sharing = m_tAllOps[test_op].sharing;
 		nops = 1;
 	} else {
-		test_ops = (test_ops_t*) test_all_ops;
-		nops = sizeof(test_all_ops) / sizeof(test_ops_t);
+		test_ops = (aby_ops_t*) m_tAllOps;
+		nops = sizeof(m_tAllOps) / sizeof(aby_ops_t);
 	}
 
 	srand(seed);
@@ -104,7 +100,7 @@ bool run_tests(e_role role, char* address, seclvl seclvl, uint32_t bitlen, uint3
 	return true;
 }
 
-int32_t test_standard_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t num_test_runs, uint32_t nops,
+int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t num_test_runs, uint32_t nops,
 		e_role role, bool verbose) {
 	uint32_t a = 0, b = 0, c, verify, sa, sb, *avec, *bvec;
 	share *shra, *shrb, *shrres, *shrout, *shrsel;
@@ -221,7 +217,7 @@ int32_t test_standard_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen
 	return 1;
 }
 
-int32_t test_vector_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t nvals, uint32_t num_test_runs,
+int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t nvals, uint32_t num_test_runs,
 		uint32_t nops, e_role role, bool verbose) {
 	uint32_t *avec, *bvec, *cvec, *verifyvec, tmpbitlen, tmpnvals;
 	uint8_t *sa, *sb;
@@ -350,6 +346,14 @@ int32_t test_vector_ops(test_ops_t* test_ops, ABYParty* party, uint32_t bitlen, 
 				 shrres = yc->PutADDGate(shrres, shrres);
 				 circ = yc;
 				 verify = (a*b) + (a*b);
+				 break;
+				 case OP_AND_VEC:
+				 shra = circ->PutCombinerGate(shra);
+				 //shrb = circ->PutCombinerGate(shrb);
+				 shrres = circ->PutANDVecGate(shra, shrb);
+				 //shrres = circ->PutANDGate(shra, shrb);
+				 shrres = circ->PutSplitterGate(shrres);
+				 verify = (b&0x01) * a;
 				 break;*/
 			default:
 				shrres = circ->PutADDGate(shra, shrb);

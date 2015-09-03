@@ -20,7 +20,6 @@
 #include "abyparty.h"
 
 #include <sstream>
-//#define ABYDEBUG
 
 using namespace std;
 
@@ -430,11 +429,11 @@ BOOL ABYParty::ThreadReceiveValues() {
 }
 
 BOOL ABYParty::AssignInputValues() {
-	vector<CBitVector> inputbits(m_vSharings.size());
+	/*vector<CBitVector> inputbits(m_vSharings.size());
 	vector<uint32_t> inbits(m_vSharings.size());
 
 	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
-		inbits[i] = m_vSharings[i]->AssignInput(inputbits[i]);
+		inbits[i] = m_vSharings[i]->AssignInput(inputbits[i]); //TODO is not needed anymore
 		m_nMyNumInBits += inbits[i];
 	}
 
@@ -443,7 +442,7 @@ BOOL ABYParty::AssignInputValues() {
 		m_vInputBits.SetBits(inputbits[i].GetArr(), (int) startpos, (int) inbits[i]);
 		startpos += inbits[i];
 	}
-
+	*/
 	return true;
 }
 
@@ -559,8 +558,6 @@ void ABYParty::Reset() {
 		m_vSharings[i]->Reset();
 
 	m_pCircuit->Reset();
-
-	m_vInputBits.delCBitVector();
 }
 
 double ABYParty::GetTiming(ABYPHASE phase) {

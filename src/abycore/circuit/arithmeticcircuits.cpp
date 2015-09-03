@@ -116,36 +116,19 @@ template<class T> uint32_t ArithmeticCircuit::PutINGate(uint32_t nvals, T val, e
 	return gateid;
 }
 
-share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) {
+
+template<class T> share* ArithmeticCircuit::InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role) {
 	share* shr = new arithshare(this);
 	shr->set_gate(0, PutINGate(nvals, val, role));
 	return shr;
 }
 
-//TODO: hack around: works only if val consists of a single input value
-share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) {
-	assert(bitlen <= m_nShareBitLen);
-	return PutINGate(nvals, *((uint32_t*) val), bitlen, role);
-}
 
-share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) {
-	uint32_t* tmpval = (uint32_t*) malloc(nvals * sizeof(uint32_t));
-	for(uint32_t i = 0; i < nvals; i++) {
-		tmpval[i] = (uint32_t) val[i];
-	}
-	assert(bitlen <= m_nShareBitLen);
-	//return PutINGate(nvals, *((uint32_t*) val), bitlen, role);
-	share* out = PutINGate(nvals, tmpval, bitlen, role);
-	free(tmpval);
-	return out;
-}
-
-
-share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) {
+template<class T> share* ArithmeticCircuit::InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role) {
 	assert(bitlen <= m_nShareBitLen);
 	share* shr = new arithshare(this);
 	uint32_t gateid = PutINGate(nvals, role);
-	uint32_t iters = sizeof(UGATE_T) / sizeof(uint32_t);
+	uint32_t iters = sizeof(UGATE_T) / sizeof(T);
 	assert(iters > 0);
 	shr->set_gate(0, gateid);
 
@@ -162,7 +145,6 @@ share* ArithmeticCircuit::PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitl
 	}
 
 	return shr;
-
 }
 
 uint32_t ArithmeticCircuit::PutOUTGate(uint32_t parentid, e_role dst) {

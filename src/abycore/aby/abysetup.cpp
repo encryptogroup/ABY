@@ -19,9 +19,7 @@
 #include "abysetup.h"
 
 ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg mtalgo) {
-	//m_sSecLvl = seclvl;
 	m_nNumOTThreads = numThreads;
-	//m_aSeed = seed;
 	m_cCrypt = crypt;
 	m_eRole = role;
 	m_nSndVals = 2;

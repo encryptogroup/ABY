@@ -31,6 +31,7 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 	assert(bitlen <= 32);
 	uint32_t nbins = epsilon * neles * 2;
 	uint8_t *client_hash_table, *server_hash_table, *stash;
+	timeval t_start, t_end;
 
 	//vector<uint32_t> sel_bits(nswapgates);
 	maxstashsize = compute_max_stash_size(neles, nbins);
@@ -59,11 +60,25 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 	set_fixed_elements(neles, bitlen, srv_set, cli_set);
 
 	//map the random elements to a set of bins using simple hashing or to a cuckoo table
+	gettimeofday(&t_start, NULL);
 	ServerHashingRoutine((uint8_t*) srv_set, neles, bitlen, nbins, &maxbinsize, &server_hash_table,
 			&internalbitlen, nthreads, crypt);
+	gettimeofday(&t_end, NULL);
 
+	cout << "Maxbinsize = " << maxbinsize << endl;
+	if(role == SERVER) {
+		cout << "Time for simple hashing: " << getMillies(t_start, t_end) << endl;
+	}
+
+	gettimeofday(&t_start, NULL);
 	ClientHashingRoutine((uint8_t*) cli_set, neles, bitlen, nbins, &client_hash_table, inv_perm,
 			&internalbitlen, &stash, maxstashsize, &stashperm, nthreads, crypt);
+
+	gettimeofday(&t_end, NULL);
+
+	if(role == CLIENT) {
+		cout << "Time for cuckoo hashing: " << getMillies(t_start, t_end) << endl;
+	}
 
 	shr_srv_hash_table = (share**) malloc(sizeof(share*) * maxbinsize);
 	shr_cli_stash = (share**) malloc(sizeof(share*) * maxstashsize);
@@ -375,19 +390,19 @@ void pad_elements(uint8_t* hash_table, uint32_t elebytelen, uint32_t nbins, uint
 }
 
 uint32_t compute_max_stash_size(uint32_t neles, uint32_t nbins) {
-	if(neles >= 1<<20) {
+	if(neles >= 1<<24) {
 		return 2;
-	} else if(neles >= 2<<16) {
+	} else if(neles >= 1<<20) {
 		return 3;
-	} else if(neles >= 2<<14) {
+	} else if(neles >= 1<<16) {
 		return 4;
-	} else if(neles >= 2<<13) {
+	} else if(neles >= 1<<13) {
 		return 5;
-	} else if(neles >= 2<<12) {
+	} else if(neles >= 1<<12) {
 		return 6;
-	} else if(neles >= 2<<11) {
+	} else if(neles >= 1<<11) {
 		return 8;
-	} else if(neles >= 2<<10) {
+	} else if(neles >= 1<<10) {
 		return 10;
 	} else {
 		return 12;

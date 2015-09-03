@@ -58,7 +58,6 @@ void YaoClientSharing::PrepareSetupPhase(ABYSetup* setup) {
 	m_nANDGates = m_cBoolCircuit->GetNumANDGates();
 
 	gt_size = ((uint64_t) m_nANDGates) * KEYS_PER_GATE_IN_TABLE * m_nSecParamBytes;
-
 	if (m_cBoolCircuit->GetMaxDepth() == 0)
 		return;
 
@@ -162,7 +161,8 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 			EvaluateCallbackGate(localops[i]);
 		}
 		else {
-			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
+			cerr << "YaoClientSharing: Non-interactive operation not recognized: " <<
+					(uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
 		}
 	}
 }
@@ -173,7 +173,9 @@ void YaoClientSharing::EvaluateInteractiveOperations(uint32_t depth) {
 	//cout << "In total I have " <<  localops.size() << " local operations to evaluate on this level " << endl;
 	for (uint32_t i = 0; i < interactiveops.size(); i++) {
 		GATE* gate = m_pGates + interactiveops[i];
-
+#ifdef DEBUGYAOCLIENT
+		cout << "Evaluating interactive operation in Yao client sharing with type = " << get_gate_type_name(gate->type) << endl;
+#endif
 		if (gate->type == G_IN) {
 			if (gate->gs.ishare.src == SERVER) {
 				ReceiveServerKeys(interactiveops[i]);
@@ -205,7 +207,8 @@ void YaoClientSharing::EvaluateInteractiveOperations(uint32_t depth) {
 		} else if(gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(interactiveops[i]);
 		} else {
-			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
+			cerr << "YaoClientSharing: Interactive operation not recognized: " << (uint32_t) gate->type << "(" <<
+					get_gate_type_name(gate->type) << ")" << endl;
 		}
 	}
 }
@@ -388,10 +391,16 @@ void YaoClientSharing::EvaluateConversionGate(uint32_t gateid) {
 		cout << "Client conversion gate with pos = " << gate->gs.pos << endl;
 #endif
 		if (parent->context == S_ARITH) {
-			uint64_t id, tval;
+			uint64_t id;
+			uint8_t *tval;
+			tval = (uint8_t*) calloc(ceil_divide(parent->nvals, 8), sizeof(uint8_t));
 			id = gate->gs.pos >> 1;
-			tval = (val[id / GATE_T_BITS] >> (id % GATE_T_BITS)) & 0x01; //TODO: not going to work for nvals > 1
-			m_vROTSndBuf.SetBits((BYTE*) &tval, (int) m_nClientSndOTCtr, gate->nvals);
+			for(uint32_t i = 0; i < parent->nvals; i++) {
+				tval[i/8] |= ((val[(id+i*parent->sharebitlen) / GATE_T_BITS] >>
+						((id+i*parent->sharebitlen) % GATE_T_BITS)) & 0x01) << (i%8);
+			}
+			m_vROTSndBuf.SetBits((BYTE*) tval, (int) m_nClientSndOTCtr, gate->nvals);
+			free(tval);
 #ifdef DEBUGYAOCLIENT
 			cout << "value of conversion gate: " << tval << endl;
 #endif
@@ -562,7 +571,7 @@ void YaoClientSharing::UsedGate(uint32_t gateid) {
 	m_pGates[gateid].nused--;
 	//If the gate is needed in another subsequent gate, delete it
 	if (!m_pGates[gateid].nused && m_pGates[gateid].type != G_CONV) {
-		//free(m_pGates[gateid].gs.yval);
+		free(m_pGates[gateid].gs.yval);
 		m_pGates[gateid].instantiated = false;
 	}
 }

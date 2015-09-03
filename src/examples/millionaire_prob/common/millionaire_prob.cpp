@@ -73,8 +73,8 @@ int32_t test_millionaire_prob_circuit(e_role role, char* address, seclvl seclvl,
 				but PutINGate() must always be called for both roles.
 	*/
 
-	s_alice_money = circ->PutINGate(nvals, alice_money, 32, CLIENT);
-	s_bob_money = circ->PutINGate(nvals, bob_money, 32, SERVER);
+	s_alice_money = circ->PutINGate(nvals, alice_money, (uint32_t) 32, CLIENT);
+	s_bob_money = circ->PutINGate(nvals, bob_money, (uint32_t) 32, SERVER);
 
 	/**
 		Step 7: Call the build method for building the circuit for the

@@ -81,6 +81,7 @@ enum e_gatetype {
 	G_PERM = 0x83, /**< Enum for PERMUTATION gates that permute the value of multi-value gates */
 	G_COMBINEPOS = 0x84, /**< Enum for COMBINE_AT_POSITION gates that form a new multi-value gate from specific positions of old multi-value gates */
 	G_SUBSET = 0x85, /**< Enum for SUBSET gates that form a new multi-value gate from multiple positions of one multi-value gate */
+	G_STRUCT_COMBINE = 0x86, /**< Enum for STRUCTURIZED COMBINER gates which combine one or multiple input gates based on an increase value
 //G_YAO_BUILD 		/**< Enum for  */
 };
 
@@ -127,7 +128,7 @@ enum e_sharing {
 	S_YAO = 1, /**< Enum for performing yao sharing*/
 	S_ARITH = 2, /**< Enum for performing arithemetic sharing*/
 	S_LAST = 3, /**< Enum for indicating the last enum value. DO NOT PUT ANOTHER ENUM AFTER THIS ONE! !*/
-	S_YAO_PIPE = 4 /**< TODO Enum for performing yao sharing in pipelined mode*/
+	S_YAO_PIPE = 8, /**< TODO Enum for performing yao sharing in pipelined mode*/
 
 };
 
@@ -139,6 +140,30 @@ enum e_sharing {
 enum e_role {
 	SERVER, CLIENT, ALL
 };
+
+
+/**
+ \struct 	aby_ops_t
+ \brief	Holds the operation, a sharing and the string name of the operation
+ */
+typedef struct {
+	e_operation op;
+	e_sharing sharing;
+	std::string opname;
+} aby_ops_t;
+
+
+static string get_circuit_type_name(e_circuit c) {
+	switch(c) {
+	case C_BOOLEAN:
+		return "BOOLEAN";
+	case C_ARITHMETIC:
+		return "ARITHMETIC";
+	default:
+		return "NN";
+	}
+}
+
 
 static string get_role_name(e_role r) {
 	switch(r) {
@@ -260,5 +285,14 @@ const uint8_t m_vFixedKeyAESSeed[AES_KEY_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44
  \brief Static seed for various testing functionalities
  */
 const uint8_t m_vSeed[AES_KEY_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+
+/** \var m_tAllOps
+ \brief All operations in the different sharings that are available in ABY
+ */
+static const aby_ops_t m_tAllOps[] = { { OP_IO, S_BOOL, "iobool" }, { OP_XOR, S_BOOL, "xorbool" }, { OP_AND, S_BOOL, "andbool" }, { OP_ADD, S_BOOL, "addbool" }, { OP_MUL,
+		S_BOOL, "mulbool" }, { OP_CMP, S_BOOL, "cmpbool" }, { OP_EQ, S_BOOL, "eqbool" }, { OP_MUX, S_BOOL, "muxbool" }, { OP_SUB, S_BOOL, "subbool" }, { OP_IO, S_YAO, "ioyao" }, {
+		OP_XOR, S_YAO, "xoryao" }, { OP_AND, S_YAO, "andyao" }, { OP_IO, S_ARITH, "ioarith" }, { OP_ADD, S_YAO, "addyao" }, { OP_MUL, S_YAO, "mulyao" },
+		{ OP_CMP, S_YAO, "cmpyao" }, { OP_EQ, S_YAO, "eqyao" }, { OP_MUX, S_YAO, "muxyao" }, { OP_SUB, S_YAO, "subyao" }, { OP_ADD, S_ARITH, "addarith" }, { OP_MUL, S_ARITH,
+				"mularith" }, { OP_Y2B, S_YAO, "y2b" }, { OP_B2A, S_BOOL, "b2a" }, { OP_B2Y, S_BOOL, "b2y" }, { OP_AND_VEC, S_BOOL, "vec-and" }, { OP_A2Y, S_ARITH, "a2y" } };
 
 #endif /* CONSTANTS_H_ */

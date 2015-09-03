@@ -126,14 +126,18 @@ uint32_t ABYCircuit::PutNonLinearVectorGate(e_gatetype type, uint32_t choiceinpu
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, type, choiceinput, vectorinput);
 
+	assert((m_pGates[vectorinput].nvals % m_pGates[choiceinput].nvals) == 0);
+
 	gate->nvals = m_pGates[vectorinput].nvals;
 
 	gate->nrounds = rounds;
 
+	gate->gs.avs.bitlen = m_pGates[vectorinput].nvals / m_pGates[choiceinput].nvals;
+
 	return m_nNextFreeGate++;
 }
 
-uint32_t ABYCircuit::PutCombinerGate(vector<uint32_t>& input) {
+uint32_t ABYCircuit::PutCombinerGate(vector<uint32_t> input) {
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, G_COMBINE, input);
 
@@ -168,7 +172,7 @@ vector<uint32_t> ABYCircuit::PutSplitterGate(uint32_t input) {
 	return outids;
 }
 
-uint32_t ABYCircuit::PutCombineAtPosGate(vector<uint32_t>& input, uint32_t pos) {
+uint32_t ABYCircuit::PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos) {
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, G_COMBINEPOS, input);
 
@@ -214,6 +218,30 @@ uint32_t ABYCircuit::PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nv
 	return m_nNextFreeGate++;
 }
 
+uint32_t ABYCircuit::PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals) {
+	GATE* gate = m_pGates + m_nNextFreeGate;
+	InitGate(gate, G_STRUCT_COMBINE, input);
+
+	gate->nvals = nvals;
+
+	gate->gs.struct_comb.pos_start = pos_start;
+	gate->gs.struct_comb.pos_incr= pos_incr;
+	gate->gs.struct_comb.num_in_gates = input.size();
+
+	/*cout << "From " << pos_start << " incr: " << pos_incr << " for " << nvals << " vals with max = ";
+	for (uint32_t i = 0; i < input.size(); i++) {
+		cout << m_pGates[input[i]].nvals << "; ";
+		//assert(pos_start + ((nvals-1) * pos_incr) <= m_pGates[input[i]].nvals);
+	}
+	cout << endl;*/
+
+	if (gate->nvals > m_nMaxVectorSize)
+		m_nMaxVectorSize = gate->nvals;
+
+	return m_nNextFreeGate++;
+
+}
+
 uint32_t ABYCircuit::PutRepeaterGate(uint32_t input, uint32_t nvals) {
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, G_REPEAT, input);
@@ -234,8 +262,23 @@ vector<uint32_t> ABYCircuit::PutRepeaterGate(vector<uint32_t> input, uint32_t nv
 	return out;
 }
 
-uint32_t ABYCircuit::PutPermutationGate() {
-	//TODO
+uint32_t ABYCircuit::PutPermutationGate(vector<uint32_t> input, uint32_t* positions) {
+	GATE* gate = m_pGates + m_nNextFreeGate;
+	InitGate(gate, G_PERM, input);
+
+	gate->nvals = input.size();
+
+	gate->gs.perm.posids = (uint32_t*) malloc(sizeof(uint32_t) * gate->nvals);
+
+	for (uint32_t i = 0; i < input.size(); i++) {
+		assert(positions[i] < m_pGates[input[i]].nvals);
+		gate->gs.perm.posids[i] = positions[i];
+	}
+
+	if (gate->nvals > m_nMaxVectorSize)
+		m_nMaxVectorSize = gate->nvals;
+
+	return m_nNextFreeGate++;
 }
 
 uint32_t ABYCircuit::PutOUTGate(uint32_t in, e_role dst, uint32_t rounds) {
@@ -296,7 +339,7 @@ uint32_t ABYCircuit::PutINVGate(uint32_t in) {
 	return m_nNextFreeGate++;
 }
 
-uint32_t ABYCircuit::PutCONVGate(vector<uint32_t>& in, uint32_t nrounds, e_sharing dst, uint32_t sharebitlen) {
+uint32_t ABYCircuit::PutCONVGate(vector<uint32_t> in, uint32_t nrounds, e_sharing dst, uint32_t sharebitlen) {
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, G_CONV, in);
 

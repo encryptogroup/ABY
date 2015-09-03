@@ -124,7 +124,7 @@ share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ) {
 	return new boolshare(out, circ);
 }
 
-vector<uint32_t> AddAESRoundKey(vector<uint32_t>& val, vector<uint32_t>& key, uint32_t keyaddr, BooleanCircuit* circ) {
+vector<uint32_t> AddAESRoundKey(vector<uint32_t>& val, vector<uint32_t> key, uint32_t keyaddr, BooleanCircuit* circ) {
 	vector<uint32_t> out(8);
 	for (uint32_t i = 0; i < 8; i++) {
 		out[i] = circ->PutXORGate(val[i], key[keyaddr + i]);

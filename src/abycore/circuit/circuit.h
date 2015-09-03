@@ -26,6 +26,12 @@ class share;
 class boolshare;
 class arithshare;
 
+struct non_lin_on_layers {
+	uint32_t* num_on_layer;
+	uint32_t min_depth;
+	uint32_t max_depth;
+};
+
 /** Circuit class */
 class Circuit {
 
@@ -176,8 +182,16 @@ public:
 	virtual uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1) = 0;
 
 	//virtual int 	PutINGate(int nvals, ROLE src) = 0;
+	/* Unfortunately, a template function cannot be used due to virtual */
 	virtual share* PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint32_t nvals, uint16_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint32_t nvals, uint8_t val, uint32_t bitlen, e_role role) = 0;
+
+	/* Unfortunately, a template function cannot be used due to virtual */
+	virtual share* PutINGate(uint32_t nvals, uint64_t* val, uint32_t bitlen, e_role role) = 0;
 	virtual share* PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) = 0;
 	virtual share* PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) = 0;
 
 	virtual share* PutADDGate(share* ina, share* inb) = 0;
@@ -227,6 +241,8 @@ protected:
 	void UpdateInteractiveQueue(share* gateid);
 	void UpdateLocalQueue(share* gateid);
 
+	void ResizeNonLinOnLayer(uint32_t new_max_depth);
+
 	ABYCircuit* m_cCircuit; /** ABYCircuit Object  */
 	GATE* m_pGates;			/** Gates vector which stores the */
 	e_sharing m_eContext;
@@ -273,7 +289,7 @@ public:
 	}
 	;
 
-	vector<uint32_t>& get_gates() {
+	vector<uint32_t> get_gates() {
 		return m_ngateids;
 	}
 	;
@@ -321,6 +337,7 @@ public:
 
 	virtual uint8_t* get_clear_value() = 0;
 	virtual void get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals) = 0;
+	virtual void get_clear_value_vec(uint64_t** vec, uint32_t *bitlen, uint32_t *nvals) = 0;
 
 protected:
 	vector<uint32_t> m_ngateids;
@@ -353,6 +370,9 @@ public:
 
 	uint8_t* get_clear_value();
 	void get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals);
+	//TODO solve problem of different types by templates!!
+	void get_clear_value_vec(uint64_t** vec, uint32_t *bitlen, uint32_t *nvals);
+
 };
 
 /** Arithmetic Share Class */
@@ -381,6 +401,7 @@ public:
 
 	uint8_t* get_clear_value();
 	void get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t* nvals);
+	void get_clear_value_vec(uint64_t** vec, uint32_t* bitlen, uint32_t* nvals);
 
 };
 

@@ -175,9 +175,18 @@ void free_hash_table(sht_ctx* table) {
 
 inline uint32_t get_max_bin_size(uint32_t nbins, uint32_t neles) {
 	double n = neles;
-	if(ceil_divide(neles, nbins) < 3)
-		return 3*max((double) log(n) / log(log(n)), (double) 3.0);
-	else
+	if(ceil_divide(neles, nbins) < 3) {
+		if(neles >= (1<<24))
+			return 21;
+		if(neles >= (1<<20))
+			return 20;
+		if(neles >= (1<<16))
+			return 19;
+		if(neles >= (1<<12))
+			return 18;
+		if(neles >= (1<<8))
+			return 15;
+	} else
 		return 6*max((uint32_t) ceil_divide(neles, nbins), (uint32_t) 3);
 }
 

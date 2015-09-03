@@ -126,6 +126,7 @@ class CThread {
 public:
 	CThread() {
 		m_bRunning = FALSE;
+		m_pThread = 0;
 	}
 	virtual ~CThread() {
 	}

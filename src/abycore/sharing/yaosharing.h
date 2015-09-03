@@ -27,7 +27,15 @@
 #define FIXED_KEY_GARBLING
 //#define MAXSHAREBUFSIZE 1000000
 
-//TODO the garbled table is addressed as uint32_t and might overflow if sufficient (>4mio AND gates) are required. Change to LONG
+typedef struct {
+	uint32_t gateid;
+	UGATE_T* inval;
+} input_gate_val_t;
+
+typedef struct {
+	uint32_t gateid;
+	uint32_t pos;
+} a2y_gate_pos_t;
 
 
 /** 
