@@ -40,8 +40,8 @@ EXAMPLE = $(lastword $(subst /, ,${CURDIR}))
 
 all: ${BIN}/${EXAMPLE}.exe
 
-${BIN}/${EXAMPLE}.exe: ${OBJECTS} ${OBJECTS_CORE} ${OBJECTS_MIRACL}
-	${CC} ${COMPILER_OPTIONS} ${CFLAGS} $^ ${LIBRARIES} -o $@
+${BIN}/${EXAMPLE}.exe: ${OBJECTS} ${OBJECTS_CORE}
+	${CC} ${COMPILER_OPTIONS} ${CFLAGS} $^ ${OBJECTS_MIRACL} ${LIBRARIES} -o $@
 
 %.o: %.cpp %.h
 	${CC} $< ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
