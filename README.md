@@ -40,10 +40,11 @@ This code is provided as a experimental implementation for testing purposes and 
 
 #### Building the ABY Framework
 
-1. Clone a copy of the main ABY git repository and its submodules by running:
+1. **Recursively clone** the ABY git repository (including its submodules) by running:
 	```
 	git clone --recursive git://github.com/encryptogroup/ABY
 	```
+Please **don't** download the .zip file, since it doesn't include submodules.
 
 2. Enter the Framework directory: `cd ABY/`
 
