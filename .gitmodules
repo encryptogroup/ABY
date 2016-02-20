@@ -4,3 +4,6 @@
 [submodule "src/abycore/ot/externals"]
 	path = src/abycore/ot/external/
 	url = git://github.com/encryptogroup/OTExtension.git
+[submodule "src/abycore/ot/external"]
+	path = src/abycore/ot/external
+	url = git://github.com/encryptogroup/OTExtension
