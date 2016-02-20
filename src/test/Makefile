@@ -15,6 +15,7 @@ OBJECTS := $(patsubst %.cpp, %.o, ${SOURCES})
 # object files for the test cases
 OBJECTS_MILLIONAIRE_CIRC=${SRC}/examples/millionaire_prob/common/millionaire_prob.o
 OBJECTS_AES_CIRC=${SRC}/examples/aes/common/aescircuit.o
+OBJECTS_SHA1_CIRC=${SRC}/examples/sha1/common/sha1_circuit.o
 OBJECTS_PSI_CIRC=${SRC}/examples/psi_scs/common/*.o
 OBJECTS_PHASING_CIRC=${SRC}/examples/psi_phasing/common/*.o
 OBJECTS_HASHING_CIRC=${SRC}/examples/psi_phasing/common/hashing/*.o
@@ -24,13 +25,13 @@ MIRACL_LIB_DIR=${CORE}/util/miracl_lib
 OBJECTS_MIRACL=${MIRACL_LIB_DIR}/*.o
 
 # all source files and corresponding object files in abycore
-SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/util/Miracl/*')
+SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/util/Miracl/*' -not -path '*/ot/external/*')
 OBJECTS_CORE := $(SOURCES_CORE:.cpp=.o)
 
 # compiler settings
 CC=g++
-COMPILER_OPTIONS=-O2
-DEBUG_OPTIONS=-g3 -Wall
+COMPILER_OPTIONS=-O0
+DEBUG_OPTIONS=-g3 -ggdb #-Wall
 BATCH=
 ARCHITECTURE = $(shell uname -m)
 ifeq (${ARCHITECTURE},x86_64)
@@ -48,7 +49,7 @@ EXAMPLE = test-aby
 
 all: ${BIN}/${EXAMPLE}.exe
 
-${BIN}/${EXAMPLE}.exe: ${OBJECTS_CORE} ${OBJECTS} ${OBJECTS_MILLIONAIRE_CIRC} ${OBJECTS_AES_CIRC} ${OBJECTS_PSI_CIRC} ${OBJECTS_PHASING_CIRC} ${OBJECTS_HASHING_CIRC} ${OBJECTS_MIRACL}
+${BIN}/${EXAMPLE}.exe: ${OBJECTS_CORE} ${OBJECTS} ${OBJECTS_MILLIONAIRE_CIRC} ${OBJECTS_AES_CIRC} ${OBJECTS_SHA1_CIRC} ${OBJECTS_PSI_CIRC} ${OBJECTS_PHASING_CIRC} ${OBJECTS_HASHING_CIRC} ${OBJECTS_MIRACL}
 	${CC} ${COMPILER_OPTIONS} -o $@ ${CFLAGS} $^ ${LIBRARIES}
 
 

@@ -35,18 +35,25 @@ int main(int argc, char** argv) {
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 	double epsilon = 1.2;
+	uint32_t num_test_runs = 5;
 
-	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op, &verbose);
+	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op, &num_test_runs, &mt_alg, &verbose);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	run_tests(role, (char*) address.c_str(), seclvl, bitlen, nvals, nthreads, mt_alg, test_op, verbose);
+	run_tests(role, (char*) address.c_str(), seclvl, bitlen, nvals, nthreads, mt_alg, test_op, num_test_runs, verbose);
 
 	//Test the AES circuit
 	cout << "Testing AES circuit in Boolean sharing" << endl;
 	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL);
 	cout << "Testing AES circuit in Yao sharing" << endl;
 	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_YAO);
+
+	//Test the SHA1 circuit TODO: Constant gates are limited to nvals < 64. Fix!
+	cout << "Testing SHA1 circuit in Boolean sharing" << endl;
+	test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_BOOL);
+	cout << "Testing SHA1 circuit in Yao sharing" << endl;
+	test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_YAO);
 
 	//Test the Sort-Compare-Shuffle PSI circuit
 	cout << "Testing SCS PSI circuit in Boolean sharing" << endl;
@@ -67,10 +74,11 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-bool run_tests(e_role role, char* address, seclvl seclvl, uint32_t bitlen, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, int32_t test_op, bool verbose) {
+bool run_tests(e_role role, char* address, seclvl seclvl, uint32_t bitlen, uint32_t nvals, uint32_t nthreads,
+		e_mt_gen_alg mt_alg, int32_t test_op, uint32_t num_test_runs, bool verbose) {
 	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads, mt_alg);
 
-	uint32_t num_test_runs = 5, nops;
+	uint32_t nops;
 	uint64_t seed = 0xAAAAAAAAAAAAAAAA;
 
 	UGATE_T val;
@@ -113,8 +121,8 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 			a = (uint32_t) rand() % ((uint64_t) 1<<bitlen);
 			b = (uint32_t) rand() % ((uint64_t) 1<<bitlen);
 
-			shra = circ->PutINGate(1, a, bitlen, SERVER);
-			shrb = circ->PutINGate(1, b, bitlen, CLIENT);
+			shra = circ->PutINGate(a, bitlen, SERVER);
+			shrb = circ->PutINGate(b, bitlen, CLIENT);
 
 			switch (test_ops[i].op) {
 			case OP_IO:
@@ -152,7 +160,7 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 			case OP_MUX:
 				sa = rand() % 2;
 				sb = rand() % 2;
-				shrsel = circ->PutXORGate(circ->PutINGate(1, sa, 1, SERVER), circ->PutINGate(1, sb, 1, CLIENT));
+				shrsel = circ->PutXORGate(circ->PutINGate(sa, 1, SERVER), circ->PutINGate(sb, 1, CLIENT));
 				shrres = circ->PutMUXGate(shra, shrb, shrsel);
 				verify = sa ^ sb == 0 ? b : a;
 				break;
@@ -211,7 +219,7 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 				cout << get_role_name(role) << " " << test_ops[i].opname << ": values: a = " <<
 				a << ", b = " << b << ", c = " << c << ", verify = " << verify << endl;
 			party->Reset();
-			//assert(verify == c);
+			assert(verify == c);
 		}
 	}
 	return 1;
@@ -239,7 +247,7 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 	for (uint32_t r = 0; r < num_test_runs; r++) {
 		for (uint32_t i = 0; i < nops; i++) {
 			if (!verbose)
-				cout << "Running test no. " << i << " on operation " << test_ops[i].opname << endl;
+				cout << "Running vector test no. " << i << " on operation " << test_ops[i].opname << endl;
 
 			Circuit* circ = sharings[test_ops[i].sharing]->GetCircuitBuildRoutine();
 
@@ -247,8 +255,9 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 				avec[j] = (uint32_t) rand() % ((uint64_t) 1<<bitlen);;
 				bvec[j] = (uint32_t) rand() % ((uint64_t) 1<<bitlen);;
 			}
-			shra = circ->PutINGate(nvals, avec, bitlen, SERVER);
-			shrb = circ->PutINGate(nvals, bvec, bitlen, CLIENT);
+			shra = circ->PutSIMDINGate(nvals, avec, bitlen, SERVER);
+			shrb = circ->PutSIMDINGate(nvals, bvec, bitlen, CLIENT);
+
 
 			switch (test_ops[i].op) {
 			case OP_IO:
@@ -296,7 +305,7 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 					 sa[j] = (uint8_t) (rand() & 0x01);
 					 sb[j] = (uint8_t) (rand() & 0x01);
 				}
-				shrsel = circ->PutXORGate(circ->PutINGate(nvals, sa, 1, SERVER), circ->PutINGate(nvals, sb, 1, CLIENT));
+				shrsel = circ->PutXORGate(circ->PutSIMDINGate(nvals, sa, 1, SERVER), circ->PutSIMDINGate(nvals, sb, 1, CLIENT));
 				shrres = circ->PutMUXGate(shra, shrb, shrsel);
 				for (uint32_t j = 0; j < nvals; j++)
 					verifyvec[j] = (sa[j] ^ sb[j]) == 0 ? bvec[j] : avec[j];
@@ -367,7 +376,6 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 
 			//cout << "Size of output: " << shrout->size() << endl;
 			shrout->get_clear_value_vec(&cvec, &tmpbitlen, &tmpnvals);
-
 			assert(tmpnvals == nvals);
 			party->Reset();
 			for (uint32_t j = 0; j < nvals; j++) {
@@ -375,7 +383,6 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 					cout << "\t" << get_role_name(role) << " " << test_ops[i].opname << ": values[" << j <<
 					"]: a = " << avec[j] <<	", b = " << bvec[j] << ", c = " << cvec[j] << ", verify = " <<
 					verifyvec[j] << endl;
-
 				assert(verifyvec[j] == cvec[j]);
 			}
 		}
@@ -392,17 +399,18 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 
 }
 
-int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, string* address, uint16_t* port, int32_t* test_op,
-		bool* verbose) {
+int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam,
+		string* address, uint16_t* port, int32_t* test_op, uint32_t* num_test_runs, e_mt_gen_alg *mt_alg, bool* verbose) {
 
-	uint32_t int_role = 0, int_port = 0;
+	uint32_t int_role = 0, int_port = 0, int_mtalg = 0;
 	bool useffc = false;
 
 	parsing_ctx options[] = { { (void*) &int_role, T_NUM, 'r', "Role: 0/1", true, false }, { (void*) nvals, T_NUM, 'n', "Number of parallel operations elements", false, false }, {
 			(void*) bitlen, T_NUM, 'b', "Bit-length, default 32", false, false }, { (void*) secparam, T_NUM, 's', "Symmetric Security Bits, default: 128", false, false }, {
 			(void*) address, T_STR, 'a', "IP-address, default: localhost", false, false }, { (void*) &int_port, T_NUM, 'p', "Port, default: 7766", false, false }, {
 			(void*) test_op, T_NUM, 't', "Single test (leave out for all operations), default: off", false, false }, { (void*) verbose, T_FLAG, 'v',
-			"Do not print computation results, default: off", false, false } };
+			"Do not print computation results, default: off", false, false }, {(void*) num_test_runs, T_NUM, 'i', "Number of test runs for operation tests, default: 5",
+					false, false }, { (void*) &int_mtalg, T_NUM, 'm', "Arithmetic MT gen algo [0: OT, 1: Paillier, 2: DGK], default: 0", false, false } };
 
 	if (!parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
@@ -417,6 +425,9 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 		assert(int_port < 1 << (sizeof(uint16_t) * 8));
 		*port = (uint16_t) int_port;
 	}
+
+	assert(int_mtalg < MT_LAST);
+	*mt_alg = (e_mt_gen_alg) int_mtalg;
 
 	//delete options;
 
