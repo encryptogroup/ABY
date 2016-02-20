@@ -503,7 +503,9 @@ inline void BoolSharing::EvaluateINVGate(uint32_t gateid) {
 		gate->gs.val[i] = m_pGates[parentid].gs.val[i] ^ tmpval;
 	}
 	//set only the remaining nvals%GATE_T_BITS
-	gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
+	if(gate->nvals % GATE_T_BITS != 0) {
+	  gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
+	}
 #ifdef DEBUGBOOL
 	cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
 	" and input: " << m_pGates[parentid].gs.val[0]<< (dec) << endl;
