@@ -212,6 +212,9 @@ public:
 
 	uint32_t PutPermutationGate(vector<uint32_t> input, uint32_t* positions);
 
+	share* PutStructurizedCombinerGate(share* input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
+	uint32_t PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
+
 	share* PutSplitterGate(share* input);
 	vector<uint32_t> PutSplitterGate(uint32_t input);
 

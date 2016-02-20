@@ -22,8 +22,6 @@ ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg
 	m_nNumOTThreads = numThreads;
 	m_cCrypt = crypt;
 	m_eRole = role;
-	m_nSndVals = 2;
-	m_nIKNPProgress = 0;
 	m_eMTGenAlg = mtalgo;
 
 	if (!Init()) {

@@ -23,7 +23,9 @@
 #include <algorithm>
 #include "../circuit/booleancircuits.h"
 
+//#define USE_KK_OT_FOR_MT
 //#define DEBUGBOOL
+//#define BENCHBOOLTIME
 /**
  BOOL SHARING - <DETAILED EXPLANATION PLEASE>
  */
@@ -49,15 +51,15 @@ public:
 	void EvaluateLocalOperations(uint32_t level);
 	void EvaluateInteractiveOperations(uint32_t level);
 
-	void FinishCircuitLayer();
+	void FinishCircuitLayer(uint32_t level);
 
 	void PrepareOnlinePhase();
 
 	inline void InstantiateGate(GATE* gate);
 	inline void UsedGate(uint32_t gateid);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& bytesize);
-	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes);
+	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
+	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
 
 	void EvaluateSIMDGate(uint32_t gateid);
 
@@ -92,7 +94,6 @@ public:
 	void PrintPerformanceStatistics();
 	//ENDS HERE
 private:
-	uint32_t m_nNumANDSizes;
 
 	uint32_t m_nTotalNumMTs;
 	vector<uint32_t> m_nNumMTs;
@@ -111,6 +112,9 @@ private:
 	uint32_t m_nInputShareRcvSize;
 	uint32_t m_nOutputShareRcvSize;
 
+	uint32_t m_nNumANDSizes;
+
+
 	vector<CBitVector> m_vA; //Dim 1 for all pairs of sender / receiver, Dim 2 for MTs of different bitlengths as sender / receiver
 	vector<CBitVector> m_vB; //value B of a multiplication triple
 	vector<CBitVector> m_vS; // temporary value for the computation of the multiplication triples
@@ -123,6 +127,14 @@ private:
 	vector<CBitVector> m_vResB;
 	non_lin_vec_ctx* m_vANDs;
 
+	//multiplication triple values A, B and C for use in KK OT ext. Are later written to m_vA, m_vB and mvC. m_vKKS is used for temporary results
+	vector<CBitVector> m_vKKA;
+	vector<CBitVector> m_vKKB;
+	vector<CBitVector> m_vKKC;
+	vector<CBitVector*> m_vKKS;
+	vector<CBitVector*> m_vKKChoices;
+
+
 	CBitVector m_vInputShareSndBuf;
 	CBitVector m_vOutputShareSndBuf;
 
@@ -130,6 +142,14 @@ private:
 	CBitVector m_vOutputShareRcvBuf;
 
 	BooleanCircuit* m_cBoolCircuit;
+
+#ifdef BENCHBOOLTIME
+	double m_nCombTime;
+	double m_nSubsetTime;
+	double m_nCombStructTime;
+	double m_nSIMDTime;
+	double m_nXORTime;
+#endif
 
 	/** 
 	 Share Values

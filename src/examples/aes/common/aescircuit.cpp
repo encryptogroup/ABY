@@ -99,7 +99,7 @@ share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ) {
 	for (round = 0; round < AES_ROUNDS; round++) {
 		for (i = 0; i < AES_STATE_COLS; i++) {
 			for (j = 0; j < AES_STATE_ROWS; j++) {
-				state[i][j] = AddAESRoundKey(state[i][j], key->get_gates(), (round * AES_STATE_SIZE + (i * AES_STATE_COLS) + j) * 8, circ); //ARK
+				state[i][j] = AddAESRoundKey(state[i][j], key->get_wires(), (round * AES_STATE_SIZE + (i * AES_STATE_COLS) + j) * 8, circ); //ARK
 				state_temp[(i - j) & 0x3][j] = AESSBox_Forward_BP(state[i][j], circ); // SBox + ShiftRows
 			}
 		}
