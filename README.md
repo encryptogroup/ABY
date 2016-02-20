@@ -7,7 +7,7 @@ By *Daniel Demmler, Thomas Schneider and Michael Zohner* ([ENCRYPTO](http://www.
 ### Features
 ---
 ABY efficiently combines secure computation schemes based on **Arithmetic sharing**, **Boolean sharing**, and **Yao’s garbled circuits** and makes available best-practice solutions in secure two-party computation.
-It allows to pre-compute almost all cryptographic operations and provides novel, highly efficient conversions between secure computation schemes based on pre-computed *oblivious transfer extensions*.
+It allows to pre-compute almost all cryptographic operations and provides novel, highly efficient conversions between secure computation schemes based on pre-computed *oblivious transfer extensions* using our [**OT extension library**](https://github.com/encryptogroup/OTExtension) available on GitHub.
 ABY supports several standard operations and provides example applications.
 
 This code is provided as a experimental implementation for testing purposes and should not be used in a productive environment. We cannot guarantee security and correctness.
@@ -44,18 +44,18 @@ This code is provided as a experimental implementation for testing purposes and 
 	```
 	git clone --recursive git://github.com/encryptogroup/ABY
 	```
-Please **don't** download the .zip file, since it doesn't include submodules.
+Please **don't** download the .zip file, since it doesn't include submodules. Also note that there has been an update where the OT extension code has been outsourced as **submodule**. In case an older code version is updated to the current version, please run `git submodule update`. 
 
 2. Enter the Framework directory: `cd ABY/`
 
 3. Call `make` in the root directory of ABY to compile all dependencies, tests, and examples and create the corresponding executables.
-
 
 #### Makefile Options
 ##### Building ABY
 **In most cases you should be fine with simply running `make` in the ABY root directory.** This will invoke `make all`, which will obviously build everything and is called by default. There are several options you can pass to `make` to build parts of ABY.
 
 * `make miracl` - build the Miracl library, which is included as submodule according to their build instructions
+* `make otext` - copies the [**OT extension source files**](https://github.com/encryptogroup/OTExtension) from the external repository into the internal ABY repository
 * `make core` - build only the core files of ABY, requires Miracl
 * `make examples` - build all examples and create executables for them, requires core
 * `make test` - build the tests and create an executable, requires core
@@ -66,7 +66,7 @@ Please **don't** download the .zip file, since it doesn't include submodules.
 ##### Cleaning ABY
 * `make clean` - cleans all binaries plus example and test object files
 * `make cleanmore` - same as `make clean` plus ABY core object files
-* `make cleanall` - same as `make cleanmore` plus Miracl library objects
+* `make cleanall` - same as `make cleanmore` plus Miracl and OT extension library objects
 
 
 #### Doxygen Documentation
@@ -83,6 +83,7 @@ See the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY
   * The [**Euclidean Distance**](https://en.wikipedia.org/wiki/Euclidean_distance) for two 2-dimensional coordinates.
   * The **Minimum Euclidean Distance** for finding the closest match between one d-dimensional element and a database of n d-dimensional elements.
   * The [**Arithmetic Inner Product**](https://en.wikipedia.org/wiki/Dot_product#Algebraic_definition) that multiplies N values component-wise and then adds all multiplication results (modulo 16 Bit in this case).
+  * Secure Hash Function Evaluation [**SHA1**](https://en.wikipedia.org/wiki/SHA1), where both parties concatenate their 256-bit inputs to a 512-bit message which is collaboratively hashed using SHA1. 
   * Further example applications will be added soon.
 
 #### Running Applications
