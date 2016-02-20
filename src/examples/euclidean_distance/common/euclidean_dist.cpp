@@ -72,15 +72,15 @@ int32_t test_euclid_dist_circuit(e_role role, char* address, seclvl seclvl,
 	uint8_t dummy = 0;
 
 	if (role == SERVER) {
-		s_x1 = circ->PutINGate(nvals, x1, 32, SERVER);
-		s_y1 = circ->PutINGate(nvals, y1, 32, SERVER);
-		s_x2 = circ->PutINGate(nvals, dummy, 32, CLIENT);
-		s_y2 = circ->PutINGate(nvals, dummy, 32, CLIENT);
+		s_x1 = circ->PutINGate(x1, 32, SERVER);
+		s_y1 = circ->PutINGate(y1, 32, SERVER);
+		s_x2 = circ->PutINGate(dummy, 32, CLIENT);
+		s_y2 = circ->PutINGate(dummy, 32, CLIENT);
 	} else {
-		s_x1 = circ->PutINGate(nvals, dummy, 32, SERVER);
-		s_y1 = circ->PutINGate(nvals, dummy, 32, SERVER);
-		s_x2 = circ->PutINGate(nvals, x2, 32, CLIENT);
-		s_y2 = circ->PutINGate(nvals, y2, 32, CLIENT);
+		s_x1 = circ->PutINGate(dummy, 32, SERVER);
+		s_y1 = circ->PutINGate(dummy, 32, SERVER);
+		s_x2 = circ->PutINGate(x2, 32, CLIENT);
+		s_y2 = circ->PutINGate(y2, 32, CLIENT);
 	}
 
 	/**

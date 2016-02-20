@@ -114,9 +114,10 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 	m_nOutputDestionationsCtr = 0;
 	//deque<uint32_t> out = m_cBoolCircuit->GetOutputGatesForParty(CLIENT);
 
-	OTTask* task = (OTTask*) malloc(sizeof(OTTask));
+	IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 	task->bitlen = symbits;
-	task->ottype = R_OT;
+	task->snd_flavor = Snd_R_OT;
+	task->rec_flavor = Rec_OT;
 	task->numOTs = m_nClientInputBits + m_nConversionInputBits;
 	task->mskfct = fMaskFct;
 	task->pval.sndval.X0 = &(m_vROTMasks[0]);
@@ -305,7 +306,7 @@ void YaoServerSharing::CreateAndSendGarbledCircuit(ABYSetup* setup) {
 
 	//Send the garbled circuit and the output mapping to the client
 	if (m_nANDGates > 0)
-		setup->AddSendTask(m_vGarbledCircuit.GetArr(), m_nGarbledTableCtr * m_nSecParamBytes * KEYS_PER_GATE_IN_TABLE);
+		setup->AddSendTask(m_vGarbledCircuit.GetArr(), m_nANDGates * m_nSecParamBytes * KEYS_PER_GATE_IN_TABLE);
 	if (m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT) > 0)
 		setup->AddSendTask(m_vOutputShareSndBuf.GetArr(), ceil_divide(m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT), 8));
 #ifdef DEBUGYAOSERVER
@@ -364,6 +365,12 @@ void YaoServerSharing::PrecomputeGC(deque<uint32_t>& queue) {
 			EvaluateInversionGate(gate);
 		} else if (gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(queue[i]);
+		} else if (gate->type == G_SHARED_OUT) {
+			GATE* parent = m_pGates + gate->ingates.inputs.parent;
+			InstantiateGate(gate);
+			memcpy(gate->gs.yinput.outKey, parent->gs.yinput.outKey, gate->nvals * m_nSecParamBytes);
+			memcpy(gate->gs.yinput.pi, parent->gs.yinput.pi, gate->nvals);
+			UsedGate(gate->ingates.inputs.parent);
 		} else {
 			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
 		}
@@ -525,11 +532,11 @@ void YaoServerSharing::EvaluateANDGate(GATE* gate) {
 		assert(gate->gs.yinput.pi[g] < 2);
 
 		//Pipelined send - TODO: outsource in own thread
-		if(m_nGarbledTableCtr >= GARBLED_TABLE_WINDOW) {
+		//if(m_nGarbledTableCtr >= GARBLED_TABLE_WINDOW) {
 			//TODO: pipeline the garbled table transfer
 			//sock.Send(m_vGarbledCircuit.GetArr(), m_nGarbledTableCtr * m_nSecParamBytes * KEYS_PER_GATE_IN_TABLE);
-			m_nGarbledTableCtr=0;
-		}
+		//	m_nGarbledTableCtr=0;
+		//}
 	}
 	UsedGate(idleft);
 	UsedGate(idright);
@@ -667,7 +674,7 @@ void YaoServerSharing::EvaluateOutputGate(GATE* gate) {
 #endif
 }
 
-void YaoServerSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& sndbytes) {
+void YaoServerSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
 	//Input keys of server
 	if (m_nServerKeyCtr > 0) {
 #ifdef DEBUGYAOSERVER
@@ -695,7 +702,7 @@ void YaoServerSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& s
 	}
 }
 
-void YaoServerSharing::FinishCircuitLayer() {
+void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
 	//Use OT bits from the client to determine the send bits that are supposed to go out next round
 	if (m_nClientInBitCtr > 0) {
 		for (uint32_t i = 0, linbitctr = 0; i < m_vClientInputGate.size() && linbitctr < m_nClientInBitCtr; i++) {
@@ -797,7 +804,7 @@ void YaoServerSharing::FinishCircuitLayer() {
 }
 ;
 
-void YaoServerSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes) {
+void YaoServerSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) {
 	//receive bit from random-OT
 	if (m_nClientInBitCtr > 0) {
 #ifdef DEBUGYAOSERVER

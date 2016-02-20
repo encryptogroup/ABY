@@ -18,7 +18,7 @@
 
 #include "connection.h"
 
-BOOL Connect(string address, short port, vector<CSocket> &sockets, int id) {
+BOOL Connect(string address, short port, vector<CSocket*> &sockets, int id) {
 	int nNumConnections;
 
 	BOOL bFail = FALSE;
@@ -31,12 +31,12 @@ BOOL Connect(string address, short port, vector<CSocket> &sockets, int id) {
 
 	for (int j = 0; j < sockets.size(); j++) {
 		for (int i = 0; i < RETRY_CONNECT; i++) {
-			if (!sockets[j].Socket())
+			if (!sockets[j]->Socket())
 				goto connect_failure;
-			if (sockets[j].Connect(address, port, lTO)) {
+			if (sockets[j]->Connect(address, port, lTO)) {
 				// send pid when connected
-				sockets[j].Send(&id, sizeof(int));
-				sockets[j].Send(&j, sizeof(int));
+				sockets[j]->Send(&id, sizeof(int));
+				sockets[j]->Send(&j, sizeof(int));
 #ifndef BATCH
 				os.str("");
 				os << " (" << id << ") (" << j << ") connected" << endl;
@@ -49,7 +49,7 @@ BOOL Connect(string address, short port, vector<CSocket> &sockets, int id) {
 				}
 			}
 			SleepMiliSec(10);
-			sockets[j].Close();
+			sockets[j]->Close();
 		}
 	}
 
@@ -62,22 +62,22 @@ BOOL Connect(string address, short port, vector<CSocket> &sockets, int id) {
 
 }
 
-BOOL Listen(string address, short port, vector<vector<CSocket> > &sockets, int numConnections, int myID) {
+BOOL Listen(string address, short port, vector<vector<CSocket*> > &sockets, int numConnections, int myID) {
 	// everybody except the last thread listenes
 	ostringstream os;
 
 #ifndef BATCH
 	cout << "Listening: " << address << ":" << port << endl;
 #endif
-	if (!sockets[myID][0].Socket()) {
+	if (!sockets[myID][0]->Socket()) {
 		cerr << "Error: a socket could not be created " << endl;
 		goto listen_failure;
 	}
-	if (!sockets[myID][0].Bind(port, address)) {
+	if (!sockets[myID][0]->Bind(port, address)) {
 		cerr << "Error: a socket could not be bound" << endl;
 		goto listen_failure;
 	}
-	if (!sockets[myID][0].Listen()) {
+	if (!sockets[myID][0]->Listen()) {
 		cerr << "Error: could not listen on the socket " << endl;
 		goto listen_failure;
 	}
@@ -85,7 +85,7 @@ BOOL Listen(string address, short port, vector<vector<CSocket> > &sockets, int n
 	for (int i = 0; i < numConnections; i++) //twice the actual number, due to double sockets for OT
 			{
 		CSocket sock;
-		if (!sockets[myID][0].Accept(sock)) {
+		if (!sockets[myID][0]->Accept(sock)) {
 			cerr << "Error: could not accept connection" << endl;
 			goto listen_failure;
 		}
@@ -114,7 +114,7 @@ BOOL Listen(string address, short port, vector<vector<CSocket> > &sockets, int n
 		cout << os.str() << flush;
 #endif
 		// locate the socket appropriately
-		sockets[nID][conID].AttachFrom(sock);
+		sockets[nID][conID]->AttachFrom(sock);
 		sock.Detach();
 	}
 

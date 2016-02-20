@@ -104,20 +104,20 @@ public:
 	/**	
 	 Method for finishing the circuit layer <Better description please>
 	 */
-	virtual void FinishCircuitLayer() = 0;
+	virtual void FinishCircuitLayer(uint32_t level) = 0;
 
 	/**	
 	 Method for sending the data.
 	 \param 	sendbuf 	sender buffer
 	 \param 	bytesize	data size
 	 */
-	virtual void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& bytesize) = 0;
+	virtual void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize) = 0;
 	/**	
 	 Method for receiving the data.
 	 \param 	rsvbuf 		receiver buffer
 	 \param 	rcvsize		data size
 	 */
-	virtual void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes) = 0;
+	virtual void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) = 0;
 	/**	
 	 Method for Instantiating a gate
 	 \param gate 		Input gate

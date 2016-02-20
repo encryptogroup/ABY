@@ -27,8 +27,31 @@
 #define AES_BYTES				16
 #define LOG2_AES_BITS			ceil_log2(AES_BITS)
 
+#define SHA1_OUT_BYTES 20
+#define SHA256_OUT_BYTES 32
+#define SHA512_OUT_BYTES 64
+
+#define MAX_NUM_COMM_CHANNELS 256
+#define ADMIN_CHANNEL MAX_NUM_COMM_CHANNELS-1
+#define OT_ADMIN_CHANNEL ADMIN_CHANNEL-1
+#define ABY_PARTY_CHANNEL OT_ADMIN_CHANNEL-1
+#define ABY_SETUP_CHANNEL ABY_PARTY_CHANNEL-1
+#define DJN_CHANNEL	 32
+#define DGK_CHANNEL DJN_CHANNEL
+#define OT_BASE_CHANNEL 0
+
+#define NUMOTBLOCKS 128
+#define BUFFER_OT_KEYS 128
+
+#define ABY_OT
+#define FIXED_KEY_AES_HASHING //for OT routines
+
+/**
+ \enum	field_type
+ \brief	Enumeration for the field type of asymmetric cryptographic operations
+ */
 enum field_type {
-	P_FIELD, ECC_FIELD
+	P_FIELD, ECC_FIELD, FIELD_LAST
 };
 
 static const seclvl ST = { 40, 80, 1024, 160, 163 };
@@ -75,6 +98,7 @@ enum e_gatetype {
 	G_CONSTANT = 0x06, /**< Enum for CONSTANT gates */
 	G_CONV = 0x07, /**< Enum for CONVERSION gates (dst is used to specify the sharing to convert to) */
 	G_CALLBACK = 0x08, /**< Enum for Callback gates where the developer specifies a routine which is called upon gate evaluation */
+	G_SHARED_OUT = 0x09, /**< Enum for shared output gate, where the output is kept secret-shared between parties after the evaluation*/
 	G_COMBINE = 0x80, /**< Enum for COMBINER gates that combine multiple single-value gates to one multi-value gate  */
 	G_SPLIT = 0x81, /**< Enum for SPLITTER gates that split a multi-value gate to multiple single-value gates */
 	G_REPEAT = 0x82, /**< Enum for REPEATER gates that repeat the value of a single-value gate to form a new multi-value gate */
@@ -101,6 +125,7 @@ enum e_operation {
 	OP_SUB = 7, /**< Enum for performing SUBTRACTION*/
 	OP_AND_VEC = 8, /**< Enum for performing VECTORED AND*/
 	OP_MUL_VEC = 9, /**< Enum for performing VECTORED MULTIPLICATION*/
+	OP_SHARE_OUT = 10, /**< Enum for computing an arbitrary truth table. Is needed for the 1ooN OT in BoolNonMTSharing */
 	OP_IN, /**< Enum for performing INPUT*/
 	OP_OUT, /**< Enum for performing OUTPUT*/
 	OP_INV, /**< Enum for performing INVERSION*/
@@ -139,6 +164,30 @@ enum e_sharing {
  */
 enum e_role {
 	SERVER, CLIENT, ALL
+};
+
+/**
+ \enum 	ot_ext_prot
+ \brief	Specifies the different underlying OT extension protocols that are available
+ */
+enum ot_ext_prot {
+	IKNP, ALSZ, NNOB, KK, PROT_LAST
+};
+
+/**
+ \enum 	snd_ot_flavor
+ \brief	Different OT flavors for the OT sender
+ */
+enum snd_ot_flavor {
+	Snd_OT, Snd_C_OT, Snd_R_OT, Snd_GC_OT, Snd_OT_LAST
+};
+
+/**
+ \enum 	rec_ot_flavor
+ \brief	Different OT flavors for the OT receiver
+ */
+enum rec_ot_flavor {
+	Rec_OT, Rec_R_OT, Rec_OT_LAST
 };
 
 
@@ -264,6 +313,42 @@ static string get_op_name(e_operation op) {
 		return "CMBP";
 	default:
 		return "NN";
+	}
+}
+
+static const char* getSndFlavor(snd_ot_flavor stype) {
+	switch (stype) {
+	case Snd_OT: return "Snd_OT";
+	case Snd_C_OT: return "Snd_C_OT";
+	case Snd_R_OT: return "Snd_R_OT";
+	case Snd_GC_OT: return "Snd_GC_OT";
+	default: return "unknown snd type";
+	}
+}
+
+static const char* getRecFlavor(rec_ot_flavor rtype) {
+	switch (rtype) {
+	case Rec_OT: return "Rec_OT";
+	case Rec_R_OT: return "Rec_R_OT";
+	default: return "unknown rec type";
+	}
+}
+
+static const char* getProt(ot_ext_prot prot) {
+	switch (prot) {
+	case IKNP: return "IKNP";
+	case ALSZ: return "ALSZ";
+	case NNOB: return "NNOB";
+	case KK: return "KK";
+	default: return "unknown protocol";
+	}
+}
+
+static const char* getFieldType(field_type ftype) {
+	switch (ftype) {
+	case P_FIELD: return "P_FIELD";
+	case ECC_FIELD: return "ECC_FIELD";
+	default: return "unknown field";
 	}
 }
 

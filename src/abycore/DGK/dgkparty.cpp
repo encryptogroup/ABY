@@ -27,7 +27,7 @@
  * initializes a DGK_Party with the asymmetric security parameter and the sharelength and exchanges public keys.
  * @param mode - 0 = generate new key; 1 = read key
  */
-DGKParty::DGKParty(UINT DGKbits, UINT sharelen, CSocket sock, UINT readkey) {
+DGKParty::DGKParty(UINT DGKbits, UINT sharelen, channel* chan, UINT readkey) {
 
 	m_nShareLength = sharelen;
 	m_nDGKbits = DGKbits;
@@ -46,7 +46,7 @@ DGKParty::DGKParty(UINT DGKbits, UINT sharelen, CSocket sock, UINT readkey) {
 		generateKey();
 	}
 
-	keyExchange(sock);
+	keyExchange(chan);
 }
 
 /**
@@ -112,7 +112,7 @@ DGKParty::~DGKParty() {
  * inputs pre-allocates byte buffers for aMT calculation.
  * numMTs must be the total number of MTs and divisible by 2
  */
-void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, CSocket sock) {
+void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan) {
 	struct timeval start, end;
 
 	numMTs = numMTs / 2; // We can be both sender and receiver at the same time.
@@ -169,11 +169,11 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 
 		window = min(window, tosend);
 
-		sock.Send(abuf + offset, window);
-		sock.Receive(abuf + offset, window);
+		chan->send(abuf + offset, window);
+		chan->blocking_receive(abuf + offset, window);
 
-		sock.Send(bbuf + offset, window);
-		sock.Receive(bbuf + offset, window);
+		chan->send(bbuf + offset, window);
+		chan->blocking_receive(bbuf + offset, window);
 
 		tosend -= window;
 		offset += window;
@@ -223,8 +223,8 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	while (tosend > 0) {
 		window = min(window, tosend);
 
-		sock.Send(zbuf + offset, window);
-		sock.Receive(zbuf + offset, window);
+		chan->send(zbuf + offset, window);
+		chan->blocking_receive(zbuf + offset, window);
 
 		tosend -= window;
 		offset += window;
@@ -256,12 +256,12 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	mpz_t ai, bi, ci, ai1, bi1, ci1, ta, tb;
 	mpz_inits(ai, bi, ci, ai1, bi1, ci1, ta, tb, NULL);
 
-	sock.Send(bA, numMTs * shareBytes);
-	sock.Receive(bA, numMTs * shareBytes);
-	sock.Send(bB, numMTs * shareBytes);
-	sock.Receive(bB, numMTs * shareBytes);
-	sock.Send(bC, numMTs * shareBytes);
-	sock.Receive(bC, numMTs * shareBytes);
+	chan->send(bA, numMTs * shareBytes);
+	chan->blocking_receive(bA, numMTs * shareBytes);
+	chan->send(bB, numMTs * shareBytes);
+	chan->blocking_receive(bB, numMTs * shareBytes);
+	chan->send(bC, numMTs * shareBytes);
+	chan->blocking_receive(bC, numMTs * shareBytes);
 
 	for (UINT i = 0; i < numMTs; i++) {
 
@@ -309,19 +309,19 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 /**
  * exchanges private keys with other party via sock, pre-calculates fixed-base representation of remote pub-key
  */
-void DGKParty::keyExchange(CSocket sock) {
+void DGKParty::keyExchange(channel* chan) {
 
 //send public key
-	sendmpz_t(m_localpub->n, sock);
-	sendmpz_t(m_localpub->g, sock);
-	sendmpz_t(m_localpub->h, sock);
+	sendmpz_t(m_localpub->n, chan);
+	sendmpz_t(m_localpub->g, chan);
+	sendmpz_t(m_localpub->h, chan);
 
 //receive and complete public key
 	mpz_t n, g, h;
 	mpz_inits(n, g, h, NULL);
-	receivempz_t(n, sock); //n
-	receivempz_t(g, sock); //g
-	receivempz_t(h, sock); //h
+	receivempz_t(n, chan); //n
+	receivempz_t(g, chan); //g
+	receivempz_t(h, chan); //h
 
 	dgk_complete_pubkey(m_nDGKbits, m_nShareLength, &m_remotepub, n, g, h);
 
@@ -340,7 +340,7 @@ void DGKParty::keyExchange(CSocket sock) {
 /**
  * send one mpz_t to sock
  */
-void DGKParty::sendmpz_t(mpz_t t, CSocket sock, BYTE * buf) {
+void DGKParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 
 //clear upper bytes of the buffer, so tailing bytes are zero
 	for (int i = mpz_sizeinbase(t, 256); i < m_nBuflen; i++) {
@@ -354,7 +354,7 @@ void DGKParty::sendmpz_t(mpz_t t, CSocket sock, BYTE * buf) {
 	mpz_export(buf, NULL, -1, 1, 1, 0, t);
 
 //send bytes of t
-	sock.Send(buf, (uint64_t) m_nBuflen);
+	chan->send(buf, (uint64_t) m_nBuflen);
 
 #if NETDEBUG
 	cout << endl << "SEND" << endl;
@@ -369,8 +369,8 @@ void DGKParty::sendmpz_t(mpz_t t, CSocket sock, BYTE * buf) {
 /**
  * receive one mpz_t from sock. t must be initialized.
  */
-void DGKParty::receivempz_t(mpz_t t, CSocket sock, BYTE * buf) {
-	sock.Receive(buf, (uint64_t) m_nBuflen);
+void DGKParty::receivempz_t(mpz_t t, channel* chan, BYTE * buf) {
+	chan->blocking_receive(buf, (uint64_t) m_nBuflen);
 	mpz_import(t, m_nBuflen, -1, 1, 1, 0, buf);
 
 #if NETDEBUG
@@ -386,16 +386,16 @@ void DGKParty::receivempz_t(mpz_t t, CSocket sock, BYTE * buf) {
 /**
  * send one mpz_t to sock, allocates buffer
  */
-void DGKParty::sendmpz_t(mpz_t t, CSocket sock) {
+void DGKParty::sendmpz_t(mpz_t t, channel* chan) {
 	unsigned int bytelen = mpz_sizeinbase(t, 256);
 	BYTE* arr = (BYTE*) malloc(bytelen);
 	mpz_export(arr, NULL, 1, 1, 1, 0, t);
 
 //send byte length
-	sock.Send(&bytelen, sizeof(bytelen));
+	chan->send((BYTE*) &bytelen, sizeof(bytelen));
 
 //send bytes of t
-	sock.Send(arr, (uint64_t) bytelen);
+	chan->send(arr, (uint64_t) bytelen);
 
 	free(arr);
 #if NETDEBUG
@@ -406,15 +406,15 @@ void DGKParty::sendmpz_t(mpz_t t, CSocket sock) {
 /**
  * receive one mpz_t from sock. t must be initialized.
  */
-void DGKParty::receivempz_t(mpz_t t, CSocket sock) {
+void DGKParty::receivempz_t(mpz_t t, channel* chan) {
 	unsigned int bytelen;
 
 //reiceive byte length
-	sock.Receive(&bytelen, sizeof(bytelen));
+	chan->blocking_receive((BYTE*) &bytelen, sizeof(bytelen));
 	BYTE* arr = (BYTE*) malloc(bytelen);
 
 //receive bytes of t
-	sock.Receive(arr, (uint64_t) bytelen);
+	chan->blocking_receive(arr, (uint64_t) bytelen);
 	mpz_import(t, bytelen, 1, 1, 1, 0, arr);
 
 	free(arr);

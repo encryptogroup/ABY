@@ -69,15 +69,15 @@ public:
 	virtual void FinishSetupPhase(ABYSetup* setup) = 0;
 	virtual void EvaluateLocalOperations(uint32_t gateid) = 0;
 
-	virtual void FinishCircuitLayer() = 0;
+	virtual void FinishCircuitLayer(uint32_t level) = 0;
 
 	virtual void PrepareOnlinePhase() = 0;
 
 	virtual void InstantiateGate(GATE* gate) = 0;
 	virtual void UsedGate(uint32_t gateid) = 0;
 
-	virtual void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& bytesize) = 0;
-	virtual void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes) = 0;
+	virtual void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize) = 0;
+	virtual void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) = 0;
 
 	virtual uint32_t AssignInput(CBitVector& input) = 0;
 	virtual uint32_t GetOutput(CBitVector& out) = 0;

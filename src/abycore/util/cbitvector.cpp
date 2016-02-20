@@ -46,7 +46,7 @@ void CBitVector::Create(uint64_t bits) {
 	}
 
 	//TODO: check if padding to aes bits is still necessary, otherwise pad to bytes
-	int size = ceil_divide(bits, AES_BITS);
+	uint64_t size = ceil_divide(bits, AES_BITS);
 	m_nByteSize = size * AES_BYTES;
 	m_pBits = (BYTE*) calloc(m_nByteSize, sizeof(BYTE));
 	assert(m_pBits != NULL);
@@ -78,10 +78,10 @@ void CBitVector::Create(uint64_t numelementsDimA, uint64_t numelementsDimB, uint
 
 void CBitVector::ResizeinBytes(int newSizeBytes) {
 	BYTE* tBits = m_pBits;
-	int tSize = (m_nByteSize<newSizeBytes)? m_nByteSize:newSizeBytes; //fix for overflow condition in memcpy.
+	uint64_t tSize = (m_nByteSize<newSizeBytes)? m_nByteSize:newSizeBytes; //fix for overflow condition in memcpy.
 
 	m_nByteSize = newSizeBytes;
-	m_pBits = new BYTE[m_nByteSize];
+	m_pBits = (uint8_t*) calloc(m_nByteSize, sizeof(uint8_t));
 
 	memcpy(m_pBits, tBits, tSize);
 
@@ -138,8 +138,8 @@ void CBitVector::SetBits(BYTE* p, uint64_t pos, uint64_t len) {
 
 
 //Set bits given an offset on the bits for p which is not necessarily divisible by 8
-void CBitVector::SetBitsPosOffset(BYTE* p, int ppos, int pos, int len) {
-	for (int i = pos, j = ppos; j < ppos + len; i++, j++) {
+void CBitVector::SetBitsPosOffset(BYTE* p, uint64_t ppos, uint64_t pos, uint64_t len) {
+	for (uint64_t i = pos, j = ppos; j < ppos + len; i++, j++) {
 		m_pBits[i / 8] ^= (((p[j / 8] & (1 << (j % 8))) >> j % 8) << i % 8);
 	}
 }
@@ -158,6 +158,18 @@ void CBitVector::SetBitsToZero(int bitpos, int bitlen) {
 		SetBitNoMask(i, 0);
 	}
 }
+
+void CBitVector::SetBytesToZero(int bytepos, int bytelen) {
+	assert(bytepos + bytelen < m_nByteSize);
+	memset(m_pBits + bytepos, 0x00, bytelen);
+}
+
+void CBitVector::Invert() {
+	for(uint64_t i = 0; i < m_nByteSize; i++) {
+		m_pBits[i] = ~m_pBits[i];
+	}
+}
+
 
 void CBitVector::GetBits(BYTE* p, int pos, int len) {
 	if (len < 1 || (pos + len) > m_nByteSize << 3)
@@ -278,12 +290,20 @@ void CBitVector::XORBytes(BYTE* p, int pos, int len) {
 	XORBytes(dst, src, dst + (len & ((1 << SHIFTVAL) - 1)));
 }
 
+//Method for directly XORing CBitVectors
+void CBitVector::XOR(CBitVector* b) {
+	assert(b->GetSize() == m_nByteSize);
+	XORBytes(b->GetArr(), 0, m_nByteSize);
+}
+
 //Generic bytewise XOR operation
 template<class T> void CBitVector::XORBytes(T* dst, T* src, T* lim) {
 	while (dst != lim) {
 		*dst++ ^= *src++;
 	}
 }
+
+
 
 void CBitVector::XORRepeat(BYTE* p, int pos, int len, int num) {
 	unsigned short* dst = (unsigned short*) (m_pBits + pos);
@@ -344,6 +364,13 @@ void CBitVector::SetAND(BYTE* p, BYTE* q, int pos, int len) {
 	ANDBytes(q, pos, len);
 }
 
+//Method for directly ANDing CBitVectors
+void CBitVector::AND(CBitVector* b) {
+	assert(b->GetSize() == m_nByteSize);
+	ANDBytes(b->GetArr(), 0, m_nByteSize);
+}
+
+
 void CBitVector::Print(int fromBit, int toBit) {
 	int to = toBit > (m_nByteSize << 3) ? (m_nByteSize << 3) : toBit;
 	for (int i = fromBit; i < to; i++) {
@@ -402,7 +429,6 @@ void CBitVector::PrintContent() {
 
 BOOL CBitVector::IsEqual(CBitVector& vec) {
 	if (vec.GetSize() != m_nByteSize) {
-		cout << "Size not matching!" << endl;
 		return false;
 	}
 
@@ -452,6 +478,14 @@ unsigned int CBitVector::GetInt(int bitPos, int bitLen) {
 	}
 	ret |= (m_pBits[i] & SELECT_BIT_POSITIONS[k]) << j; //for the last execution 0<=k<=8
 	return ret;
+}
+
+void CBitVector::Transpose(int rows, int columns) {
+#ifdef SIMPLE_TRANSPOSE
+	SimpleTranspose(rows, columns);
+#else
+	EklundhBitTranspose(rows, columns);
+#endif
 }
 
 void CBitVector::SimpleTranspose(int rows, int columns) {

@@ -55,39 +55,72 @@ public:
 	share* PutORGate(share* a, share* b);
 	vector<uint32_t> PutORGate(vector<uint32_t> a, vector<uint32_t> b);
 
-	uint32_t PutINGate(uint32_t nvals, e_role src);
-	template<class T> uint32_t PutINGate(uint32_t nvals, T val);
-	uint32_t PutINGate(uint32_t nvals, uint64_t val, e_role role);
-	template<class T> uint32_t PutINGate(uint32_t ninvals, T* val, e_role role);
+	uint32_t PutINGate(e_role src);
+	template<class T> uint32_t PutINGate(T val);
+	uint32_t PutINGate(uint64_t val, e_role role);
+	template<class T> uint32_t PutINGate(T* val, e_role role);
+
+	uint32_t PutSIMDINGate(uint32_t nvals, e_role src);
+	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val);
+	uint32_t PutSIMDINGate(uint32_t nvals, uint64_t val, e_role role);
+	template<class T> uint32_t PutSIMDINGate(uint32_t ninvals, T* val, e_role role);
+
 
 	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role);
 	/* Unfortunately, a template function cannot be used due to virtual */
-	share* PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) {
+	share* PutINGate(uint64_t val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint64_t>(1, val, bitlen, role);
+	}
+	share* PutINGate(uint32_t val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint32_t>(1, val, bitlen, role);
+	};
+	share* PutINGate(uint16_t val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint16_t>(1, val, bitlen, role);
+	};
+	share* PutINGate(uint8_t val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint8_t>(1, val, bitlen, role);
+	};
+
+	share* PutSIMDINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint64_t>(nvals, val, bitlen, role);
 	}
-	share* PutINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role) {
+	share* PutSIMDINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint32_t>(nvals, val, bitlen, role);
 	};
-	share* PutINGate(uint32_t nvals, uint16_t val, uint32_t bitlen, e_role role) {
+	share* PutSIMDINGate(uint32_t nvals, uint16_t val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint16_t>(nvals, val, bitlen, role);
 	};
-	share* PutINGate(uint32_t nvals, uint8_t val, uint32_t bitlen, e_role role) {
+	share* PutSIMDINGate(uint32_t nvals, uint8_t val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint8_t>(nvals, val, bitlen, role);
 	};
 
 
+
 	template<class T> share* InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role);
 	/* Unfortunately, a template function cannot be used due to virtual. Call Internal PutINGate*/
-	share* PutINGate(uint32_t nvals, uint64_t* val, uint32_t bitlen, e_role role) {
+	share* PutINGate(uint64_t* val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint64_t>(1, val, bitlen, role);
+	};
+	share* PutINGate(uint32_t* val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint32_t>(1, val, bitlen, role);
+	};
+	share* PutINGate(uint16_t* val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint16_t>(1, val, bitlen, role);
+	};
+	share* PutINGate(uint8_t* val, uint32_t bitlen, e_role role) {
+		return InternalPutINGate<uint8_t>(1, val, bitlen, role);
+	};
+
+	share* PutSIMDINGate(uint32_t nvals, uint64_t* val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint64_t>(nvals, val, bitlen, role);
 	};
-	share* PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) {
+	share* PutSIMDINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint32_t>(nvals, val, bitlen, role);
 	};
-	share* PutINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) {
+	share* PutSIMDINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint16_t>(nvals, val, bitlen, role);
 	};
-	share* PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) {
+	share* PutSIMDINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint8_t>(nvals, val, bitlen, role);
 	};
 
@@ -95,9 +128,17 @@ public:
 	vector<uint32_t> PutOUTGate(vector<uint32_t> parents, e_role dst);
 	share* PutOUTGate(share* parent, e_role dst);
 
-	share* PutCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen);
-	share* PutCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen);
-	share* PutCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen);
+	vector<uint32_t> PutSharedOUTGate(vector<uint32_t> parents);
+	share* PutSharedOUTGate(share* parent);
+
+	share* PutCONSGate(UGATE_T val, uint32_t bitlen);
+	share* PutCONSGate(uint32_t* val, uint32_t bitlen);
+	share* PutCONSGate(uint8_t* val, uint32_t bitlen);
+
+	share* PutSIMDCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen);
+	share* PutSIMDCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen);
+	share* PutSIMDCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen);
+
 	uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1);
 
 	uint32_t GetNumB2YGates() {
@@ -109,20 +150,20 @@ public:
 	}
 	;
 
-	int GetNumANDGates() {
+	uint32_t GetNumANDGates() {
 		return m_vANDs[0].numgates;
 	}
 	;
-	int GetANDs(non_lin_vec_ctx*& inptr) {
+	uint32_t GetANDs(non_lin_vec_ctx*& inptr) {
 		inptr = m_vANDs;
 		return m_nNumANDSizes;
 	}
 	;
-	int GetNumXORVals() {
+	uint32_t GetNumXORVals() {
 		return m_nNumXORVals;
 	};
 
-	int GetNumXORGates() {
+	uint32_t GetNumXORGates() {
 		return m_nNumXORGates;
 	};
 
@@ -165,14 +206,11 @@ public:
 	uint32_t PutCombinerGate(vector<uint32_t> input);
 	uint32_t PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos);
 
-	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
-	share* PutSubsetGate(share* input, uint32_t* posids, uint32_t nvals);
+	//uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
+	//share* PutSubsetGate(share* input, uint32_t* posids, uint32_t nvals);
 
-	share* PutPermutationGate(share* input, uint32_t* positions);
+
 	uint32_t PutPermutationGate(vector<uint32_t> input, uint32_t* positions);
-
-	share* PutStructurizedCombinerGate(share* input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
-	uint32_t PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
 
 	share* PutSplitterGate(share* input);
 	vector<uint32_t> PutSplitterGate(uint32_t input);
@@ -206,6 +244,11 @@ public:
 	void PutMinIdxGate(share** a, share** b, uint32_t nvals, share** minval_shr, share** minid_shr);
 	void PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<uint32_t> > idx,
 			vector<uint32_t>& minval, vector<uint32_t>& minid);
+
+	void PutMaxIdxGate(share** a, share** b, uint32_t nvals, share** maxval_shr, share** maxid_shr);
+	void PutMaxIdxGate(vector<vector<uint32_t> > a, vector<vector<uint32_t> > idx,
+			vector<uint32_t>& maxval, vector<uint32_t>& maxid);
+
 
 	void PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_t nshares, share** Sout);
 

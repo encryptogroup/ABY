@@ -176,23 +176,41 @@ public:
 	;
 
 	/* Common gate-building routines */
-	virtual share* PutCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen) = 0;
-	virtual share* PutCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) = 0;
-	virtual share* PutCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) = 0;
+	virtual share* PutCONSGate(UGATE_T val, uint32_t bitlen) = 0;
+	virtual share* PutCONSGate(uint32_t* val, uint32_t bitlen) = 0;
+	virtual share* PutCONSGate(uint8_t* val, uint32_t bitlen) = 0;
+
+	virtual share* PutSIMDCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen) = 0;
+	virtual share* PutSIMDCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) = 0;
+	virtual share* PutSIMDCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) = 0;
+
+
 	virtual uint32_t PutConstantGate(UGATE_T val, uint32_t nvals = 1) = 0;
 
 	//virtual int 	PutINGate(int nvals, ROLE src) = 0;
 	/* Unfortunately, a template function cannot be used due to virtual */
-	virtual share* PutINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) = 0;
-	virtual share* PutINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role) = 0;
-	virtual share* PutINGate(uint32_t nvals, uint16_t val, uint32_t bitlen, e_role role) = 0;
-	virtual share* PutINGate(uint32_t nvals, uint8_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint64_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint32_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint16_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint8_t val, uint32_t bitlen, e_role role) = 0;
 
 	/* Unfortunately, a template function cannot be used due to virtual */
-	virtual share* PutINGate(uint32_t nvals, uint64_t* val, uint32_t bitlen, e_role role) = 0;
-	virtual share* PutINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) = 0;
-	virtual share* PutINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) = 0;
-	virtual share* PutINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint64_t* val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint32_t* val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint16_t* val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutINGate(uint8_t* val, uint32_t bitlen, e_role role) = 0;
+
+	virtual share* PutSIMDINGate(uint32_t nvals, uint64_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutSIMDINGate(uint32_t nvals, uint32_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutSIMDINGate(uint32_t nvals, uint16_t val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutSIMDINGate(uint32_t nvals, uint8_t val, uint32_t bitlen, e_role role) = 0;
+
+	/* Unfortunately, a template function cannot be used due to virtual */
+	virtual share* PutSIMDINGate(uint32_t nvals, uint64_t* val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutSIMDINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutSIMDINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) = 0;
+	virtual share* PutSIMDINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) = 0;
+
 
 	virtual share* PutADDGate(share* ina, share* inb) = 0;
 	virtual share* PutSUBGate(share* ina, share* inb) = 0;
@@ -208,17 +226,71 @@ public:
 	virtual share* PutA2YGate(share* ina) = 0;
 	virtual share* PutANDVecGate(share* ina, share* inb) = 0;
 	virtual share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals) = 0;
+	/**
+		Combiner gate takes in a share object containing n possible wires and join them in such way forming
+		a single wire interfacing for the user.
+		\param 		ina 	Input share object containing n wires which requires joining.
+		\return 			share object after performing the combine operation.
+	*/
 	share* PutCombinerGate(share* ina);
+
+	/**
+		Combiner gate takes in two share objects containing n and m multiple possible wires and join
+		them in such way forming a single wire interfacing for the user.
+		\param 		ina 	Input share object containing n wires which requires joining.
+		\param 		inb 	Input share object containing m wires which requires joining.
+		\return 			share object after performing the combine operation.
+	*/
+	share* PutCombinerGate(share* ina, share* inb);
+
+	/**
+		Splitter gate takes in a share object containing composite wire and splits it n possible wires according
+		to defined nvals.
+		\param 		ina 	Input share object containing composite wires which requires splitting.
+		\return 			share object after performing the splitting operation.
+	*/
 	share* PutSplitterGate(share* ina);
 	share* PutRepeaterGate(uint32_t nvals, share* ina);
 
+	/**
+		Subset gate takes in an input share object and possible subset gate ids using which the gate generates a
+		new share object containing only the selected subset input gates.
+		\param 		input 	Input share object which is used as input for subset gate.
+		\param 		posids	Position ids of the various gates in the input share object which needs to be selected.
+		\param		nvals	size of each gate input.
+		\return 			share object after performing the subset gate operation.
+	*/
+	share* PutSubsetGate(share* input, uint32_t* posids, uint32_t nvals);
+
+	/**
+		CombineAtPos gate takes in a share object containing n possible wires and join them in such way forming
+		a single wire interfacing for the user at a given position provided.
+		\param 		input 	Input share object containing n wires which requires joining.
+		\param		pos		Position at which combination is performed.
+		\return 			share object after performing the combine operation.
+	*/
+	share* PutCombineAtPosGate(share* input, uint32_t pos);
+
+	share* PutPermutationGate(share* input, uint32_t* positions);
+
 	//Templates may not be virtual, hence use dummy functions
-	template<class T> uint32_t PutINGate(uint32_t nvals, T val) {
+	template<class T> uint32_t PutINGate(T val) {
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
 	}
 	;
-	template<class T> uint32_t PutINGate(uint32_t nvals, T val, e_role role) {
+	template<class T> uint32_t PutINGate(T val, e_role role) {
+		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		return -1;
+	}
+	;
+
+	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val) {
+		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		return -1;
+	}
+	;
+	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val, e_role role) {
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
 	}
@@ -226,6 +298,8 @@ public:
 	//virtual int 	PutOUTGate(int parent, ROLE dst) = 0;
 	virtual share* PutOUTGate(share* parent, e_role dst) =0;
 	// TODO FIXME PutOUTGate seems to work only for role ALL. SERVER causes the client to segfault at src/abycore/circuit/circuit.cpp:71: UGATE_T* Circuit::GetOutputGateValue(uint32_t): Assertion `m_pGates[gateid].instantiated' failed.
+	virtual share* PutSharedOUTGate(share* parent) =0;
+
 
 
 	virtual uint32_t PutINVGate(uint32_t parentid) = 0;
@@ -233,6 +307,26 @@ public:
 		return m_eCirctype;
 	}
 	;
+
+	int GetNumCombGates() {
+		return ncombgates;
+	};
+
+	int GetNumStructCombGates() {
+		return nstructcombgates;
+	};
+
+	int GetNumPermGates() {
+		return npermgates;
+	};
+
+	int GetNumSubsetGates() {
+		return nsubsetgates;
+	};
+
+	int GetNumSplitGates() {
+		return nsplitgates;
+	};
 
 protected:
 	virtual void UpdateInteractiveQueue(uint32_t gateid) = 0;
@@ -242,6 +336,7 @@ protected:
 	void UpdateLocalQueue(share* gateid);
 
 	void ResizeNonLinOnLayer(uint32_t new_max_depth);
+
 
 	ABYCircuit* m_cCircuit; /** ABYCircuit Object  */
 	GATE* m_pGates;			/** Gates vector which stores the */
@@ -257,6 +352,13 @@ protected:
 	vector<deque<uint32_t> > m_vOutputGates;				//input gates for the parties
 	vector<uint32_t> m_vInputBits;				//number of input bits for the parties
 	vector<uint32_t> m_vOutputBits;				//number of output bits for the parties
+
+	uint32_t ncombgates;
+	uint32_t npermgates;
+	uint32_t nsubsetgates;
+	uint32_t nsplitgates;
+	uint32_t nstructcombgates;
+
 
 	uint32_t m_nMULs;					//number of AND gates in the circuit
 	uint32_t m_nCONVGates;				//number of Boolean to arithmetic conversion gates
@@ -289,18 +391,21 @@ public:
 	}
 	;
 
-	vector<uint32_t> get_gates() {
+	vector<uint32_t> get_wires() {
 		return m_ngateids;
 	}
 	;
-	uint32_t get_gate(uint32_t shareid);
-	void set_gate(uint32_t shareid, uint32_t gateid);
+	uint32_t get_wire(uint32_t pos_id);
+
+	share* get_wire_as_share(uint32_t pos_id);
+
+	void set_wire(uint32_t pos_id, uint32_t wireid);
 	void resize(uint32_t sharelen) {
 		m_ngateids.resize(sharelen);
 	}
 	;
-	void set_gates(vector<uint32_t> shares) {
-		m_ngateids = shares;
+	void set_wires(vector<uint32_t> wires) {
+		m_ngateids = wires;
 	}
 	;
 	uint32_t size() {
@@ -316,6 +421,9 @@ public:
 		m_nmaxbitlen = maxsize;
 	}
 	;
+	uint32_t get_nvals_on_wire(uint32_t wireid) {
+		return m_ccirc->GetNumVals(m_ngateids[wireid]);
+	};
 	e_circuit get_circuit_type() {
 		return m_ccirc->GetCircuitType();
 	}
@@ -373,6 +481,13 @@ public:
 	//TODO solve problem of different types by templates!!
 	void get_clear_value_vec(uint64_t** vec, uint32_t *bitlen, uint32_t *nvals);
 
+	/**
+		\brief	The function returns a share object based on the shareid being inputed.
+		\param		shareid		shareid which needs to obtained and the respective gate to be
+								attached with the newly created share object.
+		\return		share object which is newly created based on the share id being inputed.
+	*/
+	share* get_share_from_id(uint32_t shareid);
 };
 
 /** Arithmetic Share Class */
@@ -403,9 +518,17 @@ public:
 	void get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t* nvals);
 	void get_clear_value_vec(uint64_t** vec, uint32_t* bitlen, uint32_t* nvals);
 
+	/**
+		\brief	The function returns a share object based on the shareid being inputed.
+		\param		shareid		shareid which needs to obtained and the respective gate to be
+								attached with the newly created share object.
+		\return		share object which is newly created based on the share id being inputed.
+	*/
+	share* get_share_from_id(uint32_t shareid);
+
 };
 
-static share* create_new_share(uint32_t size, Circuit* circ, e_circuit circtype);
-static share* create_new_share(vector<uint32_t> vals, Circuit* circ, e_circuit circtype);
+static share* create_new_share(uint32_t size, Circuit* circ);
+static share* create_new_share(vector<uint32_t> vals, Circuit* circ);
 
 #endif /* CIRCUIT_H_ */

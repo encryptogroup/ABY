@@ -86,9 +86,10 @@ void YaoClientSharing::PrepareSetupPhase(ABYSetup* setup) {
 	/* Use the standard XORMasking function */
 
 	/* Define the new OT tasks that will be done when the setup phase is performed*/
-	OTTask* task = (OTTask*) malloc(sizeof(OTTask));
+	IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 	task->bitlen = m_cCrypto->get_seclvl().symbits;
-	task->ottype = R_OT;
+	task->snd_flavor = Snd_R_OT;
+	task->rec_flavor = Rec_OT;
 	task->numOTs = m_nClientInputBits + m_nConversionInputBits;
 	task->mskfct = fMaskFct;
 	task->pval.rcvval.C = &(m_vChoiceBits);
@@ -157,7 +158,12 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 			InstantiateGate(gate);
 			memcpy(gate->gs.yval, m_pGates[parentid].gs.yval, m_nSecParamBytes * gate->nvals);
 			UsedGate(parentid);
-		} else if(gate->type == G_CALLBACK) {
+		} else if (gate->type == G_SHARED_OUT) {
+			GATE* parent = m_pGates + gate->ingates.inputs.parent;
+			InstantiateGate(gate);
+			memcpy(gate->gs.yval, parent->gs.yval, gate->nvals * m_nSecParamBytes);
+			UsedGate(gate->ingates.inputs.parent);
+		}  else if(gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(localops[i]);
 		}
 		else {
@@ -416,7 +422,7 @@ void YaoClientSharing::EvaluateConversionGate(uint32_t gateid) {
 }
 
 //TODO bits in ROTMasks are not going to be aligned later on, recheck
-void YaoClientSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& sndbytes) {
+void YaoClientSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
 	//Send the correlation bits with the random OTs
 	if (m_nClientSndOTCtr > 0) {
 #ifdef DEBUGYAOCLIENT
@@ -455,7 +461,7 @@ void YaoClientSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& s
 }
 
 /* Register the values that are to be received in this iteration */
-void YaoClientSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes) {
+void YaoClientSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) {
 	//Receive servers keys
 	if (m_nServerInBitCtr > 0) {
 #ifdef DEBUGYAOCLIENT
@@ -480,7 +486,7 @@ void YaoClientSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_
 	}
 }
 
-void YaoClientSharing::FinishCircuitLayer() {
+void YaoClientSharing::FinishCircuitLayer(uint32_t level) {
 	//Assign the servers input keys that were received this round
 	if (m_nServerInBitCtr > 0)
 		AssignServerInputKeys();

@@ -49,18 +49,18 @@ public:
 	void PrepareSetupPhase(ABYSetup* setup);
 	void PerformSetupPhase(ABYSetup* setup);
 	void FinishSetupPhase(ABYSetup* setup);
-	void EvaluateLocalOperations(uint32_t gateid);
-	void EvaluateInteractiveOperations(uint32_t gateid);
+	void EvaluateLocalOperations(uint32_t depth);
+	void EvaluateInteractiveOperations(uint32_t depth);
 
-	void FinishCircuitLayer();
+	void FinishCircuitLayer(uint32_t depth);
 
 	void PrepareOnlinePhase();
 
 	void InstantiateGate(GATE* gate);
 	void UsedGate(uint32_t gateid);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& bytesize);
-	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes);
+	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
+	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
 
 	uint32_t AssignInput(CBitVector& input);
 	uint32_t GetOutput(CBitVector& out);

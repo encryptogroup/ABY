@@ -31,9 +31,13 @@
 #include "ecc-pk-crypto.h"
 #include "../socket.h"
 
+#include "TedKrovetzAesNiWrapperC.h"
+#include "intrin_sequential_enc8.h"
+
 const uint8_t ZERO_IV[AES_BYTES] = { 0 };
 
-const uint8_t const_seed[] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
+const uint8_t const_seed[2][16] = {{ 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF },
+		{0xFF, 0xEE, 0xDD, 0xCC, 0xBB, 0xAA, 0x99, 0x88, 0x77, 0x66, 0x55, 0x44, 0x33, 0x22, 0x11, 0x00 } };
 
 enum bc_mode {
 	ECB, CBC
@@ -65,8 +69,9 @@ public:
 
 	//Randomness generation routines
 	void gen_rnd(uint8_t* resbuf, uint32_t numbytes);
+	void gen_rnd_from_seed(uint8_t* resbuf, uint32_t resbytes, uint8_t* seed);
 	//void gen_rnd(prf_state_ctx* prf_state, uint8_t* resbuf, uint32_t nbytes);
-	void gen_rnd_uniform(uint8_t* resbuf, uint64_t mod);
+	void gen_rnd_uniform(uint32_t* res, uint32_t mod);
 	void gen_rnd_perm(uint32_t* perm, uint32_t neles);
 
 	//Encryption routines
@@ -75,7 +80,9 @@ public:
 
 	//Hash routines
 	void hash(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes);
-	void hash_ctr(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint32_t ctr);
+	void hash_buf(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint8_t* buf);
+	void hash_non_threadsafe(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes);
+	void hash_ctr(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint64_t ctr);
 	void fixed_key_aes_hash(AES_KEY_CTX* aes_key, uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes);
 	void fixed_key_aes_hash_ctr(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes);
 
@@ -86,6 +93,7 @@ public:
 	//External encryption routines
 	void init_aes_key(AES_KEY_CTX* aes_key, uint8_t* seed, bc_mode mode = ECB, const uint8_t* iv = ZERO_IV);
 	void init_aes_key(AES_KEY_CTX* aes_key, uint32_t symbits, uint8_t* seed, bc_mode mode = ECB, const uint8_t* iv = ZERO_IV);
+	void clean_aes_key(AES_KEY_CTX* aeskey);
 	uint32_t get_aes_key_bytes();
 	void encrypt(AES_KEY_CTX* enc_key, uint8_t* resbuf, uint8_t* inbuf, uint32_t ninbytes);
 	void decrypt(AES_KEY_CTX* dec_key, uint8_t* resbuf, uint8_t* inbuf, uint32_t ninbytes);
@@ -132,7 +140,5 @@ void gen_rnd_bytes(prf_state_ctx* prf_state, uint8_t* resbuf, uint32_t nbytes);
 
 seclvl get_sec_lvl(uint32_t symsecbits); //TODO pick a more elegant name (see crypto->get_seclvl())
 
-static const uint32_t m_nCodeWordBits = 256;
-static const uint32_t m_nCodeWordBytes = m_nCodeWordBits / 8;
 
 #endif /* CRYPTO_H_ */

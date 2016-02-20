@@ -37,7 +37,6 @@ void ArithSharing<T>::Init() {
 
 	m_nInputShareSndCtr = 0;
 	m_nOutputShareSndCtr = 0;
-
 	m_nInputShareRcvCtr = 0;
 	m_nOutputShareRcvCtr = 0;
 
@@ -90,9 +89,10 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 			setup->AddPKMTGenTask(pgentask);
 		} else {
 			for (uint32_t i = 0; i < 2; i++) {
-				OTTask* task = (OTTask*) malloc(sizeof(OTTask));
+				IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 				task->bitlen = m_nTypeBitLen;
-				task->ottype = C_OT;
+				task->snd_flavor = Snd_C_OT;
+				task->rec_flavor = Rec_OT;
 				task->numOTs = m_nMTs * m_nTypeBitLen;
 				task->mskfct = fMaskFct;
 				if ((m_eRole ^ i) == SERVER) {
@@ -103,7 +103,7 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 					task->pval.rcvval.R = &(m_vS[0]);
 				}
 #ifndef BATCH
-				cout << "Adding a OT task which is supposed to perform " << task->numOTs << " OTs on " << m_nTypeBitLen << " bits" << endl;
+				cout << "Adding a OT task which is supposed to perform " << task->numOTs << " OTs on " << m_nTypeBitLen << " bits for ArithMul" << endl;
 #endif
 				setup->AddOTTask(task, i);
 			}
@@ -114,9 +114,10 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 	if (m_nNumCONVs > 0) {
 		XORMasking* fXORMaskFct = new XORMasking(m_nTypeBitLen); //TODO to implement the vector multiplication change first argument
 
-		OTTask* task = (OTTask*) malloc(sizeof(OTTask));
+		IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 		task->bitlen = m_nTypeBitLen;
-		task->ottype = R_OT;
+		task->snd_flavor = Snd_R_OT;
+		task->rec_flavor = Rec_OT;
 		task->numOTs = m_nNumCONVs * m_nTypeBitLen;
 		task->mskfct = fXORMaskFct; //the masking function is not used anyway
 		if ((m_eRole) == SERVER) {
@@ -131,7 +132,7 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 			task->pval.rcvval.R = &(m_vConversionMasks[1]);
 		}
 #ifdef DEBUGARITH
-		cout << "Conv: Adding a OT task which is supposed to perform " << task->numOTs << " OTs on " << m_nTypeBitLen << " bits" << endl;
+		cout << "Conv: Adding a OT task which is supposed to perform " << task->numOTs << " OTs on " << m_nTypeBitLen << " bits for B2A" << endl;
 #endif
 		setup->AddOTTask(task, 0);
 
@@ -243,7 +244,7 @@ void ArithSharing<T>::PrepareOnlinePhase() {
 	uint32_t otheroutvals = m_cArithCircuit->GetNumOutputBitsForParty(m_eRole==SERVER ? CLIENT : SERVER);
 
 #ifndef BATCH
-	cout << "ninputvals = " << invals << ", noutputvals = " << outvals << ", typelen = " << m_nTypeBitLen << endl;
+	cout << "ninputvals = " << myinvals << ", noutputvals = " << myoutvals << ", typelen = " << m_nTypeBitLen << endl;
 #endif
 
 	m_vInputShareSndBuf.Create(myinvals, m_nTypeBitLen, m_cCrypto);
@@ -287,6 +288,11 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 				gate->gs.val[i] = value;
 		} else if (gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(localops[i]);
+		} else if (gate->type == G_SHARED_OUT) {
+			GATE* parent = m_pGates + gate->ingates.inputs.parent;
+			InstantiateGate(gate);
+			memcpy(gate->gs.val, parent->gs.val, gate->nvals * sizeof(T));
+			UsedGate(gate->ingates.inputs.parent);
 		} else {
 			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
 		}
@@ -474,7 +480,7 @@ void ArithSharing<T>::SelectiveOpen(GATE* gate) {
 }
 
 template<typename T>
-void ArithSharing<T>::FinishCircuitLayer() {
+void ArithSharing<T>::FinishCircuitLayer(uint32_t depth) {
 #ifdef DEBUGARITH
 	if(m_nInputShareRcvCtr > 0) {
 		cout << "Received "<< m_nInputShareRcvCtr << " input shares: ";
@@ -652,6 +658,7 @@ void ArithSharing<T>::AssignServerConversionShares() {
 #endif
 		for (uint32_t k = 0; k < gate->nvals; k++) {
 			((T*) gate->gs.aval)[k] = tmpsum[k];
+			//cout << "Gate val = " << ((T*) gate->gs.aval)[k] << endl;
 #ifdef DEBUGARITH
 			cout << tmpsum[k] << " ";
 #endif
@@ -704,6 +711,7 @@ void ArithSharing<T>::AssignClientConversionShares() {
 #endif
 		for (uint32_t k = 0; k < gate->nvals; k++) {
 			((T*) gate->gs.aval)[k] = tmpsum[k];
+			//cout << "Gate val = " << ((T*) gate->gs.aval)[k] << endl;
 #ifdef DEBUGARITH
 			cout << tmpsum[k] << " ";
 #endif
@@ -733,7 +741,7 @@ void ArithSharing<T>::EvaluateINVGate(GATE* gate) {
 }
 
 template<typename T>
-void ArithSharing<T>::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& sndbytes) {
+void ArithSharing<T>::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
 	//Input shares
 	if (m_nInputShareSndCtr > 0) {
 		sendbuf.push_back(m_vInputShareSndBuf.GetArr());
@@ -790,7 +798,7 @@ void ArithSharing<T>::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& sn
 }
 
 template<typename T>
-void ArithSharing<T>::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes) {
+void ArithSharing<T>::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) {
 	//cout << "Getting buffers to receive!" << endl;
 	//Input shares
 	if (m_nInputShareRcvCtr > 0) {
@@ -955,38 +963,40 @@ void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 #ifdef VERIFY_ARITH_MT
 template <typename T>
 void ArithSharing<T>::VerifyArithMT(ABYSetup* setup) {
-	uint32_t MTByteLen = m_nMTs * sizeof(T);
-	CBitVector Arcv, Brcv, Crcv;
-	BOOL correct = true;
-	Arcv.Create(m_nMTs, sizeof(T) * 8);
-	Brcv.Create(m_nMTs, sizeof(T) * 8);
-	Crcv.Create(m_nMTs, sizeof(T) * 8);
+	if(m_nMTs > 0 ) {
+		uint32_t MTByteLen = m_nMTs * sizeof(T);
+		CBitVector Arcv, Brcv, Crcv;
+		BOOL correct = true;
+		Arcv.Create(m_nMTs, sizeof(T) * 8);
+		Brcv.Create(m_nMTs, sizeof(T) * 8);
+		Crcv.Create(m_nMTs, sizeof(T) * 8);
 
-	setup->AddSendTask(m_vA[0].GetArr(), MTByteLen);
-	setup->AddReceiveTask(Arcv.GetArr(), MTByteLen);
+		setup->AddSendTask(m_vA[0].GetArr(), MTByteLen);
+		setup->AddReceiveTask(Arcv.GetArr(), MTByteLen);
 
-	setup->AddSendTask(m_vB[0].GetArr(), MTByteLen);
-	setup->AddReceiveTask(Brcv.GetArr(), MTByteLen);
+		setup->AddSendTask(m_vB[0].GetArr(), MTByteLen);
+		setup->AddReceiveTask(Brcv.GetArr(), MTByteLen);
 
-	setup->AddSendTask(m_vC[0].GetArr(), MTByteLen);
-	setup->AddReceiveTask(Crcv.GetArr(), MTByteLen);
+		setup->AddSendTask(m_vC[0].GetArr(), MTByteLen);
+		setup->AddReceiveTask(Crcv.GetArr(), MTByteLen);
 
-	setup->WaitForTransmissionEnd();
+		setup->WaitForTransmissionEnd();
 
-	T a, b, c, res, c1, c2;
-	for(uint32_t i = 0; i < m_nMTs; i++) {
-		a = m_vA[0].Get<T>(i) + Arcv.Get<T>(i);
-		b = m_vB[0].Get<T>(i) + Brcv.Get<T>(i);
-		c = m_vC[0].Get<T>(i) + Crcv.Get<T>(i);
-		res = a * b;
-		if(res != c) {
-			cerr << "Error: " << i << "-th multiplication triples differs: a (" << (UINT64_T) a << ") * b (" <<
-			(UINT64_T) b << ") = c (" << (UINT64_T) c << "), correct = " << (UINT64_T) res << endl;
-			correct = false;
+		T a, b, c, res, c1, c2;
+		for(uint32_t i = 0; i < m_nMTs; i++) {
+			a = m_vA[0].Get<T>(i) + Arcv.Get<T>(i);
+			b = m_vB[0].Get<T>(i) + Brcv.Get<T>(i);
+			c = m_vC[0].Get<T>(i) + Crcv.Get<T>(i);
+			res = a * b;
+			if(res != c) {
+				cerr << "Error: " << i << "-th multiplication triples differs: a (" << (UINT64_T) a << ") * b (" <<
+				(UINT64_T) b << ") = c (" << (UINT64_T) c << "), correct = " << (UINT64_T) res << endl;
+				correct = false;
+			}
 		}
-	}
-	if(correct) {
-		cout << "Arithmetic multipilcation triple verification successful" << endl;
+		if(correct) {
+			cout << "Arithmetic multipilcation triple verification successful" << endl;
+		}
 	}
 }
 #endif

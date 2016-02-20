@@ -24,7 +24,7 @@
 #include "cbitvector.h"
 #include <sstream>
 
-BOOL Connect(string address, short port, vector<CSocket> &sockets, int id);
-BOOL Listen(string address, short port, vector<vector<CSocket> > &sockets, int numConnections, int myID);
+BOOL Connect(string address, short port, vector<CSocket*> &sockets, int id);
+BOOL Listen(string address, short port, vector<vector<CSocket*> > &sockets, int numConnections, int myID);
 
 #endif

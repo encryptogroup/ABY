@@ -29,6 +29,15 @@ void Circuit::Init() {
 	m_vOutputBits.resize(2, 0);
 
 	m_nGates = 0;
+
+	ncombgates = 0;
+	npermgates = 0;
+	nsubsetgates = 0;
+	nsplitgates = 0;
+	nstructcombgates = 0;
+	//m_vNonLinOnLayer.max_depth = 1;
+	//m_vNonLinOnLayer.min_depth = 0;
+	//m_vNonLinOnLayer.num_on_layer = (uint32_t*) calloc(m_vNonLinOnLayer.max_depth, sizeof(uint32_t));
 }
 ;
 
@@ -59,6 +68,10 @@ void Circuit::Reset() {
 		m_vInputBits[i] = 0;
 	for (int i = 0; i < m_vOutputBits.size(); i++)
 		m_vOutputBits[i] = 0;
+
+	//free(m_vNonLinOnLayer.num_on_layer);
+	//m_vNonLinOnLayer.max_depth = 0;
+	//m_vNonLinOnLayer.min_depth = 0;
 }
 
 uint32_t Circuit::GetOutputGateValue(uint32_t gateid, UGATE_T*& outval) {
@@ -78,34 +91,83 @@ template<class T> void Circuit::GetOutputGateValue(uint32_t gateid, T& val) {
 	val = m_pGates[gateid].gs.val;
 }
 
+
+share* Circuit::PutSubsetGate(share* input, uint32_t* posids, uint32_t nvals) {
+	//share* out = new boolshare(input->size(), this);
+	vector<uint32_t> tmp(input->size());
+	for(uint32_t i = 0; i < input->size(); i++) {
+		//out->set_wire(i, PutSubsetGate(input->get_wire(i), posids, nvals));
+		tmp[i] = m_cCircuit->PutSubsetGate(input->get_wire(i), posids, nvals);
+		nsubsetgates++;
+	}
+	share* out = create_new_share(tmp, this);
+	UpdateLocalQueue(out);
+	return out;
+}
+
+share* Circuit::PutPermutationGate(share* input, uint32_t* positions) {
+	share* out = create_new_share(1, this);
+	npermgates++;
+	out->set_wire(0, m_cCircuit->PutPermutationGate(input->get_wires(),positions));
+	UpdateLocalQueue(out);
+	return out;
+}
+
+share* Circuit::PutCombineAtPosGate(share* input, uint32_t pos) {
+	share* out = create_new_share(1, this);
+	out->set_wire(0, m_cCircuit->PutCombineAtPosGate(input->get_wires(),pos));
+	UpdateLocalQueue(out);
+	return out;
+}
+
+
 share* Circuit::PutCombinerGate(share* ina) {
-	share* out = create_new_share(1, this, ina->get_circuit_type());
-	out->set_gate(0, m_cCircuit->PutCombinerGate(ina->get_gates()));
+	share* out = create_new_share(1, this);
+	ncombgates++;
+	out->set_wire(0, m_cCircuit->PutCombinerGate(ina->get_wires()));
+	UpdateLocalQueue(out);
+	return out;
+}
+
+share* Circuit::PutCombinerGate(share* ina, share* inb) {
+	assert(ina->get_circuit_type() == inb->get_circuit_type());
+	vector<uint32_t> wires(ina->size() + inb->size());
+	//cout << "Size on left = " << ina->size() << " (" << m_pGates[ina->get_wire(0)].nvals << ") on right = " << inb->size()
+	//		<< " ("<< m_pGates[inb->get_wire(0)].nvals << ")" << endl;
+
+	for(uint32_t i = 0; i < ina->size(); i++) {
+		wires[i] = ina->get_wire(i);
+	}
+	for(uint32_t i = 0; i < inb->size(); i++ ) {
+		wires[i+ina->size()] = inb->get_wire(i);
+	}
+	share* out = create_new_share(1, this);
+	out->set_wire(0, m_cCircuit->PutCombinerGate(wires));
 	UpdateLocalQueue(out);
 	return out;
 }
 
 share* Circuit::PutSplitterGate(share* ina) {
-
-	share* out = create_new_share(m_cCircuit->PutSplitterGate(ina->get_gate(0)), this, ina->get_circuit_type());
+	share* out = create_new_share(m_cCircuit->PutSplitterGate(ina->get_wire(0)), this);
+	nsplitgates++;
 	UpdateLocalQueue(out);
 	return out;
 }
 
 share* Circuit::PutRepeaterGate(uint32_t nvals, share* ina) {
-	share* out = create_new_share(m_cCircuit->PutRepeaterGate(ina->get_gates(), nvals), this, ina->get_circuit_type());
+	share* out = create_new_share(m_cCircuit->PutRepeaterGate(ina->get_wires(), nvals), this);
 	UpdateLocalQueue(out);
 	return out;
 }
 
 void Circuit::UpdateInteractiveQueue(share* gateids) {
 	for (uint32_t i = 0; i < gateids->size(); i++) {
-		UpdateInteractiveQueue(gateids->get_gate(i));
+		UpdateInteractiveQueue(gateids->get_wire(i));
 	}
 }
 void Circuit::UpdateLocalQueue(share* gateids) {
 	for (uint32_t i = 0; i < gateids->size(); i++) {
-		UpdateLocalQueue(gateids->get_gate(i));
+		UpdateLocalQueue(gateids->get_wire(i));
 	}
 }
 
@@ -127,14 +189,22 @@ void share::init(Circuit* circ, uint32_t maxbitlen) {
 	m_nmaxbitlen = maxbitlen;
 }
 
-uint32_t share::get_gate(uint32_t shareid) {
-	assert(shareid < m_ngateids.size());
-	return m_ngateids[shareid];
+uint32_t share::get_wire(uint32_t pos_id) {
+	assert(pos_id < m_ngateids.size());
+	return m_ngateids[pos_id];
 }
 
-void share::set_gate(uint32_t shareid, uint32_t gateid) {
-	assert(shareid < m_ngateids.size());
-	m_ngateids[shareid] = gateid;
+share* share::get_wire_as_share(uint32_t pos_id) {
+	assert(pos_id < m_ngateids.size());
+	share* out = new boolshare(1, m_ccirc);
+	out->set_wire(0, m_ngateids[pos_id]);
+	return out;
+}
+
+
+void share::set_wire(uint32_t pos_id, uint32_t wireid) {
+	assert(pos_id < m_ngateids.size());
+	m_ngateids[pos_id] = wireid;
 }
 
 /* =========================== Methods for the Boolean share class =========================== */
@@ -274,9 +344,23 @@ void arithshare::get_clear_value_vec(uint64_t** vec, uint32_t* bitlen, uint32_t*
 	*bitlen = m_ccirc->GetShareBitLen();
 }
 
+share* arithshare::get_share_from_id(uint32_t shareid) {
 
-static share* create_new_share(uint32_t size, Circuit* circ, e_circuit circtype) {
-	switch (circtype) {
+	arithshare *new_shr = new arithshare(m_ccirc);
+	new_shr->set_wire(shareid,get_wire(shareid));
+	return new_shr;
+}
+
+share* boolshare::get_share_from_id(uint32_t shareid) {
+
+	boolshare *new_shr = new boolshare(max_size(),m_ccirc);
+	new_shr->set_wire(shareid,get_wire(shareid));
+	return new_shr;
+}
+
+
+static share* create_new_share(uint32_t size, Circuit* circ) {
+	switch (circ->GetCircuitType()) {
 	case C_BOOLEAN:
 		return new boolshare(size, circ);
 	case C_ARITHMETIC:
@@ -287,8 +371,8 @@ static share* create_new_share(uint32_t size, Circuit* circ, e_circuit circtype)
 	}
 }
 
-static share* create_new_share(vector<uint32_t> vals, Circuit* circ, e_circuit circtype) {
-	switch (circtype) {
+static share* create_new_share(vector<uint32_t> vals, Circuit* circ) {
+	switch (circ->GetCircuitType()) {
 	case C_BOOLEAN:
 		return new boolshare(vals, circ);
 	case C_ARITHMETIC:

@@ -20,20 +20,38 @@
 #define __SOCKET_H__BY_SGCHOI 
 
 #include "typedefs.h"
+#include "thread.h"
 
 class CSocket {
 public:
+	uint64_t getSndCnt() {
+		return m_nSndCount;
+	}
+	uint64_t getRcvCnt() {
+		return m_nRcvCount;
+	}
+	void ResetSndCnt() {
+		m_nSndCount = 0;
+	};
+	void ResetRcvCnt() {
+		m_nRcvCount = 0;
+	};
+
 	CSocket() {
 		m_hSock = INVALID_SOCKET;
+		m_nSndCount = 0;
+		m_nRcvCount = 0;
 	}
 	~CSocket() {
-		//Close();
+		Close();
 	}
 
 	BOOL Socket() {
 		BOOL success = false;
 		BOOL bOptVal = true;
 		int bOptLen = sizeof(BOOL);
+		m_nSndCount = 0;
+		m_nRcvCount = 0;
 
 #ifdef WIN32
 		static BOOL s_bInit = FALSE;
@@ -199,6 +217,10 @@ public:
 		char* p = (char*) pBuf;
 		uint64_t n = nLen;
 		uint64_t ret = 0;
+
+		m_nRcvCount += nLen;
+
+
 		while (n > 0) {
 			ret = recv(m_hSock, p, n, 0);
 #ifdef WIN32
@@ -229,11 +251,14 @@ public:
 	}
 
 	int Send(const void* pBuf, uint64_t nLen, int nFlags = 0) {
+		m_nSndCount += nLen;
 		return send(m_hSock, (char*) pBuf, nLen, nFlags);
 	}
 
 private:
 	SOCKET m_hSock;
+	uint64_t m_nSndCount, m_nRcvCount;
+
 };
 
 #endif //SOCKET_H__BY_SGCHOI

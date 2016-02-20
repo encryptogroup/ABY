@@ -56,7 +56,7 @@ int32_t test_min_eucliden_dist_circuit(e_role role, char* address, seclvl seclvl
 	for (i = 0; i < dbsize; i++) {
 		Sshr[i] = (share**) malloc(sizeof(share*) * dim);
 		for (j = 0; j < dim; j++) {
-			Sshr[i][j] = distcirc->PutINGate(1, serverdb[i][j], bitlen, SERVER);
+			Sshr[i][j] = distcirc->PutINGate(serverdb[i][j], bitlen, SERVER);
 		}
 	}
 
@@ -67,7 +67,7 @@ int32_t test_min_eucliden_dist_circuit(e_role role, char* address, seclvl seclvl
 			temp = serverdb[i][j];
 			tempsum += (temp * temp);
 		}
-		Ssqr[i] = mincirc->PutINGate(1, tempsum, 2*bitlen+ceil_log2(dim), SERVER);
+		Ssqr[i] = mincirc->PutINGate(tempsum, 2*bitlen+ceil_log2(dim), SERVER);
 	}
 
 	//set client input
@@ -75,10 +75,10 @@ int32_t test_min_eucliden_dist_circuit(e_role role, char* address, seclvl seclvl
 	tempsum = 0;
 	for (j = 0; j < dim; j++) {
 		temp = clientquery[j];
-		Cshr[j] = distcirc->PutINGate(1, 2*temp, bitlen+1, CLIENT);
+		Cshr[j] = distcirc->PutINGate(2*temp, bitlen+1, CLIENT);
 		tempsum += (temp * temp);
 	}
-	Csqr = mincirc->PutINGate(1, tempsum, 2*bitlen+ceil_log2(dim), CLIENT);
+	Csqr = mincirc->PutINGate(tempsum, 2*bitlen+ceil_log2(dim), CLIENT);
 
 
 	mindst = build_min_euclidean_dist_circuit(Sshr, Cshr, dbsize, dim, Ssqr, Csqr, distcirc, (BooleanCircuit*) mincirc);

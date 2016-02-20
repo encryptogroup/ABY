@@ -50,30 +50,37 @@ void crypto::init(uint32_t symsecbits, uint8_t* seed) {
 	aes_hash_buf_y1 = (uint8_t*) malloc(AES_BYTES);
 	aes_hash_buf_y2 = (uint8_t*) malloc(AES_BYTES);
 
-	sha_hash_buf = (uint8_t*) malloc((secparam.symbits >> 3) * 2);
-
 	if (secparam.symbits == ST.symbits) {
 		hash_routine = &sha1_hash;
+		sha_hash_buf = (uint8_t*) malloc(SHA1_OUT_BYTES);
 	} else if (secparam.symbits == MT.symbits) {
 		hash_routine = &sha256_hash;
+		sha_hash_buf = (uint8_t*) malloc(SHA256_OUT_BYTES);
 	} else if (secparam.symbits == LT.symbits) {
 		hash_routine = &sha256_hash;
+		sha_hash_buf = (uint8_t*) malloc(SHA256_OUT_BYTES);
 	} else if (secparam.symbits == XLT.symbits) {
 		hash_routine = &sha512_hash;
+		sha_hash_buf = (uint8_t*) malloc(SHA512_OUT_BYTES);
 	} else if (secparam.symbits == XXLT.symbits) {
 		hash_routine = &sha512_hash;
+		sha_hash_buf = (uint8_t*) malloc(SHA512_OUT_BYTES);
 	} else {
 		hash_routine = &sha256_hash;
+		sha_hash_buf = (uint8_t*) malloc(SHA256_OUT_BYTES);
 	}
 }
 
 pk_crypto* crypto::gen_field(field_type ftype) {
 	uint8_t* pkseed = (uint8_t*) malloc(sizeof(uint8_t) * (secparam.symbits >> 3));
 	gen_rnd(pkseed, secparam.symbits >> 3);
+	pk_crypto* ret;
 	if (ftype == P_FIELD)
-		return new prime_field(secparam, pkseed);
+		ret = new prime_field(secparam, pkseed);
 	else
-		return new ecc_field(secparam, pkseed);
+		ret = new ecc_field(secparam, pkseed);
+	free(pkseed);
+	return ret;
 }
 
 void gen_rnd_bytes(prf_state_ctx* prf_state, uint8_t* resbuf, uint32_t nbytes) {
@@ -102,8 +109,29 @@ void crypto::gen_rnd(uint8_t* resbuf, uint32_t nbytes) {
 	gen_rnd_bytes(&global_prf_state, resbuf, nbytes);
 }
 
-void crypto::gen_rnd_uniform(uint8_t* resbuf, uint64_t mod) {
-	//TODO: implement
+void crypto::gen_rnd_uniform(uint32_t* res, uint32_t mod) {
+	//pad to multiple of 4 bytes for uint32_t length
+	uint32_t nrndbytes = PadToMultiple(bits_in_bytes(secparam.symbits) + ceil_log2(mod), sizeof(uint32_t));
+	uint64_t bitsint = (8*sizeof(uint32_t));
+	uint32_t rnditers = ceil_divide(nrndbytes * 8, bitsint);
+
+	uint32_t* rndbuf = (uint32_t*) malloc(nrndbytes);
+	gen_rnd((uint8_t*) rndbuf, nrndbytes);
+
+	uint64_t tmpval = 0, tmpmod = mod;
+
+	for(uint32_t i = 0; i < rnditers; i++) {
+		tmpval = (((uint64_t) (tmpval << bitsint)) | ((uint64_t)rndbuf[i]));
+		tmpval %= tmpmod;
+	}
+	*res = (uint32_t) tmpval;
+	free(rndbuf);
+}
+void crypto::gen_rnd_from_seed(uint8_t* resbuf, uint32_t resbytes, uint8_t* seed) {
+	prf_state_ctx tmpstate;
+	init_prf_state(&tmpstate, seed);
+	gen_rnd_bytes(&tmpstate, resbuf, resbytes);
+	free_prf_state(&tmpstate);
 }
 
 void crypto::encrypt(AES_KEY_CTX* enc_key, uint8_t* resbuf, uint8_t* inbuf, uint32_t ninbytes) {
@@ -146,6 +174,10 @@ void crypto::seed_aes_key(AES_KEY_CTX* aeskey, uint8_t* seed, bc_mode mode, cons
 	seed_aes_key(aeskey, secparam.symbits, seed, mode, iv, encrypt);
 }
 
+void crypto::clean_aes_key(AES_KEY_CTX* aeskey) {
+	EVP_CIPHER_CTX_cleanup(aeskey);
+}
+
 void crypto::seed_aes_key(AES_KEY_CTX* aeskey, uint32_t symbits, uint8_t* seed, bc_mode mode, const uint8_t* iv, bool encrypt) {
 	EVP_CIPHER_CTX_init(aeskey);
 	int (*initfct)(EVP_CIPHER_CTX*, const EVP_CIPHER*, ENGINE*, const unsigned char*, const unsigned char*);
@@ -180,15 +212,25 @@ void crypto::seed_aes_key(AES_KEY_CTX* aeskey, uint32_t symbits, uint8_t* seed, 
 	}
 }
 
-void crypto::hash_ctr(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint32_t ctr) {
-	uint8_t* tmpbuf = (uint8_t*) malloc(ninbytes + sizeof(uint32_t));
-	memcpy(tmpbuf, &ctr, sizeof(uint32_t));
-	memcpy(tmpbuf + sizeof(uint32_t), inbuf, ninbytes);
-	hash_routine(resbuf, noutbytes, inbuf, ninbytes, sha_hash_buf);
+void crypto::hash_ctr(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint64_t ctr) {
+	uint8_t* tmpbuf = (uint8_t*) malloc(ninbytes + sizeof(uint64_t));
+	memcpy(tmpbuf, &ctr, sizeof(uint64_t));
+	memcpy(tmpbuf + sizeof(uint64_t), inbuf, ninbytes);
+	hash_routine(resbuf, noutbytes, tmpbuf, ninbytes+sizeof(uint64_t), sha_hash_buf);
 	free(tmpbuf);
 }
 
 void crypto::hash(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes) {
+	uint8_t* hash_buf = (uint8_t*) malloc(get_hash_bytes());
+	hash_routine(resbuf, noutbytes, inbuf, ninbytes, hash_buf);
+	free(hash_buf);
+}
+
+void crypto::hash_buf(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint8_t* buf) {
+	hash_routine(resbuf, noutbytes, inbuf, ninbytes, buf);
+}
+
+void crypto::hash_non_threadsafe(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes) {
 	hash_routine(resbuf, noutbytes, inbuf, ninbytes, sha_hash_buf);
 }
 

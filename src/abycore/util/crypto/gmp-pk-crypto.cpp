@@ -64,17 +64,28 @@ void gmp_num::set_si(int32_t src) {
 void gmp_num::set_add(num* a, num* b) {
 	mpz_add(val, *num2mpz(a), *num2mpz(b));
 }
+//a-b
+void gmp_num::set_sub(num* a, num* b) {
+	mpz_sub(val, *num2mpz(a), *num2mpz(b));
+}
 void gmp_num::set_mul(num* a, num* b) {
 	mpz_mul(val, *num2mpz(a), *num2mpz(b));
 }
+void gmp_num::mod(num* modulus) {
+	mpz_mod(val, val, *num2mpz(modulus));
+}
+void gmp_num::set_mul_mod(num* a, num* b, num* modulus) {
+	set_mul(a, b);
+	mod(modulus);
+}
 
-void gmp_num::import_from_bytes(uint8_t* buf, uint32_t field_size) {
-	mpz_import(val, field_size, 1, sizeof((buf)[0]), 0, 0, (buf));
+void gmp_num::import_from_bytes(uint8_t* buf, uint32_t field_size_bytes) {
+	mpz_import(val, field_size_bytes, 1, sizeof((buf)[0]), 0, 0, (buf));
 }
 
 //export and pad all leading zeros
-void gmp_num::export_to_bytes(uint8_t* buf, uint32_t field_size) {
-	mpz_export_padded(buf, ceil_divide(field_size, 8), val);
+void gmp_num::export_to_bytes(uint8_t* buf, uint32_t field_size_bytes) {
+	mpz_export_padded(buf, field_size_bytes, val);
 }
 
 num* prime_field::get_rnd_num(uint32_t bitlen) {
@@ -83,14 +94,18 @@ num* prime_field::get_rnd_num(uint32_t bitlen) {
 		bitlen = secparam.ifcbits;
 	mpz_init(val);
 	mpz_urandomm(val, rnd_state, q);
-	return new gmp_num(this, val);
+	num* ret = new gmp_num(this, val);
+	mpz_clear(val);
+	return ret;
 }
 
 fe* prime_field::get_rnd_fe(uint32_t bitlen) {
 	mpz_t val;
 	mpz_init(val);
 	mpz_urandomm(val, rnd_state, q);
-	return new gmp_fe(this, val);
+	fe* ret = new gmp_fe(this, val);
+	mpz_clear(val);
+	return ret;
 }
 
 gmp_fe::gmp_fe(prime_field* fld) {
@@ -148,6 +163,9 @@ void gmp_fe::sample_fe_from_bytes(uint8_t* buf, uint32_t bytelen) {
 	mpz_import(val, bytelen, 1, sizeof((buf)[0]), 0, 0, (buf));
 	mpz_mod(val, val, *field->get_p());
 }
+bool gmp_fe::eq(fe* a) {
+	return mpz_cmp(val, *fe2mpz(a)) == 0;
+}
 
 num* prime_field::get_num() {
 	return new gmp_num(this);
@@ -161,6 +179,11 @@ mpz_t* prime_field::get_p() {
 fe* prime_field::get_generator() {
 	return new gmp_fe(this, g);
 }
+num* prime_field::get_order() {
+	num* val = get_num();
+	val->set(order);
+	return val;
+}
 
 fe* prime_field::get_rnd_generator() {
 	mpz_t tmp;
@@ -171,7 +194,9 @@ fe* prime_field::get_rnd_generator() {
 		mpz_mod(tmp, tmp, p);
 		mpz_powm(tmp, tmp, q, p);
 	} while (!(mpz_cmp_ui(tmp, (uint32_t ) 1)));
-	return new gmp_fe(this, tmp);
+	fe* ret = new gmp_fe(this, tmp);
+	mpz_clear(tmp);
+	return ret;
 }
 
 brickexp* prime_field::get_brick(fe* gen) {
@@ -188,7 +213,7 @@ void prime_field::init(seclvl sp, uint8_t* seed) {
 	mpz_inits(p, q, g, rnd_seed, NULL);
 	secparam = sp;
 
-	mpz_import(rnd_seed, secparam.symbits, 1, sizeof((seed)[0]), 0, 0, seed);
+	mpz_import(rnd_seed, ceil_divide(secparam.symbits, 8), 1, sizeof((seed)[0]), 0, 0, seed);
 
 	if (secparam.ifcbits == ST.ifcbits) {
 		mpz_set_str(p, ifcp1024, 16);
@@ -206,13 +231,15 @@ void prime_field::init(seclvl sp, uint8_t* seed) {
 	{
 		mpz_set_str(p, ifcp3072, 10);
 		mpz_set_str(g, ifcg3072, 10);
-		mpz_set_str(q, ifcq1024, 16);
+		mpz_set_str(q, ifcq3072, 10);
 	}
+	order = new gmp_num(this, q);
 
 	gmp_randinit_default(rnd_state);
 	gmp_randseed(rnd_state, rnd_seed);
-	mpz_clear(rnd_seed);
 	fe_bytelen = ceil_divide(secparam.ifcbits, 8);
+
+	mpz_clear(rnd_seed);
 }
 
 prime_field::~prime_field() {
@@ -220,6 +247,7 @@ prime_field::~prime_field() {
 	mpz_clear(p);
 	mpz_clear(g);
 	mpz_clear(q);
+	delete order;
 }
 
 gmp_brickexp::~gmp_brickexp() {

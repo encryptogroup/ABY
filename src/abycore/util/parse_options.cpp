@@ -28,7 +28,7 @@ void tokenize_verilog(const std::string& str, std::vector<uint32_t>& tokens, con
 
 	tokens.clear();
 
-	// Skip delimiters at beginning. Skip first two characters
+	// Skip delimiters at beginning. Skip first two characters (1 Char + 1 Space)
 	std::string::size_type lastPos = str.find_first_not_of(delimiters, 2);
 
 	// Find first "non-delimiter".

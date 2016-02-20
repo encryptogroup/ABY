@@ -1,6 +1,6 @@
 /**
- \file 		bgp_test.cpp
- \author	daniel.demmler@ec-spride.de
+ \file 		bench_operations.cpp
+ \author	michael.zohner@ec-spride.de
  \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
  Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
  This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  GNU Affero General Public License for more details.
  You should have received a copy of the GNU Affero General Public License
  along with this program. If not, see <http://www.gnu.org/licenses/>.
- \brief		BGP Test implementation.
+ \brief		Benchmark Primitive Operations
  */
 
 //Utility libs
@@ -44,7 +44,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* 
 			{ (void*) secparam, T_NUM, 's',	"Symmetric Security Bits, default: 128", false, false },
 			{ (void*) address, T_STR, 'a', "IP-address, default: localhost", false, false },
 			{ (void*) &int_port, T_NUM, 'p', "Port, default: 7766",	false, false },
-			{ (void*) operation, T_NUM, 'o', "Test operation with id (leave out for all operations; for list of IDs use -l), default: all", 	false, false },
+			{ (void*) operation, T_NUM, 'o', "Test operation with id (leave out for all operations; for list of IDs use -l), default: all", false, false },
 			{ (void*) nruns, T_NUM, 'i', "Number of iterations of tests, default: 1",	false, false },
 			{ (void*) verbose, T_FLAG, 'v', "Verbose (silent benchmarks, only timings), default: off",	false, false },
 			{ (void*) &oplist, T_FLAG, 'l', "List the IDs of operations",	false, false },
@@ -145,8 +145,8 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 					avec[j] = (((uint64_t) rand()<<(sizeof(uint32_t)*8)) + rand()) & typebitmask;
 					bvec[j] = (((uint64_t) rand()<<(sizeof(uint32_t)*8)) + rand()) & typebitmask;
 				}
-				shra = circ->PutINGate(nvals, avec, bitlen, SERVER);
-				shrb = circ->PutINGate(nvals, bvec, bitlen, CLIENT);
+				shra = circ->PutSIMDINGate(nvals, avec, bitlen, SERVER);
+				shrb = circ->PutSIMDINGate(nvals, bvec, bitlen, CLIENT);
 				shra->set_max_size(bitlen);
 				shrb->set_max_size(bitlen);
 
@@ -191,7 +191,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 						sa[j] = (uint8_t) (rand() & 0x01);
 						sb[j] = (uint8_t) (rand() & 0x01);
 					}
-					shrsel = circ->PutXORGate(circ->PutINGate(nvals, sa, 1, SERVER), circ->PutINGate(nvals, sb, 1, CLIENT));
+					shrsel = circ->PutXORGate(circ->PutSIMDINGate(nvals, sa, 1, SERVER), circ->PutSIMDINGate(nvals, sb, 1, CLIENT));
 					shrres = circ->PutMUXGate(shra, shrb, shrsel);
 					for (uint32_t j = 0; j < nvals; j++)
 						verifyvec[j] = (sa[j] ^ sb[j]) == 0 ? bvec[j] : avec[j];

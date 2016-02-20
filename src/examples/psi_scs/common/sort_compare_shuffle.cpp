@@ -87,21 +87,21 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 
 	//Set input gates to the circuit
 	for (uint32_t i = 0; i < neles; i++) {
-		shr_server_set[i] = circ->PutINGate(bitlen, srv_set[i], 1, SERVER);
-		shr_client_set[i] = circ->PutINGate(bitlen, cli_set[neles-i-1], 1, CLIENT);
+		shr_server_set[i] = circ->PutSIMDINGate(bitlen, srv_set[i], 1, SERVER);
+		shr_client_set[i] = circ->PutSIMDINGate(bitlen, cli_set[neles-i-1], 1, CLIENT);
 	}
 
 	//Get inputs for the selection bits of the swap gate in the waksman network
 	vector<uint32_t> selbits(nswapgates);
 	for (uint32_t i = 0; i < nswapgates; i++) {
-		selbits[i] = ((share*) circ->PutINGate(1, (uint32_t) rand() % 2, 1, SERVER))->get_gate(0);
+		selbits[i] = ((share*) circ->PutINGate((uint32_t) rand() % 2, 1, SERVER))->get_wire(0);
 	}
 
 	vector<uint32_t> out = BuildSCSPSICircuit(shr_server_set, shr_client_set, selbits, neles, bitlen, circ, circ, 0);
 
 	for(uint32_t i = 0; i < out.size(); i++) {
 		shr_out[i] = new boolshare(1, circ);
-		shr_out[i]->set_gate(0, out[i]);
+		shr_out[i]->set_wire(0, out[i]);
 		shr_out[i] = circ->PutOUTGate(shr_out[i], CLIENT);
 	}
 	party->ExecCircuit();
@@ -284,8 +284,8 @@ vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint
 
 	//Combine all values of a and b into a single vector c
 	for (i = 0; i < neles; i++) {
-		c[i] = srv_set[i]->get_gate(0);
-		c[i + neles] = cli_set[i]->get_gate(0);
+		c[i] = srv_set[i]->get_wire(0);
+		c[i + neles] = cli_set[i]->get_wire(0);
 	}
 
 	//Build bitonic sort gate for all values in C

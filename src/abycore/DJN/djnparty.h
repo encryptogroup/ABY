@@ -25,17 +25,18 @@
 #include "../util/socket.h"
 #include "../util/djn.h"
 #include "../util/powmod.h"
+#include "../util/channel.h"
 
 using namespace std;
 
 class DJNParty {
 public:
 	DJNParty(UINT DJNbits, UINT sharelen);
-	DJNParty(UINT DJNbits, UINT sharelen, CSocket sock);
+	DJNParty(UINT DJNbits, UINT sharelen, channel* chan);
 	~DJNParty();
 
-	void keyExchange(CSocket sock);
-	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, CSocket sock);
+	void keyExchange(channel* chan);
+	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan);
 
 	void setSharelLength(UINT sharelen);
 
@@ -52,14 +53,14 @@ private:
 	djn_prvkey_t *m_prv;
 	gmp_randstate_t m_randstate;
 
-	void benchPreCompPacking1(CSocket sock, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
+	void benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
 			mpz_t y, mpz_t z);
 
-	void sendmpz_t(mpz_t t, CSocket sock, BYTE * buf);
-	void receivempz_t(mpz_t t, CSocket sock, BYTE * buf);
+	void sendmpz_t(mpz_t t, channel* chan, BYTE * buf);
+	void receivempz_t(mpz_t t, channel* chan, BYTE * buf);
 
-	void sendmpz_t(mpz_t t, CSocket sock);
-	void receivempz_t(mpz_t t, CSocket sock);
+	void sendmpz_t(mpz_t t, channel* chan);
+	void receivempz_t(mpz_t t, channel* chan);
 
 	void printBuf(BYTE* b, UINT l);
 

@@ -26,11 +26,18 @@ void BoolSharing::Init() {
 
 	m_nInputShareSndSize = 0;
 	m_nOutputShareSndSize = 0;
-
 	m_nInputShareRcvSize = 0;
 	m_nOutputShareRcvSize = 0;
 
 	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, S_BOOL);
+
+#ifdef BENCHBOOLTIME
+	m_nCombTime = 0;
+	m_nSubsetTime = 0;
+	m_nCombStructTime = 0;
+	m_nSIMDTime = 0;
+	m_nXORTime = 0;
+#endif
 }
 
 //Pre-set values for new layer
@@ -75,13 +82,39 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 	if (m_nTotalNumMTs == 0)
 		return;
 
+#ifdef USE_KK_OT_FOR_MT
+	fMaskFct = new XORMasking(m_vANDs[0].bitlen);
+
+	for (uint32_t j = 0; j < 2; j++) {
+		KK_OTTask* task = (KK_OTTask*) malloc(sizeof(KK_OTTask));
+		task->bitlen = m_vANDs[0].bitlen;
+		task->snd_flavor = Snd_OT;
+		task->rec_flavor = Rec_OT;
+		task->nsndvals = 4;
+		task->numOTs = ceil_divide(m_nNumMTs[0], 2);
+		task->mskfct = fMaskFct;
+		if ((m_eRole ^ j) == SERVER) {
+			task->pval.sndval.X = m_vKKS.data();
+		} else {
+			task->pval.rcvval.C = m_vKKChoices[m_eRole^1];
+			task->pval.rcvval.R = &(m_vKKC[m_eRole^1]);
+		}
+#ifndef BATCH
+		cout << "Adding new KK OT task for " << m_nNumMTs[0] << " OTs on " << m_vANDs[0].bitlen << " bit-strings" << endl;
+#endif
+		setup->AddOTTask(task, j);
+	}
+	for (uint32_t i = 1; i < m_nNumANDSizes; i++) {
+#else
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
+#endif
 		fMaskFct = new XORMasking(m_vANDs[i].bitlen);
 
 		for (uint32_t j = 0; j < 2; j++) {
-			OTTask* task = (OTTask*) malloc(sizeof(OTTask));
+			IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 			task->bitlen = m_vANDs[i].bitlen;
-			task->ottype = R_OT;
+			task->snd_flavor = Snd_R_OT;
+			task->rec_flavor = Rec_OT;
 			task->numOTs = m_nNumMTs[i];
 			task->mskfct = fMaskFct;
 			if ((m_eRole ^ j) == SERVER) {
@@ -97,7 +130,6 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 			setup->AddOTTask(task, j);
 		}
 	}
-
 }
 
 void BoolSharing::PerformSetupPhase(ABYSetup* setup) {
@@ -144,7 +176,7 @@ void BoolSharing::InitializeMTs() {
 		//A contains the  choice bits for the OTs
 		m_vA[i].Create(m_nNumMTs[i], m_cCrypto);
 		//B contains the correlation between the OTs
-		m_vB[i].Create(m_nNumMTs[i] * mtbitlen);
+		m_vB[i].Create(m_nNumMTs[i] * mtbitlen, m_cCrypto);
 		//C contains the zero mask and is later computed correctly
 		m_vC[i].Create(m_nNumMTs[i] * mtbitlen);
 		//S is a temporary buffer and contains the result of the OTs where A is used as choice bits
@@ -161,14 +193,55 @@ void BoolSharing::InitializeMTs() {
 		m_vResA[i].Create(m_nNumMTs[i] * mtbitlen);
 		m_vResB[i].Create(m_nNumMTs[i] * mtbitlen);
 	}
+
+#ifdef USE_KK_OT_FOR_MT
+	m_vKKA.resize(2);
+	m_vKKB.resize(2);
+	m_vKKC.resize(2);
+	m_vKKChoices.resize(2);
+	m_vKKS.resize(4);
+
+	for(uint32_t i = 0; i < 2; i++) {
+		m_vKKA[i].Create(ceil_divide(m_nNumMTs[0], 2), m_cCrypto);
+		m_vKKB[i].Create(ceil_divide(m_nNumMTs[0], 2), m_cCrypto);
+		m_vKKC[i].Create(ceil_divide(m_nNumMTs[0], 2), m_cCrypto);
+	}
+	CBitVector* Ainv = new CBitVector();
+	CBitVector* Binv = new CBitVector();
+	Ainv->Copy(m_vKKA[m_eRole]);
+	Ainv->Invert();
+	Binv->Copy(m_vKKB[m_eRole]);
+	Binv->Invert();
+	CBitVector* tmpA[2];
+	CBitVector* tmpB[2];
+	tmpA[0] = &m_vKKA[m_eRole];
+	tmpA[1] = Ainv;
+	tmpB[0] = &m_vKKB[m_eRole];
+	tmpB[1] = Binv;
+
+	for(uint32_t i = 0; i < 4; i++) {
+		m_vKKS[i] = new CBitVector();
+		m_vKKS[i]->Copy(*(tmpA[i>>1]));
+		m_vKKS[i]->AND(tmpB[i&0x01]);
+		m_vKKS[i]->XOR(&(m_vKKC[m_eRole]));
+	}
+
+	//Merge the A and B values into one vector on receiver side
+	m_vKKChoices[m_eRole^1] = new CBitVector();
+	m_vKKChoices[m_eRole^1]->Create(m_nNumMTs[0]);
+	for(uint32_t i = 0; i < ceil_divide(m_nNumMTs[0], 2); i++) {
+		m_vKKChoices[m_eRole^1]->SetBitNoMask(2*i, m_vKKB[m_eRole^1].GetBitNoMask(i));
+		m_vKKChoices[m_eRole^1]->SetBitNoMask(2*i+1, m_vKKA[m_eRole^1].GetBitNoMask(i));
+	}
+#endif
 }
 
 void BoolSharing::PrepareOnlinePhase() {
 
 	//get #in/output bits for other party
-	uint32_t insharesndbits = m_cBoolCircuit->GetNumInputBitsForParty(m_eRole==SERVER ? CLIENT : SERVER);
+	uint32_t insharesndbits = m_cBoolCircuit->GetNumInputBitsForParty(m_eRole);
 	uint32_t outsharesndbits = m_cBoolCircuit->GetNumOutputBitsForParty(m_eRole==SERVER ? CLIENT : SERVER);
-	uint32_t insharercvbits = m_cBoolCircuit->GetNumInputBitsForParty(m_eRole);
+	uint32_t insharercvbits = m_cBoolCircuit->GetNumInputBitsForParty(m_eRole==SERVER ? CLIENT : SERVER);
 	uint32_t outsharercvbits = m_cBoolCircuit->GetNumOutputBitsForParty(m_eRole);
 
 	m_vInputShareSndBuf.Create(insharesndbits, m_cCrypto);
@@ -184,11 +257,42 @@ void BoolSharing::PrepareOnlinePhase() {
 }
 
 void BoolSharing::ComputeMTs() {
+	//cout << "Computing MTs " << endl;
+	CBitVector temp;
+
+#ifdef USE_KK_OT_FOR_MT
+	uint64_t len = (uint64_t) ceil_divide(m_nNumMTs[0], 2);
+	for(uint32_t i = 0; i < 2; i++) {
+		m_vA[0].SetBits(m_vKKA[i].GetArr(), i*len, len);
+		m_vB[0].SetBits(m_vKKB[i].GetArr(), i*len, len);
+		m_vC[0].SetBits(m_vKKC[i].GetArr(), i*len, len);
+	}
+
+
+	//m_vB[0].SetBits(m_vKKB[0].GetArr(), (uint64_t) 0L, (uint64_t) ceil_divide(m_nNumMTs[0], 2));
+	//m_vB[0].SetBits(m_vKKB[1].GetArr(), (uint64_t) ceil_divide(m_nNumMTs[0], 2), (uint64_t) ceil_divide(m_nNumMTs[0], 2));
+
+	//m_vC[0].SetBits(m_vKKC[0].GetArr(), (uint64_t) 0L, (uint64_t) ceil_divide(m_nNumMTs[0], 2));
+	//m_vC[0].SetBits(m_vKKC[1].GetArr(), (uint64_t) ceil_divide(m_nNumMTs[0], 2), (uint64_t) ceil_divide(m_nNumMTs[0], 2));
+
+	//Pre-store the values in A and B in D_snd and E_snd
+	m_vD_snd[0].Copy(m_vA[0].GetArr(), 0, bits_in_bytes(m_nNumMTs[0]));
+	m_vE_snd[0].Copy(m_vB[0].GetArr(), 0, bits_in_bytes(m_nNumMTs[0]));
+
+	m_vKKChoices[m_eRole^1]->delCBitVector();
+	for(uint32_t i = 0; i < 4; i++) {
+		m_vKKS[i]->delCBitVector();
+	}
+
+	for (uint32_t i = 1; i < m_nNumANDSizes; i++) {
+#else
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
+#endif
+		//cout << "I = " << i << ", len = " << m_vANDs[i].bitlen << ", Num= " << m_nNumMTs[i] <<endl;
 		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
 		uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
 
-		CBitVector temp(stringbytelen * 8);
+		temp.Create(stringbytelen * 8);
 		temp.Reset();
 
 		//Get correct B
@@ -213,7 +317,6 @@ void BoolSharing::ComputeMTs() {
 			}
 		}
 
-
 		m_vC[i].XORBytes(temp.GetArr(), 0, stringbytelen);
 		m_vC[i].XORBytes(m_vS[i].GetArr(), 0, stringbytelen);
 
@@ -230,6 +333,7 @@ void BoolSharing::ComputeMTs() {
 		cout << "C: ";
 		m_vC[i].PrintHex();
 #endif
+		temp.delCBitVector();
 	}
 
 }
@@ -237,7 +341,9 @@ void BoolSharing::ComputeMTs() {
 void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 	deque<uint32_t> localops = m_cBoolCircuit->GetLocalQueueOnLvl(depth);
 	GATE* gate;
-
+#ifdef BENCHBOOLTIME
+	timeval tstart, tend;
+#endif
 	for (uint32_t i = 0; i < localops.size(); i++) {
 		gate = m_pGates + localops[i];
 
@@ -247,7 +353,14 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 
 		switch (gate->type) {
 		case G_LIN:
+#ifdef BENCHBOOLTIME
+			gettimeofday(&tstart, NULL);
+#endif
 			EvaluateXORGate(localops[i]);
+#ifdef BENCHBOOLTIME
+			gettimeofday(&tend, NULL);
+			m_nXORTime += getMillies(tstart, tend);
+#endif
 			break;
 		case G_CONSTANT:
 			EvaluateConstantGate(localops[i]);
@@ -257,6 +370,11 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 			break;
 		case G_CONV:
 			EvaluateCONVGate(localops[i]);
+			break;
+		case G_SHARED_OUT:
+			InstantiateGate(gate);
+			memcpy(gate->gs.val, ((GATE*) m_pGates + gate->ingates.inputs.parent)->gs.val, bits_in_bytes(gate->nvals));
+			UsedGate(gate->ingates.inputs.parent);
 			break;
 		case G_CALLBACK:
 			EvaluateCallbackGate(localops[i]);
@@ -455,6 +573,7 @@ inline void BoolSharing::SelectiveOpen(uint32_t gateid) {
 
 inline void BoolSharing::SelectiveOpenVec(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
+
 	uint32_t idchoice = gate->ingates.inputs.twin.left;
 	uint32_t idvector = gate->ingates.inputs.twin.right;
 
@@ -492,7 +611,7 @@ inline void BoolSharing::SelectiveOpenVec(uint32_t gateid) {
 	UsedGate(idvector);
 }
 
-void BoolSharing::FinishCircuitLayer() {
+void BoolSharing::FinishCircuitLayer(uint32_t level) {
 	//Compute the values of the AND gates
 #ifdef DEBUGBOOL
 	if(m_nInputShareRcvSize > 0) {
@@ -517,107 +636,115 @@ void BoolSharing::EvaluateMTs() {
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 		uint32_t startpos = m_vMTStartIdx[i];
 		uint32_t endpos = m_vMTIdx[i];
-		uint32_t len = endpos - startpos;
-		uint32_t startposbytes = ceil_divide(startpos, 8);
-		uint32_t startposstringbits = startpos * m_vANDs[i].bitlen;
-		uint32_t startposstringbytes = startposbytes * m_vANDs[i].bitlen;
-		uint32_t lenbytes = ceil_divide(len, 8);
-		uint32_t stringbytelen = ceil_divide(m_vANDs[i].bitlen * len, 8);
-		uint32_t mtbytelen = ceil_divide(m_vANDs[i].bitlen, 8);
+		if(startpos != endpos) {//do nothing, since len = 0, TODO: there is an error somehwere that makes this check necesssary, fix!
+			uint32_t len = endpos - startpos;
+			uint32_t startposbytes = ceil_divide(startpos, 8);
+			uint32_t startposstringbits = startpos * m_vANDs[i].bitlen;
+			uint32_t startposstringbytes = startposbytes * m_vANDs[i].bitlen;
+			uint32_t lenbytes = ceil_divide(len, 8);
+			uint32_t stringbytelen = ceil_divide(m_vANDs[i].bitlen * len, 8);
+			uint32_t mtbytelen = ceil_divide(m_vANDs[i].bitlen, 8);
 
-		m_vD_snd[i].XORBytes(m_vD_rcv[i].GetArr() + startposbytes, startposbytes, lenbytes);
-		m_vE_snd[i].XORBytes(m_vE_rcv[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
+
+	/*		cout << "lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
+			", startposbytes = " << startposbytes << ", startposstring = " << startposstringbytes << ", nummts: " <<
+				m_nNumMTs[i] << ", mtidx = " << m_vMTIdx[i] << ", mtstartidx = " << m_vMTStartIdx[i] << ", numandgates: " <<
+				m_vANDs[i].numgates <<endl;*/
+
+			m_vD_snd[i].XORBytes(m_vD_rcv[i].GetArr() + startposbytes, startposbytes, lenbytes);
+			m_vE_snd[i].XORBytes(m_vE_rcv[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
 
 
 #ifdef DEBUGBOOL
-		if(i > 0) {
-			cout << "i = " << i << ", lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
-				", startposbytes = " << startposbytes << ", startposstring = " << startposstringbytes << ", startidx = " <<
-				m_vMTStartIdx[i] << ", idx = " << m_vMTIdx[i] << ", num ANDs = " << m_vANDs[i].numgates << ", nummts = " <<
-				m_nNumMTs[i] << ", " << m_vMTIdx[i] - m_vMTStartIdx[i] << endl;
+			if(i > 0) {
+				cout << "i = " << i << ", lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
+					", startposbytes = " << startposbytes << ", startposstring = " << startposstringbytes << ", startidx = " <<
+					m_vMTStartIdx[i] << ", idx = " << m_vMTIdx[i] << ", num ANDs = " << m_vANDs[i].numgates << ", nummts = " <<
+					m_nNumMTs[i] << ", " << m_vMTIdx[i] - m_vMTStartIdx[i] << endl;
 
 
-		cout << "A share: ";
-		m_vA[i].Print(0, len);
-		cout << "B share: ";
-		m_vB[i].PrintHex(0, stringbytelen);
-		cout << "C-share: ";
-		m_vC[i].PrintHex(0, stringbytelen);
+			cout << "A share: ";
+			m_vA[i].Print(0, len);
+			cout << "B share: ";
+			m_vB[i].PrintHex(0, stringbytelen);
+			cout << "C-share: ";
+			m_vC[i].PrintHex(0, stringbytelen);
 
-		cout << "D-rcv: ";
-		m_vD_rcv[i].Print(0,len);
-		cout << "E-rcv: ";
-		m_vE_rcv[i].PrintHex(0, stringbytelen);
-		cout << "D-total: ";
-		m_vD_snd[i].Print(0,len);
-		cout << "E-total: ";
-		m_vE_snd[i].PrintHex(0, stringbytelen);
-		}
+			cout << "D-rcv: ";
+			m_vD_rcv[i].Print(0,len);
+			cout << "E-rcv: ";
+			m_vE_rcv[i].PrintHex(0, stringbytelen);
+			cout << "D-total: ";
+			m_vD_snd[i].Print(0,len);
+			cout << "E-total: ";
+			m_vE_snd[i].PrintHex(0, stringbytelen);
+			}
 #endif
 
-		if (i == 0) {
-			m_vResA[i].Copy(m_vA[i].GetArr() + startposbytes, startposbytes, lenbytes);
-			m_vResB[i].Copy(m_vB[i].GetArr() + startposbytes, startposbytes, lenbytes);
-
-			m_vResA[i].ANDBytes(m_vE_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
-			m_vResB[i].ANDBytes(m_vD_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
-		} else {
-			if((m_vANDs[i].bitlen & 0x07) == 0) {
-				for (uint32_t j = 0; j < len; j++) {
-					if (m_vA[i].GetBitNoMask(j + startpos)) { //a * e
-						m_vResA[i].SetBytes(m_vE_snd[i].GetArr() + startposstringbytes + j * mtbytelen,
-								startposstringbytes + j * mtbytelen, mtbytelen);
-					}
-					if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * b
-						m_vResB[i].SetBytes(m_vB[i].GetArr() + startposstringbytes + j * mtbytelen,
-								startposstringbytes + j * mtbytelen, mtbytelen);
-					}
-				}
-			} else {
-				for (uint32_t j = 0; j < len; j++) {
-					if (m_vA[i].GetBitNoMask(j + startpos)) { //a * e
-						uint64_t tmp = m_vE_snd[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-						m_vResA[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-						//m_vResA[i].SetBitsPosOffset(m_vE_snd[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
-						//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-					}
-					if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * b
-						uint64_t tmp = m_vB[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-						m_vResB[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-						//m_vResB[i].SetBitsPosOffset(m_vB[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
-						//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-					}
-				}
-			}
-		}
-
-		m_vResA[i].XORBytes(m_vResB[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
-		m_vResA[i].XORBytes(m_vC[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
-
-		if (m_eRole == SERVER) {
 			if (i == 0) {
-				m_vResB[i].Copy(m_vE_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
+				m_vResA[i].Copy(m_vA[i].GetArr() + startposbytes, startposbytes, lenbytes);
+				m_vResB[i].Copy(m_vB[i].GetArr() + startposbytes, startposbytes, lenbytes);
+
+				m_vResA[i].ANDBytes(m_vE_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
 				m_vResB[i].ANDBytes(m_vD_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
 			} else {
 				if((m_vANDs[i].bitlen & 0x07) == 0) {
 					for (uint32_t j = 0; j < len; j++) {
-						if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * e
-							m_vResB[i].SetBytes(m_vE_snd[i].GetArr() + startposstringbytes + j * mtbytelen,
+						if (m_vA[i].GetBitNoMask(j + startpos)) { //a * e
+							m_vResA[i].SetBytes(m_vE_snd[i].GetArr() + startposstringbytes + j * mtbytelen,
+									startposstringbytes + j * mtbytelen, mtbytelen);
+						}
+						if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * b
+							m_vResB[i].SetBytes(m_vB[i].GetArr() + startposstringbytes + j * mtbytelen,
 									startposstringbytes + j * mtbytelen, mtbytelen);
 						}
 					}
 				} else {
 					for (uint32_t j = 0; j < len; j++) {
-						if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * e
+						if (m_vA[i].GetBitNoMask(j + startpos)) { //a * e
 							uint64_t tmp = m_vE_snd[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							m_vResA[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							//m_vResA[i].SetBitsPosOffset(m_vE_snd[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
+							//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+						}
+						if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * b
+							uint64_t tmp = m_vB[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
 							m_vResB[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-							//m_vResB[i].SetBitsPosOffset(m_vE_snd[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
+							//m_vResB[i].SetBitsPosOffset(m_vB[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
 							//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
 						}
 					}
 				}
 			}
+
 			m_vResA[i].XORBytes(m_vResB[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
+			m_vResA[i].XORBytes(m_vC[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
+
+			if (m_eRole == SERVER) {
+				if (i == 0) {
+					m_vResB[i].Copy(m_vE_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
+					m_vResB[i].ANDBytes(m_vD_snd[i].GetArr() + startposbytes, startposbytes, lenbytes);
+				} else {
+					if((m_vANDs[i].bitlen & 0x07) == 0) {
+						for (uint32_t j = 0; j < len; j++) {
+							if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * e
+								m_vResB[i].SetBytes(m_vE_snd[i].GetArr() + startposstringbytes + j * mtbytelen,
+										startposstringbytes + j * mtbytelen, mtbytelen);
+							}
+						}
+					} else {
+						for (uint32_t j = 0; j < len; j++) {
+							if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * e
+								uint64_t tmp = m_vE_snd[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+								m_vResB[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+								//m_vResB[i].SetBitsPosOffset(m_vE_snd[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
+								//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							}
+						}
+					}
+				}
+				m_vResA[i].XORBytes(m_vResB[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
+			}
 		}
 	}
 }
@@ -694,7 +821,7 @@ void BoolSharing::AssignOutputShares() {
 	}
 }
 
-void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& sndbytes) {
+void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
 	//Input shares
 	if (m_nInputShareSndSize > 0) {
 		sendbuf.push_back(m_vInputShareSndBuf.GetArr());
@@ -735,7 +862,7 @@ void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& sndbyt
 #endif
 }
 
-void BoolSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes) {
+void BoolSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) {
 	//Input shares
 	if (m_nInputShareRcvSize > 0) {
 		if (m_vInputShareRcvBuf.GetSize() < ceil_divide(m_nInputShareRcvSize, 8)) {
@@ -784,14 +911,41 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t vsize = gate->nvals;
 
+#ifdef BENCHBOOLTIME
+	timeval tstart, tend;
+	gettimeofday(&tstart, NULL);
+#endif
+
 	if (gate->type == G_COMBINE) {
 #ifdef DEBUGSHARING
 		cout << " which is a COMBINE gate" << endl;
 #endif
-		uint32_t* input = gate->ingates.inputs.parents;
-		InstantiateGate(gate);
 
-		for (uint32_t k = 0, bitstocopy = vsize; k < ceil_divide(vsize, GATE_T_BITS); k++, bitstocopy -= GATE_T_BITS) {
+		uint32_t* input = gate->ingates.inputs.parents;
+		uint32_t nparents = gate->ingates.ningates;
+		InstantiateGate(gate);
+		CBitVector tmp;
+
+		tmp.AttachBuf((uint8_t*) gate->gs.val, (int) ceil_divide(vsize, 8));
+
+		for(uint64_t i = 0, bit_ctr = 0, ctr=0; i < nparents; i++) {
+			uint64_t in_size = m_pGates[input[i]].nvals;
+
+			tmp.SetBits((uint8_t*) m_pGates[input[i]].gs.val, bit_ctr, in_size);
+			bit_ctr += in_size;
+		}
+
+		tmp.DetachBuf();
+#ifdef BENCHBOOLTIME
+		gettimeofday(&tend, NULL);
+		m_nCombTime += getMillies(tstart, tend);
+#endif
+		/*cout << "Res value = " << (hex);
+		for(uint64_t i = 0; i < ceil_divide(vsize, GATE_T_BITS); i++) {
+			cout << gate->gs.val[i] << " ";
+		}
+		cout << (dec) << endl;*/
+		/*for (uint32_t k = 0, bitstocopy = vsize; k < ceil_divide(vsize, GATE_T_BITS); k++, bitstocopy -= GATE_T_BITS) {
 			uint32_t size = min(bitstocopy, ((uint32_t) GATE_T_BITS));
 			gate->gs.val[k] = 0;
 			//TODO: not working if valsize of the original gate is greater than GATE_T_BITS!, replace for variable sized function
@@ -799,7 +953,8 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 				gate->gs.val[k] |= m_pGates[input[i + k * GATE_T_BITS]].gs.val[0] << i;
 				UsedGate(input[i + k * GATE_T_BITS]);
 			}
-		}
+		}*/
+
 		free(input);
 	} else if (gate->type == G_SPLIT) {
 #ifdef DEBUGSHARING
@@ -870,14 +1025,18 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		uint32_t bitpos;
 		InstantiateGate(gate);
 		memset(gate->gs.val, 0x00, ceil_divide(vsize, 8));
-
+		UGATE_T* valptr = m_pGates[idparent].gs.val;
 		for (uint32_t i = 0; i < vsize; i++) {
-			arraypos = positions[i] / GATE_T_BITS;
-			bitpos = positions[i] % GATE_T_BITS;
-			gate->gs.val[i / GATE_T_BITS] |= (((m_pGates[idparent].gs.val[arraypos] >> bitpos) & 0x1) << (i % GATE_T_BITS));
+			arraypos = positions[i] >> 6;
+			bitpos = positions[i] & 0x3F;
+			gate->gs.val[i >> 6] |= (((valptr[arraypos] >> bitpos) & 0x1) << (i & 0x3F));
 		}
 		UsedGate(idparent);
 		free(positions);
+#ifdef BENCHBOOLTIME
+		gettimeofday(&tend, NULL);
+		m_nSubsetTime += getMillies(tstart, tend);
+#endif
 	} else if (gate->type == G_STRUCT_COMBINE) {
 #ifdef DEBUGSHARING
 		cout << " which is a Subset gate" << endl;
@@ -894,6 +1053,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		memset(gate->gs.val, 0x00, ceil_divide(vsize, 8));
 
 		//TODO: Optimize
+		//cout << "ninputs = " << ninputs << ", nvals = " << vsize  << endl;
 		for(uint32_t pos_ctr = pos_start, ctr=0, p_tmp_idx, p_tmp_pos; ctr<vsize; pos_ctr+=pos_incr) {
 			p_tmp_idx = pos_ctr / GATE_T_BITS;
 			p_tmp_pos = pos_ctr % GATE_T_BITS;
@@ -912,7 +1072,15 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		}
 
 		free(inputs);
+#ifdef BENCHBOOLTIME
+		gettimeofday(&tend, NULL);
+		m_nCombStructTime += getMillies(tstart, tend);
+#endif
 	}
+#ifdef BENCHBOOLTIME
+	gettimeofday(&tend, NULL);
+	m_nSIMDTime += getMillies(tstart, tend);
+#endif
 }
 
 uint32_t BoolSharing::AssignInput(CBitVector& inputvals) {
@@ -960,10 +1128,24 @@ uint32_t BoolSharing::GetOutput(CBitVector& out) {
 
 void BoolSharing::PrintPerformanceStatistics() {
 	cout << "Boolean Sharing: ANDs: ";
-	for (uint32_t i = 0; i < m_nNumANDSizes; i++)
+	uint64_t total_non_vec_ANDs = 0;
+	uint64_t total_vec_ANDs = 0;
+	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 		cout << m_vANDs[i].numgates << " (" << m_vANDs[i].bitlen << "-bit) ; ";
+		total_non_vec_ANDs += (((uint64_t) m_vANDs[i].numgates ) * ((uint64_t) m_vANDs[i].bitlen));
+		total_vec_ANDs += ((uint64_t) m_vANDs[i].numgates);
+	}
 	cout << "Depth: " << GetMaxCommunicationRounds() << endl;
+	cout << "Total Vec AND: " << total_vec_ANDs << endl;
+	cout << "Total Non-Vec AND: " << total_non_vec_ANDs << endl;
 	cout << "XOR vals: "<< m_cBoolCircuit->GetNumXORVals() << " gates: "<< m_cBoolCircuit->GetNumXORGates() << endl;
+	cout << "Comb gates: " << m_cBoolCircuit->GetNumCombGates() << ", CombStruct gates: " <<  m_cBoolCircuit->GetNumStructCombGates() <<
+			", Perm gates: "<< m_cBoolCircuit->GetNumPermGates() << ", Subset gates: " << m_cBoolCircuit->GetNumSubsetGates() <<
+			", Split gates: "<< m_cBoolCircuit->GetNumSplitGates() << endl;
+#ifdef BENCHBOOLTIME
+	cout << "XOR time " << m_nXORTime << ", SIMD time " << m_nSIMDTime << ", Comb time: " << m_nCombTime << ", Comb structurized time: " <<
+			m_nCombStructTime << ", Subset time: " << m_nSubsetTime << endl;
+#endif
 }
 
 void BoolSharing::Reset() {
@@ -1004,6 +1186,11 @@ void BoolSharing::Reset() {
 		m_vResA[i].delCBitVector();
 		m_vResB[i].delCBitVector();
 	}
+#ifdef USE_KK_OT_FOR_MT
+		m_vKKA[0].delCBitVector();
+		m_vKKB[0].delCBitVector();
+		m_vKKC[0].delCBitVector();
+#endif
 
 	m_vInputShareSndBuf.delCBitVector();
 	m_vOutputShareSndBuf.delCBitVector();

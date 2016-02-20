@@ -13,7 +13,7 @@ SOURCES := $(shell find . -type f -name '*.cpp')
 OBJECTS := $(patsubst %.cpp, %.o, ${SOURCES})
 
 # all source files and corresponding object files in abycore
-SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/util/Miracl/*')
+SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/util/Miracl/*' -not -path '*/ot/external/*')
 OBJECTS_CORE := $(SOURCES_CORE:.cpp=.o)
 
 # directory for the Miracl library

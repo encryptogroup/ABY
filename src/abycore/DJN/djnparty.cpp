@@ -29,7 +29,7 @@
  * Generates DJN key.
  * Key Exchange must be done manually after calling this constructor!
  */
-DJNParty::DJNParty(UINT DJNbits, UINT sharelen, CSocket sock) {
+DJNParty::DJNParty(UINT DJNbits, UINT sharelen, channel* chan) {
 
 	m_nShareLength = sharelen;
 	m_nDJNbits = DJNbits;
@@ -43,7 +43,7 @@ DJNParty::DJNParty(UINT DJNbits, UINT sharelen, CSocket sock) {
 	gmp_randseed_ui(m_randstate, rand());
 
 	keyGen();
-	keyExchange(sock);
+	keyExchange(chan);
 }
 
 DJNParty::DJNParty(UINT DJNbits, UINT sharelen) {
@@ -91,7 +91,7 @@ DJNParty::~DJNParty() {
  * inputs pre-allocates byte buffers for aMT calculation.
  * numMTs must be the total number of MTs and divisible by 2
  */
-void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, CSocket sock) {
+void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan) {
 	struct timeval start, end;
 
 	numMTs = numMTs / 2; // We can be both sender and receiver at the same time.
@@ -153,11 +153,11 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 
 		window = min(window, tosend);
 
-		sock.Send(abuf + offset, window);
-		sock.Receive(abuf + offset, window);
+		chan->send(abuf + offset, window);
+		chan->blocking_receive(abuf + offset, window);
 
-		sock.Send(bbuf + offset, window);
-		sock.Receive(bbuf + offset, window);
+		chan->send(bbuf + offset, window);
+		chan->blocking_receive(bbuf + offset, window);
 
 		tosend -= window;
 		offset += window;
@@ -233,8 +233,8 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	while (tosend > 0) {
 		window = min(window, tosend);
 
-		sock.Send(zbuf + offset, window);
-		sock.Receive(zbuf + offset, window);
+		chan->send(zbuf + offset, window);
+		chan->blocking_receive(zbuf + offset, window);
 
 		tosend -= window;
 		offset += window;
@@ -273,12 +273,12 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	mpz_t ai, bi, ci, ai1, bi1, ci1, ta, tb;
 	mpz_inits(ai, bi, ci, ai1, bi1, ci1, ta, tb, NULL);
 
-	sock.Send(bA, numMTs * shareBytes);
-	sock.Receive(bA, numMTs * shareBytes);
-	sock.Send(bB, numMTs * shareBytes);
-	sock.Receive(bB, numMTs * shareBytes);
-	sock.Send(bC, numMTs * shareBytes);
-	sock.Receive(bC, numMTs * shareBytes);
+	chan->send(bA, numMTs * shareBytes);
+	chan->blocking_receive(bA, numMTs * shareBytes);
+	chan->send(bB, numMTs * shareBytes);
+	chan->blocking_receive(bB, numMTs * shareBytes);
+	chan->send(bC, numMTs * shareBytes);
+	chan->blocking_receive(bC, numMTs * shareBytes);
 
 	for (UINT i = 0; i < numMTs; i++) {
 
@@ -328,7 +328,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
  * a,b,c are server shares. a1,b1,c1 are client shares.
  * All mpz_t values must be pre-initialized.
  */
-void DJNParty::benchPreCompPacking1(CSocket sock, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
+void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
 		mpz_t y, mpz_t z) {
 #if DEBUG
 	cout << "packlen: " << packlen << " numshares: " << numshares << endl;
@@ -341,7 +341,7 @@ void DJNParty::benchPreCompPacking1(CSocket sock, BYTE * buf, UINT packlen, UINT
 		mpz_export(buf + (2 * i + 1) * m_nBuflen, NULL, -1, 1, 1, 0, r);
 	}
 
-	sock.Send(buf, (uint64_t) m_nBuflen * numshares * 2);
+	chan->send(buf, (uint64_t) m_nBuflen * numshares * 2);
 
 #if NETDEBUG
 	cout << " SEND " << endl;
@@ -350,7 +350,7 @@ void DJNParty::benchPreCompPacking1(CSocket sock, BYTE * buf, UINT packlen, UINT
 	}
 #endif
 
-	sock.Receive(buf, (uint64_t) m_nBuflen * numshares * 2);
+	chan->blocking_receive(buf, (uint64_t) m_nBuflen * numshares * 2);
 
 #if NETDEBUG
 	cout << " RECV " << endl;
@@ -400,17 +400,17 @@ void DJNParty::benchPreCompPacking1(CSocket sock, BYTE * buf, UINT packlen, UINT
 /**
  * exchanges private keys with other party via sock, pre-calculates fixed-base representation of remote pub-key
  */
-void DJNParty::keyExchange(CSocket sock) {
+void DJNParty::keyExchange(channel* chan) {
 
 //send public key
-	sendmpz_t(m_localpub->n, sock);
-	sendmpz_t(m_localpub->h, sock);
+	sendmpz_t(m_localpub->n, chan);
+	sendmpz_t(m_localpub->h, chan);
 
 //receive and complete public key
 	mpz_t a, b;
 	mpz_inits(a, b, NULL);
-	receivempz_t(a, sock); //n
-	receivempz_t(b, sock); //h
+	receivempz_t(a, chan); //n
+	receivempz_t(b, chan); //h
 	djn_complete_pubkey(m_nDJNbits, &m_remotepub, a, b);
 
 // pre calculate table for fixed-base exponentiation for client
@@ -427,7 +427,7 @@ void DJNParty::keyExchange(CSocket sock) {
 /**
  * send one mpz_t to sock
  */
-void DJNParty::sendmpz_t(mpz_t t, CSocket sock, BYTE * buf) {
+void DJNParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 
 //clear upper bytes of the buffer, so tailing bytes are zero
 	for (int i = mpz_sizeinbase(t, 256); i < m_nBuflen; i++) {
@@ -441,7 +441,7 @@ void DJNParty::sendmpz_t(mpz_t t, CSocket sock, BYTE * buf) {
 	mpz_export(buf, NULL, -1, 1, 1, 0, t);
 
 	//send Bytes of t
-	sock.Send(buf, (uint64_t) m_nBuflen);
+	chan->send(buf, (uint64_t) m_nBuflen);
 
 #if NETDEBUG
 	cout << endl << "SEND" << endl;
@@ -456,8 +456,8 @@ void DJNParty::sendmpz_t(mpz_t t, CSocket sock, BYTE * buf) {
 /**
  * receive one mpz_t from sock. t must be initialized.
  */
-void DJNParty::receivempz_t(mpz_t t, CSocket sock, BYTE * buf) {
-	sock.Receive(buf, (uint64_t) m_nBuflen);
+void DJNParty::receivempz_t(mpz_t t, channel* chan, BYTE * buf) {
+	chan->blocking_receive(buf, (uint64_t) m_nBuflen);
 	mpz_import(t, m_nBuflen, -1, 1, 1, 0, buf);
 
 #if NETDEBUG
@@ -473,16 +473,16 @@ void DJNParty::receivempz_t(mpz_t t, CSocket sock, BYTE * buf) {
 /**
  * send one mpz_t to sock, allocates buffer
  */
-void DJNParty::sendmpz_t(mpz_t t, CSocket sock) {
+void DJNParty::sendmpz_t(mpz_t t, channel* chan) {
 	unsigned int bytelen = mpz_sizeinbase(t, 256);
 	BYTE* arr = (BYTE*) malloc(bytelen);
 	mpz_export(arr, NULL, 1, 1, 1, 0, t);
 
 //send byte length
-	sock.Send(&bytelen, sizeof(bytelen));
+	chan->send((BYTE*) &bytelen, sizeof(bytelen));
 
 //send bytes of t
-	sock.Send(arr, (uint64_t) bytelen);
+	chan->send(arr, (uint64_t) bytelen);
 
 	free(arr);
 #if NETDEBUG
@@ -493,15 +493,15 @@ void DJNParty::sendmpz_t(mpz_t t, CSocket sock) {
 /**
  * receive one mpz_t from sock. t must be initialized.
  */
-void DJNParty::receivempz_t(mpz_t t, CSocket sock) {
+void DJNParty::receivempz_t(mpz_t t, channel* chan) {
 	unsigned int bytelen;
 
 //reiceive byte length
-	sock.Receive(&bytelen, sizeof(bytelen));
+	chan->blocking_receive((BYTE*) &bytelen, sizeof(bytelen));
 	BYTE* arr = (BYTE*) malloc(bytelen);
 
 //receive bytes of t
-	sock.Receive(arr, (uint64_t) bytelen);
+	chan->blocking_receive(arr, (uint64_t) bytelen);
 	mpz_import(t, bytelen, 1, 1, 1, 0, arr);
 
 	free(arr);

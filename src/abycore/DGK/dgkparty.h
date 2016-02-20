@@ -25,18 +25,19 @@
 #include "../util/socket.h"
 #include "../util/dgk.h"
 #include "../util/powmod.h"
+#include "../util/channel.h"
 
 using namespace std;
 
 class DGKParty {
 public:
 	DGKParty(UINT DGKbits, UINT sharelen, UINT readkey);
-	DGKParty(UINT DGKbits, UINT sharelen, CSocket sock, UINT readkey);
+	DGKParty(UINT DGKbits, UINT sharelen, channel* chan, UINT readkey);
 	~DGKParty();
 
-	void keyExchange(CSocket sock);
+	void keyExchange(channel* chan);
 
-	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, CSocket sock);
+	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan);
 
 	void readKey();
 
@@ -55,14 +56,14 @@ private:
 	dgk_prvkey_t *m_prv;
 	gmp_randstate_t m_randstate;
 
-	void benchPreCompPacking1(CSocket sock, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
+	void benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
 			mpz_t y, mpz_t z);
 
-	void sendmpz_t(mpz_t t, CSocket sock, BYTE * buf);
-	void receivempz_t(mpz_t t, CSocket sock, BYTE * buf);
+	void sendmpz_t(mpz_t t, channel* chan, BYTE * buf);
+	void receivempz_t(mpz_t t, channel* chan, BYTE * buf);
 
-	void sendmpz_t(mpz_t t, CSocket sock);
-	void receivempz_t(mpz_t t, CSocket sock);
+	void sendmpz_t(mpz_t t, channel* chan);
+	void receivempz_t(mpz_t t, channel* chan);
 
 	void printBuf(BYTE* b, UINT l);
 

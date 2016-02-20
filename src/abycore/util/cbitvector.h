@@ -163,7 +163,7 @@ public:
 			\link delCBitVector() \endlink.
 	*/
 	~CBitVector(){
-		delCBitVector();
+		//delCBitVector();//TODO: the call breaks something in the underlying OT. Find out what and fix!
 	}
 
 	/**
@@ -211,10 +211,22 @@ public:
 		to AES byte size and multiply that ceiled value with AES byte size. (For reference, AES Byte size is taken as 16 bytes). Internally, this method
 		calls \link Create(uint64_t bits) \endlink. Therefore, for further info please refer to the internal method provided.
 
-		\param  bits	 - It is the number of bits which will be used to allocate the CBitVector with.
+		\param  bytes	 - It is the number of bytes which will be used to allocate the CBitVector with.
 	*/
 	void CreateBytes(uint64_t bytes) {
 		Create(bytes << 3);
+	}
+	/**
+		This method is used to create the CBitVector with the provided byte size and fills it with random data from the crypt object. The method creates a
+		bit vector with a size close to AES Bytesize. For example, if byte size provided is 9. After this method is called it will be 16 bytes. It will perform a ceil of provided_byte_size
+		to AES byte size and multiply that ceiled value with AES byte size. (For reference, AES Byte size is taken as 16 bytes). Internally, this method
+		calls \link Create(uint64_t bits, crypto* crypt) \endlink. Therefore, for further info please refer to the internal method provided.
+
+		\param  bytes	 - It is the number of bytes which will be used to allocate the CBitVector with.
+		\param  crypt	 - Reference to a crypto object from which fresh randomness is sampled
+	*/
+	void CreateBytes(uint64_t bytes, crypto* crypt) {
+		Create(bytes << 3, crypt);
 	}
 	/**
 		This method is used to create the CBitVector with the provided bits and set them to value zero. The method creates a bit vector with a size close to AES Bitsize.
@@ -314,6 +326,12 @@ public:
 	void SetToOne() {
 		memset(m_pBits, 0xFF, m_nByteSize);
 	}
+
+	/**
+		This method sets all bits in the CBitVector to the inverse
+	*/
+	void Invert();
+
 
 	/**
 		This is a getter method which returns the size of the CBitVector in bytes.
@@ -464,7 +482,7 @@ public:
 		\param	idx		-		Bit Index which needs to be fetched from the CBitVector.
 		\return The byte which has got just the bit in it.
 	*/
-	BYTE GetBitNoMask(int idx) {
+	BYTE GetBitNoMask(uint64_t idx) {
 		return !!(m_pBits[idx >> 3] & BIT[idx & 0x7]);
 	}
 
@@ -610,7 +628,7 @@ public:
 		\param	pos		-	Positional offset in the CBitVector, where data will be set from the provided byte array.
 		\param	len		-	The range limit of obtaining the data from the CBitVector.
 	 */
-	void SetBitsPosOffset(BYTE* p, int ppos, int pos, int len);
+	void SetBitsPosOffset(BYTE* p, uint64_t ppos, uint64_t pos, uint64_t len);
 
 	/**
 		The method for setting CBitVector for a given byte range with offset and length. This method internally calls the method
@@ -626,6 +644,13 @@ public:
 		\link SetBytes(BYTE* p, int pos, int len) \endlink.
 	*/
 	template<class T> void SetBytes(T* dst, T* src, T* lim);
+
+	/**
+		This method sets the values in a given byte range to Zero in the current CBitVector.
+		\param	bytepos		-	Byte Positional offset in the CBitVector.
+		\param	bytelen		-	Byte Length in the CBitVector until which the value needs to be set to zero.
+	*/
+	void SetBytesToZero(int bytepos, int bytelen);
 
 	/**
 		Generic method which performs the operation of setting values to a CBitVector for a given bit position and length.
@@ -710,6 +735,12 @@ public:
 	*/
 	template<class T> void XORBytes(T* dst, T* src, T* lim);
 
+	/**
+		Set the value of this CBitVector to this XOR b
+		\param	b		-	Pointer to a CBitVector which is XORed on this CBitVector
+	*/
+	void XOR(CBitVector* b);
+
 	/** Deprecated */
 	void XORRepeat(BYTE* p, int pos, int len, int num);
 
@@ -766,6 +797,12 @@ public:
 		\param	len		-  		Length or amount of values to be copied and ANDed to the current vector from provided byte location.
 	*/
 	void SetAND(BYTE* p, BYTE* q, int pos, int len);
+
+	/**
+		Set the value of this CBitVector to this AND b
+		\param	b		-	Pointer to a CBitVector which is ANDed on this CBitVector
+	*/
+	void AND(CBitVector* b);
 
 	/*
 	 * Buffer access operations
@@ -899,6 +936,7 @@ public:
 	//useful when accessing elements using an index
 
 	//View the cbitvector as a rows x columns matrix and transpose
+	void Transpose(int rows, int columns);
 	void EklundhBitTranspose(int rows, int columns);
 	void SimpleTranspose(int rows, int columns);
 

@@ -33,18 +33,11 @@ ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg
 }
 
 BOOL ABYSetup::Init() {
-	//Initialize the NaorPinkas Base OT with the security level and seed
-
 	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
 	uint32_t aes_key_bytes = m_cCrypt->get_aes_key_bytes();
-	np = new NaorPinkas(m_cCrypt, P_FIELD); //m_sSecLvl, m_aSeed);
 
-	//m_vU.Create(symbits);
-
-	m_vKeySeedMtx = (BYTE*) malloc(symbits * m_nSndVals * aes_key_bytes);
-	m_vKeySeeds = (BYTE*) malloc(symbits * aes_key_bytes);
-
-	m_vOTTasks.resize(2);
+	m_vIKNPOTTasks.resize(2);
+	m_vKKOTTasks.resize(2);
 
 	uint32_t threadsize = 2 * m_nNumOTThreads;
 	m_vThreads.resize(threadsize);
@@ -67,7 +60,7 @@ BOOL ABYSetup::Init() {
 		m_cDGKMTGen = (DGKParty**) malloc(sizeof(DGKParty*));
 		m_cDGKMTGen[0] = new DGKParty(m_sSecLvl.ifcbits, sizeof(UINT64_T) * 8, 0);
 #endif
-		//m_cDGKMTGen = new DGKParty(m_sSecLvl.ifcbits, sizeof(UINT16_T) * 8);
+		//m_cDGKMTGen = new DGKParty(m_cCrypt->get_seclvl().ifcbits, sizeof(UINT16_T) * 8);
 	}
 
 	return true;
@@ -75,49 +68,49 @@ BOOL ABYSetup::Init() {
 
 void ABYSetup::Cleanup() {
 
-	//m_vU.delCBitVector();
+	m_tSetupChan->synchronize_end();
+	delete m_tSetupChan;
 
-	//np->Cleanup();
-	delete np;
-
-
-	//delete ot_sender;
-	//delete ot_receiver;
-
-	//delete m_cPaillierMTGen;
-
-	delete ot_sender;
-	delete ot_receiver;
-
-	free(m_vKeySeedMtx);
-	free(m_vKeySeeds);
+	delete iknp_ot_sender;
+	delete iknp_ot_receiver;
 }
 
-BOOL ABYSetup::PrepareSetupPhase(vector<CSocket>& sockets) {
-	m_vSockets = sockets;
+BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
+	m_tComm = comm;
+
+	m_tSetupChan = new channel(ABY_SETUP_CHANNEL, m_tComm->rcv_std, m_tComm->snd_std);
+	if(m_eRole == SERVER) {
+		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
+		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
+
+		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
+		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
+	} else {
+		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
+		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt,  m_tComm->rcv_inv, m_tComm->snd_inv);
+
+		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
+		kk_ot_sender = new KKOTExtSnd(m_cCrypt,  m_tComm->rcv_inv, m_tComm->snd_inv);
+	}
 	//Start Naor-Pinkas base OTs
 	WakeupWorkerThreads(e_NP);
 	BOOL success = WaitWorkerThreads();
 
 	if (m_eMTGenAlg == MT_PAILLIER) {
 		//Start Paillier key generation for the MT generation
-		m_cPaillierMTGen->keyExchange(m_vSockets[0]);
+		m_cPaillierMTGen->keyExchange(m_tSetupChan);
 	}
-	//OTExtSnd sender(m_nSndVals, m_cCrypt, sockptr, m_vU, m_vKeySeeds);
-	CSocket* sockptr = m_vSockets.data() + ((m_eRole!=SERVER) * m_nNumOTThreads);
-	ot_sender = new OTExtSnd(m_nSndVals, m_cCrypt, sockptr, m_vU, m_vKeySeeds);
-	sockptr = m_vSockets.data() + ((m_eRole!=CLIENT) * m_nNumOTThreads);
-	ot_receiver = new OTExtRec(m_nSndVals, m_cCrypt, sockptr, m_vKeySeedMtx);
 
-	m_vU.delCBitVector();
 	return success;
 }
 
-BOOL ABYSetup::PerformSetupPhase(vector<CSocket>& sockets) {
+BOOL ABYSetup::PerformSetupPhase() {
 	/* Compute OT extension */
-	WakeupWorkerThreads(e_OTExt);
+	WakeupWorkerThreads(e_IKNPOTExt);
 	BOOL success = WaitWorkerThreads();
 
+	WakeupWorkerThreads(e_KKOTExt);
+	success &= WaitWorkerThreads();
 	if (m_eMTGenAlg == MT_PAILLIER) {
 		//Start Paillier MT generation
 		WakeupWorkerThreads(e_MTPaillier);
@@ -130,7 +123,7 @@ BOOL ABYSetup::PerformSetupPhase(vector<CSocket>& sockets) {
 #ifndef BENCH_PRECOMP
 			m_cDGKMTGen[i] = new DGKParty(m_cCrypt->get_seclvl().ifcbits, m_vPKMTGenTasks[i]->sharebitlen, 1);
 #endif
-			m_cDGKMTGen[i]->keyExchange(sockets[0]);
+			m_cDGKMTGen[i]->keyExchange(m_tSetupChan);
 		}
 		//Start DGK MT generation
 		WakeupWorkerThreads(e_MTDGK);
@@ -144,51 +137,22 @@ BOOL ABYSetup::PerformSetupPhase(vector<CSocket>& sockets) {
 	return success;
 }
 
+BOOL ABYSetup::FinishSetupPhase() {
+	//Do nothing atm
+	return true;
+}
+
 BOOL ABYSetup::ThreadRunNPSnd(uint32_t exec) {
-	CSocket& sock = m_vSockets[exec ^ m_eRole];
-	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
-	uint32_t hash_bytes = m_cCrypt->get_hash_bytes();
-	uint32_t aes_key_bytes = m_cCrypt->get_aes_key_bytes();
-	BYTE* pBuf = new BYTE[symbits * hash_bytes];
-	BOOL success;
-	m_vU.Create(symbits, m_cCrypt);		//, m_aSeed, cnt);
-	//m_cCrypt->gen_rnd(m_vU.GetArr(), ceil_divide(symbits, 8));
-
-	np->Receiver(m_nSndVals, symbits, m_vU, sock, pBuf);
-
-	//Copy necessary key bits to keyseeds
-	BYTE* pBufIdx = pBuf;
-	for (uint32_t i = 0; i < symbits; i++) {
-		memcpy(m_vKeySeeds + i * aes_key_bytes, pBufIdx, aes_key_bytes);
-		pBufIdx += hash_bytes;
-	}
-
-	delete[] pBuf;
+	BOOL success = true;
+	iknp_ot_sender->ComputeBaseOTs(P_FIELD);
+	kk_ot_sender->ComputeBaseOTs(P_FIELD);
 	return success;
 }
 
 BOOL ABYSetup::ThreadRunNPRcv(uint32_t exec) {
-	// Execute NP receiver routine and obtain the key
-	CSocket& sock = m_vSockets[exec ^ m_eRole];
-	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
-	uint32_t hash_bytes = m_cCrypt->get_hash_bytes();
-	uint32_t aes_key_bytes = m_cCrypt->get_aes_key_bytes();
-
-	BYTE* pBuf = new BYTE[hash_bytes * symbits * m_nSndVals];
-	BOOL success;
-
-	np->Sender(m_nSndVals, symbits, sock, pBuf);
-
-	//Copy necessary bits to keyseedmtx
-	BYTE* pBufIdx = pBuf;
-	for (uint32_t i = 0; i < symbits * m_nSndVals; i++) //320 times init after Naor Pinkas
-			{
-		memcpy(m_vKeySeedMtx + i * aes_key_bytes, pBufIdx, aes_key_bytes);
-		pBufIdx += hash_bytes;
-	}
-
-	delete[] pBuf;
-
+	BOOL success = true;
+	iknp_ot_receiver->ComputeBaseOTs(P_FIELD);
+	kk_ot_receiver->ComputeBaseOTs(P_FIELD);
 	return success;
 }
 
@@ -197,20 +161,19 @@ BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
 	bool success = true;
 
 	uint32_t inverse = exec ^ m_eRole;
-	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
-	for (uint32_t i = 0; i < m_vOTTasks[inverse].size(); i++) {
+	uint32_t nsndvals = 2;
 
-		CSocket* sockptr = m_vSockets.data() + (inverse * m_nNumOTThreads);
-
-		//OTExtSnd sender(m_nSndVals, m_cCrypt, sockptr, m_vU, m_vKeySeeds);
-
-		OTTask* task = m_vOTTasks[inverse][i]; //m_vOTTasks[inverse][0];
+	CBitVector** X = (CBitVector**) malloc(sizeof(CBitVector*) * nsndvals);
+	for (uint32_t i = 0; i < m_vIKNPOTTasks[inverse].size(); i++) {
+		IKNP_OTTask* task = m_vIKNPOTTasks[inverse][i]; //m_vOTTasks[inverse][0];
 		uint32_t numOTs = task->numOTs;
+		X[0] = (task->pval.sndval.X0);
+		X[1] = (task->pval.sndval.X1);
 
 #ifndef BATCH
-		cout << "Starting OT sender routine for " << numOTs << " OTs" << endl;
+		cout << "Starting OT sender routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
 #endif
-		success &= ot_sender->send(numOTs, task->bitlen, *(task->pval.sndval.X0), *(task->pval.sndval.X1), task->ottype, m_nNumOTThreads, task->mskfct);
+		success &= iknp_ot_sender->send(numOTs, task->bitlen, nsndvals, X, task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP
 		cout << "OT sender results for bitlen = " << task->bitlen << ": " << endl;
 		cout << "X0: ";
@@ -219,8 +182,7 @@ BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
 		task->pval.sndval.X1->PrintHex();
 #endif
 	}
-	m_vOTTasks[inverse].resize(0);
-
+	m_vIKNPOTTasks[inverse].resize(0);
 	return success;
 }
 
@@ -229,19 +191,17 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 
 	uint32_t inverse = exec ^ m_eRole;
 	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
-	for (uint32_t i = 0; i < m_vOTTasks[inverse].size(); i++) {
+	uint32_t nsndvals = 2;
 
-		OTTask* task = m_vOTTasks[inverse][i];
-		CSocket* sockptr = m_vSockets.data() + (inverse * m_nNumOTThreads);
+	for (uint32_t i = 0; i < m_vIKNPOTTasks[inverse].size(); i++) {
 
-		//OTExtRec receiver(m_nSndVals, m_cCrypt, sockptr, m_vKeySeedMtx);
-
+		IKNP_OTTask* task = m_vIKNPOTTasks[inverse][i];
 		uint32_t numOTs = task->numOTs;
 
 #ifndef BATCH
-		cout << "Starting OT receiver routine for " << numOTs << " OTs" << endl;
+		cout << "Starting OT receiver routine for " << numOTs << " OTs" << task->bitlen << " bit strings " << endl;
 #endif
-		success &= ot_receiver->receive(numOTs, task->bitlen, *(task->pval.rcvval.C), *(task->pval.rcvval.R), task->ottype, m_nNumOTThreads, task->mskfct);
+		success = iknp_ot_receiver->receive(numOTs, task->bitlen, nsndvals, (task->pval.rcvval.C), (task->pval.rcvval.R), task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP
 		cout << "OT receiver results for bitlen = " << task->bitlen << ": " << endl;
 		cout << "C: ";
@@ -250,41 +210,105 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 		task->pval.rcvval.R->PrintHex();
 #endif
 	}
-	m_vOTTasks[inverse].resize(0);
-
+	m_vIKNPOTTasks[inverse].resize(0);
 	return success;
 }
+
+
+//KK13 OT extension sender and receiver routine outsourced in separate threads
+BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
+	bool success = true;
+
+	uint32_t inverse = exec ^ m_eRole;
+
+	for (uint32_t i = 0; i < m_vKKOTTasks[inverse].size(); i++) {
+		KK_OTTask* task = m_vKKOTTasks[inverse][i];
+		CBitVector** X = (CBitVector**) malloc(sizeof(CBitVector*) * task->nsndvals);
+
+		uint32_t numOTs = task->numOTs;
+		X = task->pval.sndval.X;
+
+#ifndef BATCH
+		cout << "Starting 1oo" << task->nsndvals << " KK OT sender routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
+#endif
+		success &= kk_ot_sender->send(numOTs, task->bitlen, task->nsndvals, X, task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
+#ifdef DEBUGSETUP
+		cout << "OT sender results for bitlen = " << task->bitlen << ": " << endl;
+		for(uint32_t j = 0; j < task->nsndvals; j++) {
+			cout << "X" << j << ": ";
+			X[j]->PrintHex();
+		}
+
+#endif
+		//free(X);//TODO check once running
+	}
+	m_vKKOTTasks[inverse].resize(0);
+	return success;
+}
+
+BOOL ABYSetup::ThreadRunKKRcv(uint32_t exec) {
+	bool success = true;
+
+	uint32_t inverse = exec ^ m_eRole;
+	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
+	uint32_t nsndvals = 2;
+
+	for (uint32_t i = 0; i < m_vKKOTTasks[inverse].size(); i++) {
+
+		KK_OTTask* task = m_vKKOTTasks[inverse][i];
+		uint32_t numOTs = task->numOTs;
+
+#ifndef BATCH
+		cout << "Starting 1oo" << task->nsndvals << " KK OT receiver routine for " << numOTs << " OTs" << task->bitlen << " bit strings " << endl;
+#endif
+		success = kk_ot_receiver->receive(numOTs, task->bitlen, task->nsndvals, (task->pval.rcvval.C), (task->pval.rcvval.R), task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
+#ifdef DEBUGSETUP
+		cout << "OT receiver results for bitlen = " << task->bitlen << ": " << endl;
+		cout << "C: ";
+		task->pval.rcvval.C->PrintBinary();
+		cout << "R: ";
+		task->pval.rcvval.R->PrintHex();
+#endif
+	}
+	m_vKKOTTasks[inverse].resize(0);
+	return success;
+}
+
 
 BOOL ABYSetup::ThreadRunPaillierMTGen(uint32_t threadid) {
 
 	uint32_t nthreads = 2 * m_nNumOTThreads;
+
+	channel* djnchan = new channel(DJN_CHANNEL+threadid, m_tComm->rcv_std, m_tComm->snd_std);
 	for (uint32_t i = 0; i < m_vPKMTGenTasks.size(); i++) {
 
 		PKMTGenVals* ptask = m_vPKMTGenTasks[i];
 
-		//TODO: adapt this to be more fine-granular. also, might cause problems
-		uint32_t nummtsperthread = ceil_divide(ptask->numMTs, 2*nthreads) * 2;
+		uint32_t nummtsperthread = ceil_divide(ptask->numMTs, nthreads);
+
 		uint32_t mynummts = nummtsperthread; //times two since we need the number of MTs to be a multiple of 2 internally
 		uint32_t sharebytelen = ceil_divide(ptask->sharebitlen, 8);
 		if (threadid == nthreads - 1) {
-			mynummts = mynummts - ((mynummts * nthreads) - ptask->numMTs);
+			mynummts = ptask->numMTs - (nthreads-1 ) * nummtsperthread;
 		}
 
 		uint32_t mystartpos = nummtsperthread * threadid * sharebytelen;
 		m_cPaillierMTGen->setSharelLength(ptask->sharebitlen);
 
 		UINT32_T roleoffset = mystartpos + sharebytelen * (mynummts / 2);
-
 		if (m_eRole == SERVER) {
 			m_cPaillierMTGen->preCompBench(ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, ptask->A->GetArr() + roleoffset,
-					ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, mynummts, m_vSockets[threadid]);
+					ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, mynummts, djnchan);
 		} else {
 			m_cPaillierMTGen->preCompBench(ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, ptask->A->GetArr() + mystartpos,
-					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, m_vSockets[threadid]);
+					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, djnchan);
 		}
 
 		//free(ptask);//TODO should be done by main task after the Paillier MT generation has been done
 	}
+	djnchan->synchronize_end();
+	delete djnchan;
+
 	return true;
 }
 
@@ -292,18 +316,19 @@ BOOL ABYSetup::ThreadRunDGKMTGen(uint32_t threadid) {
 
 	uint32_t nthreads = 2 * m_nNumOTThreads;
 
+	channel* dgkchan = new channel(DGK_CHANNEL+threadid, m_tComm->rcv_std, m_tComm->snd_std);
+
 	for (uint32_t i = 0; i < m_vPKMTGenTasks.size(); i++) {
 		PKMTGenVals* ptask = m_vPKMTGenTasks[i];
 
-		cout << "Number of share-bits: " << ptask->sharebitlen << endl;
 		//times two since we need the number of MTs to be a multiple of 2 internally
-		uint32_t nummtsperthread = ceil_divide(ptask->numMTs, 2*nthreads) * 2;
+		uint32_t nummtsperthread = ceil_divide(ptask->numMTs, nthreads);
 		uint32_t mynummts = nummtsperthread;
 		uint32_t sharebytelen = ceil_divide(ptask->sharebitlen, 8);
 
 		//if the number of MTs is not evenly divisible among all threads
 		if (threadid == nthreads - 1) {
-			mynummts = mynummts - ((mynummts * nthreads) - ptask->numMTs);
+			mynummts = ptask->numMTs - (nthreads-1 ) * nummtsperthread;
 		}
 
 		uint32_t mystartpos = nummtsperthread * threadid * sharebytelen;
@@ -313,13 +338,15 @@ BOOL ABYSetup::ThreadRunDGKMTGen(uint32_t threadid) {
 
 		if (m_eRole == SERVER) {
 			m_cDGKMTGen[i]->preCompBench(ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, ptask->A->GetArr() + roleoffset,
-					ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, mynummts, m_vSockets[threadid]);
+					ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, mynummts, dgkchan);
 		} else {
 			m_cDGKMTGen[i]->preCompBench(ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, ptask->A->GetArr() + mystartpos,
-					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, m_vSockets[threadid]);
+					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, dgkchan);
 		}
 		//free(ptask);//TODO should be done by main task after the Paillier MT generation has been done
 	}
+	dgkchan->synchronize_end();
+	delete dgkchan;
 
 	return true;
 }
@@ -345,12 +372,12 @@ void ABYSetup::AddReceiveTask(BYTE* rcvbuf, uint64_t rcvbytes) {
 }
 
 BOOL ABYSetup::ThreadSendData(uint32_t threadid) {
-	m_vSockets[threadid].Send(m_tsndtask.sndbuf, m_tsndtask.sndbytes);
+	m_tSetupChan->send(m_tsndtask.sndbuf, m_tsndtask.sndbytes);
 	return true;
 }
 
 BOOL ABYSetup::ThreadReceiveData(uint32_t threadid) {
-	m_vSockets[threadid].Receive(m_trcvtask.rcvbuf, m_trcvtask.rcvbytes);
+	 m_tSetupChan->blocking_receive(m_trcvtask.rcvbuf, m_trcvtask.rcvbytes);
 	return true;
 }
 
@@ -410,11 +437,17 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 		switch (m_eJob) {
 		case e_Stop:
 			return;
-		case e_OTExt:
+		case e_IKNPOTExt:
 			if (threadid == SERVER)
 				bSuccess = m_pCallback->ThreadRunIKNPSnd(threadid);
 			else
 				bSuccess = m_pCallback->ThreadRunIKNPRcv(threadid);
+			break;
+		case e_KKOTExt:
+			if (threadid == SERVER)
+				bSuccess = m_pCallback->ThreadRunKKSnd(threadid);
+			else
+				bSuccess = m_pCallback->ThreadRunKKRcv(threadid);
 			break;
 		case e_NP:
 			if (threadid == SERVER)
@@ -441,8 +474,14 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 
 void ABYSetup::Reset() {
 	/* Clear any remaining OT tasks */
-	for (uint32_t i = 0; i < m_vOTTasks.size(); i++) {
-		m_vOTTasks[i].clear();
+	for (uint32_t i = 0; i < m_vIKNPOTTasks.size(); i++) {
+		m_vIKNPOTTasks[i].clear();
 	}
+	/* Clear any remaining OT tasks */
+	for (uint32_t i = 0; i < m_vKKOTTasks.size(); i++) {
+		m_vKKOTTasks[i].clear();
+	}
+
+
 }
 

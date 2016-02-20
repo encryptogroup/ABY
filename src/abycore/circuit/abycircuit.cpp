@@ -35,6 +35,9 @@ inline void ABYCircuit::InitGate(GATE* gate, e_gatetype type) {
 #ifdef DEBUG_CIRCUIT_CONSTRUCTION
 	cout << "Putting new gate with type " << type << endl;
 #endif
+	if(m_nNextFreeGate >= m_nMaxGates) {
+		cout << "I have more gates than available" << endl;
+	}
 	assert(m_nNextFreeGate < m_nMaxGates);
 
 	gate->type = type;
@@ -141,7 +144,14 @@ uint32_t ABYCircuit::PutCombinerGate(vector<uint32_t> input) {
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, G_COMBINE, input);
 
-	gate->nvals = input.size();
+	gate->nvals = 0;
+
+	for(uint32_t i = 0; i < input.size(); i++) {
+		//cout << "size at i = " << i << ": " << m_pGates[input[i]].nvals << endl;;
+		gate->nvals += m_pGates[input[i]].nvals;
+	}
+
+	//cout << "Putting combiner gate with nvals = " << gate->nvals << endl;
 
 	if (gate->nvals > m_nMaxVectorSize)
 		m_nMaxVectorSize = gate->nvals;
@@ -294,6 +304,17 @@ uint32_t ABYCircuit::PutOUTGate(uint32_t in, e_role dst, uint32_t rounds) {
 	return m_nNextFreeGate++;
 }
 
+uint32_t ABYCircuit::PutSharedOUTGate(uint32_t in) {
+	GATE* gate = m_pGates + m_nNextFreeGate;
+	InitGate(gate, G_SHARED_OUT, in);
+
+	gate->nvals = m_pGates[in].nvals;
+
+	gate->nrounds = 0;
+
+	return m_nNextFreeGate++;
+}
+
 uint32_t ABYCircuit::PutINGate(e_sharing context, uint32_t nvals, uint32_t sharebitlen, e_role src, uint32_t rounds) {
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, G_IN);
@@ -321,8 +342,7 @@ uint32_t ABYCircuit::PutConstantGate(e_sharing context, UGATE_T val, uint32_t nv
 	gate->nvals = nvals;
 	gate->context = context;
 	gate->sharebitlen = sharebitlen;
-	//TODO the evaluation of constant gates is not working correctly if the depth is set to 0, change!
-	gate->nrounds = 1;
+	gate->nrounds = 0;
 
 	if (gate->nvals > m_nMaxVectorSize)
 		m_nMaxVectorSize = gate->nvals;
@@ -358,6 +378,14 @@ vector<uint32_t> ABYCircuit::PutOUTGate(vector<uint32_t> in, e_role dst, uint32_
 	vector<uint32_t> out(in.size());
 	for (uint32_t i = 0; i < in.size(); i++) {
 		out[i] = PutOUTGate(in[i], dst, rounds);
+	}
+	return out;
+}
+
+vector<uint32_t> ABYCircuit::PutSharedOUTGate(vector<uint32_t> in) {
+	vector<uint32_t> out(in.size());
+	for (uint32_t i = 0; i < in.size(); i++) {
+		out[i] = PutSharedOUTGate(in[i]);
 	}
 	return out;
 }

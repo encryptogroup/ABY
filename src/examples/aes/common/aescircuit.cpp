@@ -40,8 +40,8 @@ int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nva
 	assert(circ->GetCircuitType() == C_BOOLEAN);
 
 	share *s_in, *s_key, *s_ciphertext;
-	s_in = circ->PutINGate(nvals, input.GetArr(), aes_key_bits, CLIENT);
-	s_key = circ->PutINGate(1, key.GetArr(), aes_key_bits * (AES_ROUNDS + 1), SERVER);
+	s_in = circ->PutSIMDINGate(nvals, input.GetArr(), aes_key_bits, CLIENT);
+	s_key = circ->PutINGate(key.GetArr(), aes_key_bits * (AES_ROUNDS + 1), SERVER);
 	s_key = circ->PutRepeaterGate(nvals, s_key);
 
 	s_ciphertext = BuildAESCircuit(s_in, s_key, (BooleanCircuit*) circ);
@@ -67,7 +67,7 @@ int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nva
 		out.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
 		cout << "(" << i << ") Verify:\t";
 		verify.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
-		//assert(verify.IsEqual(out, i*AES_BITS, (i+1)*AES_BITS));
+		assert(verify.IsEqual(out, i*AES_BITS, (i+1)*AES_BITS));
 	}
 
 	delete crypt;
@@ -91,7 +91,7 @@ share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ) {
 			state_temp[i][j].resize(8);
 
 			for (k = 0; k < 8; k++) {
-				state[i][j][k] = val->get_gate(((i * AES_STATE_COLS) + j) * 8 + k);
+				state[i][j][k] = val->get_wire(((i * AES_STATE_COLS) + j) * 8 + k);
 			}
 		}
 	}
@@ -114,7 +114,7 @@ share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ) {
 
 	for (i = 0; i < AES_STATE_COLS; i++) {
 		for (j = 0; j < AES_STATE_ROWS; j++) {
-			state[i][j] = AddAESRoundKey(state[i][j], key->get_gates(), (AES_ROUNDS * AES_STATE_SIZE + (i * AES_STATE_COLS) + j) * 8, circ);
+			state[i][j] = AddAESRoundKey(state[i][j], key->get_wires(), (AES_ROUNDS * AES_STATE_SIZE + (i * AES_STATE_COLS) + j) * 8, circ);
 			for (k = 0; k < 8; k++) {
 				out[(i * AES_STATE_ROWS + j) * 8 + k] = state[i][j][k];
 			}

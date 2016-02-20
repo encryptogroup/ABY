@@ -51,15 +51,15 @@ public:
 	void EvaluateInteractiveOperations(uint32_t gateid);
 	void EvaluateConversionGate(uint32_t gateid);
 
-	void FinishCircuitLayer();
+	void FinishCircuitLayer(uint32_t level);
 
 	void PrepareOnlinePhase();
 
 	void InstantiateGate(GATE* gate);
 	void UsedGate(uint32_t gateid);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint32_t>& bytesize);
-	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint32_t>& rcvbytes);
+	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
+	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
 
 	uint32_t AssignInput(CBitVector& input);
 	uint32_t GetOutput(CBitVector& out);

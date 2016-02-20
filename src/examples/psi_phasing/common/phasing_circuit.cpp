@@ -89,7 +89,7 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 	for(uint32_t i = 0; i < nbins; i++) {
 		tmpset.SetBytes(client_hash_table + i* internalbytelen, (int) i * internalbytelen, (int) internalbytelen);
 	}
-	shr_cli_hash_table = circ->PutINGate(nbins, client_hash_table, internalbitlen, CLIENT);
+	shr_cli_hash_table = circ->PutSIMDINGate(nbins, client_hash_table, internalbitlen, CLIENT);
 
 
 	//Set input gates for the server
@@ -99,7 +99,7 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 
 			tmpset.SetBytes(server_hash_table + (j * maxbinsize + i) * internalbytelen, (int) j * internalbytelen, (int) internalbytelen);
 		}
-		shr_srv_hash_table[i] = circ->PutINGate(nbins, tmpset.GetArr(), internalbitlen, SERVER);
+		shr_srv_hash_table[i] = circ->PutSIMDINGate(nbins, tmpset.GetArr(), internalbitlen, SERVER);
 	}
 
 	shr_out = BuildPhasingCircuit(shr_srv_hash_table, shr_cli_hash_table, maxbinsize, circ);
@@ -107,10 +107,10 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 
 
 
-	shr_srv_set = circ->PutINGate(neles, srv_set, bitlen, SERVER);
+	shr_srv_set = circ->PutSIMDINGate(neles, srv_set, bitlen, SERVER);
 
 	for(uint32_t i = 0; i < maxstashsize; i++) {
-		shr_cli_stash[i] = circ->PutINGate(1, ((uint32_t*) stash)[i], bitlen, CLIENT);
+		shr_cli_stash[i] = circ->PutINGate(((uint32_t*) stash)[i], bitlen, CLIENT);
 		shr_cli_stash[i] = circ->PutRepeaterGate(shr_cli_stash[i], neles);
 	}
 
@@ -269,7 +269,7 @@ share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint3
 		for(uint32_t j = neles; j > 1; j/=2) {
 			if(j & 0x01 > 0) { //value is odd, hence store highest value on stash
 				tmpneles = j-1;
-				odd_stash.push_back(circ->PutSubsetGate(eq, &tmpneles, 1)->get_gate(0));
+				odd_stash.push_back(circ->PutSubsetGate(eq, &tmpneles, 1)->get_wire(0));
 			}
 			posa = ids;
 			posb = ids+(j/2);
@@ -277,16 +277,16 @@ share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint3
 			eqb = circ->PutSubsetGate(eq, posb, j/2);
 			eq = circ->PutXORGate(eqa, eqb);
 		}
-		xoreq = eq->get_gate(0);
+		xoreq = eq->get_wire(0);
 		for(uint32_t j = 0; j < odd_stash.size(); j++) { //handle all odd values
 			xoreq = circ->PutXORGate(xoreq, odd_stash[j]);
 		}
 		odd_stash.clear();
 
-		out->set_gate(i, xoreq);
+		out->set_wire(i, xoreq);
 	}
 	free(ids);
-	//out->set_gates(circ->PutSplitterGate(shr_cli_stash[1]->get_gate(6)));
+	//out->set_wires(circ->PutSplitterGate(shr_cli_stash[1]->get_wire(6)));
 	return out;
 }
 

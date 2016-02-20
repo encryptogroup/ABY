@@ -33,8 +33,12 @@
 #include "../sharing/yaoclientsharing.h"
 #include "../sharing/yaoserversharing.h"
 #include "../sharing/arithsharing.h"
+#include "../util/sndthread.h"
+#include "../util/rcvthread.h"
 
 #include "../util/yaokey.h"
+#include "../util/timer.h"
+
 
 #include <limits.h>
 #include "../util/connection.h"
@@ -49,9 +53,14 @@
 
 using namespace std;
 
+//Send and receive threads for the standard direction (SERVER plays server, CLIENT plays client)
+//and for the inverse direction (SERVER plays client, CLIENT plays server)
+
+
 class ABYParty {
 public:
-	ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo = MT_OT);
+	ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo = MT_OT, uint32_t maxgates = 4000000, uint16_t port = 7766);
+//TODO only up to 4.000.000 gates are be built by default, is probably changing in the future. Set maxgates above.
 	~ABYParty();
 
 	vector<Sharing*>& GetSharings() {
@@ -59,26 +68,25 @@ public:
 	}
 	CBitVector ExecCircuit();
 	CBitVector ExecSetupPhase();
-	uint32_t GetMyInput(CBitVector& in); //TODO deprecated, used only for benchmarking reasons where input is random
-	uint32_t GetOtherInput(CBitVector &otherin); //used for verification, parties exchange inputs
 
-	uint32_t GetOutput(CBitVector& out);
 	void Reset();
 
 	double GetTiming(ABYPHASE phase);
+	uint64_t GetSentData(ABYPHASE phase);
+	uint64_t GetReceivedData(ABYPHASE phase);
+
 
 private:
 	BOOL Init();
 	void Cleanup();
 
-	BOOL InitCircuit(uint32_t bitlen);
+	BOOL InitCircuit(uint32_t bitlen, uint32_t maxgates);
 
 	BOOL EstablishConnection();
 
 	BOOL ABYPartyListen();
 	BOOL ABYPartyConnect();
 
-	BOOL AssignInputValues();
 	BOOL EvaluateCircuit();
 
 	void BuildCircuit();
@@ -92,22 +100,15 @@ private:
 	BOOL ThreadSendValues();
 	BOOL ThreadReceiveValues();
 
-	BOOL PrintInput();
-	void PrintOutput();
-
-#ifdef VERIFYABYRES
-	BOOL VerifyResult();
-#endif
-
 	void PrintPerformanceStatistics();
 
 	e_mt_gen_alg m_eMTGenAlg;
 	ABYSetup* m_pSetup;
 
 	// Network Communication
-	vector<CSocket> m_vSockets; // sockets for threads
+	vector<CSocket*> m_vSockets; // sockets for threads
 	e_role m_eRole; // thread id
-	short m_nPort;
+	uint16_t m_nPort;
 	seclvl m_sSecLvl;
 
 	uint32_t m_nNumOTThreads;
@@ -138,6 +139,10 @@ private:
 	enum EPartyJobType {
 		e_Party_Comm, e_Party_Stop,
 	};
+
+	comm_ctx* m_tComm;
+
+	channel* m_tPartyChan;
 
 	class CPartyWorkerThread: public CThread {
 	public:
