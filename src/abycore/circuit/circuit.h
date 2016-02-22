@@ -211,6 +211,30 @@ public:
 	virtual share* PutSIMDINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen, e_role role) = 0;
 	virtual share* PutSIMDINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) = 0;
 
+	// Shared Input Gates
+	/* Unfortunately, a template function cannot be used due to virtual */
+	virtual share* PutSharedINGate(uint64_t val, uint32_t bitlen) = 0;
+	virtual share* PutSharedINGate(uint32_t val, uint32_t bitlen) = 0;
+	virtual share* PutSharedINGate(uint16_t val, uint32_t bitlen) = 0;
+	virtual share* PutSharedINGate(uint8_t val, uint32_t bitlen) = 0;
+
+	/* Unfortunately, a template function cannot be used due to virtual */
+	virtual share* PutSharedINGate(uint64_t* val, uint32_t bitlen) = 0;
+	virtual share* PutSharedINGate(uint32_t* val, uint32_t bitlen) = 0;
+	virtual share* PutSharedINGate(uint16_t* val, uint32_t bitlen) = 0;
+	virtual share* PutSharedINGate(uint8_t* val, uint32_t bitlen) = 0;
+
+	virtual share* PutSharedSIMDINGate(uint32_t nvals, uint64_t val, uint32_t bitlen) = 0;
+	virtual share* PutSharedSIMDINGate(uint32_t nvals, uint32_t val, uint32_t bitlen) = 0;
+	virtual share* PutSharedSIMDINGate(uint32_t nvals, uint16_t val, uint32_t bitlen) = 0;
+	virtual share* PutSharedSIMDINGate(uint32_t nvals, uint8_t val, uint32_t bitlen) = 0;
+
+	/* Unfortunately, a template function cannot be used due to virtual */
+	virtual share* PutSharedSIMDINGate(uint32_t nvals, uint64_t* val, uint32_t bitlen) = 0;
+	virtual share* PutSharedSIMDINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) = 0;
+	virtual share* PutSharedSIMDINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen) = 0;
+	virtual share* PutSharedSIMDINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) = 0;
+
 
 	virtual share* PutADDGate(share* ina, share* inb) = 0;
 	virtual share* PutSUBGate(share* ina, share* inb) = 0;
@@ -284,7 +308,11 @@ public:
 		return -1;
 	}
 	;
-
+	template<class T> uint32_t PutSharedINGate(T val) {
+		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		return -1;
+	}
+	;
 	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val) {
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
@@ -295,11 +323,16 @@ public:
 		return -1;
 	}
 	;
+	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val) {
+		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		return -1;
+	}
+	;
 	//virtual int 	PutOUTGate(int parent, ROLE dst) = 0;
 	virtual share* PutOUTGate(share* parent, e_role dst) =0;
 	// TODO FIXME PutOUTGate seems to work only for role ALL. SERVER causes the client to segfault at src/abycore/circuit/circuit.cpp:71: UGATE_T* Circuit::GetOutputGateValue(uint32_t): Assertion `m_pGates[gateid].instantiated' failed.
-	virtual share* PutSharedOUTGate(share* parent) =0;
 
+	virtual share* PutSharedOUTGate(share* parent) =0;
 
 
 	virtual uint32_t PutINVGate(uint32_t parentid) = 0;

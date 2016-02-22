@@ -163,12 +163,15 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 			InstantiateGate(gate);
 			memcpy(gate->gs.yval, parent->gs.yval, gate->nvals * m_nSecParamBytes);
 			UsedGate(gate->ingates.inputs.parent);
+			// TODO this currently copies both keys and bits and getclearvalue will probably fail.
+			cerr << "SharedOutGate is not properly tested for Yao!" << endl;
 		}  else if(gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(localops[i]);
 		}
 		else {
 			cerr << "YaoClientSharing: Non-interactive operation not recognized: " <<
 					(uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
+			exit(0);
 		}
 	}
 }

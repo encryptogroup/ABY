@@ -186,6 +186,9 @@ public:
 	vector<uint32_t> PutSharedOUTGate(vector<uint32_t> in);
 
 	uint32_t PutINGate(e_sharing context, uint32_t nvals, uint32_t sharebitlen, e_role src, uint32_t rounds);
+
+	uint32_t PutSharedINGate(e_sharing context, uint32_t nvals, uint32_t sharebitlen);
+
 	uint32_t PutConstantGate(e_sharing context, UGATE_T val, uint32_t nvals, uint32_t sharebitlen);
 	uint32_t PutINVGate(uint32_t in);
 	uint32_t PutCONVGate(vector<uint32_t> in, uint32_t nrounds, e_sharing dst, uint32_t sharebitlen);

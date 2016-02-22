@@ -81,14 +81,18 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
 
+#ifdef USE_KK_OT_FOR_MT
 		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
+#endif
 	} else {
 		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt,  m_tComm->rcv_inv, m_tComm->snd_inv);
 
+#ifdef USE_KK_OT_FOR_MT
 		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		kk_ot_sender = new KKOTExtSnd(m_cCrypt,  m_tComm->rcv_inv, m_tComm->snd_inv);
+#endif
 	}
 	//Start Naor-Pinkas base OTs
 	WakeupWorkerThreads(e_NP);
@@ -107,8 +111,11 @@ BOOL ABYSetup::PerformSetupPhase() {
 	WakeupWorkerThreads(e_IKNPOTExt);
 	BOOL success = WaitWorkerThreads();
 
+#ifdef USE_KK_OT_FOR_MT
 	WakeupWorkerThreads(e_KKOTExt);
 	success &= WaitWorkerThreads();
+#endif
+
 	if (m_eMTGenAlg == MT_PAILLIER) {
 		//Start Paillier MT generation
 		WakeupWorkerThreads(e_MTPaillier);
@@ -143,14 +150,18 @@ BOOL ABYSetup::FinishSetupPhase() {
 BOOL ABYSetup::ThreadRunNPSnd(uint32_t exec) {
 	BOOL success = true;
 	iknp_ot_sender->ComputeBaseOTs(P_FIELD);
+#ifdef USE_KK_OT_FOR_MT
 	kk_ot_sender->ComputeBaseOTs(P_FIELD);
+#endif
 	return success;
 }
 
 BOOL ABYSetup::ThreadRunNPRcv(uint32_t exec) {
 	BOOL success = true;
 	iknp_ot_receiver->ComputeBaseOTs(P_FIELD);
+#ifdef USE_KK_OT_FOR_MT
 	kk_ot_receiver->ComputeBaseOTs(P_FIELD);
+#endif
 	return success;
 }
 

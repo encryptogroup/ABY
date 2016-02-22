@@ -23,7 +23,6 @@
 #include <algorithm>
 #include "../circuit/booleancircuits.h"
 
-//#define USE_KK_OT_FOR_MT
 //#define DEBUGBOOL
 //#define BENCHBOOLTIME
 /**

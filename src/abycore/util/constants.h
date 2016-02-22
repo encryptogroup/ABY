@@ -46,6 +46,8 @@
 #define ABY_OT
 #define FIXED_KEY_AES_HASHING //for OT routines
 
+#define USE_KK_OT_FOR_MT
+
 /**
  \enum	field_type
  \brief	Enumeration for the field type of asymmetric cryptographic operations
@@ -99,6 +101,7 @@ enum e_gatetype {
 	G_CONV = 0x07, /**< Enum for CONVERSION gates (dst is used to specify the sharing to convert to) */
 	G_CALLBACK = 0x08, /**< Enum for Callback gates where the developer specifies a routine which is called upon gate evaluation */
 	G_SHARED_OUT = 0x09, /**< Enum for shared output gate, where the output is kept secret-shared between parties after the evaluation*/
+	G_SHARED_IN = 0x0B, /**< Enum for pre-shared input gate, where the parties dont secret-share (e.g. in outsourcing) */
 	G_COMBINE = 0x80, /**< Enum for COMBINER gates that combine multiple single-value gates to one multi-value gate  */
 	G_SPLIT = 0x81, /**< Enum for SPLITTER gates that split a multi-value gate to multiple single-value gates */
 	G_REPEAT = 0x82, /**< Enum for REPEATER gates that repeat the value of a single-value gate to form a new multi-value gate */
@@ -125,7 +128,8 @@ enum e_operation {
 	OP_SUB = 7, /**< Enum for performing SUBTRACTION*/
 	OP_AND_VEC = 8, /**< Enum for performing VECTORED AND*/
 	OP_MUL_VEC = 9, /**< Enum for performing VECTORED MULTIPLICATION*/
-	OP_SHARE_OUT = 10, /**< Enum for computing an arbitrary truth table. Is needed for the 1ooN OT in BoolNonMTSharing */
+	OP_SHARE_OUT = 10, /**< Enum for Shared Output without reconstruction. */
+	OP_SHARE_IN = 11, /**< Enum for Pre-Shared Input without input sharing (communication). */
 	OP_IN, /**< Enum for performing INPUT*/
 	OP_OUT, /**< Enum for performing OUTPUT*/
 	OP_INV, /**< Enum for performing INVERSION*/
@@ -374,10 +378,32 @@ const uint8_t m_vSeed[AES_KEY_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x6
 /** \var m_tAllOps
  \brief All operations in the different sharings that are available in ABY
  */
-static const aby_ops_t m_tAllOps[] = { { OP_IO, S_BOOL, "iobool" }, { OP_XOR, S_BOOL, "xorbool" }, { OP_AND, S_BOOL, "andbool" }, { OP_ADD, S_BOOL, "addbool" }, { OP_MUL,
-		S_BOOL, "mulbool" }, { OP_CMP, S_BOOL, "cmpbool" }, { OP_EQ, S_BOOL, "eqbool" }, { OP_MUX, S_BOOL, "muxbool" }, { OP_SUB, S_BOOL, "subbool" }, { OP_IO, S_YAO, "ioyao" }, {
-		OP_XOR, S_YAO, "xoryao" }, { OP_AND, S_YAO, "andyao" }, { OP_IO, S_ARITH, "ioarith" }, { OP_ADD, S_YAO, "addyao" }, { OP_MUL, S_YAO, "mulyao" },
-		{ OP_CMP, S_YAO, "cmpyao" }, { OP_EQ, S_YAO, "eqyao" }, { OP_MUX, S_YAO, "muxyao" }, { OP_SUB, S_YAO, "subyao" }, { OP_ADD, S_ARITH, "addarith" }, { OP_MUL, S_ARITH,
-				"mularith" }, { OP_Y2B, S_YAO, "y2b" }, { OP_B2A, S_BOOL, "b2a" }, { OP_B2Y, S_BOOL, "b2y" }, { OP_AND_VEC, S_BOOL, "vec-and" }, { OP_A2Y, S_ARITH, "a2y" } };
+static const aby_ops_t m_tAllOps[] = { {OP_IO, S_BOOL, "iobool"},
+	{OP_XOR, S_BOOL, "xorbool"},
+	{OP_AND, S_BOOL, "andbool"},
+	{OP_ADD, S_BOOL, "addbool"},
+	{OP_MUL, S_BOOL, "mulbool"},
+	{OP_CMP, S_BOOL, "cmpbool"},
+	{OP_EQ, S_BOOL, "eqbool"},
+	{OP_MUX, S_BOOL, "muxbool"},
+	{OP_SUB, S_BOOL, "subbool"},
+	{OP_IO, S_YAO, "ioyao"},
+	{OP_XOR, S_YAO, "xoryao"},
+	{OP_AND, S_YAO, "andyao"},
+	{OP_IO, S_ARITH, "ioarith"},
+	{OP_ADD, S_YAO, "addyao"},
+	{OP_MUL, S_YAO, "mulyao"},
+	{OP_CMP, S_YAO, "cmpyao"},
+	{OP_EQ, S_YAO, "eqyao"},
+	{OP_MUX, S_YAO, "muxyao"},
+	{OP_SUB, S_YAO, "subyao"},
+	{OP_ADD, S_ARITH, "addarith"},
+	{OP_MUL, S_ARITH, "mularith"},
+	{OP_Y2B, S_YAO, "y2b"},
+	{OP_B2A, S_BOOL, "b2a"},
+	{OP_B2Y, S_BOOL, "b2y"},
+	{OP_AND_VEC, S_BOOL, "vec-and"},
+	{OP_A2Y, S_ARITH, "a2y"}
+};
 
 #endif /* CONSTANTS_H_ */

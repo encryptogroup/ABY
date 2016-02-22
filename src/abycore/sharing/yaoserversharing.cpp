@@ -371,8 +371,11 @@ void YaoServerSharing::PrecomputeGC(deque<uint32_t>& queue) {
 			memcpy(gate->gs.yinput.outKey, parent->gs.yinput.outKey, gate->nvals * m_nSecParamBytes);
 			memcpy(gate->gs.yinput.pi, parent->gs.yinput.pi, gate->nvals);
 			UsedGate(gate->ingates.inputs.parent);
+			// TODO this currently copies both keys and bits and getclearvalue will probably fail.
+			cerr << "SharedOutGate is not properly tested for Yao!" << endl;
 		} else {
 			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
+			exit(0);
 		}
 	}
 }

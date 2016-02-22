@@ -333,6 +333,24 @@ uint32_t ABYCircuit::PutINGate(e_sharing context, uint32_t nvals, uint32_t share
 	return m_nNextFreeGate++;
 }
 
+
+uint32_t ABYCircuit::PutSharedINGate(e_sharing context, uint32_t nvals, uint32_t sharebitlen) {
+	GATE* gate = m_pGates + m_nNextFreeGate;
+	InitGate(gate, G_SHARED_IN);
+	gate->nvals = nvals;
+	gate->depth = 0;
+
+	gate->context = context;
+	gate->sharebitlen = sharebitlen;
+
+	gate->nrounds = 0;
+
+	if (gate->nvals > m_nMaxVectorSize)
+		m_nMaxVectorSize = gate->nvals;
+
+	return m_nNextFreeGate++;
+}
+
 uint32_t ABYCircuit::PutConstantGate(e_sharing context, UGATE_T val, uint32_t nvals, uint32_t sharebitlen) {
 	assert(nvals > 0 && sharebitlen > 0);
 	GATE* gate = m_pGates + m_nNextFreeGate;

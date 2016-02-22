@@ -196,6 +196,18 @@ uint32_t BooleanCircuit::PutSIMDINGate(uint32_t ninvals, e_role src) {
 	return gateid;
 }
 
+uint32_t BooleanCircuit::PutSharedINGate() {
+	uint32_t gateid = m_cCircuit->PutSharedINGate(m_eContext, 1, m_nShareBitLen);
+	UpdateLocalQueue(gateid);
+	return gateid;
+}
+
+uint32_t BooleanCircuit::PutSharedSIMDINGate(uint32_t ninvals) {
+	uint32_t gateid = m_cCircuit->PutSharedINGate(m_eContext, ninvals, m_nShareBitLen);
+	UpdateLocalQueue(gateid);
+	return gateid;
+}
+
 
 template<class T> uint32_t BooleanCircuit::PutINGate(T val) {
 
@@ -209,6 +221,22 @@ template<class T> uint32_t BooleanCircuit::PutINGate(T val) {
 
 	return gateid;
 }
+
+
+template<class T> uint32_t BooleanCircuit::PutSharedINGate(T val) {
+
+	uint32_t gateid = PutSharedINGate();
+	//assign value
+	GATE* gate = m_pGates + gateid;
+	gate->gs.val = (UGATE_T*) calloc(1 * m_nShareBitLen, sizeof(UGATE_T));
+
+	*gate->gs.val = (UGATE_T) val;
+	gate->instantiated = true;
+
+	return gateid;
+}
+
+
 template<class T> uint32_t BooleanCircuit::PutSIMDINGate(uint32_t ninvals, T val) {
 
 	uint32_t gateid = PutSIMDINGate(ninvals, m_eMyRole);
@@ -223,6 +251,19 @@ template<class T> uint32_t BooleanCircuit::PutSIMDINGate(uint32_t ninvals, T val
 }
 
 
+template<class T> uint32_t BooleanCircuit::PutSharedSIMDINGate(uint32_t ninvals, T val) {
+
+	uint32_t gateid = PutSharedSIMDINGate(ninvals);
+	//assign value
+	GATE* gate = m_pGates + gateid;
+	gate->gs.val = (UGATE_T*) calloc(ninvals * m_nShareBitLen, sizeof(UGATE_T));
+
+	*gate->gs.val = (UGATE_T) val;
+	gate->instantiated = true;
+
+	return gateid;
+}
+
 
 template<class T> uint32_t BooleanCircuit::PutINGate(T* val, e_role role) {
 	uint32_t gateid = PutINGate(role);
@@ -236,6 +277,22 @@ template<class T> uint32_t BooleanCircuit::PutINGate(T* val, e_role role) {
 	}
 	return gateid;
 }
+
+
+template<class T> uint32_t BooleanCircuit::PutSharedINGate(T* val) {
+	uint32_t gateid = PutSharedINGate();
+
+		//assign value
+		GATE* gate = m_pGates + gateid;
+		gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+		memcpy(gate->gs.val, val, ceil_divide(1 * m_nShareBitLen, 8));
+
+		gate->instantiated = true;
+
+	return gateid;
+}
+
+
 template<class T> uint32_t BooleanCircuit::PutSIMDINGate(uint32_t ninvals, T* val, e_role role) {
 	uint32_t gateid = PutSIMDINGate(ninvals, role);
 	if (role == m_eMyRole) {
@@ -245,6 +302,17 @@ template<class T> uint32_t BooleanCircuit::PutSIMDINGate(uint32_t ninvals, T* va
 		memcpy(gate->gs.ishare.inval, val, ceil_divide(ninvals * m_nShareBitLen, 8));
 		gate->instantiated = true;
 	}
+	return gateid;
+}
+
+
+template<class T> uint32_t BooleanCircuit::PutSharedSIMDINGate(uint32_t ninvals, T* val) {
+	uint32_t gateid = PutSharedSIMDINGate(ninvals);
+	//assign value
+	GATE* gate = m_pGates + gateid;
+	gate->gs.val = (UGATE_T*) calloc(ceil_divide(ninvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+	memcpy(gate->gs.val, val, ceil_divide(ninvals * m_nShareBitLen, 8));
+	gate->instantiated = true;
 	return gateid;
 }
 
@@ -263,6 +331,19 @@ uint32_t BooleanCircuit::PutINGate(uint64_t val, e_role role) {
 
 	return gateid;
 }
+
+
+uint32_t BooleanCircuit::PutSharedINGate(uint64_t val) {
+	uint32_t gateid = PutSharedINGate();
+	//assign value
+	GATE* gate = m_pGates + gateid;
+	gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
+	memcpy(gate->gs.val, &val, ceil_divide(1 * m_nShareBitLen, 8));
+
+	gate->instantiated = true;
+	return gateid;
+}
+
 uint32_t BooleanCircuit::PutSIMDINGate(uint32_t nvals, uint64_t val, e_role role) {
 	//return PutINGate(nvals, &val, role);
 	uint32_t gateid = PutSIMDINGate(nvals, role);
@@ -278,6 +359,23 @@ uint32_t BooleanCircuit::PutSIMDINGate(uint32_t nvals, uint64_t val, e_role role
 	return gateid;
 }
 
+uint32_t BooleanCircuit::PutSharedSIMDINGate(uint32_t nvals, uint64_t val) {
+	//return PutINGate(nvals, &val, role);
+	uint32_t gateid = PutSharedSIMDINGate(nvals);
+
+	//assign value
+	GATE* gate = m_pGates + gateid;
+	gate->gs.val = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
+	memcpy(gate->gs.val, &val, ceil_divide(nvals * m_nShareBitLen, 8));
+
+	gate->instantiated = true;
+	return gateid;
+}
+
+
+/**
+ * When inputting shares with bitlen>1 and nvals convert to regular SIMD in gates
+ */
 template<class T> share* BooleanCircuit::InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role) {
 	share* shr = new boolshare(bitlen, this);
 	assert(nvals <= sizeof(T) * 8);
@@ -292,6 +390,23 @@ template<class T> share* BooleanCircuit::InternalPutINGate(uint32_t nvals, T val
 	return shr;
 }
 
+
+/**
+ * When inputting shares with bitlen>1 and nvals convert to regular SIMD in gates
+ */
+template<class T> share* BooleanCircuit::InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen) {
+	share* shr = new boolshare(bitlen, this);
+	assert(nvals <= sizeof(T) * 8);
+	T mask = 0;
+
+	memset(&mask, 0xFF, ceil_divide(nvals, 8));
+	mask = mask >> (PadToMultiple(nvals, 8)-nvals);
+
+	for (uint32_t i = 0; i < bitlen; i++) {
+		shr->set_wire(i, PutSharedSIMDINGate(nvals, (val >> i) & mask));
+	}
+	return shr;
+}
 
 
 template<class T> share* BooleanCircuit::InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role) {
@@ -309,6 +424,26 @@ template<class T> share* BooleanCircuit::InternalPutINGate(uint32_t nvals, T* va
 			tmpval[j /typebitlen] += (((val[j * typebyteiters + i/typebitlen] >> (i % typebitlen)) & 0x01) << (j%typebitlen));
 		}
 		shr->set_wire(i, PutSIMDINGate(nvals, tmpval, role));
+	}
+	free(tmpval);
+	return shr;
+}
+
+template<class T> share* BooleanCircuit::InternalPutSharedINGate(uint32_t nvals, T* val, uint32_t bitlen) {
+	share* shr = new boolshare(bitlen, this);
+	uint32_t typebitlen = sizeof(T) * 8;
+	uint32_t typebyteiters = ceil_divide(bitlen, typebitlen);
+	uint64_t tmpval_bytes = typebyteiters * nvals;// * sizeof(T);
+	//uint32_t valstartpos = ceil_divide(nvals, typebitlen);
+	T* tmpval = (T*) malloc(tmpval_bytes);
+
+	for (uint32_t i = 0; i < bitlen; i++) {
+		memset(tmpval, 0, tmpval_bytes);
+		for (uint32_t j = 0; j < nvals; j++) {
+			//tmpval[j / typebitlen] += ((val[j] >> (i % typebitlen) & 0x01) << j);
+			tmpval[j /typebitlen] += (((val[j * typebyteiters + i/typebitlen] >> (i % typebitlen)) & 0x01) << (j%typebitlen));
+		}
+		shr->set_wire(i, PutSharedSIMDINGate(nvals, tmpval));
 	}
 	free(tmpval);
 	return shr;

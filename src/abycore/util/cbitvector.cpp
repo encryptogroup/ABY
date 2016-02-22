@@ -380,7 +380,6 @@ void CBitVector::Print(int fromBit, int toBit) {
 }
 
 void CBitVector::PrintHex(int fromByte, int toByte) {
-
 	int to = toByte > (m_nByteSize) ? (m_nByteSize) : toByte;
 	for (int i = fromByte; i < to; i++) {
 		cout << setw(2) << setfill('0') << (hex) << ((unsigned int) m_pBits[i]);

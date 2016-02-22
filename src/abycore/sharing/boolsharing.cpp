@@ -376,6 +376,8 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 			memcpy(gate->gs.val, ((GATE*) m_pGates + gate->ingates.inputs.parent)->gs.val, bits_in_bytes(gate->nvals));
 			UsedGate(gate->ingates.inputs.parent);
 			break;
+		case G_SHARED_IN:
+			break;
 		case G_CALLBACK:
 			EvaluateCallbackGate(localops[i]);
 			break;
@@ -401,7 +403,6 @@ void BoolSharing::EvaluateInteractiveOperations(uint32_t depth) {
 #ifdef DEBUGBOOL
 		cout << "Evaluating interactive gate with id = " << interactiveops[i] << " and type " << get_gate_type_name(gate->type) << endl;
 #endif
-
 		switch (gate->type) {
 		case G_NON_LIN:
 			SelectiveOpen(interactiveops[i]);
@@ -502,9 +503,7 @@ inline void BoolSharing::EvaluateINVGate(uint32_t gateid) {
 		gate->gs.val[i] = m_pGates[parentid].gs.val[i] ^ tmpval;
 	}
 	//set only the remaining nvals%GATE_T_BITS
-	if(gate->nvals % GATE_T_BITS != 0) {
-	  gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
-	}
+	gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
 #ifdef DEBUGBOOL
 	cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
 	" and input: " << m_pGates[parentid].gs.val[0]<< (dec) << endl;

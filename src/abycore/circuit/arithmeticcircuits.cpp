@@ -93,6 +93,12 @@ uint32_t ArithmeticCircuit::PutINGate(e_role src) {
 	return gateid;
 }
 
+uint32_t ArithmeticCircuit::PutSharedINGate() {
+	uint32_t gateid = m_cCircuit->PutSharedINGate(m_eContext, 1, m_nShareBitLen);
+	UpdateLocalQueue(gateid);
+	return gateid;
+}
+
 uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t ninvals, e_role src) {
 	uint32_t gateid = m_cCircuit->PutINGate(m_eContext, ninvals, m_nShareBitLen, src, m_nRoundsIN[src]);
 	UpdateInteractiveQueue(gateid);
@@ -120,25 +126,12 @@ uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t ninvals, e_role src) {
 }
 
 
-template<class T> uint32_t ArithmeticCircuit::PutINGate(T val) {
-	uint32_t gateid = PutINGate(m_eMyRole);
-	GATE* gate = m_pGates + gateid;
-	gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
-
-	*gate->gs.ishare.inval = (UGATE_T) val;
-	gate->instantiated = true;
-	return 1;
+uint32_t ArithmeticCircuit::PutSharedSIMDINGate(uint32_t ninvals) {
+	uint32_t gateid = m_cCircuit->PutSharedINGate(m_eContext, ninvals, m_nShareBitLen);
+	UpdateLocalQueue(gateid);
+	return gateid;
 }
 
-template<class T> uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t nvals, T val) {
-	uint32_t gateid = PutSIMDINGate(nvals, m_eMyRole);
-	GATE* gate = m_pGates + gateid;
-	gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
-
-	*gate->gs.ishare.inval = (UGATE_T) val;
-	gate->instantiated = true;
-	return 1;
-}
 
 template<class T> uint32_t ArithmeticCircuit::PutINGate(T val, e_role role) {
 	uint32_t gateid = PutINGate(role);
@@ -152,6 +145,18 @@ template<class T> uint32_t ArithmeticCircuit::PutINGate(T val, e_role role) {
 
 	return gateid;
 }
+
+template<class T> uint32_t ArithmeticCircuit::PutSharedINGate(T val) {
+	uint32_t gateid = PutSharedINGate();
+	GATE* gate = m_pGates + gateid;
+	gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
+
+	*gate->gs.val = (UGATE_T) val;
+	gate->instantiated = true;
+	return gateid;
+}
+
+
 template<class T> uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t nvals, T val, e_role role) {
 	uint32_t gateid = PutSIMDINGate(nvals, role);
 	if (role == m_eMyRole) {
@@ -165,10 +170,27 @@ template<class T> uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t nvals, T va
 	return gateid;
 }
 
+template<class T> uint32_t ArithmeticCircuit::PutSharedSIMDINGate(uint32_t nvals, T val) {
+	uint32_t gateid = PutSharedSIMDINGate(nvals);
+	GATE* gate = m_pGates + gateid;
+	gate->gs.val = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
+
+	*gate->gs.val = (UGATE_T) val;
+	gate->instantiated = true;
+	return gateid;
+}
+
 
 template<class T> share* ArithmeticCircuit::InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role) {
 	share* shr = new arithshare(this);
 	shr->set_wire(0, PutSIMDINGate(nvals, val, role));
+	return shr;
+}
+
+
+template<class T> share* ArithmeticCircuit::InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen) {
+	share* shr = new arithshare(this);
+	shr->set_wire(0, PutSharedSIMDINGate(nvals, val));
 	return shr;
 }
 
@@ -193,6 +215,26 @@ template<class T> share* ArithmeticCircuit::InternalPutINGate(uint32_t nvals, T*
 		gate->instantiated = true;
 	}
 
+	return shr;
+}
+
+
+template<class T> share* ArithmeticCircuit::InternalPutSharedINGate(uint32_t nvals, T* val, uint32_t bitlen) {
+	assert(bitlen <= m_nShareBitLen);
+	share* shr = new arithshare(this);
+	uint32_t gateid = PutSharedSIMDINGate(nvals);
+	uint32_t iters = sizeof(UGATE_T) / sizeof(T);
+	assert(iters > 0);
+	shr->set_wire(0, gateid);
+
+	GATE* gate = m_pGates + gateid;
+	uint32_t sharebytelen = ceil_divide(m_nShareBitLen, 8);
+	uint32_t inbytelen = ceil_divide(bitlen, 8);
+	gate->gs.val = (UGATE_T*) calloc(nvals, PadToMultiple(sharebytelen, sizeof(UGATE_T)));
+	for(uint32_t i = 0; i < nvals; i++) {
+		memcpy(((uint8_t*) gate->gs.val) + i * sharebytelen, val+i, inbytelen);
+	}
+	gate->instantiated = true;
 	return shr;
 }
 

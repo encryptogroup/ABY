@@ -288,6 +288,8 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 				gate->gs.val[i] = value;
 		} else if (gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(localops[i]);
+		} else if (gate->type == G_SHARED_IN) {
+			// nothing to do here
 		} else if (gate->type == G_SHARED_OUT) {
 			GATE* parent = m_pGates + gate->ingates.inputs.parent;
 			InstantiateGate(gate);

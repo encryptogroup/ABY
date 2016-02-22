@@ -65,8 +65,23 @@ public:
 	uint32_t PutSIMDINGate(uint32_t nvals, uint64_t val, e_role role);
 	template<class T> uint32_t PutSIMDINGate(uint32_t ninvals, T* val, e_role role);
 
+	// SharedINGates
+	uint32_t PutSharedINGate();
+	template<class T> uint32_t PutSharedINGate(T val);
+	uint32_t PutSharedINGate(uint64_t val);
+	template<class T> uint32_t PutSharedINGate(T* val);
+
+	// SharedSIMDINGates
+	uint32_t PutSharedSIMDINGate(uint32_t nvals);
+	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val);
+	uint32_t PutSharedSIMDINGate(uint32_t nvals, uint64_t val);
+	template<class T> uint32_t PutSharedSIMDINGate(uint32_t ninvals, T* val);
+
 
 	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role);
+	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen);
+
+
 	/* Unfortunately, a template function cannot be used due to virtual */
 	share* PutINGate(uint64_t val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint64_t>(1, val, bitlen, role);
@@ -94,9 +109,36 @@ public:
 		return InternalPutINGate<uint8_t>(nvals, val, bitlen, role);
 	};
 
+	/* Unfortunately, a template function cannot be used due to virtual - same for Shared*/
+	share* PutSharedINGate(uint64_t val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint64_t>(1, val, bitlen);
+	}
+	share* PutSharedINGate(uint32_t val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint32_t>(1, val, bitlen);
+	};
+	share* PutSharedINGate(uint16_t val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint16_t>(1, val, bitlen);
+	};
+	share* PutSharedINGate(uint8_t val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint8_t>(1, val, bitlen);
+	};
 
+	share* PutSharedSIMDINGate(uint32_t nvals, uint64_t val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint64_t>(nvals, val, bitlen);
+	}
+	share* PutSharedSIMDINGate(uint32_t nvals, uint32_t val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint32_t>(nvals, val, bitlen);
+	};
+	share* PutSharedSIMDINGate(uint32_t nvals, uint16_t val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint16_t>(nvals, val, bitlen);
+	};
+	share* PutSharedSIMDINGate(uint32_t nvals, uint8_t val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint8_t>(nvals, val, bitlen);
+	};
 
 	template<class T> share* InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role);
+	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T* val, uint32_t bitlen);
+
 	/* Unfortunately, a template function cannot be used due to virtual. Call Internal PutINGate*/
 	share* PutINGate(uint64_t* val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint64_t>(1, val, bitlen, role);
@@ -123,6 +165,34 @@ public:
 	share* PutSIMDINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint8_t>(nvals, val, bitlen, role);
 	};
+
+	/* Unfortunately, a template function cannot be used due to virtual. Call Internal PutSharedINGate -  same for Shared*/
+	share* PutSharedINGate(uint64_t* val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint64_t>(1, val, bitlen);
+	};
+	share* PutSharedINGate(uint32_t* val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint32_t>(1, val, bitlen);
+	};
+	share* PutSharedINGate(uint16_t* val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint16_t>(1, val, bitlen);
+	};
+	share* PutSharedINGate(uint8_t* val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint8_t>(1, val, bitlen);
+	};
+
+	share* PutSharedSIMDINGate(uint32_t nvals, uint64_t* val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint64_t>(nvals, val, bitlen);
+	};
+	share* PutSharedSIMDINGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint32_t>(nvals, val, bitlen);
+	};
+	share* PutSharedSIMDINGate(uint32_t nvals, uint16_t* val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint16_t>(nvals, val, bitlen);
+	};
+	share* PutSharedSIMDINGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) {
+		return InternalPutSharedINGate<uint8_t>(nvals, val, bitlen);
+	};
+
 
 	uint32_t PutOUTGate(uint32_t parent, e_role dst);
 	vector<uint32_t> PutOUTGate(vector<uint32_t> parents, e_role dst);
