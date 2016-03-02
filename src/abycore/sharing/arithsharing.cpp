@@ -724,6 +724,7 @@ void ArithSharing<T>::AssignClientConversionShares() {
 		free(parentids);
 	}
 	free(tmpsum);
+	m_vCONVGates.clear();
 }
 
 template<typename T>
