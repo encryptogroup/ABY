@@ -138,16 +138,16 @@ public:
 		T* rcvedvals = (T*) rcv_buf->GetArr();
 		T* outvals = ((T*) output->GetArr()) + startpos * m_nElements;
 
-		for (uint32_t mtid = startpos, i = progress, mtbit, j; i < lim; mtid++) {
+		for (uint32_t mtid = startpos, i = progress, mtbit, j, maskctr=0; i < lim; mtid++) {
 #ifdef DEBUGARITHMTMASKING
 			cout << "Receiver val = " << (UINT64_T) tmpmasks.Get<T>(mtid * m_nMTBitLen, m_nMTBitLen) << ", bits = ";
 			tmpmasks.Print(mtid * m_nMTBitLen, (mtid + 1) * m_nMTBitLen);
 #endif
-			for (mtbit = 0; mtbit < m_nMTBitLen; mtbit++, i++, rcvbufptr += m_nOTByteLen) {
+			for (mtbit = 0; mtbit < m_nMTBitLen; mtbit++, i++, rcvbufptr += m_nOTByteLen, maskctr++) {
 				if (choices->GetBitNoMask(i)) {
-					tmpmask->XORBytes(rcvbufptr, i * m_nOTByteLen, m_nOTByteLen);
+					tmpmask->XORBytes(rcvbufptr, maskctr * m_nOTByteLen, m_nOTByteLen);
 					for (j = 0; j < m_nElements; j++) {
-						tmpval = masks[i * m_nElements + j];
+						tmpval = masks[maskctr * m_nElements + j];
 						gtmpval[j] = gtmpval[j] + tmpval;
 #ifdef DEBUGARITHMTMASKING
 						cout << "R: i = " << i << ", tmpval " << (UINT64_T) tmpval << ", tmpsum = " << (UINT64_T) gtmpval[j] << ", choice = " << (UINT64_T) choices.GetBitNoMask(i) << endl;
@@ -155,7 +155,7 @@ public:
 					}
 				} else {
 					for (j = 0; j < m_nElements; j++) {
-						tmpval = masks[i * m_nElements + j];
+						tmpval = masks[maskctr * m_nElements + j];
 						gtmpval[j] =
 								gtmpval[j] - tmpval;
 #ifdef DEBUGARITHMTMASKING

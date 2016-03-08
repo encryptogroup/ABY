@@ -624,7 +624,7 @@ void ArithSharing<T>::AssignServerConversionShares() {
 	uint32_t maxvectorsize = m_pCircuit->GetMaxVectorSize();
 	tmpsum = (T*) malloc(sizeof(T) * maxvectorsize);
 
-	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx * m_nTypeBitLen; i < m_vCONVGates.size(); i++, m_nConvShareIdx++) {
+	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx * m_nTypeBitLen; i < m_vCONVGates.size(); i++) {
 		gate = m_vCONVGates[i];
 		parentids = gate->ingates.inputs.parents;
 		nparents = gate->ingates.ningates;
@@ -687,7 +687,7 @@ void ArithSharing<T>::AssignClientConversionShares() {
 	uint32_t maxvectorsize = m_pCircuit->GetMaxVectorSize();
 	tmpsum = (T*) malloc(sizeof(T) * maxvectorsize);
 	//Take the masks from the pre-computed OTs down from the received string
-	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx; i < m_vCONVGates.size(); i++, m_nConvShareIdx++) {
+	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx*m_nTypeBitLen; i < m_vCONVGates.size(); i++, m_nConvShareIdx++) {
 		gate = m_vCONVGates[i];
 		parentids = gate->ingates.inputs.parents;
 		nparents = gate->ingates.ningates;
