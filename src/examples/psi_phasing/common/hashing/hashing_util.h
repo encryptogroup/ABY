@@ -28,6 +28,7 @@ typedef struct hashing_state_ctx {
 	uint32_t nbins;
 	uint32_t inbitlen;
 	uint32_t addrbitlen;
+	uint32_t floor_addrbitlen;
 	uint32_t outbitlen;
 	//the byte values, are stored separately since they are needed very often
 	uint32_t inbytelen;
@@ -66,6 +67,7 @@ static void init_hashing_state(hs_t* hs, uint32_t nelements, uint32_t inbitlen, 
 
 	hs->inbitlen = inbitlen;
 	hs->addrbitlen = min((uint32_t) ceil_log2(nbins), inbitlen);
+	hs->floor_addrbitlen = min((uint32_t) floor_log2(nbins), inbitlen);
 
 #ifdef USE_LUBY_RACKOFF
 	hs->outbitlen = hs->inbitlen - hs->addrbitlen+1;
@@ -139,7 +141,7 @@ inline void hashElement(uint8_t* element, uint32_t* address, uint8_t* val, hs_t*
 	//Store the first hs->addrbitlen bits in L
 	L = *((uint32_t*) element) & SELECT_BITS[hs->addrbitlen];
 	//Store the remaining hs->outbitlen bits in R and pad correspondingly
-	R = (*((uint32_t*) element) & SELECT_BITS_INV[hs->addrbitlen]) >> (hs->addrbitlen);
+	R = (*((uint32_t*) element) & SELECT_BITS_INV[hs->floor_addrbitlen]) >> (hs->floor_addrbitlen);
 
 	R &= hs->mask;//mask = (1<<32-hs->addrbitlen)
 
@@ -182,7 +184,8 @@ inline void hashElement(uint8_t* element, uint32_t* address, uint8_t* val, hs_t*
 	//if(hs->outbytelen >= sizeof(uint32_t))
 	if(hs->inbitlen > sizeof(uint32_t) * 8) {
 		//memcpy(val + (sizeof(uint32_t) - hs->addrbytelen), element + sizeof(uint32_t), hs->outbytelen - (sizeof(uint32_t) - hs->addrbytelen));
-		memcpy(val + (sizeof(uint32_t) - (hs->addrbitlen >>3)), element + sizeof(uint32_t), hs->outbytelen - (sizeof(uint32_t) - (hs->addrbitlen >>3)));
+		memcpy(val + (sizeof(uint32_t) - (hs->floor_addrbitlen >>3)), element + sizeof(uint32_t), hs->outbytelen - (sizeof(uint32_t) - (hs->floor_addrbitlen >>3)));
+
 
 		//cout << "Element: "<< (hex) << (uint32_t) val[hs->outbytelen-1] << ", " << (uint32_t) (BYTE_SELECT_BITS_INV[hs->outbitlen & 0x03])
 		//		<< ", " << (uint32_t) (val[hs->outbytelen-1] & (BYTE_SELECT_BITS_INV[hs->outbitlen & 0x03]) )<< (dec) << " :";
