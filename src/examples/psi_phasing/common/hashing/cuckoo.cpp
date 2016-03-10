@@ -108,6 +108,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 
 	for(i = 0; i < nbins; i++) {
 		if(cuckoo_table[i] != NULL) {
+			cuckoo_table[i]->val[0] ^= (cuckoo_table[i]->pos & 0x01);
 			memcpy(hash_table + i * hs.outbytelen, cuckoo_table[i]->val, hs.outbytelen);
 			/*cout << "copying value for bin " << i << ": " << (hex);
 			for(uint32_t j = 0; j < hs.outbytelen; j++) {

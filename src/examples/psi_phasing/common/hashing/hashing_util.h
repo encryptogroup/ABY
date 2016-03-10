@@ -70,7 +70,7 @@ static void init_hashing_state(hs_t* hs, uint32_t nelements, uint32_t inbitlen, 
 	hs->floor_addrbitlen = min((uint32_t) floor_log2(nbins), inbitlen);
 
 #ifdef USE_LUBY_RACKOFF
-	hs->outbitlen = hs->inbitlen - hs->addrbitlen+1;
+	hs->outbitlen = hs->inbitlen - hs->addrbitlen+2;
 #else
 	hs->outbitlen = inbitlen;
 #endif
@@ -140,8 +140,8 @@ inline void hashElement(uint8_t* element, uint32_t* address, uint8_t* val, hs_t*
 	TABLEID_T hfmaskaddr;
 	//Store the first hs->addrbitlen bits in L
 	L = *((uint32_t*) element) & SELECT_BITS[hs->addrbitlen];
-	//Store the remaining hs->outbitlen bits in R and pad correspondingly
-	R = (*((uint32_t*) element) & SELECT_BITS_INV[hs->floor_addrbitlen]) >> (hs->floor_addrbitlen);
+	//Store the remaining hs->outbitlen bits in R and pad correspondingly. Pad one to the left to add permutation bit.
+	R = ((*((uint32_t*) element) & SELECT_BITS_INV[hs->floor_addrbitlen]) >> (hs->floor_addrbitlen)) << 1;
 
 	R &= hs->mask;//mask = (1<<32-hs->addrbitlen)
 

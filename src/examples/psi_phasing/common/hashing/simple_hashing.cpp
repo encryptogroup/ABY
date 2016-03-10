@@ -125,6 +125,7 @@ inline void insert_element(sht_ctx* table, uint8_t* element, uint32_t* address, 
 		tmp_bin=table->bins + address[i];
 		//pthread_mutex_lock(locks + address[i]);
 		memcpy(tmp_bin->values + tmp_bin->nvals * hs->outbytelen, tmpbuf, hs->outbytelen);
+		(tmp_bin->values + tmp_bin->nvals * hs->outbytelen)[0] ^= (i&0x01);
 		for(j = 0; j < i; j++) {
 			if(address[i] == address[j]) {
 				memset(tmp_bin->values + tmp_bin->nvals * hs->outbytelen, DUMMY_ENTRY_SERVER, hs->outbytelen);
