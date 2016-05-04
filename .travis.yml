@@ -1,0 +1,18 @@
+language: cpp
+
+compiler:
+  - g++
+
+addons:
+  apt:
+    packages:
+    - libgmp-dev
+    - libglib2.0-dev
+    - libssl-dev
+
+script:
+  - make all
+  - make runtest
+
+notifications:
+  - email: false
