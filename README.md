@@ -1,4 +1,4 @@
-# [ABY](http://encrypto.de/papers/DSZ15.pdf)
+# [ABY](http://encrypto.de/papers/DSZ15.pdf) [![Build Status](https://travis-ci.org/naderpour/ABY.svg?branch=public)](https://travis-ci.org/naderpour/ABY)
 
 ### A Framework for Efficient Mixed-Protocol Secure Two-Party Computation
 
