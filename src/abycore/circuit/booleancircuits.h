@@ -19,10 +19,13 @@
 #define __BOOLEANCIRCUITS_H_
 
 #include "../util/typedefs.h"
+#include "../util/cbitvector.h"
 #include "abycircuit.h"
 #include <assert.h>
 #include "circuit.h"
-
+#include <map>
+#include <fstream>
+#include "../util/parse_options.h"
 
 /** BooleanCircuit class. */
 class BooleanCircuit: public Circuit {
@@ -271,22 +274,8 @@ public:
 
 	uint32_t PutIdxGate(uint32_t r, uint32_t maxidx);
 
-	share* PutRepeaterGate(share* input, uint32_t nvals);
-	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals);
-	uint32_t PutCombinerGate(vector<uint32_t> input);
-	uint32_t PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos);
-
-	//uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
-	//share* PutSubsetGate(share* input, uint32_t* posids, uint32_t nvals);
-
-
-	uint32_t PutPermutationGate(vector<uint32_t> input, uint32_t* positions);
-
 	share* PutStructurizedCombinerGate(share* input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
 	uint32_t PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
-
-	share* PutSplitterGate(share* input);
-	vector<uint32_t> PutSplitterGate(uint32_t input);
 
 	uint32_t PutCallbackGate(vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 	share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
@@ -314,12 +303,49 @@ public:
 	share* PutMinGate(share** a, uint32_t nvals);
 	vector<uint32_t> PutMinGate(vector<vector<uint32_t> > a);
 
-	void PutMinIdxGate(share** a, share** b, uint32_t nvals, share** minval_shr, share** minid_shr);
-	void PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<uint32_t> > idx,
+
+	/**
+	 * \brief Floating point gate with one input
+	 * \param inputs input wire IDs
+	 * \param func the name of the function
+	 * \param bitsize total leng of the floating point type
+	 * \param nvals parallel instantiation
+	 * \return output wire IDs
+	 */
+	vector<uint32_t> PutFPGate(const string func, vector<uint32_t> inputs, uint8_t bitsize, uint32_t nvals = 1);
+
+	/**
+	 * \brief Floating point gate with two inputs
+	 * \param ina 1st input wire IDs
+	 * \param inb 2nd input wire IDs
+	 * \param func the name of the function
+	 * \param bitsize total leng of the floating point type
+	 * \param nvals parallel instantiation
+	 * \return output wire IDs
+	 */
+	vector<uint32_t> PutFPGate(const string func, vector<uint32_t> ina, vector<uint32_t> inb, uint8_t bitsize, uint32_t nvals = 1);
+
+	/**
+	 * \brief Add gate from a certain .aby file
+	 * \param inputs input wire IDs
+	 * \param nvals parallel instantiation
+	 * \return output wire IDs
+	 */
+	vector<uint32_t> PutGateFromFile(const string filename, vector<uint32_t> inputs, uint32_t nvals = 1);
+
+	/**
+	 * \brief Get the number of input bits for both parties that a given circuit file expects
+	 * \param the file name of the circuit
+	 * \return the number of input bits for both parties
+	 */
+	uint32_t GetInputLengthFromFile(const string filename);
+
+	void PutMinIdxGate(share** vals, share** ids, uint32_t nvals, share** minval_shr, share** minid_shr);
+	void PutMinIdxGate(vector<vector<uint32_t> > vals, vector<vector<uint32_t> > ids,
 			vector<uint32_t>& minval, vector<uint32_t>& minid);
 
-	void PutMaxIdxGate(share** a, share** b, uint32_t nvals, share** maxval_shr, share** maxid_shr);
-	void PutMaxIdxGate(vector<vector<uint32_t> > a, vector<vector<uint32_t> > idx,
+	void PutMaxIdxGate(share** vals, share** ids, uint32_t nvals, share** maxval_shr, share** maxid_shr);
+	void PutMaxIdxGate(vector<vector<uint32_t> > vals, vector<vector<uint32_t> > ids,
 			vector<uint32_t>& maxval, vector<uint32_t>& maxid);
 
 

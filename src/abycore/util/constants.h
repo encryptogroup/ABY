@@ -46,7 +46,7 @@
 #define ABY_OT
 #define FIXED_KEY_AES_HASHING //for OT routines
 
-#define USE_KK_OT_FOR_MT
+
 
 /**
  \enum	field_type
@@ -108,8 +108,8 @@ enum e_gatetype {
 	G_PERM = 0x83, /**< Enum for PERMUTATION gates that permute the value of multi-value gates */
 	G_COMBINEPOS = 0x84, /**< Enum for COMBINE_AT_POSITION gates that form a new multi-value gate from specific positions of old multi-value gates */
 	G_SUBSET = 0x85, /**< Enum for SUBSET gates that form a new multi-value gate from multiple positions of one multi-value gate */
-	G_STRUCT_COMBINE = 0x86, /**< Enum for STRUCTURIZED COMBINER gates which combine one or multiple input gates based on an increase value
-//G_YAO_BUILD 		/**< Enum for  */
+	G_STRUCT_COMBINE = 0x86, /**< Enum for STRUCTURIZED COMBINER gates which combine one or multiple input gates based on an increase value*/
+	G_LIN_SUB = 0x0C, /**< Enum for LINEAR gates (SUB in Arithmetic circuits) */
 };
 
 /**

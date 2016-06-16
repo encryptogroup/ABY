@@ -49,7 +49,7 @@
 //#define BENCHONLINEPHASE
 //#define PRINT_PERFORMANCE_STATS
 //#define DEBUGCOMM
-//#define BATCH
+#define BATCH
 
 using namespace std;
 

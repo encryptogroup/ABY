@@ -42,6 +42,7 @@ public:
 
 	uint32_t PutMULGate(uint32_t left, uint32_t right);
 	uint32_t PutADDGate(uint32_t left, uint32_t right);
+	uint32_t PutSUBGate(uint32_t left, uint32_t right);
 
 	uint32_t PutINGate(e_role src);
 	template<class T> uint32_t PutINGate(T val, e_role role);
@@ -187,10 +188,7 @@ public:
 
 	share* PutADDGate(share* ina, share* inb);
 
-	share* PutSUBGate(share* ina, share* inb) {
-		cerr << "SUB not implemented in arithmetic sharing" << endl;
-		return new arithshare(this);
-	}
+	share* PutSUBGate(share* ina, share* inb);
 	share* PutANDGate(share* ina, share* inb) {
 		cerr << "AND not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);

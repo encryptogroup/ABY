@@ -31,12 +31,15 @@
 enum ABYPHASE {
 	P_TOTAL, P_INIT, P_CIRCUIT, P_NETWORK, P_BASE_OT, P_SETUP, P_OT_EXT, P_GARBLE, P_ONLINE, P_FIRST = P_TOTAL, P_LAST = P_ONLINE
 };
+
+// Structure for measuring runtime
 struct aby_timings {
 	double timing;
-	timeval tbegin;
-	timeval tend;
+	timespec tbegin;
+	timespec tend;
 };
 
+// Structure for counting communication
 struct aby_comm {
 	uint64_t totalcomm;
 	uint64_t cbegin;
@@ -44,16 +47,14 @@ struct aby_comm {
 };
 
 static aby_timings m_tTimes[P_LAST - P_FIRST + 1];
-
 static aby_comm m_tSend[P_LAST - P_FIRST + 1];
 static aby_comm m_tRecv[P_LAST - P_FIRST + 1];
 
-
 using namespace std;
 
-
-
-// Timing routines
+/**
+ * Return time difference in milliseconds
+ */
 static double getMillies(timespec timestart, timespec timeend) {
 	long time1 = (timestart.tv_sec * 1000000) + (timestart.tv_nsec / 1000);
 	long time2 = (timeend.tv_sec * 1000000) + (timeend.tv_nsec / 1000);
@@ -61,18 +62,49 @@ static double getMillies(timespec timestart, timespec timeend) {
 	return (double) (time2 - time1) / 1000;
 }
 
+/**
+ * Start measuring runtime for a given phase
+ * @param msg - a message for debugging
+ * @param phase - the ABY phase to measure
+ */
 static void StartWatch(const string& msg, ABYPHASE phase) {
-	if (phase < P_FIRST && phase > P_LAST) {
+	if (phase < P_FIRST || phase > P_LAST) {
 		cerr << "Phase not recognized: " << phase << endl;
 		return;
 	}
-	gettimeofday(&(m_tTimes[phase].tbegin), NULL);
+
+	clock_gettime(CLOCK_MONOTONIC, &(m_tTimes[phase].tbegin));
 #ifndef BATCH
 	cout << msg << endl;
 #endif
 }
 
+/**
+ * Stop measuring runtime
+ * Called after StartWatch() with identical phase parameter
+ * @param msg - a message for debugging
+ * @param phase - the ABY phase to measure
+ */
+static void StopWatch(const string& msg, ABYPHASE phase) {
+	if (phase < P_FIRST || phase > P_LAST) {
+		cerr << "Phase not recognized: " << phase << endl;
+		return;
+	}
 
+	clock_gettime(CLOCK_MONOTONIC, &(m_tTimes[phase].tend));
+	m_tTimes[phase].timing = getMillies(m_tTimes[phase].tbegin, m_tTimes[phase].tend);
+
+#ifndef BATCH
+	cout << msg << m_tTimes[phase].timing << " ms " << endl;
+#endif
+}
+
+/**
+ * Start measuring both runtime and communication
+ * @param msg - a message for debugging
+ * @param phase - the ABY phase to measure
+ * @param sock - a vector of sockets
+ */
 static void StartRecording(const string& msg, ABYPHASE phase, vector<CSocket*> sock) {
 	StartWatch(msg, phase);
 
@@ -84,20 +116,13 @@ static void StartRecording(const string& msg, ABYPHASE phase, vector<CSocket*> s
 	}
 }
 
-static void StopWatch(const string& msg, ABYPHASE phase) {
-	if (phase < P_FIRST && phase > P_LAST) {
-		cerr << "Phase not recognized: " << phase << endl;
-		return;
-	}
-
-	gettimeofday(&(m_tTimes[phase].tend), NULL);
-	m_tTimes[phase].timing = getMillies(m_tTimes[phase].tbegin, m_tTimes[phase].tend);
-
-#ifndef BATCH
-	cout << msg << m_tTimes[phase].timing << " ms " << endl;
-#endif
-}
-
+/**
+ * Stop measuring both runtime and communication
+ * Called after StartRecording() with identical phase parameter
+ * @param msg - a message for debugging
+ * @param phase - the ABY phase to measure
+ * @param sock - a vector of sockets
+ */
 static void StopRecording(const string& msg, ABYPHASE phase, vector<CSocket*> sock) {
 	StopWatch(msg, phase);
 
@@ -111,6 +136,7 @@ static void StopRecording(const string& msg, ABYPHASE phase, vector<CSocket*> so
 	m_tSend[phase].totalcomm = m_tSend[phase].cend - m_tSend[phase].cbegin;
 	m_tRecv[phase].totalcomm = m_tRecv[phase].cend - m_tRecv[phase].cbegin;
 }
+
 
 static void PrintTimings() {
 	string unit = " ms";
@@ -148,6 +174,5 @@ static uint64_t GetSentDataForPhase(ABYPHASE phase) {
 static uint64_t GetReceivedDataForPhase(ABYPHASE phase) {
 	return m_tRecv[phase].totalcomm;
 }
-
 
 #endif /* TIMER_H_ */

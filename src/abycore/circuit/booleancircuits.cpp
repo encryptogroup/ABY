@@ -413,7 +413,7 @@ template<class T> share* BooleanCircuit::InternalPutINGate(uint32_t nvals, T* va
 	share* shr = new boolshare(bitlen, this);
 	uint32_t typebitlen = sizeof(T) * 8;
 	uint32_t typebyteiters = ceil_divide(bitlen, typebitlen);
-	uint64_t tmpval_bytes = typebyteiters * nvals;// * sizeof(T);
+	uint64_t tmpval_bytes = max(typebyteiters * nvals, (uint32_t) sizeof(T));// * sizeof(T);
 	//uint32_t valstartpos = ceil_divide(nvals, typebitlen);
 	T* tmpval = (T*) malloc(tmpval_bytes);
 
@@ -433,7 +433,7 @@ template<class T> share* BooleanCircuit::InternalPutSharedINGate(uint32_t nvals,
 	share* shr = new boolshare(bitlen, this);
 	uint32_t typebitlen = sizeof(T) * 8;
 	uint32_t typebyteiters = ceil_divide(bitlen, typebitlen);
-	uint64_t tmpval_bytes = typebyteiters * nvals;// * sizeof(T);
+	uint64_t tmpval_bytes = max(typebyteiters * nvals, (uint32_t) sizeof(T));;// * sizeof(T);
 	//uint32_t valstartpos = ceil_divide(nvals, typebitlen);
 	T* tmpval = (T*) malloc(tmpval_bytes);
 
@@ -702,24 +702,6 @@ share* BooleanCircuit::PutA2YGate(share* ina) {
 }
 
 //TODO: implement other SIMD gate types! Also put this into its own class
-uint32_t BooleanCircuit::PutCombinerGate(vector<uint32_t> input) {
-	uint32_t gateid = m_cCircuit->PutCombinerGate(input);
-	UpdateLocalQueue(gateid);
-	return gateid;
-}
-
-uint32_t BooleanCircuit::PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos) {
-	uint32_t gateid = m_cCircuit->PutCombineAtPosGate(input, pos);
-	UpdateLocalQueue(gateid);
-	return gateid;
-}
-
-/*uint32_t BooleanCircuit::PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals) {
-	uint32_t gateid = m_cCircuit->PutSubsetGate(input, posids, nvals);
-	UpdateLocalQueue(gateid);
-	return gateid;
-}*/
-
 
 uint32_t BooleanCircuit::PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start,
 		uint32_t pos_incr, uint32_t nvals) {
@@ -734,43 +716,6 @@ share* BooleanCircuit::PutStructurizedCombinerGate(share* input, uint32_t pos_st
 	nstructcombgates++;
 	out->set_wire(0, PutStructurizedCombinerGate(input->get_wires(), pos_start, pos_incr, nvals));
 	return out;
-}
-
-vector<uint32_t> BooleanCircuit::PutSplitterGate(uint32_t input) {
-	vector<uint32_t> gateid = m_cCircuit->PutSplitterGate(input);
-	for (uint32_t i = 0; i < gateid.size(); i++)
-		UpdateLocalQueue(gateid[i]);
-	return gateid;
-}
-
-share* BooleanCircuit::PutSplitterGate(share* input) {
-	assert(input->size() == 1); //TODO works for gates of size 1 only currently
-	return new boolshare(PutSplitterGate(input->get_wire(0)), this);
-}
-
-uint32_t BooleanCircuit::PutRepeaterGate(uint32_t input, uint32_t nvals) {
-	uint32_t gateid = m_cCircuit->PutRepeaterGate(input, nvals);
-	UpdateLocalQueue(gateid);
-	return gateid;
-}
-
-share* BooleanCircuit::PutRepeaterGate(share* input, uint32_t nvals) {
-	share* share = new boolshare(input->size(), this);
-	for(uint32_t i = 0; i < input->size(); i++)
-		share->set_wire(i, PutRepeaterGate(input->get_wire(i), nvals));
-	return share;
-}
-/*
-share* BooleanCircuit::PutPermutationGate(share* input, uint32_t* positions) {
-	share* out = new boolshare(1, this);
-	out->set_wire(0, PutPermutationGate(input->get_wires(), positions));
-	return out;
-}
-*/
-uint32_t BooleanCircuit::PutPermutationGate(vector<uint32_t> input, uint32_t* positions) {
-	uint32_t gateid = m_cCircuit->PutPermutationGate(input, positions);
-	UpdateLocalQueue(gateid);
-	return gateid;
 }
 
 uint32_t BooleanCircuit::PutCallbackGate(vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*),
@@ -834,8 +779,8 @@ vector<uint32_t> BooleanCircuit::LShift(vector<uint32_t> val, uint32_t pos, uint
 
 share* BooleanCircuit::PutADDGate(share* ina, share* inb) {
 	//TODO carry computation not verified
-	bool carry = max(ina->size(), inb->size()) < max(ina->max_size(), inb->max_size());
-	assert(ina->size() == inb->size());
+	bool carry = max(ina->bitlength(), inb->bitlength()) < max(ina->max_size(), inb->max_size());
+	assert(ina->bitlength() == inb->bitlength());
 	//cout << "Carry? " << (carry? " true " : " false ") << ina->size() << ", " << inb->size() << ", " <<
 	//		ina->max_size() << ", " << inb->max_size() << endl;
 	return new boolshare(PutAddGate(ina->get_wires(), inb->get_wires(), carry), this);
@@ -849,6 +794,119 @@ vector<uint32_t> BooleanCircuit::PutAddGate(vector<uint32_t> left, vector<uint32
 		return PutSizeOptimizedAddGate(left, right, bCarry);
 	}
 }
+
+
+
+//a + b, do we need a carry?
+vector<uint32_t> BooleanCircuit::PutSizeOptimizedAddGate(vector<uint32_t> a, vector<uint32_t> b, BOOL bCarry) {
+	// left + right mod (2^Rep)
+	// Construct C[i] gates
+	uint32_t rep = a.size();// + (!!bCarry);
+	vector<uint32_t> C(rep);
+	uint32_t axc, bxc, acNbc;
+
+	C[0] = PutConstantGate(0, m_pGates[a[0]].nvals); //the second parameter stands for the number of vals
+
+	uint32_t i = 0;
+	for (; i < rep - 1; i++) {
+		//===================
+		// New Gates
+		// a[i] xor c[i]
+		axc = PutXORGate(a[i], C[i]);
+
+		// b[i] xor c[i]
+		bxc = PutXORGate(b[i], C[i]);
+
+		// axc AND bxc
+		acNbc = PutANDGate(axc, bxc);
+
+		// C[i+1]
+		C[i + 1] = PutXORGate(C[i], acNbc);
+	}
+
+#ifdef ZDEBUG
+	cout << "Finished carry generation" << endl;
+#endif
+
+	if (bCarry) {
+		axc = PutXORGate(a[i], C[i]);
+
+		// b[i] xor c[i]
+		bxc = PutXORGate(b[i], C[i]);
+
+		// axc AND bxc
+		acNbc = PutANDGate(axc, bxc);
+	}
+
+#ifdef ZDEBUG
+	cout << "Finished additional carry generation" << endl;
+#endif
+
+	// Construct a[i] xor b[i] gates
+	vector<uint32_t> AxB(rep);
+	for (uint32_t i = 0; i < rep; i++) {
+		// a[i] xor b[i]
+		AxB[i] = PutXORGate(a[i], b[i]);
+	}
+
+#ifdef ZDEBUG
+	cout << "Finished parity on inputs" << endl;
+#endif
+
+	// Construct Output gates of Addition
+	vector<uint32_t> out(rep + (!!bCarry));
+	for (uint32_t i = 0; i < rep; i++) {
+		out[i] = PutXORGate(C[i], AxB[i]);
+	}
+
+#ifdef ZDEBUG
+	cout << "Finished parity on inputs xor carries" << endl;
+#endif
+
+	if (bCarry)
+		out[rep] = PutXORGate(C[i], acNbc);
+
+#ifdef ZDEBUG
+	cout << "Finished parity on additional carry and inputs" << endl;
+#endif
+
+	return out;
+}
+
+
+
+//TODO: there is a bug when adding 3 and 1 as two 2-bit numbers and expecting a carry
+vector<uint32_t> BooleanCircuit::PutDepthOptimizedAddGate(vector<uint32_t> a, vector<uint32_t> b, BOOL bCARRY) {
+	uint32_t id, rep = min(a.size(), b.size());
+	vector<uint32_t> out(a.size() + bCARRY);
+	vector<uint32_t> parity(a.size()), carry(rep), parity_zero(rep);
+
+	for (uint32_t i = 0; i < rep; i++) { //0-th layer
+		parity[i] = PutXORGate(a[i], b[i]);
+		parity_zero[i] = parity[i];
+		carry[i] = PutANDGate(a[i], b[i]);
+	}
+
+	for (uint32_t i = 1; i <= (uint32_t) ceil(log(rep) / log(2)); i++) {
+		for (uint32_t j = 0; j < rep; j++) {
+			if (j % (uint32_t) pow(2, i) >= pow(2, (i - 1))) {
+				id = pow(2, (i - 1)) + pow(2, i) * ((uint32_t) floor(j / (pow(2, i)))) - 1;
+				carry[j] = PutINVGate(PutANDGate(PutINVGate(PutANDGate(parity[j], carry[id])), PutINVGate(carry[j]))); // c = (p and c-1) or c = (((p and c-1) xor 1) and (c xor 1)) xor 1)
+				parity[j] = PutANDGate(parity[j], parity[id]);
+			}
+		}
+	}
+
+	out[0] = parity_zero[0];
+	for (uint32_t i = 1; i < rep; i++) {
+		out[i] = PutXORGate(parity_zero[i], carry[i - 1]);
+	}
+	if (bCARRY)	//Do I expect a carry in the most significant bit position?
+		out[rep] = carry[rep - 1];
+
+	return out;
+}
+
 
 vector<uint32_t> BooleanCircuit::PutMulGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t resbitlen) {
 	if(a.size() != b.size()) {
@@ -890,7 +948,7 @@ vector<uint32_t> BooleanCircuit::PutMulGate(vector<uint32_t> a, vector<uint32_t>
 }
 
 share* BooleanCircuit::PutMULGate(share* ina, share* inb) {
-	return new boolshare(PutMulGate(ina->get_wires(), inb->get_wires(), min(ina->size() + inb->size(), max(ina->max_size(), inb->max_size()))), this);
+	return new boolshare(PutMulGate(ina->get_wires(), inb->get_wires(), min(ina->bitlength() + inb->bitlength(), max(ina->max_size(), inb->max_size()))), this);
 }
 
 share* BooleanCircuit::PutGEGate(share* ina, share* inb) {
@@ -980,89 +1038,15 @@ share* BooleanCircuit::PutSUBGate(share* ina, share* inb) {
 	return new boolshare(PutSUBGate(ina->get_wires(), inb->get_wires()), this);
 }
 
-//a + b, do we need a carry?
-vector<uint32_t> BooleanCircuit::PutSizeOptimizedAddGate(vector<uint32_t> a, vector<uint32_t> b, BOOL bCarry) {
-	// left + right mod (2^Rep)
-	// Construct C[i] gates
-	uint32_t rep = a.size();// + (!!bCarry);
-	vector<uint32_t> C(rep);
-	uint32_t axc, bxc, acNbc;
 
-	C[0] = PutConstantGate(0, m_pGates[a[0]].nvals); //the second parameter stands for the number of vals
 
-	uint32_t i = 0;
-	for (; i < rep - 1; i++) {
-		//===================
-		// New Gates
-		// a[i] xor c[i]
-		axc = PutXORGate(a[i], C[i]);
-
-		// b[i] xor c[i]
-		bxc = PutXORGate(b[i], C[i]);
-
-		// axc AND bxc
-		acNbc = PutANDGate(axc, bxc);
-
-		// C[i+1]
-		C[i + 1] = PutXORGate(C[i], acNbc);
-	}
-
-#ifdef ZDEBUG
-	cout << "Finished carry generation" << endl;
-#endif
-
-	if (bCarry) {
-		axc = PutXORGate(a[i], C[i]);
-
-		// b[i] xor c[i]
-		bxc = PutXORGate(b[i], C[i]);
-
-		// axc AND bxc
-		acNbc = PutANDGate(axc, bxc);
-	}
-
-#ifdef ZDEBUG
-	cout << "Finished additional carry generation" << endl;
-#endif
-
-	// Construct a[i] xor b[i] gates
-	vector<uint32_t> AxB(rep);
-	for (uint32_t i = 0; i < rep; i++) {
-		// a[i] xor b[i]
-		AxB[i] = PutXORGate(a[i], b[i]);
-	}
-
-#ifdef ZDEBUG
-	cout << "Finished parity on inputs" << endl;
-#endif
-
-	// Construct Output gates of Addition
-	vector<uint32_t> out(rep + (!!bCarry));
-	for (uint32_t i = 0; i < rep; i++) {
-		out[i] = PutXORGate(C[i], AxB[i]);
-	}
-
-#ifdef ZDEBUG
-	cout << "Finished parity on inputs xor carries" << endl;
-#endif
-
-	if (bCarry)
-		out[rep] = PutXORGate(C[i], acNbc);
-
-#ifdef ZDEBUG
-	cout << "Finished parity on additional carry and inputs" << endl;
-#endif
-
-	return out;
-}
 
 //computes: ci = a > b ? 1 : 0; but assumes both values to be of equal length!
 uint32_t BooleanCircuit::PutGEGate(vector<uint32_t> a, vector<uint32_t> b) {
-	if (m_eContext != S_YAO) {
-		return PutDepthOptimizedGEGate(a, b);
-	} else {
+	if (m_eContext == S_YAO) {
 		return PutSizeOptimizedGEGate(a, b);
-
+	} else if(m_eContext == S_BOOL) {
+		return PutDepthOptimizedGEGate(a, b);
 	}
 }
 
@@ -1080,6 +1064,51 @@ uint32_t BooleanCircuit::PutSizeOptimizedGEGate(vector<uint32_t> a, vector<uint3
 	return ci;
 }
 
+
+uint32_t BooleanCircuit::PutDepthOptimizedGEGate(vector<uint32_t> a, vector<uint32_t> b) {
+	uint32_t i, size, ctr_head = 0, ctr_tail = 0, rem = 0;
+	uint32_t rep = min(a.size(), b.size());
+	vector<uint32_t> agtb(rep);
+	vector<uint32_t> eq(2 * rep);
+
+	//Put the leaf comparison nodes from which the tree is built
+	for (i = 0; i < rep; i++) {
+		agtb[i] = PutANDGate(a[i], PutINVGate(b[i])); //PutBitGreaterThanGate(a[i], b[i]);
+	}
+
+	//cout << "Starting bit or" << endl;
+	for (; ctr_head < rep - 1; ctr_head++) {
+		eq[ctr_head] = PutINVGate(PutXORGate(a[ctr_head + 1], b[ctr_head + 1]));
+	}
+
+	size = rep;
+	while (size > 1) {
+		rem = size % 2;
+		size = floor(size / 2);
+
+		for (i = 0; i < size; i++, ctr_tail += 2) {
+			agtb[i] = PutXORGate(agtb[2 * i + 1], PutANDGate(eq[ctr_tail], agtb[2 * i])); //PutANDGate(agtb[2*i], equals...]))
+		}
+		ctr_tail--;
+		if (size > 1) {
+			for (i = 0; i < size - 1; i++, ctr_head++) {
+				eq[ctr_head] = PutANDGate(eq[ctr_head - (size * 2 - 2 - i) - rem], eq[ctr_head - (size * 2 - 3 - i) - rem]);
+			}
+		}
+		if (rem) {
+			agtb[size] = agtb[size * 2];
+			eq[ctr_head] = eq[ctr_head - size];
+			ctr_head++;
+			size++;
+		}
+	}
+#ifdef ZDEBUG
+	cout << "Finished greater than tree with adress: " << agtb[0] << ", and bitlength: " << bitlength << endl;
+#endif
+	return agtb[0];
+}
+
+
 uint32_t BooleanCircuit::PutEQGate(vector<uint32_t> a, vector<uint32_t> b) {
 	uint32_t rep = a.size(), temp;
 	vector<uint32_t> xors(rep);
@@ -1091,6 +1120,8 @@ uint32_t BooleanCircuit::PutEQGate(vector<uint32_t> a, vector<uint32_t> b) {
 	// AND of all xor's
 	return PutWideGate(G_NON_LIN, xors);
 }
+
+
 
 uint32_t BooleanCircuit::PutORGate(uint32_t a, uint32_t b) {
 	return PutINVGate(PutANDGate(PutINVGate(a), PutINVGate(b)));
@@ -1111,7 +1142,7 @@ share* BooleanCircuit::PutORGate(share* a, share* b) {
 
 /* if c [0] = s & a[0], c[1] = s & a[1], ...*/
 share* BooleanCircuit::PutANDVecGate(share* ina, share* inb) {
-	uint32_t rep = ina->size();
+	uint32_t rep = ina->bitlength();
 	share* out = new boolshare(rep, this);
 
 	if (m_eContext == S_BOOL) {
@@ -1359,10 +1390,10 @@ vector<uint32_t> BooleanCircuit::PutMinGate(vector<vector<uint32_t> > a) {
 
 
 
-// a = values, b = indicies of each value, n = size of a and b
-void BooleanCircuit::PutMinIdxGate(share** a, share** b, uint32_t nvals, share** minval_shr, share** minid_shr) {
+// vals = values, ids = indicies of each value, n = size of vals and ids
+void BooleanCircuit::PutMinIdxGate(share** vals, share** ids, uint32_t nvals, share** minval_shr, share** minid_shr) {
 	vector<vector<uint32_t> > val(nvals);
-	vector<vector<uint32_t> > ids(nvals);
+	vector<vector<uint32_t> > id(nvals);
 
 	vector<uint32_t> minval(1);
 	vector<uint32_t> minid(1);
@@ -1377,24 +1408,24 @@ void BooleanCircuit::PutMinIdxGate(share** a, share** b, uint32_t nvals, share**
 		for(uint32_t j = 0; j < b[i]->size(); j++) {
 			ids[i][j] = b[i]->get_wire(j);
 		}*/
-		val[i] = a[i]->get_wires();
-		ids[i] = b[i]->get_wires();
+		val[i] = vals[i]->get_wires();
+		id[i] = ids[i]->get_wires();
 	}
 
-	PutMinIdxGate(val, ids, minval, minid);
+	PutMinIdxGate(val, id, minval, minid);
 
 	*minval_shr = new boolshare(minval, this);
 	*minid_shr = new boolshare(minid, this);
 }
 
 
-// a = values, idx = indices of each value, n = size of a and b
-void BooleanCircuit::PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<uint32_t> > idx,
+// vals = values, ids = indicies of each value, n = size of vals and ids
+void BooleanCircuit::PutMinIdxGate(vector<vector<uint32_t> > vals, vector<vector<uint32_t> > ids,
 		vector<uint32_t>& minval, vector<uint32_t>& minid) {
 	// build a balanced binary tree
 	uint32_t cmp;
 	uint32_t avec, bvec;
-	vector<vector<uint32_t> > m_vELMs = a;
+	vector<vector<uint32_t> > m_vELMs = vals;
 
 #ifdef USE_MULTI_MUX_GATES
 	uint32_t nvariables = 2;
@@ -1403,8 +1434,8 @@ void BooleanCircuit::PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 		vala = (share**) malloc(sizeof(share*) * nvariables);
 		valb = (share**) malloc(sizeof(share*) * nvariables);
 		valout = (share**) malloc(sizeof(share*) * nvariables);
-		tmpval = new boolshare(a[0].size(), this);
-		tmpidx = new boolshare(idx[0].size(), this);
+		tmpval = new boolshare(vals[0].size(), this);
+		tmpidx = new boolshare(ids[0].size(), this);
 		cond = new boolshare(1, this);
 	}
 #endif
@@ -1414,6 +1445,7 @@ void BooleanCircuit::PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 		for (unsigned i = 0; i < m_vELMs.size();) {
 			if (i + 1 >= m_vELMs.size()) {
 				m_vELMs[j] = m_vELMs[i];
+				ids[j] = ids[i];
 				i++;
 				j++;
 			} else {
@@ -1424,25 +1456,25 @@ void BooleanCircuit::PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 					//Multimux
 					cond->set_wire(0, cmp);
 					vala[0] = new boolshare(m_vELMs[i+1], this);
-					vala[1] = new boolshare(idx[i+1], this);
+					vala[1] = new boolshare(ids[i+1], this);
 
 					valb[0] = new boolshare(m_vELMs[i], this);
-					valb[1] = new boolshare(idx[i], this);
+					valb[1] = new boolshare(ids[i], this);
 
 					valout[0] = tmpval;
 					valout[1] = tmpidx;
 
 					PutMultiMUXGate(vala, valb, cond, nvariables, valout);
 					m_vELMs[j] = tmpval->get_wires();
-					idx[j] = tmpidx->get_wires();
+					ids[j] = tmpidx->get_wires();
 #else
 					m_vELMs[j] = PutMUXGate(m_vELMs[i + 1], m_vELMs[i], cmp, false);
-					idx[j] = PutMUXGate(idx[i + 1], idx[i], cmp, false);
+					ids[j] = PutMUXGate(ids[i + 1], ids[i], cmp, false);
 #endif
 				} else {
 					cmp = PutSizeOptimizedGEGate(m_vELMs[i], m_vELMs[i + 1]);
 					m_vELMs[j] = PutMUXGate(m_vELMs[i + 1], m_vELMs[i], cmp);
-					idx[j] = PutMUXGate(idx[i + 1], idx[i], cmp);
+					ids[j] = PutMUXGate(ids[i + 1], ids[i], cmp);
 
 				}
 
@@ -1451,10 +1483,10 @@ void BooleanCircuit::PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 			}
 		}
 		m_vELMs.resize(j);
-		idx.resize(j);
+		ids.resize(j);
 	}
 	minval = m_vELMs[0];
-	minid = idx[0];
+	minid = ids[0];
 
 #ifdef USE_MULTI_MUX_GATES
 	if(m_eContext == S_BOOL) {
@@ -1470,10 +1502,10 @@ void BooleanCircuit::PutMinIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 
 /**Max....*/
 
-// a = values, b = indicies of each value, n = size of a and b
-void BooleanCircuit::PutMaxIdxGate(share** a, share** b, uint32_t nvals, share** maxval_shr, share** maxid_shr) {
+// vals = values, ids = indicies of each value, n = size of vals and ids
+void BooleanCircuit::PutMaxIdxGate(share** vals, share** ids, uint32_t nvals, share** maxval_shr, share** maxid_shr) {
 	vector<vector<uint32_t> > val(nvals);
-	vector<vector<uint32_t> > ids(nvals);
+	vector<vector<uint32_t> > id(nvals);
 
 	vector<uint32_t> maxval(1);
 	vector<uint32_t> maxid(1);
@@ -1488,25 +1520,25 @@ void BooleanCircuit::PutMaxIdxGate(share** a, share** b, uint32_t nvals, share**
 		for(uint32_t j = 0; j < b[i]->size(); j++) {
 			ids[i][j] = b[i]->get_wire(j);
 		}*/
-		val[i] = a[i]->get_wires();
-		ids[i] = b[i]->get_wires();
+		val[i] = vals[i]->get_wires();
+		id[i] = ids[i]->get_wires();
 	}
 
 	//cout<<"Size: "<<val.size()<<endl;
-	PutMaxIdxGate(val, ids, maxval, maxid);
+	PutMaxIdxGate(val, id, maxval, maxid);
 
 	*maxval_shr = new boolshare(maxval, this);
 	*maxid_shr = new boolshare(maxid, this);
 }
 
 
-// a = values, idx = indices of each value, n = size of a and b
-void BooleanCircuit::PutMaxIdxGate(vector<vector<uint32_t> > a, vector<vector<uint32_t> > idx,
+// vals = values, ids = indicies of each value, n = size of vals and ids
+void BooleanCircuit::PutMaxIdxGate(vector<vector<uint32_t> > vals, vector<vector<uint32_t> > ids,
 		vector<uint32_t>& maxval, vector<uint32_t>& maxid) {
 	// build a balanced binary tree
 	uint32_t cmp;
 	uint32_t avec, bvec;
-	vector<vector<uint32_t> > m_vELMs = a;
+	vector<vector<uint32_t> > m_vELMs = vals;
 #ifdef USE_MULTI_MUX_GATES
 	uint32_t nvariables = 2;
 	share **vala, **valb, **valout, *tmpval, *tmpidx, *cond;
@@ -1514,8 +1546,8 @@ void BooleanCircuit::PutMaxIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 		vala = (share**) malloc(sizeof(share*) * nvariables);
 		valb = (share**) malloc(sizeof(share*) * nvariables);
 		valout = (share**) malloc(sizeof(share*) * nvariables);
-		tmpval = new boolshare(a[0].size(), this);
-		tmpidx = new boolshare(idx[0].size(), this);
+		tmpval = new boolshare(vals[0].size(), this);
+		tmpidx = new boolshare(ids[0].size(), this);
 		cond = new boolshare(1, this);
 	}
 #endif
@@ -1525,35 +1557,36 @@ void BooleanCircuit::PutMaxIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 		for (unsigned i = 0; i < m_vELMs.size();) {
 			if (i + 1 >= m_vELMs.size()) {
 				m_vELMs[j] = m_vELMs[i];
+				ids[j] = ids[i];
 				i++;
 				j++;
 			} else {
 				if (m_eContext == S_BOOL) {
-					cmp = PutDepthOptimizedGEGate(m_vELMs[i+1], m_vELMs[i]); //TODO use SizeOptimized for BGP
+					cmp = PutDepthOptimizedGEGate(m_vELMs[i+1], m_vELMs[i]);
 
 #ifdef USE_MULTI_MUX_GATES
 					//Multimux
 					cond->set_wire(0, cmp);
 					vala[0] = new boolshare(m_vELMs[i+1], this);
-					vala[1] = new boolshare(idx[i+1], this);
+					vala[1] = new boolshare(ids[i+1], this);
 
 					valb[0] = new boolshare(m_vELMs[i], this);
-					valb[1] = new boolshare(idx[i], this);
+					valb[1] = new boolshare(ids[i], this);
 
 					valout[0] = tmpval;
 					valout[1] = tmpidx;
 
 					PutMultiMUXGate(vala, valb, cond, nvariables, valout);
 					m_vELMs[j] = tmpval->get_wires();
-					idx[j] = tmpidx->get_wires();
+					ids[j] = tmpidx->get_wires();
 #else
 					m_vELMs[j] = PutMUXGate(m_vELMs[i + 1], m_vELMs[i], cmp);
-					idx[j] = PutMUXGate(idx[i + 1], idx[i], cmp);
+					ids[j] = PutMUXGate(ids[i + 1], ids[i], cmp);
 #endif
 				} else {
 					cmp = PutSizeOptimizedGEGate(m_vELMs[i + 1], m_vELMs[i]);
 					m_vELMs[j] = PutMUXGate(m_vELMs[i + 1], m_vELMs[i], cmp);
-					idx[j] = PutMUXGate(idx[i + 1], idx[i], cmp);
+					ids[j] = PutMUXGate(ids[i + 1], ids[i], cmp);
 
 				}
 
@@ -1562,10 +1595,10 @@ void BooleanCircuit::PutMaxIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 			}
 		}
 		m_vELMs.resize(j);
-		idx.resize(j);
+		ids.resize(j);
 	}
 	maxval = m_vELMs[0];
-	maxid = idx[0];
+	maxid = ids[0];
 
 #ifdef USE_MULTI_MUX_GATES
 	if(m_eContext == S_BOOL) {
@@ -1579,79 +1612,156 @@ void BooleanCircuit::PutMaxIdxGate(vector<vector<uint32_t> > a, vector<vector<ui
 #endif
 }
 
-uint32_t BooleanCircuit::PutDepthOptimizedGEGate(vector<uint32_t> a, vector<uint32_t> b) {
-	uint32_t i, size, ctr_head = 0, ctr_tail = 0, rem = 0;
-	uint32_t rep = min(a.size(), b.size());
-	vector<uint32_t> agtb(rep);
-	vector<uint32_t> eq(2 * rep);
 
-	//Put the leaf comparison nodes from which the tree is built
-	for (i = 0; i < rep; i++) {
-		agtb[i] = PutANDGate(a[i], PutINVGate(b[i])); //PutBitGreaterThanGate(a[i], b[i]);
-	}
 
-	//cout << "Starting bit or" << endl;
-	for (; ctr_head < rep - 1; ctr_head++) {
-		eq[ctr_head] = PutINVGate(PutXORGate(a[ctr_head + 1], b[ctr_head + 1]));
-	}
-
-	size = rep;
-	while (size > 1) {
-		rem = size % 2;
-		size = floor(size / 2);
-
-		for (i = 0; i < size; i++, ctr_tail += 2) {
-			agtb[i] = PutXORGate(agtb[2 * i + 1], PutANDGate(eq[ctr_tail], agtb[2 * i])); //PutANDGate(agtb[2*i], equals...]))
-		}
-		ctr_tail--;
-		if (size > 1) {
-			for (i = 0; i < size - 1; i++, ctr_head++) {
-				eq[ctr_head] = PutANDGate(eq[ctr_head - (size * 2 - 2 - i) - rem], eq[ctr_head - (size * 2 - 3 - i) - rem]);
-			}
-		}
-		if (rem) {
-			agtb[size] = agtb[size * 2];
-			eq[ctr_head] = eq[ctr_head - size];
-			ctr_head++;
-			size++;
-		}
-	}
-#ifdef ZDEBUG
-	cout << "Finished greater than tree with adress: " << agtb[0] << ", and size: " << size << endl;
-#endif
-	return agtb[0];
+vector<uint32_t> BooleanCircuit::PutFPGate(const string func, vector<uint32_t> inputs, uint8_t bitsize, uint32_t nvals){
+	string fn = "circ/fp_";
+	char bs[3];
+	fn += func;
+	fn += "_";
+	cout << "bs = " << (uint32_t) bitsize << endl;
+	sprintf(bs, "%d", bitsize);
+	fn += bs;
+	fn += ".aby";
+	cout << "opening " << fn.c_str() << endl;
+	return PutGateFromFile(fn.c_str(), inputs, nvals);
 }
 
-//TODO: there is a bug when adding 3 and 1 as two 2-bit numbers and expecting a carry
-vector<uint32_t> BooleanCircuit::PutDepthOptimizedAddGate(vector<uint32_t> a, vector<uint32_t> b, BOOL bCARRY) {
-	uint32_t id, rep = min(a.size(), b.size());
-	vector<uint32_t> out(a.size() + bCARRY);
-	vector<uint32_t> parity(a.size()), carry(rep), parity_zero(rep);
 
-	for (uint32_t i = 0; i < rep; i++) { //0-th layer
-		parity[i] = PutXORGate(a[i], b[i]);
-		parity_zero[i] = parity[i];
-		carry[i] = PutANDGate(a[i], b[i]);
-	}
+vector<uint32_t> BooleanCircuit::PutFPGate(const string func, vector<uint32_t> ina, vector<uint32_t> inb, uint8_t bitsize, uint32_t nvals){
+	ina.insert(ina.end(), inb.begin(), inb.end());
+	return PutFPGate(func, ina, bitsize, nvals);
+}
 
-	for (uint32_t i = 1; i <= (uint32_t) ceil(log(rep) / log(2)); i++) {
-		for (uint32_t j = 0; j < rep; j++) {
-			if (j % (uint32_t) pow(2, i) >= pow(2, (i - 1))) {
-				id = pow(2, (i - 1)) + pow(2, i) * ((uint32_t) floor(j / (pow(2, i)))) - 1;
-				carry[j] = PutINVGate(PutANDGate(PutINVGate(PutANDGate(parity[j], carry[id])), PutINVGate(carry[j]))); // c = (p and c-1) or c = (((p and c-1) xor 1) and (c xor 1)) xor 1)
-				parity[j] = PutANDGate(parity[j], parity[id]);
+
+vector<uint32_t> BooleanCircuit::PutGateFromFile(const string filename, vector<uint32_t> inputs, uint32_t nvals){
+	string line;
+	vector<uint32_t> tokens, outputs;
+	map<uint32_t, uint32_t> wires;
+
+	ifstream myfile;
+
+	//cout << "opening " << filename <<  endl;
+	myfile.open(filename.c_str());
+
+	uint32_t file_input_size = 0;
+
+	if (myfile.is_open()) {
+		while (getline(myfile, line)) {
+
+			if (line != "") {
+
+				tokenize_verilog(line, tokens);
+
+				switch (line.at(0)) {
+
+				case 'S': // Server input wire ids
+					assert(inputs.size() >= tokens.size() + file_input_size);
+
+					for (uint32_t i = 0; i < tokens.size(); i++) {
+						wires[tokens[i]] = inputs[i + file_input_size];
+					}
+					file_input_size += tokens.size();
+					break;
+
+				case 'C': // Client input wire ids
+					assert(inputs.size() >= tokens.size() + file_input_size);
+
+					for (uint32_t i = 0; i < tokens.size(); i++) {
+						wires[tokens[i]] = inputs[i + file_input_size];
+					}
+					file_input_size += tokens.size();
+					break;
+
+				case '0': // Constant Zero Gate
+					wires[tokens[0]] = PutConstantGate(0, nvals);
+					break;
+
+				case '1': // Constant Zero Gate
+					wires[tokens[0]] = PutConstantGate((1 << nvals) - 1, nvals);
+					break;
+
+				case 'A': // AND Gate
+					wires[tokens[2]] = PutANDGate(wires[tokens[0]], wires[tokens[1]]);
+					break;
+
+				case 'X': // XOR Gate
+					wires[tokens[2]] = PutXORGate(wires[tokens[0]], wires[tokens[1]]);
+					break;
+
+				case 'M': // MUX Gate
+					wires[tokens[3]] = PutVecANDMUXGate(wires[tokens[1]], wires[tokens[0]], wires[tokens[2]]);
+					break;
+
+				case 'I': // INV Gate
+					wires[tokens[1]] = PutINVGate(tokens[0]);
+					break;
+
+				case 'O': // List of output wires
+					for (uint32_t i = 0; i < tokens.size(); i++) {
+						outputs.push_back(wires[tokens[i]]);
+					}
+					cout << endl;
+					break;
+				}
 			}
+		}
+		myfile.close();
+
+		if (file_input_size < inputs.size()) {
+			cerr << "Warning: Input sizes didn't match! Less inputs read from circuit file than passed to it!" << endl;
 		}
 	}
 
-	out[0] = parity_zero[0];
-	for (uint32_t i = 1; i < rep; i++) {
-		out[i] = PutXORGate(parity_zero[i], carry[i - 1]);
+	else {
+		cerr << "Error: Unable to open circuit file " << filename << endl;
 	}
-	if (bCARRY)	//Do I expect a carry in the most significant bit position?
-		out[rep + 1] = carry[rep - 1];
 
-	return out;
+	wires.clear();
+	tokens.clear();
+
+	return outputs;
+}
+
+uint32_t BooleanCircuit::GetInputLengthFromFile(const string filename){
+	string line;
+	vector<uint32_t> tokens;
+	ifstream myfile;
+
+	//cout << "opening " << filename <<  endl;
+	myfile.open(filename.c_str());
+
+	uint32_t file_input_size = 0;
+
+	if (myfile.is_open()) {
+		while (getline(myfile, line)) {
+
+			if (line != "") {
+
+				tokenize_verilog(line, tokens);
+
+				switch (line.at(0)) {
+
+				case 'S': // Server input wire ids
+					file_input_size += tokens.size();
+					break;
+
+				case 'C': // Client input wire ids
+					file_input_size += tokens.size();
+					break;
+				}
+			}
+		}
+		myfile.close();
+	}
+
+	else {
+		cerr << "Error: Unable to open circuit file " << filename << endl;
+	}
+
+	tokens.clear();
+
+	return file_input_size;
 }
 
 uint32_t BooleanCircuit::PutIdxGate(uint32_t r, uint32_t maxidx) {
@@ -1685,7 +1795,7 @@ void BooleanCircuit::PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_
 	assert(m_eContext == S_BOOL);
 
 	for(uint32_t i = 0; i < nshares; i++) {
-		bitlen += Sa[i]->size();
+		bitlen += Sa[i]->bitlength();
 	}
 	uint32_t total_nvals = bitlen * nvals;
 	share* vala = new boolshare(bitlen, this);
@@ -1694,13 +1804,13 @@ void BooleanCircuit::PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_
 	//cout << "setting gate" << endl;
 	for(uint32_t i = 0, idx; i < bitlen; i++) {
 		for(uint32_t j = 0, ctr = 0; j < nshares && (i >= ctr || j == 0); j++) {
-			if(i < (ctr+Sa[j]->size())) {
+			if(i < (ctr+Sa[j]->bitlength())) {
 				idx = i - ctr;
 				//cout << "for i = " << i << " taking j = " << j << " and ctr = " << ctr << endl;
 				vala->set_wire(i, Sa[j]->get_wire(idx));
 				valb->set_wire(i, Sb[j]->get_wire(idx));
 			}
-			ctr+=Sa[j]->size();
+			ctr+=Sa[j]->bitlength();
 		}
 	}
 
@@ -1712,11 +1822,11 @@ void BooleanCircuit::PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_
 	//cout << "Setting out gates "  << endl;
 	for(uint32_t i = 0, idx; i < bitlen; i++) {
 		for(uint32_t j = 0, ctr = 0; j < nshares && (i >= ctr || j == 0); j++) {
-			if(i < (ctr+Sa[j]->size())) {
+			if(i < (ctr+Sa[j]->bitlength())) {
 				idx = i - ctr;
 				Sout[j]->set_wire(idx, PutStructurizedCombinerGate(out, i, bitlen, nvals)->get_wire(0));
 			}
-			ctr+=Sa[j]->size();
+			ctr+=Sa[j]->bitlength();
 		}
 
 	}

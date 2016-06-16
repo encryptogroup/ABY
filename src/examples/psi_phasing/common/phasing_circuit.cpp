@@ -31,7 +31,7 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 	assert(bitlen <= 32);
 	uint32_t nbins = epsilon * neles * 2;
 	uint8_t *client_hash_table, *server_hash_table, *stash;
-	timeval t_start, t_end;
+	timespec t_start, t_end;
 
 	//vector<uint32_t> sel_bits(nswapgates);
 	maxstashsize = compute_max_stash_size(neles, nbins);
@@ -60,25 +60,27 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 	set_fixed_elements(neles, bitlen, srv_set, cli_set);
 
 	//map the random elements to a set of bins using simple hashing or to a cuckoo table
-	gettimeofday(&t_start, NULL);
+	clock_gettime(CLOCK_MONOTONIC, &t_start);
 	ServerHashingRoutine((uint8_t*) srv_set, neles, bitlen, nbins, &maxbinsize, &server_hash_table,
-			&internalbitlen, nthreads, crypt);
-	gettimeofday(&t_end, NULL);
+			&internalbitlen, 1, crypt);
+	clock_gettime(CLOCK_MONOTONIC, &t_end);
 
-	cout << "Maxbinsize = " << maxbinsize << endl;
+#ifndef BATCH
 	if(role == SERVER) {
 		cout << "Time for simple hashing: " << getMillies(t_start, t_end) << endl;
 	}
+#endif
 
-	gettimeofday(&t_start, NULL);
+	clock_gettime(CLOCK_MONOTONIC, &t_start);
 	ClientHashingRoutine((uint8_t*) cli_set, neles, bitlen, nbins, &client_hash_table, inv_perm,
-			&internalbitlen, &stash, maxstashsize, &stashperm, nthreads, crypt);
+			&internalbitlen, &stash, maxstashsize, &stashperm, 1, crypt);
 
-	gettimeofday(&t_end, NULL);
-
+	clock_gettime(CLOCK_MONOTONIC, &t_end);;
+#ifndef BATCH
 	if(role == CLIENT) {
 		cout << "Time for cuckoo hashing: " << getMillies(t_start, t_end) << endl;
 	}
+#endif
 
 	shr_srv_hash_table = (share**) malloc(sizeof(share*) * maxbinsize);
 	shr_cli_stash = (share**) malloc(sizeof(share*) * maxstashsize);
@@ -111,13 +113,12 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 
 	for(uint32_t i = 0; i < maxstashsize; i++) {
 		shr_cli_stash[i] = circ->PutINGate(((uint32_t*) stash)[i], bitlen, CLIENT);
-		shr_cli_stash[i] = circ->PutRepeaterGate(shr_cli_stash[i], neles);
+		shr_cli_stash[i] = circ->PutRepeaterGate(neles,shr_cli_stash[i]);
 	}
 
 	shr_stash_out = BuildPhasingStashCircuit(shr_srv_set, shr_cli_stash, neles, bitlen, maxstashsize, circ);
 	shr_stash_out = circ->PutOUTGate(shr_stash_out, CLIENT);
 	party->ExecCircuit();
-
 
 	//Only the client obtains the outputs and performs the checks
 	if(role == CLIENT) {
@@ -149,7 +150,7 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 		for(uint32_t i = 0; i < neles; i++) {
 			cout << (hex) << setw(2) << setfill('0') << srv_set[i] << ", " << setw(2) << setfill('0') << cli_set[i] << (dec) << endl;
 		}*/
-
+#ifndef BATCH
 		std::sort(srv_set, srv_set+neles);
 		std::sort(cli_set, cli_set+neles);
 
@@ -175,7 +176,13 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 		for(uint32_t i = 0; i < circ_inter_ctr; i++) {
 			assert(ver_intersect[i] == circ_intersect[i]);
 		}
+#endif
 	}
+
+#ifdef BATCH
+	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) <<
+			"\t" << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) <<endl;
+#endif
 
 	tmpset.delCBitVector();
 	free(srv_set);
@@ -223,7 +230,7 @@ void sample_random_elements(uint32_t neles, uint32_t bitlen, uint32_t* srv_set, 
 
 //generate client and server set such that half of the elements overlap
 void set_fixed_elements(uint32_t neles, uint32_t bitlen, uint32_t* srv_set, uint32_t* cli_set) {
-	uint32_t incr = 541069841;
+	uint32_t incr = 15875162;
 	uint32_t offset = neles/2;
 	for(uint32_t i = 0; i < neles; i++) {
 		srv_set[i] = incr*(i+1);

@@ -208,14 +208,6 @@ static uint32_t floor_log2(int bits) {
 #define pad_to_power_of_two(e) ( ((uint64_t) 1) << (ceil_log2(e)) )
 
 
-// Timing routines
-static double getMillies(timeval timestart, timeval timeend) {
-	long time1 = (timestart.tv_sec * 1000000) + (timestart.tv_usec);
-	long time2 = (timeend.tv_sec * 1000000) + (timeend.tv_usec);
-
-	return (double) (time2 - time1) / 1000;
-}
-
 /*compute (a-b) mod (m+1) as: b > a ? (m) - (b-1) + a : a - b	*/
 #define MOD_SUB(a, b, m) (( ((b) > (a))? (m) - ((b) -1 ) + a : a - b))
 

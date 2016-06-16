@@ -92,7 +92,7 @@ DJNParty::~DJNParty() {
  * numMTs must be the total number of MTs and divisible by 2
  */
 void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan) {
-	struct timeval start, end;
+	struct timespec start, end;
 
 	numMTs = numMTs / 2; // We can be both sender and receiver at the same time.
 
@@ -130,7 +130,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	BYTE * bbuf = (BYTE*) calloc(numMTs * m_nBuflen, 1);
 	BYTE * zbuf = (BYTE*) calloc(numpacks * m_nBuflen, 1);
 
-	gettimeofday(&start, NULL);
+	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	// read server a,b shares and encrypt them into buffer
 	for (UINT i = 0; i < numMTs; i++) {
@@ -308,7 +308,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	mpz_clears(ai, bi, ci, ai1, bi1, ci1, ta, tb, NULL);
 #endif
 
-	gettimeofday(&end, NULL);
+	clock_gettime(CLOCK_MONOTONIC, &end);
 	printf("generating 2x %u MTs took %f\n", numMTs, getMillies(start, end));
 
 //clean up after ourselves

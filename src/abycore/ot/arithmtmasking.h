@@ -138,7 +138,7 @@ public:
 		T* rcvedvals = (T*) rcv_buf->GetArr();
 		T* outvals = ((T*) output->GetArr()) + startpos * m_nElements;
 
-		for (uint32_t mtid = startpos, i = progress, mtbit, j, maskctr=0; i < lim; mtid++) {
+		for (uint32_t mtid = startpos, i = progress, mtbit, j, maskctr = 0; i < lim; mtid++) {
 #ifdef DEBUGARITHMTMASKING
 			cout << "Receiver val = " << (UINT64_T) tmpmasks.Get<T>(mtid * m_nMTBitLen, m_nMTBitLen) << ", bits = ";
 			tmpmasks.Print(mtid * m_nMTBitLen, (mtid + 1) * m_nMTBitLen);

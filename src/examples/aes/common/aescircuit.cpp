@@ -17,7 +17,7 @@
  */
 #include "aescircuit.h"
 
-int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing) {
+int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose) {
 	uint32_t bitlen = 32;
 	uint32_t aes_key_bits;
 	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads, mt_alg);
@@ -42,7 +42,7 @@ int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nva
 	share *s_in, *s_key, *s_ciphertext;
 	s_in = circ->PutSIMDINGate(nvals, input.GetArr(), aes_key_bits, CLIENT);
 	s_key = circ->PutINGate(key.GetArr(), aes_key_bits * (AES_ROUNDS + 1), SERVER);
-	s_key = circ->PutRepeaterGate(nvals, s_key);
+	s_key = circ->PutRepeaterGate(nvals,s_key);
 
 	s_ciphertext = BuildAESCircuit(s_in, s_key, (BooleanCircuit*) circ);
 
@@ -57,19 +57,26 @@ int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nva
 
 	verify_AES_encryption(input.GetArr(), key.GetArr(), nvals, verify.GetArr(), crypt);
 
+#ifndef BATCH
 	cout << "Testing AES encryption in " << get_sharing_name(sharing) << " sharing: " << endl;
 	for (uint32_t i = 0; i < nvals; i++) {
-		cout << "(" << i << ") Input:\t";
-		input.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
-		cout << "(" << i << ") Key:\t";
-		key.PrintHex(0, AES_KEY_BYTES);
-		cout << "(" << i << ") Circ:\t";
-		out.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
-		cout << "(" << i << ") Verify:\t";
-		verify.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
+		if(!verbose) {
+			cout << "(" << i << ") Input:\t";
+			input.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
+			cout << "(" << i << ") Key:\t";
+			key.PrintHex(0, AES_KEY_BYTES);
+			cout << "(" << i << ") Circ:\t";
+			out.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
+			cout << "(" << i << ") Verify:\t";
+			verify.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
+		}
 		assert(verify.IsEqual(out, i*AES_BITS, (i+1)*AES_BITS));
 	}
-
+	cout << "all tests succeeded" << endl;
+#else
+	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) <<
+			"\t" << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) <<endl;
+#endif
 	delete crypt;
 	delete party;
 

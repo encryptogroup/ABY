@@ -70,9 +70,22 @@ public:
 		assert(m_bRcvAlive);
 		while(m_qRcvedBlocks->empty())
 			m_eRcved->Wait();
-		assert(((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes == rcvsize);
+
 		uint8_t* ret_block = ((rcv_ctx*) m_qRcvedBlocks->front())->buf;
-		m_qRcvedBlocks->pop();
+		if(((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes == rcvsize) {
+			m_qRcvedBlocks->pop();
+		} else if(rcvsize < ((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes) {
+			//if the block contains too much data, copy only the receive size
+			((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes -= rcvsize;
+			uint8_t* newbuf = (uint8_t*) malloc(((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes);
+			memcpy(newbuf, ((rcv_ctx*) m_qRcvedBlocks->front())->buf+rcvsize, ((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes);
+			((rcv_ctx*) m_qRcvedBlocks->front())->buf = newbuf;
+		} else {
+			//I want to receive more data than are in that block.
+			//TODO: needs implementing current solution: exit
+			cerr << "Receiving more data than in buffer currently not implemented, exiting!" << endl;
+			exit(0);
+		}
 
 		memcpy(rcvbuf, ret_block, rcvsize);
 		free(ret_block);

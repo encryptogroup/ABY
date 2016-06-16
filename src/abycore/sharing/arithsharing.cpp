@@ -119,14 +119,14 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 		task->snd_flavor = Snd_R_OT;
 		task->rec_flavor = Rec_OT;
 		task->numOTs = m_nNumCONVs * m_nTypeBitLen;
-		task->mskfct = fXORMaskFct; //the masking function is not used anyway
+		task->mskfct = fXORMaskFct;
 		if ((m_eRole) == SERVER) {
 			m_vConversionMasks[0].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
 			m_vConversionMasks[1].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
 			task->pval.sndval.X0 = &(m_vConversionMasks[0]);
 			task->pval.sndval.X1 = &(m_vConversionMasks[1]);
 		} else {
-			m_vConversionMasks[0].Create((int) m_nNumCONVs * m_nTypeBitLen, m_cCrypto); //the coice bits of the receiver
+			m_vConversionMasks[0].Create((int) m_nNumCONVs * m_nTypeBitLen, m_cCrypto); //the choice bits of the receiver
 			m_vConversionMasks[1].Create((int) m_nNumCONVs * m_nTypeBitLen * m_nTypeBitLen); //the resulting masks
 			task->pval.rcvval.C = &(m_vConversionMasks[0]);
 			task->pval.rcvval.R = &(m_vConversionMasks[1]);
@@ -279,6 +279,11 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 			cout << " which is an ADD gate" << endl;
 #endif
 			EvaluateADDGate(gate);
+		} else 	if (gate->type == G_LIN_SUB) {
+#ifdef DEBUGARITH
+			cout << " which is an SUB gate" << endl;
+#endif
+			EvaluateSUBGate(gate);
 		} else if (gate->type == G_CONSTANT) {
 			UGATE_T value = gate->gs.constval;
 			InstantiateGate(gate);
@@ -379,6 +384,25 @@ void ArithSharing<T>::EvaluateADDGate(GATE* gate) {
 }
 
 template<typename T>
+void ArithSharing<T>::EvaluateSUBGate(GATE* gate) {
+	uint32_t nvals = gate->nvals;
+	uint32_t idleft = gate->ingates.inputs.twin.left;
+	uint32_t idright = gate->ingates.inputs.twin.right;
+	InstantiateGate(gate);
+
+	for (uint32_t i = 0; i < nvals; i++) {
+		((T*) gate->gs.aval)[i] = ((T*) m_pGates[idleft].gs.aval)[i] - ((T*) m_pGates[idright].gs.aval)[i];
+#ifdef DEBUGARITH
+		cout << "Result SUB (" << i << "): "<< ((T*)gate->gs.aval)[i] << " = " << ((T*) m_pGates[idleft].gs.aval)[i] << " - " << ((T*)m_pGates[idright].gs.aval)[i] << endl;
+#endif
+	}
+
+	UsedGate(idleft);
+	UsedGate(idright);
+}
+
+
+template<typename T>
 void ArithSharing<T>::ShareValues(GATE* gate) {
 	T* input = (T*) gate->gs.ishare.inval;
 	T tmpval;
@@ -409,7 +433,7 @@ void ArithSharing<T>::EvaluateCONVGate(GATE* gate) {
 	uint32_t nparents = gate->ingates.ningates;
 
 #ifdef DEBUGARITH
-	cout << "Values of B2A gates: ";
+	cout << "Values of B2A gates with id " << ((((uint64_t) gate)-((uint64_t)m_pGates))/sizeof(GATE)) << ": ";
 #endif
 	for (uint32_t i = 0; i < nparents; i++) {
 		if (m_pGates[parentids[i]].context == S_YAO)
@@ -646,7 +670,9 @@ void ArithSharing<T>::AssignServerConversionShares() {
 #ifdef DEBUGARITH
 				cout << "Gate " << i << ", " << j << ", " << k << ": " << m_vConversionRandomness.Get<T>(gctr) <<
 						", A: " << m_vConversionMasks[clientpermbit].Get<T>(gctr) << ", " << tmpa <<
-						", B: " << m_vConversionMasks[!clientpermbit].Get<T>(gctr) << ", " << tmpb << ", tmpsum = " << tmpsum[k] << endl;
+						", B: " << m_vConversionMasks[!clientpermbit].Get<T>(gctr) << ", " << tmpb << ", tmpsum = " << tmpsum[k] << ", gctr = " << gctr << endl;
+				//cout << "gctr = " << gctr << ", nconvmasks = " << m_vConversionMasks[clientpermbit].GetSize() <<", nconvgates = " << m_nNumCONVs << endl;
+				assert(gate->nvals == 1);
 #endif
 
 				m_vConvShareSndBuf.Set<T>(tmpa, 2 * lctr);
@@ -701,7 +727,7 @@ void ArithSharing<T>::AssignClientConversionShares() {
 				tmpsum[k] += tmp;
 #ifdef DEBUGARITH
 				cout << "Gate " << i << ", " << j << ", " << k << ": " << tmp << " = " << rcv << " ^ " << mask << ", tmpsum = " << tmpsum[k] << ", " <<
-						((uint32_t) ((m_pGates[parentids[j]].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01)) << endl;
+						((uint32_t) ((m_pGates[parentids[j]].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01)) << ", gctr = " << gctr << endl;
 #endif
 			}
 			UsedGate(parentids[j]);

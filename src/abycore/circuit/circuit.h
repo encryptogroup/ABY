@@ -157,6 +157,10 @@ public:
 	}
 	;
 
+	/*non_lin_on_layers* GetNonLinGatesOnLayers() {
+		return &m_vNonLinOnLayer;
+	}*/
+
 	e_sharing GetContext() {
 		return m_eContext;
 	}
@@ -274,7 +278,7 @@ public:
 		\return 			share object after performing the splitting operation.
 	*/
 	share* PutSplitterGate(share* ina);
-	share* PutRepeaterGate(uint32_t nvals, share* ina);
+	share* PutRepeaterGate(uint32_t nvals,share* ina);
 
 	/**
 		Subset gate takes in an input share object and possible subset gate ids using which the gate generates a
@@ -296,6 +300,14 @@ public:
 	share* PutCombineAtPosGate(share* input, uint32_t pos);
 
 	share* PutPermutationGate(share* input, uint32_t* positions);
+
+	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals);
+	uint32_t PutCombinerGate(vector<uint32_t> input);
+	uint32_t PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos);
+	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
+	uint32_t PutPermutationGate(vector<uint32_t> input, uint32_t* positions);
+	vector<uint32_t> PutSplitterGate(uint32_t input);
+
 
 	//Templates may not be virtual, hence use dummy functions
 	template<class T> uint32_t PutINGate(T val) {
@@ -441,7 +453,7 @@ public:
 		m_ngateids = wires;
 	}
 	;
-	uint32_t size() {
+	uint32_t bitlength() {
 		return m_ngateids.size();
 	}
 	;

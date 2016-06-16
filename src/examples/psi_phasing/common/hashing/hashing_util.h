@@ -140,7 +140,7 @@ inline void hashElement(uint8_t* element, uint32_t* address, uint8_t* val, hs_t*
 	TABLEID_T hfmaskaddr;
 	//Store the first hs->addrbitlen bits in L
 	L = *((uint32_t*) element) & SELECT_BITS[hs->addrbitlen];
-	//Store the remaining hs->outbitlen bits in R and pad correspondingly. Pad one to the left to add permutation bit.
+	//Store the remaining hs->outbitlen bits in R and pad correspondingly. Shift one to the left since permutation bit is added later on
 	R = ((*((uint32_t*) element) & SELECT_BITS_INV[hs->floor_addrbitlen]) >> (hs->floor_addrbitlen)) << 1;
 
 	R &= hs->mask;//mask = (1<<32-hs->addrbitlen)
@@ -185,7 +185,6 @@ inline void hashElement(uint8_t* element, uint32_t* address, uint8_t* val, hs_t*
 	if(hs->inbitlen > sizeof(uint32_t) * 8) {
 		//memcpy(val + (sizeof(uint32_t) - hs->addrbytelen), element + sizeof(uint32_t), hs->outbytelen - (sizeof(uint32_t) - hs->addrbytelen));
 		memcpy(val + (sizeof(uint32_t) - (hs->floor_addrbitlen >>3)), element + sizeof(uint32_t), hs->outbytelen - (sizeof(uint32_t) - (hs->floor_addrbitlen >>3)));
-
 
 		//cout << "Element: "<< (hex) << (uint32_t) val[hs->outbytelen-1] << ", " << (uint32_t) (BYTE_SELECT_BITS_INV[hs->outbitlen & 0x03])
 		//		<< ", " << (uint32_t) (val[hs->outbytelen-1] & (BYTE_SELECT_BITS_INV[hs->outbitlen & 0x03]) )<< (dec) << " :";

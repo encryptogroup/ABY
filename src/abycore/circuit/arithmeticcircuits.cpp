@@ -67,6 +67,17 @@ share* ArithmeticCircuit::PutADDGate(share* ina, share* inb) {
 	return shr;
 }
 
+uint32_t ArithmeticCircuit::PutSUBGate(uint32_t inleft, uint32_t inright) {
+	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_LIN_SUB, inleft, inright, m_nRoundsXOR);
+	UpdateLocalQueue(gateid);
+	return gateid;
+}
+
+share* ArithmeticCircuit::PutSUBGate(share* ina, share* inb) {
+	share* shr = new arithshare(this);
+	shr->set_wire(0, PutSUBGate(ina->get_wire(0), inb->get_wire(0)));
+	return shr;
+}
 uint32_t ArithmeticCircuit::PutINGate(e_role src) {
 	uint32_t gateid = m_cCircuit->PutINGate(m_eContext, 1, m_nShareBitLen, src, m_nRoundsIN[src]);
 	UpdateInteractiveQueue(gateid);
@@ -266,8 +277,8 @@ uint32_t ArithmeticCircuit::PutOUTGate(uint32_t parentid, e_role dst) {
 }
 
 share* ArithmeticCircuit::PutOUTGate(share* parent, e_role dst) {
-	share* shr = new arithshare(parent->size(), this);
-	for (uint32_t i = 0; i < parent->size(); i++) {
+	share* shr = new arithshare(parent->bitlength(), this);
+	for (uint32_t i = 0; i < parent->bitlength(); i++) {
 		shr->set_wire(i, PutOUTGate(parent->get_wire(i), dst));
 	}
 

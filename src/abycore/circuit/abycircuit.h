@@ -171,7 +171,8 @@ public:
 	uint32_t PutPrimitiveGate(e_gatetype type, uint32_t inleft, uint32_t inright, uint32_t rounds);
 	uint32_t PutNonLinearVectorGate(e_gatetype type, uint32_t choiceinput, uint32_t vectorinput, uint32_t rounds);
 	uint32_t PutCombinerGate(vector<uint32_t> input);
-	vector<uint32_t> PutSplitterGate(uint32_t input);		//, vector<uint32_t> gatelengths = NULL);
+	uint32_t PutSplitterGate(uint32_t input, uint32_t pos, uint32_t bitlen);
+	vector<uint32_t> PutSplitterGate(uint32_t input, vector<uint32_t> bitlen = vector<uint32_t>());		//, vector<uint32_t> gatelengths = NULL);
 	uint32_t PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos);
 	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
 	uint32_t PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);

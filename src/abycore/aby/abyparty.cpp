@@ -86,7 +86,7 @@ ABYParty::ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint3
 }
 
 ABYParty::~ABYParty() {
-	//Cleanup();
+	Cleanup();
 }
 
 BOOL ABYParty::Init() {
@@ -118,9 +118,15 @@ void ABYParty::Cleanup() {
 	if (m_pCircuit)
 		delete m_pCircuit;
 
-	delete m_vSharings[S_BOOL];
-	delete m_vSharings[S_YAO];
-	delete m_vSharings[S_ARITH];
+	if (m_pSetup)
+		delete m_pSetup;
+
+	if(m_vSharings[S_BOOL])
+		delete m_vSharings[S_BOOL];
+	if(m_vSharings[S_YAO])
+		delete m_vSharings[S_YAO];
+	if(m_vSharings[S_ARITH])
+		delete m_vSharings[S_ARITH];
 
 	for (uint32_t i = 0; i < m_nHelperThreads; i++) {
 		m_vThreads[i]->PutJob(e_Party_Stop);
@@ -255,7 +261,7 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
 	m_pCircuit = new ABYCircuit(maxgates);
 
 	//TODO change YaoSharing such that right class is passed back just given the role
-	m_vSharings.resize(3);
+	m_vSharings.resize(S_LAST);
 	m_vSharings[S_BOOL] = new BoolSharing(m_eRole, 1, m_pCircuit, m_cCrypt);
 	if (m_eRole == SERVER)
 		m_vSharings[S_YAO] = new YaoServerSharing(m_eRole, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
@@ -290,11 +296,11 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
 
 BOOL ABYParty::EvaluateCircuit() {
 #ifdef BENCHONLINEPHASE
-	timeval tstart, tend;
+	timespec tstart, tend;
 	double interaction=0;
-	vector<double> localops(3,0);
-	vector<double> interactiveops(3,0);
-	vector<double> fincirclayer(3,0);
+	vector<double> localops(4,0);
+	vector<double> interactiveops(4,0);
+	vector<double> fincirclayer(4,0);
 #endif
 	m_nDepth = 0;
 
@@ -322,20 +328,20 @@ BOOL ABYParty::EvaluateCircuit() {
 			cout << "Evaluating local operations of sharing " << i << " on depth " << depth << endl;
 #endif
 #ifdef BENCHONLINEPHASE
-			gettimeofday(&tstart, NULL);
+			clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 			m_vSharings[i]->EvaluateLocalOperations(depth);
 #ifdef BENCHONLINEPHASE
-			gettimeofday(&tend, NULL);
+			clock_gettime(CLOCK_MONOTONIC, &tend);
 			localops[i] += getMillies(tstart, tend);
-			gettimeofday(&tstart, NULL);
+			clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 #ifdef DEBUGABYPARTY
 			cout << "Evaluating interactive operations of sharing " << i << endl;
 #endif
 			m_vSharings[i]->EvaluateInteractiveOperations(depth);
 #ifdef BENCHONLINEPHASE
-			gettimeofday(&tend, NULL);
+			clock_gettime(CLOCK_MONOTONIC, &tend);
 			interactiveops[i] += getMillies(tstart, tend);
 #endif
 		}
@@ -343,11 +349,11 @@ BOOL ABYParty::EvaluateCircuit() {
 		cout << "Finished with evaluating operations on depth = " << depth << ", continuing with interactions" << endl;
 #endif
 #ifdef BENCHONLINEPHASE
-		gettimeofday(&tstart, NULL);
+		clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 		PerformInteraction();
 #ifdef BENCHONLINEPHASE
-		gettimeofday(&tend, NULL);
+		clock_gettime(CLOCK_MONOTONIC, &tend);
 		interaction += getMillies(tstart, tend);
 #endif
 #ifdef DEBUGABYPARTY
@@ -355,12 +361,12 @@ BOOL ABYParty::EvaluateCircuit() {
 #endif
 		for (uint32_t i = 0; i < m_vSharings.size(); i++) {
 #ifdef BENCHONLINEPHASE
-			gettimeofday(&tstart, NULL);
+			clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 			//cout << "Finishing circuit layer for sharing "<< i << endl;
 			m_vSharings[i]->FinishCircuitLayer(depth);
 #ifdef BENCHONLINEPHASE
-			gettimeofday(&tend, NULL);
+			clock_gettime(CLOCK_MONOTONIC, &tend);
 			fincirclayer[i] += getMillies(tstart, tend);
 #endif
 		}

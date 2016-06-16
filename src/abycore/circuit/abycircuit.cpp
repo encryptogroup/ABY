@@ -61,8 +61,11 @@ inline void ABYCircuit::InitGate(GATE* gate, e_gatetype type, uint32_t ina) {
 inline void ABYCircuit::InitGate(GATE* gate, e_gatetype type, uint32_t ina, uint32_t inb) {
 	InitGate(gate, type);
 
-	assert(ina < m_nNextFreeGate && inb < m_nNextFreeGate);
+	if(ina >= m_nNextFreeGate || inb >= m_nNextFreeGate) {
+		cout << "ina = " << ina << ", inb = " << inb << ", nfg = " << m_nNextFreeGate << endl;
+		assert(ina < m_nNextFreeGate && inb < m_nNextFreeGate);
 
+	}
 	gate->depth = max(ComputeDepth(m_pGates[ina]), ComputeDepth(m_pGates[inb]));
 	gate->ingates.ningates = 2;
 	gate->ingates.inputs.twin.left = ina;
@@ -160,14 +163,29 @@ uint32_t ABYCircuit::PutCombinerGate(vector<uint32_t> input) {
 }
 
 //gatelenghts is defaulted to NULL
-vector<uint32_t> ABYCircuit::PutSplitterGate(uint32_t input) {
+uint32_t ABYCircuit::PutSplitterGate(uint32_t input, uint32_t pos, uint32_t bitlen) {
+	GATE* gate = m_pGates + m_nNextFreeGate;
+	InitGate(gate, G_SPLIT, input);
 
-	uint32_t nvals;
-	nvals = m_pGates[input].nvals;
-	vector<uint32_t> outids(nvals);
+	gate->gs.sinput.pos = pos;
 
-	for (uint32_t i = 0, ctr = 0; i < nvals; i++) {
-		GATE* gate = m_pGates + m_nNextFreeGate;
+	gate->nvals = bitlen;
+
+	return m_nNextFreeGate++;
+}
+
+//gatelenghts is defaulted to NULL
+vector<uint32_t> ABYCircuit::PutSplitterGate(uint32_t input, vector<uint32_t> bitlen) {
+
+	uint32_t nvals = m_pGates[input].nvals;
+	if(bitlen.size() == 0) {
+		bitlen.resize(nvals, 1);
+	}
+	vector<uint32_t> outids(bitlen.size());
+
+	uint32_t ctr = 0;
+	for (uint32_t i = 0; i < bitlen.size(); i++) {
+		/*GATE* gate = m_pGates + m_nNextFreeGate;
 		outids[i] = m_nNextFreeGate;
 		InitGate(gate, G_SPLIT, input);
 
@@ -176,7 +194,10 @@ vector<uint32_t> ABYCircuit::PutSplitterGate(uint32_t input) {
 		gate->nvals = 1;
 
 		ctr += gate->nvals;
-		m_nNextFreeGate++;
+		m_nNextFreeGate++;*/
+		outids[i] = PutSplitterGate(input, ctr, bitlen[i]);
+		ctr += bitlen[i];
+		//cout << "bitlen[" << i << "] = " << bitlen[i] << endl;
 	}
 
 	return outids;

@@ -70,6 +70,10 @@ public:
 
 		success = (m_hSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) != INVALID_SOCKET;
 
+		int one = 1;
+		setsockopt(m_hSock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
+
+
 		return success;
 
 	}
@@ -124,6 +128,7 @@ public:
 		if (ip != "") {
 			int on = 1;
 			setsockopt(m_hSock, SOL_SOCKET, SO_REUSEADDR, (const char*) &on, sizeof(on));
+			setsockopt(m_hSock, SOL_TCP, TCP_NODELAY, &on, sizeof(on));
 
 			sockAddr.sin_addr.s_addr = inet_addr(ip.c_str());
 
@@ -143,7 +148,7 @@ public:
 
 		sockAddr.sin_port = htons(nPort);
 
-		return bind(m_hSock, (sockaddr *) &sockAddr, sizeof(sockaddr_in)) >= 0;
+		return ::bind(m_hSock, (sockaddr *) &sockAddr, sizeof(sockaddr_in)) >= 0;
 	}
 
 	BOOL Listen(int nQLen = 5) {
@@ -199,6 +204,9 @@ public:
 
 			setsockopt(m_hSock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 		}
+
+		int one = 1;
+		setsockopt(m_hSock, SOL_TCP, TCP_NODELAY, &one, sizeof(one));
 
 		int ret = connect(m_hSock, (sockaddr*) &sockAddr, sizeof(sockAddr));
 

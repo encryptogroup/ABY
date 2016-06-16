@@ -72,7 +72,7 @@ const uint32_t wire_mapping[140][2] = { { 7, 4 }, { 7, 2 }, { 7, 1 }, { 4, 2 }, 
 		{ 98 + 32, 98 + 27 }, { 98 + 25, 98 + 29 }, { 98 + 20, 98 + 22 }, { 98 + 6, 98 + 21 }, { 98 + 31, 98 + 28 }, { 98 + 30, 98 + 26 }, { 98 + 6, 98 + 24 } };
 
 void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t* out, crypto* crypt);
-int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing);
+int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose = false);
 share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ);
 vector<uint32_t> AddAESRoundKey(vector<uint32_t>& val, vector<uint32_t> key, uint32_t keyaddr, BooleanCircuit* circ);
 vector<uint32_t> Mul2(vector<uint32_t>& element, BooleanCircuit* circ);

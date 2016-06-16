@@ -190,6 +190,12 @@ private:
 	 */
 	void EvaluateADDGate(GATE* gate);
 	/**
+	 Method for evaluating Sub Gate using the gate object.
+	 \param 	gate 	Gate Object.
+	 */
+	void EvaluateSUBGate(GATE* gate);
+
+	/**
 	 Method for evaluating Multiplication Gate
 	 */
 	void EvaluateMULGate();

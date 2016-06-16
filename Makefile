@@ -1,7 +1,5 @@
 ABY=aby
 TEST=test
-LOWMC=lowmc
-MILLIONAIRE=millionaire
 BIN=bin
 SRC=src
 CORE=${SRC}/abycore
@@ -12,9 +10,9 @@ CC=g++
 #Most aggressive optimizations, asserts are ignored
 #COMPILER_OPTIONS=-O3 -DNDEBUG
 #Optimizations
-COMPILER_OPTIONS=-O2
+COMPILER_OPTIONS=-O2 -march=native
 #DEBUG
-#COMPILER_OPTIONS=-g3 -ggdb -O0 -Wall -Wextra
+#COMPILER_OPTIONS=-g3 -ggdb -O0 #Wall -Wextra
 
 BATCH=
 
@@ -29,7 +27,7 @@ endif
 
 INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
 
-LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lglib-2.0
+LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lglib-2.0 -lrt
 CFLAGS=
 
 # directory for the Miracl submodule and library

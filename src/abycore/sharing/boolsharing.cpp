@@ -504,7 +504,7 @@ inline void BoolSharing::EvaluateINVGate(uint32_t gateid) {
 	}
 	//set only the remaining nvals%GATE_T_BITS
 	if(gate->nvals % GATE_T_BITS != 0) {
-	  gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
+		gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
 	}
 #ifdef DEBUGBOOL
 	cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
@@ -967,7 +967,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		uint32_t idparent = gate->ingates.inputs.parent;
 		InstantiateGate(gate);
 		for (uint32_t i = 0; i < vsize; i++) {
-			gate->gs.val[i / GATE_T_BITS] = (m_pGates[idparent].gs.val[(pos + i) / GATE_T_BITS] >> ((pos + i) % GATE_T_BITS)) & 0x1;
+			gate->gs.val[i / GATE_T_BITS] |= ((m_pGates[idparent].gs.val[(pos + i) / GATE_T_BITS] >> ((pos + i) % GATE_T_BITS)) & 0x1) << (i % GATE_T_BITS);
 		}
 		UsedGate(idparent);
 	} else if (gate->type == G_REPEAT) //TODO only meant for single bit values, update

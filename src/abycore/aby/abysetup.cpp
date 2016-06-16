@@ -68,9 +68,10 @@ void ABYSetup::Cleanup() {
 
 	m_tSetupChan->synchronize_end();
 	delete m_tSetupChan;
-
+/*
 	delete iknp_ot_sender;
 	delete iknp_ot_receiver;
+*/
 }
 
 BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
@@ -208,7 +209,7 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 		uint32_t numOTs = task->numOTs;
 
 #ifndef BATCH
-		cout << "Starting OT receiver routine for " << numOTs << " OTs" << task->bitlen << " bit strings " << endl;
+		cout << "Starting OT receiver routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
 #endif
 		success = iknp_ot_receiver->receive(numOTs, task->bitlen, nsndvals, (task->pval.rcvval.C), (task->pval.rcvval.R), task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP

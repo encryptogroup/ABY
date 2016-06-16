@@ -85,7 +85,7 @@ void CBitVector::ResizeinBytes(int newSizeBytes) {
 
 	memcpy(m_pBits, tBits, tSize);
 
-	delete (tBits);
+	free(tBits);
 }
 
 void CBitVector::Copy(BYTE* p, int pos, int len) {
@@ -279,6 +279,8 @@ template<class T> void CBitVector::GetBytes(T* dst, T* src, T* lim) {
 
 //optimized bytewise XOR operation
 void CBitVector::XORBytes(BYTE* p, int pos, int len) {
+	if(pos + len > m_nByteSize)
+	cout << "pos = " << pos << ", len = " << len << ", bytesize = " << m_nByteSize << endl;
 	assert(pos + len <= m_nByteSize);
 
 	BYTE* dst = m_pBits + pos;
@@ -370,6 +372,16 @@ void CBitVector::AND(CBitVector* b) {
 	ANDBytes(b->GetArr(), 0, m_nByteSize);
 }
 
+//Cyclic left shift by pos bits
+void CBitVector::CLShift(uint64_t pos) {
+	uint8_t* tmpbuf = (uint8_t*) malloc(m_nByteSize);
+	for(uint64_t i = 0; i < m_nByteSize; i++) {
+		tmpbuf[i+pos] = m_pBits[i];
+	}
+	free(m_pBits);
+	m_pBits = tmpbuf;
+}
+
 
 void CBitVector::Print(int fromBit, int toBit) {
 	int to = toBit > (m_nByteSize << 3) ? (m_nByteSize << 3) : toBit;
@@ -379,19 +391,23 @@ void CBitVector::Print(int fromBit, int toBit) {
 	cout << endl;
 }
 
-void CBitVector::PrintHex(int fromByte, int toByte) {
+void CBitVector::PrintHex(int fromByte, int toByte, bool linebreak) {
 	int to = toByte > (m_nByteSize) ? (m_nByteSize) : toByte;
 	for (int i = fromByte; i < to; i++) {
 		cout << setw(2) << setfill('0') << (hex) << ((unsigned int) m_pBits[i]);
 	}
-	cout << (dec) << endl;
+	if(linebreak){
+		cout << (dec) << endl;
+	}
 }
 
-void CBitVector::PrintHex() {
+void CBitVector::PrintHex(bool linebreak) {
 	for (int i = 0; i < m_nByteSize; i++) {
 		cout << setw(2) << setfill('0') << (hex) << ((unsigned int) m_pBits[i]);
 	}
-	cout << (dec) << endl;
+	if(linebreak){
+		cout << (dec) << endl;
+	}
 }
 
 void CBitVector::PrintBinaryMasked(int from, int to) {
@@ -509,7 +525,7 @@ void CBitVector::EklundhBitTranspose(int rows, int columns) {
 	lim = (REGISTER_SIZE*) m_pBits + ceil_divide(rows * columns, 8);
 
 	int offset = (columns >> 3) / sizeof(REGISTER_SIZE);
-	int numiters = ceil_log2(rows);
+	int numiters = ceil_log2(min(rows, columns));
 	int srcidx = 1, destidx;
 	int rounds;
 	int p;
@@ -581,6 +597,25 @@ void CBitVector::EklundhBitTranspose(int rows, int columns) {
 			rowbptr += (i * rowregsize);
 			for (int j = 0; j < rows; j++, rowaptr += rowregsize, rowbptr += offset) {
 				memcpy(rowaptr, rowbptr, rowbytesize);
+			}
+		}
+		free(tempvec);
+	}
+
+	if (rows > columns) {
+		BYTE* tempvec = (BYTE*) malloc((rows * columns) / 8);
+		memcpy(tempvec, m_pBits, ((rows / 8) * columns));
+
+		REGISTER_SIZE* rowaptr = (REGISTER_SIZE*) m_pBits;
+		int colbytesize = columns / 8;
+		int colregsize = columns / (sizeof(REGISTER_SIZE) * 8);
+		int offset_cols = (columns * columns) / (sizeof(REGISTER_SIZE) * 8);
+
+		for (int i = 0; i < columns; i++) {
+			rowbptr = (REGISTER_SIZE*) tempvec;
+			rowbptr += (i * colregsize);
+			for (int j = 0; j < rows / columns; j++, rowaptr += colregsize, rowbptr += offset_cols) {
+				memcpy(rowaptr, rowbptr, colbytesize);
 			}
 		}
 		free(tempvec);

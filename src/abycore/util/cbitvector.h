@@ -804,6 +804,13 @@ public:
 	*/
 	void AND(CBitVector* b);
 
+	/**
+		Cyclic shift left by pos positions
+		\param	pos		-	the left shift value
+	*/
+	void CLShift(uint64_t pos);
+
+
 	/*
 	 * Buffer access operations
 	 */
@@ -813,16 +820,6 @@ public:
 	*/
 	BYTE* GetArr() {
 		return m_pBits;
-	}
-
-	/**
-		This method is used to attach a new buffer into the CBitVector provided as arguments to this method.
-		\param	p		-		Pointer to the byte location to be attached to the CBitVector.
-		\param  size	-		Number of bytes attached from the provided buffer.
-	*/
-	void AttachBuf(BYTE* p, int size = -1) {
-		m_pBits = p;
-		m_nByteSize = size;
 	}
 
 	/**
@@ -859,14 +856,14 @@ public:
 	/**
 		This method prints the CBitVector in Hexadecimal format.
 	*/
-	void PrintHex();
+	void PrintHex(bool linebreak = true);
 
 	/**
 		This method prints the CBitVector in Hexadecimal format for the provided byte range.
 		\param	fromByte		-		The byte from which the printing of CBitVector begins.
 		\param	toByte			-		The byte until which the printing of CBitVector is done.
 	*/
-	void PrintHex(int fromByte, int toByte);
+	void PrintHex(int fromByte, int toByte, bool linebreak = true);
 
 	/**
 		This method prints the CBitVector in Binary format. This method internally calls \link Print(int fromBit, int toBit) \endlink.
