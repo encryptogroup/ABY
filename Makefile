@@ -68,17 +68,17 @@ ${MIRACL_LIB_DIR}/miracl.a: ${SOURCES_MIRACL}
 
 # this will create a copy of the files in src/abycore/ot/external/ot/ and put them into src/abycore/ot where they are then used for compiling.
 # it does not override files in the ot dir!
-otext:
+otext: miracl
 	@cp -n ${OT_SUBDIR_FILES} ${OTEXT_DIR}
 
 
-core: ${OBJECTS_CORE}
+core: miracl otext ${OBJECTS_CORE}
 
 %.o:%.cpp %.h
 	${CC} $< ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 # check that core is built, then call test makefile
-${TEST}: ${OBJECTS_CORE}
+${TEST}: miracl otext core examples
 	@(cd ${SRC}/${TEST}; if [ -e Makefile ]; then $(MAKE); fi)
 
 # this will run the previously compiled test-aby executables #TODO: take care of the output and errors
