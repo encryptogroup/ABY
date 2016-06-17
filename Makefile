@@ -86,7 +86,7 @@ runtest: ${TEST}
 	${BIN}/test-aby.exe -r 0 &
 	${BIN}/test-aby.exe -r 1
 
-examples: ${OBJECTS_CORE} ${EXAMPLE_SUBDIRS}
+examples: miracl otext core ${EXAMPLE_SUBDIRS}
 
 # if there is a Makefile for an example, then make it
 ${EXAMPLE_SUBDIRS}:
