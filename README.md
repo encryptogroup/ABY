@@ -35,7 +35,7 @@ This code is provided as a experimental implementation for testing purposes and 
 * `/bin/`    - Executables.
 * `/src/`    - Source code.
  * `src/abycore/` - Source of the internal ABY functions.
- * `src/examples/` - Example applications. Each application has a `/common` directory that holds the functionality (circuit). The idea is to re-use this circuit even outside of the application. The application's root directory contains a `.cpp` file with  main method that runs the circuit and is used to verify correctness.
+ * `src/examples/` - Example applications. Each application has a `/common` directory that holds the functionality (circuit). The idea is to re-use this circuit even outside of the application. The application's root directory contains a `.cpp` file with a main method that runs the circuit and is used to verify correctness.
  * `src/test/` - Currently one application to test internal ABY functions as well as example applications and print debug information.
 
 #### Building the ABY Framework
@@ -67,6 +67,8 @@ Please **don't** download the .zip file, since it doesn't include submodules. Al
 * `make clean` - cleans all binaries plus example and test object files
 * `make cleanmore` - same as `make clean` plus ABY core object files
 * `make cleanall` - same as `make cleanmore` plus Miracl and OT extension library objects
+
+There are several compiler flags that can be set within `Makefile` for the ABY core and `Example_Makefile` for the ABY examples. There are severeal predefined optiones, that can be commented out as needed.
 
 
 #### Doxygen Documentation
