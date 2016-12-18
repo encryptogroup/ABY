@@ -44,7 +44,7 @@ This code is provided as a experimental implementation for testing purposes and 
 	```
 	git clone --recursive git://github.com/encryptogroup/ABY
 	```
-Please **don't** download the .zip file, since it doesn't include submodules. Also note that there has been an update where the OT extension code has been outsourced as **submodule**. In case an older code version is updated to the current version, please run `git submodule init` and `git submodule update`. 
+Please **don't** download the .zip file, since it doesn't include submodules. Also note that there has been an update where the OT extension code has been outsourced as **submodule**. In case an older code version is updated to the current version, please run `git submodule init` and `git submodule update`.
 
 2. Enter the Framework directory: `cd ABY/`
 
@@ -71,8 +71,10 @@ Please **don't** download the .zip file, since it doesn't include submodules. Al
 There are several compiler flags that can be set within `Makefile` for the ABY core and `Example_Makefile` for the ABY examples. There are severeal predefined optiones, that can be commented out as needed.
 
 
-#### Doxygen Documentation
-See the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY/docs/index.html) for further information and comments on the code.
+#### Developer Guide and Documentation
+We provide an extensive [developer guide](https://www.encrypto.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_ENCRYPTO/code/ABY/devguide.pdf) with many examples and explanations of how to use ABY.
+
+Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY/docs/index.html) for further information and comments on the code.
 
 
 ### ABY Applications
@@ -85,7 +87,7 @@ See the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY
   * The [**Euclidean Distance**](https://en.wikipedia.org/wiki/Euclidean_distance) for two 2-dimensional coordinates.
   * The **Minimum Euclidean Distance** for finding the closest match between one d-dimensional element and a database of n d-dimensional elements.
   * The [**Arithmetic Inner Product**](https://en.wikipedia.org/wiki/Dot_product#Algebraic_definition) that multiplies N values component-wise and then adds all multiplication results (modulo 16 Bit in this case).
-  * Secure Hash Function Evaluation [**SHA1**](https://en.wikipedia.org/wiki/SHA1), where both parties concatenate their 256-bit inputs to a 512-bit message which is collaboratively hashed using SHA1. 
+  * Secure Hash Function Evaluation [**SHA1**](https://en.wikipedia.org/wiki/SHA1), where both parties concatenate their 256-bit inputs to a 512-bit message which is collaboratively hashed using SHA1.
   * The LowMC block cipher family [**LowMC**] (http://eprint.iacr.org/2016/687), which is a block cipher familiy with a low number of AND gates and a low AND depth. In the example, one party inputs the key and the other party inputs a message to collaboratively encrypt.
   * Further example applications will be added soon.
 
