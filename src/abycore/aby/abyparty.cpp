@@ -41,7 +41,7 @@ ABYParty::ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint3
 	m_eMTGenAlg = mg_algo;
 
 	//
-	m_cCrypt = new crypto(seclvl.symbits, (uint8_t*) const_seed[pid]);
+	m_cCrypt = new crypto(seclvl.symbits);
 	//m_aSeed = (uint8_t*) malloc(sizeof(uint8_t) * m_cCrypt->get_hash_bytes());
 
 	//Are doubled to have both parties play both roles
