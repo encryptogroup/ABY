@@ -32,9 +32,9 @@ class BoolSharing: public Sharing {
 
 public:
 	/** Constructor of the class.*/
-	BoolSharing(e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :\
+	BoolSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :\
 
-			Sharing(role, sharebitlen, circuit, crypt) {
+			Sharing(context, role, sharebitlen, circuit, crypt) {
 		Init();
 	}
 	;
@@ -53,6 +53,8 @@ public:
 	void FinishCircuitLayer(uint32_t level);
 
 	void PrepareOnlinePhase();
+
+	void PreComputationPhase();
 
 	inline void InstantiateGate(GATE* gate);
 	inline void UsedGate(uint32_t gateid);
@@ -75,7 +77,7 @@ public:
 	}
 	;
 	uint32_t GetNumNonLinearOperations() {
-		return m_nTotalNumMTs;
+		return m_nTotalNumMTs > 0? m_nTotalNumMTs-GetMaxCommunicationRounds()*8 : m_nTotalNumMTs;
 	}
 	;
 
@@ -213,7 +215,7 @@ private:
 	 */
 	inline void EvaluateConstantGate(uint32_t gateid);
 	/**
-	 Method for initialising MTs.
+	 Method for initializing MTs.
 	 */
 	void InitializeMTs();
 	/**
@@ -222,7 +224,22 @@ private:
 	void ComputeMTs();
 
 	/**
-	 Method for initialising.
+	 Method for store MTs to File
+	*/
+	void StoreMTsToFile(char *filename);
+
+	/**
+	 Method for read MTs from file
+	*/
+	void ReadMTsFromFile(char *filename);
+	/**
+	Method to check if it is the right nvals or the circuit size.
+	*/
+	BOOL isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, uint32_t in_circ_size);
+
+
+	/**
+	 Method for initializing.
 	 */
 	void Init();
 	/**

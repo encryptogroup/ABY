@@ -27,7 +27,7 @@ void ArithSharing<T>::Init() {
 	memset(&m_nTypeBitMask, 0, sizeof(uint64_t));
 	memset(&m_nTypeBitMask, 0xFF, sizeof(T));
 
-	m_cArithCircuit = new ArithmeticCircuit(m_pCircuit, S_ARITH, m_eRole, m_nTypeBitLen);
+	m_cArithCircuit = new ArithmeticCircuit(m_pCircuit, m_eContext, m_eRole, m_nTypeBitLen);
 
 	m_vConversionMasks.resize(2);
 
@@ -274,16 +274,16 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 
 		if (IsSIMDGate(gate->type)) {
 			EvaluateSIMDGate(localops[i]);
-		} else 	if (gate->type == G_LIN) {
+		} else if (gate->type == G_LIN) {
 #ifdef DEBUGARITH
 			cout << " which is an ADD gate" << endl;
 #endif
 			EvaluateADDGate(gate);
-		} else 	if (gate->type == G_LIN_SUB) {
+		} else if (gate->type == G_INV) {
 #ifdef DEBUGARITH
-			cout << " which is an SUB gate" << endl;
+			cout << " which is an INV gate" << endl;
 #endif
-			EvaluateSUBGate(gate);
+			EvaluateINVGate(gate);
 		} else if (gate->type == G_CONSTANT) {
 			UGATE_T value = gate->gs.constval;
 			InstantiateGate(gate);
@@ -300,6 +300,10 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 			InstantiateGate(gate);
 			memcpy(gate->gs.val, parent->gs.val, gate->nvals * sizeof(T));
 			UsedGate(gate->ingates.inputs.parent);
+		} else if (gate->type == G_PRINT_VAL) {
+			EvaluatePrintValGate(localops[i], C_ARITHMETIC);
+		} else if (gate->type == G_ASSERT) {
+			EvaluateAssertGate(localops[i], C_ARITHMETIC);
 		} else {
 			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
 		}
@@ -382,25 +386,6 @@ void ArithSharing<T>::EvaluateADDGate(GATE* gate) {
 	UsedGate(idleft);
 	UsedGate(idright);
 }
-
-template<typename T>
-void ArithSharing<T>::EvaluateSUBGate(GATE* gate) {
-	uint32_t nvals = gate->nvals;
-	uint32_t idleft = gate->ingates.inputs.twin.left;
-	uint32_t idright = gate->ingates.inputs.twin.right;
-	InstantiateGate(gate);
-
-	for (uint32_t i = 0; i < nvals; i++) {
-		((T*) gate->gs.aval)[i] = ((T*) m_pGates[idleft].gs.aval)[i] - ((T*) m_pGates[idright].gs.aval)[i];
-#ifdef DEBUGARITH
-		cout << "Result SUB (" << i << "): "<< ((T*)gate->gs.aval)[i] << " = " << ((T*) m_pGates[idleft].gs.aval)[i] << " - " << ((T*)m_pGates[idright].gs.aval)[i] << endl;
-#endif
-	}
-
-	UsedGate(idleft);
-	UsedGate(idright);
-}
-
 
 template<typename T>
 void ArithSharing<T>::ShareValues(GATE* gate) {
@@ -757,14 +742,9 @@ template<typename T>
 void ArithSharing<T>::EvaluateINVGate(GATE* gate) {
 	uint32_t parentid = gate->ingates.inputs.parent;
 	InstantiateGate(gate);
-
-	if (m_eRole == SERVER) {
-		//TODO make sure that this is working correctly, currently untested!
-		for (uint32_t i = 0; i < gate->nvals; i++) {
-			((T*) gate->gs.aval)[i] = MOD_SUB(0, ((T*) m_pGates[parentid].gs.aval)[i], m_nTypeBitMask);//0 - ((T*) m_pGates[parentid].gs.aval)[i];
-		}
-	} else {
-		memcpy(gate->gs.aval, m_pGates[parentid].gs.aval, gate->nvals * sizeof(T));
+	for (uint32_t i = 0; i < gate->nvals; i++) {
+//			((T*) gate->gs.aval)[i] = MOD_SUB(0, ((T*) m_pGates[parentid].gs.aval)[i], m_nTypeBitMask);//0 - ((T*) m_pGates[parentid].gs.aval)[i];
+		((T*) gate->gs.aval)[i] = -((T*) m_pGates[parentid].gs.aval)[i];
 	}
 	UsedGate(parentid);
 }
@@ -904,10 +884,13 @@ void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 		cout << " which is a COMBINE gate" << endl;
 #endif
 		uint32_t* input = gate->ingates.inputs.parents;
+		uint32_t nparents = gate->ingates.ningates;
 		InstantiateGate(gate);
 
-		for (uint32_t k = 0; k < vsize; k++) {
-			((T*) gate->gs.aval)[k] = ((T*) m_pGates[input[k]].gs.aval)[0];
+		T* valptr = ((T*) gate->gs.aval);
+		for(uint32_t k = 0; k < nparents; k++) {
+			memcpy(valptr, m_pGates[input[k]].gs.aval, sizeof(T) * m_pGates[input[k]].nvals);
+			valptr += m_pGates[input[k]].nvals;
 			UsedGate(input[k]);
 		}
 
@@ -925,7 +908,7 @@ void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 		}
 
 		UsedGate(idparent);
-	} else if (gate->type == G_REPEAT) //TODO only meant for single bit values, update
+	} else if (gate->type == G_REPEAT)
 			{
 #ifdef DEBUGSHARING
 		cout << " which is a REPEATER gate" << endl;
@@ -978,6 +961,7 @@ void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 #endif
 		uint32_t idparent = gate->ingates.inputs.parent;
 		uint32_t* positions = gate->gs.sub_pos.posids; //gate->gs.combinepos.input;
+		bool del_pos = gate->gs.sub_pos.copy_posids;
 
 		InstantiateGate(gate);
 
@@ -985,7 +969,8 @@ void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 			gate->gs.aval[i] = ((T*) m_pGates[idparent].gs.aval)[positions[i]];
 		}
 		UsedGate(idparent);
-		free(positions);
+		if(del_pos)
+			free(positions);
 	}
 }
 

@@ -26,11 +26,11 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 	uint32_t int_role = 0, int_port = 0;
 	bool useffc = false;
 
-	parsing_ctx options[] = { { (void*) &int_role, T_NUM, 'r', "Role: 0/1", true, false }, { (void*) nvals, T_NUM, 'n', "Number of parallel operations elements", false, false }, {
-			(void*) secparam, T_NUM, 's', "Symmetric Security Bits, default: 128", false, false }, { (void*) address, T_STR, 'a', "IP-address, default: localhost", false, false },
-			{ (void*) &int_port, T_NUM, 'p', "Port, default: 7766", false, false }, { (void*) statesize, T_NUM, 't', "Statesize in bits", true, false }, { (void*) keysize, T_NUM,
-					'k', "Keylength in bits", true, false }, { (void*) sboxes, T_NUM, 'm', "#SBoxes per rounds", true, false },
-			{ (void*) rounds, T_NUM, 'o', "#Rounds", true, false }, { (void*) maxnumgates, T_NUM, 'g', "Maximum number of gates in the circuit", false, false }
+	parsing_ctx options[] = { { (void*) &int_role, T_NUM, "r", "Role: 0/1", true, false }, { (void*) nvals, T_NUM, "n", "Number of parallel operations elements", false, false }, {
+			(void*) secparam, T_NUM, "s", "Symmetric Security Bits, default: 128", false, false }, { (void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
+			{ (void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false }, { (void*) statesize, T_NUM, "t", "Statesize in bits", true, false }, { (void*) keysize, T_NUM,
+					"k", "Keylength in bits", true, false }, { (void*) sboxes, T_NUM, "m", "#SBoxes per rounds", true, false },
+			{ (void*) rounds, T_NUM, "o", "#Rounds", true, false }, { (void*) maxnumgates, T_NUM, "g", "Maximum number of gates in the circuit", false, false }
 	};
 
 	if (!parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx))) {

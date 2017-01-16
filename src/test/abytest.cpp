@@ -48,24 +48,36 @@ int main(int argc, char** argv) {
 	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL);
 	cout << "Testing AES circuit in Yao sharing" << endl;
 	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_YAO);
+//	cout << "Testing AES circuit in Bool 1ooN sharing" << endl;
+//	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL_NO_MT);
 
 	//Test the SHA1 circuit TODO: Constant gates are limited to nvals < 64. Fix!
 	cout << "Testing SHA1 circuit in Boolean sharing" << endl;
 	test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_BOOL);
 	cout << "Testing SHA1 circuit in Yao sharing" << endl;
 	test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_YAO);
+//	cout << "Testing SHA1 circuit in Bool 1ooN sharing" << endl;
+//	test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_BOOL_NO_MT);
 
 	//Test the Sort-Compare-Shuffle PSI circuit
 	cout << "Testing SCS PSI circuit in Boolean sharing" << endl;
-	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_BOOL);
+	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, 0, true);
 	cout << "Testing SCS PSI circuit in Yao sharing" << endl;
-	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_YAO);
+	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, 1, true);
+//	cout << "Testing SCS PSI circuit in Bool 1ooN sharing" << endl;
+//	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_BOOL_NO_MT);
+
 
 	//Test the Phasing PSI circuit
 	cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
-	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL);
+	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL);
 	cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
-	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	epsilon, nthreads, mt_alg, S_YAO);
+	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_YAO);
+//	cout << "Testing PSI Phasing circuit in Bool 1ooN sharing" << endl;
+//	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL_NO_MT);
+
+
+	//test_lowmc_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL, (LowMCParams*) &stp);
 
 	//test_min_eucliden_dist_circuit(role, (char*) address.c_str(), seclvl, nvals, 6, nthreads, mt_alg, S_ARITH, S_YAO);
 
@@ -150,7 +162,7 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 				verify = a & b;
 				break;
 			case OP_CMP:
-				shrres = circ->PutGEGate(shra, shrb);
+				shrres = circ->PutGTGate(shra, shrb);
 				verify = a > b;
 				break;
 			case OP_EQ:
@@ -194,6 +206,22 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 				shrres = yc->PutA2YGate(shrres);
 				shrres = yc->PutADDGate(shrres, shrres);
 				circ = yc;
+				verify = (a * b) + (a * b);
+				break;
+			case OP_A2B:
+				shrres = circ->PutADDGate(shra, shrb);
+				bc = sharings[S_BOOL]->GetCircuitBuildRoutine();
+				shrres = bc->PutA2BGate(shrres, sharings[S_YAO]->GetCircuitBuildRoutine());
+				shrres = bc->PutMULGate(shrres, shrres);
+				circ = bc;
+				verify = (a + b) * (a + b);
+				break;
+			case OP_Y2A:
+				shrres = circ->PutMULGate(shra, shrb);
+				ac = sharings[S_ARITH]->GetCircuitBuildRoutine();
+				shrres = ac->PutY2AGate(shrres, sharings[S_BOOL]->GetCircuitBuildRoutine());
+				shrres = ac->PutADDGate(shrres, shrres);
+				circ = ac;
 				verify = (a * b) + (a * b);
 				break;
 			case OP_AND_VEC:
@@ -258,6 +286,29 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 			shra = circ->PutSIMDINGate(nvals, avec, bitlen, SERVER);
 			shrb = circ->PutSIMDINGate(nvals, bvec, bitlen, CLIENT);
 
+			/*shra = circ->PutSIMDINGate(ceil_divide(nvals,2), avec, bitlen, SERVER);
+			shrb = circ->PutSIMDINGate(nvals/2, avec+ceil_divide(nvals,2), bitlen, SERVER);
+
+			//share* tmp = create_new_share(nvals, circ, circ->GetCircuitType());
+			share* tmp;
+			if(circ->GetCircuitType() == C_BOOLEAN) {
+				tmp = new boolshare(2, circ);
+				cout << "Boolean, max share len = " << tmp->max_size() << endl;
+			}
+			else {
+				tmp = new arithshare(2, circ);
+				cout << "Arithmetic" << endl;
+			}
+
+			for(uint32_t j = 0; j < bitlen; j++) {
+				tmp->set_wire(0, shra->get_wire(j));
+				tmp->set_wire(1, shrb->get_wire(j));
+
+				shra->set_wire(j, circ->PutCombinerGate(tmp)->get_wire(0));
+
+			}
+
+			shrb = circ->PutSIMDINGate(nvals, bvec, bitlen, CLIENT);*/
 
 			switch (test_ops[i].op) {
 			case OP_IO:
@@ -291,7 +342,7 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 					verifyvec[j] = avec[j] & bvec[j];
 				break;
 			case OP_CMP:
-				shrres = circ->PutGEGate(shra, shrb);
+				shrres = circ->PutGTGate(shra, shrb);
 				for (uint32_t j = 0; j < nvals; j++)
 					verifyvec[j] = avec[j] > bvec[j];
 				break;
@@ -324,39 +375,61 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 				break;
 
 			 break;*/
-			/*	 case OP_Y2B:
+			 case OP_Y2B:
 				 shrres = circ->PutADDGate(shra, shrb);
 				 bc = sharings[S_BOOL]->GetCircuitBuildRoutine();
 				 shrres = bc->PutY2BGate(shrres);
 				 shrres = bc->PutMULGate(shrres, shrres);
 				 circ = bc;
-				 verify = (a + b) * (a + b);
+				 for (uint32_t j = 0; j < nvals; j++)
+					 verifyvec[j] = (avec[j] + bvec[j]) * (avec[j] + bvec[j]);
 				 break;
-				 case OP_B2A:
+			case OP_B2A:
 				 shrres = circ->PutADDGate(shra, shrb);
 				 ac = sharings[S_ARITH]->GetCircuitBuildRoutine();
 				 shrres = ac->PutB2AGate(shrres);
 				 shrres = ac->PutMULGate(shrres, shrres);
 				 circ = ac;
-				 verify = (a + b) * (a + b);
+				 for (uint32_t j = 0; j < nvals; j++)
+					 verifyvec[j] = (avec[j] + bvec[j]) * (avec[j] + bvec[j]);
 				 break;
-				 case OP_B2Y:
+			case OP_B2Y:
 				 shrres = circ->PutADDGate(shra, shrb);
 				 yc = sharings[S_YAO]->GetCircuitBuildRoutine();
 				 shrres = yc->PutB2YGate(shrres);
 				 shrres = yc->PutMULGate(shrres, shrres);
 				 circ = yc;
-				 verify = (a + b) * (a + b);
+				 for (uint32_t j = 0; j < nvals; j++)
+					 verifyvec[j] = (avec[j] + bvec[j]) * (avec[j] + bvec[j]);
 				 break;
-				 case OP_A2Y:
+			case OP_A2Y:
 				 shrres = circ->PutMULGate(shra, shrb);
 				 yc = sharings[S_YAO]->GetCircuitBuildRoutine();
 				 shrres = yc->PutA2YGate(shrres);
 				 shrres = yc->PutADDGate(shrres, shrres);
 				 circ = yc;
-				 verify = (a*b) + (a*b);
+				 for (uint32_t j = 0; j < nvals; j++)
+					 verifyvec[j] = (avec[j] * bvec[j]) + (avec[j] * bvec[j]);
 				 break;
-				 case OP_AND_VEC:
+			case OP_A2B:
+				 shrres = circ->PutMULGate(shra, shrb);
+				 bc = sharings[S_BOOL]->GetCircuitBuildRoutine();
+				 shrres = bc->PutA2BGate(shrres, sharings[S_YAO]->GetCircuitBuildRoutine());
+				 shrres = bc->PutADDGate(shrres, shrres);
+				 circ = bc;
+				 for (uint32_t j = 0; j < nvals; j++)
+					 verifyvec[j] = (avec[j] * bvec[j]) + (avec[j] * bvec[j]);
+				 break;
+			case OP_Y2A:
+				 shrres = circ->PutMULGate(shra, shrb);
+				 ac = sharings[S_ARITH]->GetCircuitBuildRoutine();
+				 shrres = ac->PutY2AGate(shrres, sharings[S_BOOL]->GetCircuitBuildRoutine());
+				 shrres = ac->PutADDGate(shrres, shrres);
+				 circ = ac;
+				 for (uint32_t j = 0; j < nvals; j++)
+					 verifyvec[j] = (avec[j] * bvec[j]) + (avec[j] * bvec[j]);
+				 break;
+			/*case OP_AND_VEC:
 				 shra = circ->PutCombinerGate(shra);
 				 //shrb = circ->PutCombinerGate(shrb);
 				 shrres = circ->PutANDVecGate(shra, shrb);
@@ -405,12 +478,12 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 	uint32_t int_role = 0, int_port = 0, int_mtalg = 0;
 	bool useffc = false;
 
-	parsing_ctx options[] = { { (void*) &int_role, T_NUM, 'r', "Role: 0/1", true, false }, { (void*) nvals, T_NUM, 'n', "Number of parallel operations elements", false, false }, {
-			(void*) bitlen, T_NUM, 'b', "Bit-length, default 32", false, false }, { (void*) secparam, T_NUM, 's', "Symmetric Security Bits, default: 128", false, false }, {
-			(void*) address, T_STR, 'a', "IP-address, default: localhost", false, false }, { (void*) &int_port, T_NUM, 'p', "Port, default: 7766", false, false }, {
-			(void*) test_op, T_NUM, 't', "Single test (leave out for all operations), default: off", false, false }, { (void*) verbose, T_FLAG, 'v',
-			"Do not print computation results, default: off", false, false }, {(void*) num_test_runs, T_NUM, 'i', "Number of test runs for operation tests, default: 5",
-					false, false }, { (void*) &int_mtalg, T_NUM, 'm', "Arithmetic MT gen algo [0: OT, 1: Paillier, 2: DGK], default: 0", false, false } };
+	parsing_ctx options[] = { { (void*) &int_role, T_NUM, "r", "Role: 0/1", true, false }, { (void*) nvals, T_NUM, "n", "Number of parallel operations elements", false, false }, {
+			(void*) bitlen, T_NUM, "b", "Bit-length, default 32", false, false }, { (void*) secparam, T_NUM, "s", "Symmetric Security Bits, default: 128", false, false }, {
+			(void*) address, T_STR, "a", "IP-address, default: localhost", false, false }, { (void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false }, {
+			(void*) test_op, T_NUM, "t", "Single test (leave out for all operations), default: off", false, false }, { (void*) verbose, T_FLAG, "v",
+			"Do not print computation results, default: off", false, false }, {(void*) num_test_runs, T_NUM, "i", "Number of test runs for operation tests, default: 5",
+					false, false }, { (void*) &int_mtalg, T_NUM, "m", "Arithmetic MT gen algo [0: OT, 1: Paillier, 2: DGK], default: 0", false, false } };
 
 	if (!parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));

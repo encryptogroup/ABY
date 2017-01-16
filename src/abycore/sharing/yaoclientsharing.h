@@ -31,8 +31,8 @@ class YaoClientSharing: public YaoSharing {
 
 public:
 	/** Constructor of the class.*/
-	YaoClientSharing(e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
-			YaoSharing(role, sharebitlen, circuit, crypt) {
+	YaoClientSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
+			YaoSharing(context, role, sharebitlen, circuit, crypt) {
 		InitClient();
 	}
 	;

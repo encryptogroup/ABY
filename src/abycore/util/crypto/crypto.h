@@ -21,9 +21,12 @@
 
 #include <openssl/evp.h>
 #include <openssl/sha.h>
+#include <openssl/des.h>
 #include <fstream>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <iostream>
+#include <iomanip>
 
 #include "../typedefs.h"
 #include "../constants.h"
@@ -43,7 +46,16 @@ enum bc_mode {
 	ECB, CBC
 };
 
+//Check for the OpenSSL version number, since the EVP_CIPHER_CTX has become opaque from >= 1.1.0
+#if OPENSSL_VERSION_NUMBER >= 0x10100000L
+	#define OPENSSL_OPAQUE_EVP_CIPHER_CTX
+#endif
+
+#ifdef OPENSSL_OPAQUE_EVP_CIPHER_CTX
+typedef EVP_CIPHER_CTX* AES_KEY_CTX;
+#else
 typedef EVP_CIPHER_CTX AES_KEY_CTX;
+#endif
 
 /* Predefined security levels,
  * ST (SHORTTERM) = 1024/160/163 bit public key, 80 bit private key
@@ -92,7 +104,7 @@ public:
 
 	//External encryption routines
 	void init_aes_key(AES_KEY_CTX* aes_key, uint8_t* seed, bc_mode mode = ECB, const uint8_t* iv = ZERO_IV);
-	void init_aes_key(AES_KEY_CTX* aes_key, uint32_t symbits, uint8_t* seed, bc_mode mode = ECB, const uint8_t* iv = ZERO_IV);
+	void init_aes_key(AES_KEY_CTX* aes_key, uint32_t symbits, uint8_t* seed, bc_mode mode = ECB, const uint8_t* iv = ZERO_IV, bool encrypt = true);
 	void clean_aes_key(AES_KEY_CTX* aeskey);
 	uint32_t get_aes_key_bytes();
 	void encrypt(AES_KEY_CTX* enc_key, uint8_t* resbuf, uint8_t* inbuf, uint32_t ninbytes);
@@ -132,6 +144,9 @@ private:
 };
 
 //Some functions that should be useable without the class
+void des_encrypt(uint8_t* resbuf, uint8_t* inbuf, uint8_t* key, bool encrypt);
+void des3_encrypt(uint8_t* resbuf, uint8_t* inbuf, uint8_t* key, bool encrypt);
+
 void sha1_hash(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint8_t* hash_buf);
 void sha256_hash(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint8_t* hash_buf);
 void sha512_hash(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes, uint8_t* hash_buf);

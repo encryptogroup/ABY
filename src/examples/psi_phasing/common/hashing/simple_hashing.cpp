@@ -120,17 +120,19 @@ inline void insert_element(sht_ctx* table, uint8_t* element, uint32_t* address, 
 
 	hashElement(element, address, tmpbuf, hs);
 
+	//cout << "Element " <<
 	for(i = 0; i < hs->nhashfuns; i++) {
 
 		tmp_bin=table->bins + address[i];
 		//pthread_mutex_lock(locks + address[i]);
+		//cout << "Element: " << ((uint32_t*) tmpbuf)[0] << ", position = " << (i&0x03) << " , mapped to " << address[i] << endl;
 		memcpy(tmp_bin->values + tmp_bin->nvals * hs->outbytelen, tmpbuf, hs->outbytelen);
-		(tmp_bin->values + tmp_bin->nvals * hs->outbytelen)[0] ^= (i&0x01);
-		for(j = 0; j < i; j++) {
+		(tmp_bin->values + tmp_bin->nvals * hs->outbytelen)[0] ^= (i&0x03);
+		/*for(j = 0; j < i; j++) {
 			if(address[i] == address[j]) {
 				memset(tmp_bin->values + tmp_bin->nvals * hs->outbytelen, DUMMY_ENTRY_SERVER, hs->outbytelen);
 			}
-		}
+		}*/
 		tmp_bin->nvals++;
 
 		if(tmp_bin->nvals == table->maxbinsize) {
@@ -178,15 +180,15 @@ inline uint32_t get_max_bin_size(uint32_t nbins, uint32_t neles) {
 	double n = neles;
 	if(ceil_divide(neles, nbins) < 3) {
 		if(neles >= (1<<24))
-			return 21;
+			return 27;
 		if(neles >= (1<<20))
-			return 20;
+			return 26;
 		if(neles >= (1<<16))
-			return 19;
+			return 25;
 		if(neles >= (1<<12))
-			return 18;
+			return 24;
 		if(neles >= (1<<8))
-			return 15;
+			return 23;
 	} else
 		return 6*max((uint32_t) ceil_divide(neles, nbins), (uint32_t) 3);
 }

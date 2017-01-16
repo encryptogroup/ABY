@@ -55,6 +55,8 @@ public:
 	uint32_t PutSharedSIMDINGate(uint32_t nvals);
 	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val);
 
+	share* PutDummyINGate(uint32_t bitlen);
+	share* PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen);
 
 
 	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role);
@@ -182,6 +184,10 @@ public:
 
 
 	share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
+	share* PutTruthTableGate(share* in, uint64_t* ttable);
+	share* PutTruthTableMultiOutputGate(share* in, uint32_t out_bits, uint64_t* ttable);
+
+
 
 	uint32_t PutINVGate(uint32_t parentid);
 	uint32_t PutCONVGate(vector<uint32_t> parentids);
@@ -203,8 +209,8 @@ public:
 	}
 	share* PutMULGate(share* ina, share* inb);
 
-	share* PutGEGate(share* ina, share* inb) {
-		cerr << "GE not implemented in arithmetic sharing" << endl;
+	share* PutGTGate(share* ina, share* inb) {
+		cerr << "GT not implemented in arithmetic sharing" << endl;
 		return new arithshare(this);
 	}
 	share* PutEQGate(share* ina, share* inb) {
@@ -233,8 +239,7 @@ public:
 	}
 	uint32_t PutB2AGate(vector<uint32_t> ina);
 	share* PutB2AGate(share* ina);
-	//TODO: implement
-	//uint32_t		 		PutY2AGate(vector<uint32_t>& parentids, uint32_t mindepth=0);
+
 
 	uint32_t GetNumMULGates() {
 		return m_nMULs;

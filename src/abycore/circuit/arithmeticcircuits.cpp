@@ -40,7 +40,7 @@ void ArithmeticCircuit::Cleanup() {
 
 share* ArithmeticCircuit::PutMULGate(share* ina, share* inb) {
 	share* shr = new arithshare(this);
-	shr->set_wire(0, PutMULGate(ina->get_wire(0), inb->get_wire(0)));
+	shr->set_wire_id(0, PutMULGate(ina->get_wire_id(0), inb->get_wire_id(0)));
 	return shr;
 }
 
@@ -63,19 +63,22 @@ uint32_t ArithmeticCircuit::PutADDGate(uint32_t inleft, uint32_t inright) {
 
 share* ArithmeticCircuit::PutADDGate(share* ina, share* inb) {
 	share* shr = new arithshare(this);
-	shr->set_wire(0, PutADDGate(ina->get_wire(0), inb->get_wire(0)));
+	shr->set_wire_id(0, PutADDGate(ina->get_wire_id(0), inb->get_wire_id(0)));
 	return shr;
 }
 
 uint32_t ArithmeticCircuit::PutSUBGate(uint32_t inleft, uint32_t inright) {
-	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_LIN_SUB, inleft, inright, m_nRoundsXOR);
+
+	uint32_t rightinv = m_cCircuit->PutINVGate(inright);
+	UpdateLocalQueue(rightinv);
+	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_LIN, inleft, rightinv, m_nRoundsXOR);
 	UpdateLocalQueue(gateid);
 	return gateid;
 }
 
 share* ArithmeticCircuit::PutSUBGate(share* ina, share* inb) {
 	share* shr = new arithshare(this);
-	shr->set_wire(0, PutSUBGate(ina->get_wire(0), inb->get_wire(0)));
+	shr->set_wire_id(0, PutSUBGate(ina->get_wire_id(0), inb->get_wire_id(0)));
 	return shr;
 }
 uint32_t ArithmeticCircuit::PutINGate(e_role src) {
@@ -144,6 +147,18 @@ uint32_t ArithmeticCircuit::PutSharedSIMDINGate(uint32_t ninvals) {
 }
 
 
+share* ArithmeticCircuit::PutDummyINGate(uint32_t bitlen) {
+	vector<uint32_t> wires(1);
+	wires[0] = PutINGate((e_role) !m_eMyRole);
+	return new arithshare(wires, this);
+}
+share* ArithmeticCircuit::PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen) {
+	vector<uint32_t> wires(1);
+	wires[0] = PutSIMDINGate(nvals, (e_role) !m_eMyRole);
+	return new arithshare(wires, this);
+}
+
+
 template<class T> uint32_t ArithmeticCircuit::PutINGate(T val, e_role role) {
 	uint32_t gateid = PutINGate(role);
 	if (role == m_eMyRole) {
@@ -194,14 +209,14 @@ template<class T> uint32_t ArithmeticCircuit::PutSharedSIMDINGate(uint32_t nvals
 
 template<class T> share* ArithmeticCircuit::InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role) {
 	share* shr = new arithshare(this);
-	shr->set_wire(0, PutSIMDINGate(nvals, val, role));
+	shr->set_wire_id(0, PutSIMDINGate(nvals, val, role));
 	return shr;
 }
 
 
 template<class T> share* ArithmeticCircuit::InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen) {
 	share* shr = new arithshare(this);
-	shr->set_wire(0, PutSharedSIMDINGate(nvals, val));
+	shr->set_wire_id(0, PutSharedSIMDINGate(nvals, val));
 	return shr;
 }
 
@@ -212,7 +227,7 @@ template<class T> share* ArithmeticCircuit::InternalPutINGate(uint32_t nvals, T*
 	uint32_t gateid = PutSIMDINGate(nvals, role);
 	uint32_t iters = sizeof(UGATE_T) / sizeof(T);
 	assert(iters > 0);
-	shr->set_wire(0, gateid);
+	shr->set_wire_id(0, gateid);
 
 	if (role == m_eMyRole) {
 		GATE* gate = m_pGates + gateid;
@@ -236,7 +251,7 @@ template<class T> share* ArithmeticCircuit::InternalPutSharedINGate(uint32_t nva
 	uint32_t gateid = PutSharedSIMDINGate(nvals);
 	uint32_t iters = sizeof(UGATE_T) / sizeof(T);
 	assert(iters > 0);
-	shr->set_wire(0, gateid);
+	shr->set_wire_id(0, gateid);
 
 	GATE* gate = m_pGates + gateid;
 	uint32_t sharebytelen = ceil_divide(m_nShareBitLen, 8);
@@ -277,9 +292,9 @@ uint32_t ArithmeticCircuit::PutOUTGate(uint32_t parentid, e_role dst) {
 }
 
 share* ArithmeticCircuit::PutOUTGate(share* parent, e_role dst) {
-	share* shr = new arithshare(parent->bitlength(), this);
-	for (uint32_t i = 0; i < parent->bitlength(); i++) {
-		shr->set_wire(i, PutOUTGate(parent->get_wire(i), dst));
+	share* shr = new arithshare(parent->get_bitlength(), this);
+	for (uint32_t i = 0; i < parent->get_bitlength(); i++) {
+		shr->set_wire_id(i, PutOUTGate(parent->get_wire_id(i), dst));
 	}
 
 	return shr;
@@ -338,6 +353,16 @@ share* ArithmeticCircuit::PutCallbackGate(share* in, uint32_t rounds, void (*cal
 	return new arithshare(gateid, this);
 }
 
+share* ArithmeticCircuit::PutTruthTableGate(share* in, uint64_t* ttable) {
+	cerr << "PutTruthTableGate not implemented in ArithmeticCircuit!!" << endl;
+	return NULL;
+}
+
+share* ArithmeticCircuit::PutTruthTableMultiOutputGate(share* in, uint32_t out_bits, uint64_t* ttable) {
+	cerr << "PutTruthTableMultiOutputGate not implemented in ArithmeticCircuit!!" << endl;
+	return NULL;
+}
+
 
 share* ArithmeticCircuit::PutCONSGate(uint8_t* val, uint32_t bitlen) {
 	//TODO
@@ -377,7 +402,7 @@ uint32_t ArithmeticCircuit::PutB2AGate(vector<uint32_t> ina) {
 
 share* ArithmeticCircuit::PutB2AGate(share* ina) {
 	share* shr = new arithshare(this);
-	shr->set_wire(0, PutCONVGate(ina->get_wires()));
+	shr->set_wire_id(0, PutCONVGate(ina->get_wires()));
 	return shr;
 }
 

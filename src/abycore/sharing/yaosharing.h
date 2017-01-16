@@ -52,8 +52,8 @@ class YaoSharing: public Sharing {
 public:
 
 	/** Constructor for the class. */
-	YaoSharing(e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
-			Sharing(role, sharebitlen, circuit, crypt) {
+	YaoSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
+			Sharing(context, role, sharebitlen, circuit, crypt) {
 		Init();
 	}
 	;
@@ -72,6 +72,10 @@ public:
 	virtual void FinishCircuitLayer(uint32_t level) = 0;
 
 	virtual void PrepareOnlinePhase() = 0;
+
+	void PreComputationPhase() {
+		return;
+	}
 
 	virtual void InstantiateGate(GATE* gate) = 0;
 	virtual void UsedGate(uint32_t gateid) = 0;

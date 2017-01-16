@@ -21,6 +21,7 @@
 #include <math.h>
 #include "../util/typedefs.h"
 #include <iostream>
+#include <fstream>
 #include <limits.h>
 #include <deque>
 #include "../util/constants.h"
@@ -35,7 +36,6 @@
 
 struct GATE;
 
-//TODO redefine outkey as UINT64_T
 struct yao_fields {
 	//The output wire key
 	BYTE* outKey;
@@ -58,6 +58,7 @@ struct combine_at_pos_gate {
 
 struct subset_gate {
 	uint32_t* posids;
+	bool copy_posids;
 };
 struct splitter_fields {
 	uint32_t pos;
@@ -82,17 +83,19 @@ struct struct_combine_gate {
 	uint32_t num_in_gates;
 };
 
+struct tt_gate {
+	uint64_t* table;
+	uint32_t noutputs;
+};
 
-//TODO redefine yval as UINT64_T
-//TODO store in a specific output field, stored in val right now (which also BOOL values are)
 union gate_specific {
-
 	//fields of the combiner gate
 	uint32_t* cinput;
 	//fields of the standard gate (pos)
 	splitter_fields sinput;
 	//fields of a yao's garbled circuit gate
 	yao_fields yinput;
+	//the evaluators key in Yao's garbled circuits
 	BYTE* yval;
 	//Arithmetic sharing values, a pointer to a uint16, uint32 or uint64 array with val_size elements
 	UGATE_T* aval;
@@ -101,7 +104,6 @@ union gate_specific {
 	//fields for the permutation gate. perm is a vector that first has the id i of the input gate and then the pos p of the input gate for n input gates (i_1,p_1,i_2,p_2,...,i_n,p_n)
 	permutation_gate perm;
 	//fields for the combinepos gate. combinepos first holds the position and then the ids of the input gates it combines
-	//TODO: combine the combine and combinepos gate into one gate
 	combine_at_pos_gate combinepos;
 	//value that is supposed to be shared
 	input_fields ishare;
@@ -119,6 +121,12 @@ union gate_specific {
 	and_vec_simd avs;
 	//is used for structurized combiner gates
 	struct_combine_gate struct_comb;
+	//used for the G_TT gate where an arbitrary-sized truth-table is evaluated using OT
+	tt_gate tt;
+	//used for the PRINT VAL gate where the plaintext value of the gate is printed with the info string below
+	const char* infostr;
+	//used for the ASSERT gate where the plaintext value of the gate is checked against the plaintext value in assertval
+	UGATE_T* assertval;
 };
 typedef union gate_specific gs_t;
 
@@ -154,6 +162,12 @@ struct non_lin_vec_ctx {
 	uint32_t numgates;
 };
 
+struct tt_lens_ctx {
+	uint32_t tt_len;
+	uint32_t numgates;
+	uint32_t out_bits;
+};
+
 uint32_t FindBitLenPositionInVec(uint32_t bitlen, non_lin_vec_ctx* list, uint32_t listentries);
 
 class ABYCircuit {
@@ -174,7 +188,7 @@ public:
 	uint32_t PutSplitterGate(uint32_t input, uint32_t pos, uint32_t bitlen);
 	vector<uint32_t> PutSplitterGate(uint32_t input, vector<uint32_t> bitlen = vector<uint32_t>());		//, vector<uint32_t> gatelengths = NULL);
 	uint32_t PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos);
-	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals);
+	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals_out, bool copy_posids);
 	uint32_t PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
 	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals);
 	vector<uint32_t> PutRepeaterGate(vector<uint32_t> input, uint32_t nvals);
@@ -194,6 +208,13 @@ public:
 	uint32_t PutINVGate(uint32_t in);
 	uint32_t PutCONVGate(vector<uint32_t> in, uint32_t nrounds, e_sharing dst, uint32_t sharebitlen);
 	uint32_t PutCallbackGate(vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
+	uint32_t PutTruthTableGate(vector<uint32_t> in, uint32_t rounds, uint32_t out_bits, uint64_t* truth_table);
+	uint32_t PutTruthTableMultiOutputGate(vector<uint32_t> in, uint32_t rounds, uint32_t out_bits, uint64_t* truth_table);
+
+
+	uint32_t PutPrintValGate(vector<uint32_t> in, string infostr);
+	uint32_t PutAssertGate(vector<uint32_t> in, uint32_t bitlen, UGATE_T* assert_val);
+
 	uint32_t GetGateHead() {
 		return m_nNextFreeGate;
 	}
@@ -202,7 +223,9 @@ public:
 		return m_nMaxVectorSize;
 	}
 
-	void FinishCircuitGeneration();
+	//Export the constructed circuit in the Bristol circuit file format
+	void ExportCircuitInBristolFormat(vector<uint32_t> ingates_client, vector<uint32_t> ingates_server,
+			vector<uint32_t> outgates, const char* filename);
 
 private:
 
@@ -213,6 +236,11 @@ private:
 
 	inline uint32_t GetNumRounds(e_gatetype type, e_sharing context);
 	inline void MarkGateAsUsed(uint32_t gateid, uint32_t uses = 1);
+
+	void ExportGateInBristolFormat(uint32_t gateid, uint32_t& next_gate_id, vector<int>& gate_id_map,
+			vector<int>& constant_map, ofstream& outfile);
+	void CheckAndPropagateConstant(uint32_t gateid, uint32_t& next_gate_id, vector<int>& gate_id_map,
+			vector<int>& constant_map, ofstream& outfile);
 
 	GATE* m_pGates;
 	uint32_t m_nNextFreeGate;	// points to the current first unused gate

@@ -21,8 +21,8 @@
 void YaoSharing::Init() {
 	/* init the class for correctly sized Yao key operations*/
 	InitYaoKey(&m_pKeyOps, m_cCrypto->get_seclvl().symbits);
-
-	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, S_YAO);
+	
+	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext);
 
 	m_bZeroBuf = (BYTE*) calloc(m_nSecParamBytes, sizeof(BYTE));
 	m_bTempKeyBuf = (BYTE*) malloc(sizeof(BYTE) * AES_BYTES);
@@ -83,5 +83,5 @@ void YaoSharing::PrintKey(BYTE* key) {
 }
 
 void YaoSharing::PrintPerformanceStatistics() {
-	cout << "Yao Sharing: ANDs: " << m_nANDGates << " ; Depth: " << GetMaxCommunicationRounds() << endl;
+	cout <<  get_sharing_name(m_eContext) << ": ANDs: " << m_nANDGates << " ; Depth: " << GetMaxCommunicationRounds() << endl;
 }

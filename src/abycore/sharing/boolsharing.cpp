@@ -29,7 +29,7 @@ void BoolSharing::Init() {
 	m_nInputShareRcvSize = 0;
 	m_nOutputShareRcvSize = 0;
 
-	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, S_BOOL);
+	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext);
 
 #ifdef BENCHBOOLTIME
 	m_nCombTime = 0;
@@ -65,11 +65,23 @@ void BoolSharing::InitNewLayer() {
 void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 	m_nNumANDSizes = m_cBoolCircuit->GetANDs(m_vANDs);
 
+
+	/**Checking the role of the executor. Based on the role a specific file is selected.*/
+	//TODO use strings
+	char filename[21];
+	if(m_eRole == SERVER) {
+		strcpy(filename, "pre_comp_server.dump");
+	}
+	else {
+		strcpy(filename, "pre_comp_client.dump");
+	}
+
+
 	m_nTotalNumMTs = 0;
 	m_nNumMTs.resize(m_nNumANDSizes);
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 		//Is needed to pad the MTs to a byte, deleting this will make the online phase really messy and (probably) inefficient
-		m_nNumMTs[i] = m_vANDs[i].numgates + (8 * m_cBoolCircuit->GetMaxDepth());
+		m_nNumMTs[i] = m_vANDs[i].numgates > 0? m_vANDs[i].numgates + (8 * m_cBoolCircuit->GetMaxDepth()) : m_vANDs[i].numgates;
 		m_nTotalNumMTs += m_vANDs[i].numgates;
 	}
 
@@ -79,55 +91,72 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 
 	InitializeMTs();
 
+	/**
+		Checking if the precomputation mode is READ. If so, checking if the circuit size configured is
+		within the provided specification of the precomputation values stored in the file.
+		If it not within the spec, reverting to default mode.
+	*/
+	if((GetPreCompPhaseValue()==ePreCompRead)&&(!isCircuitSizeLessThanOrEqualWithValueFromFile(filename, m_nNumANDSizes))) {
+			SetPreCompPhaseValue(ePreCompDefault);
+	}
+
+
 	if (m_nTotalNumMTs == 0)
 		return;
 
-#ifdef USE_KK_OT_FOR_MT
-	fMaskFct = new XORMasking(m_vANDs[0].bitlen);
+	/**
+	   If the precomputation is READ or in Reading phase when in RAM mode, the MTs doesn't need to be
+	   computed again and therefore following check is done.
+	 */
+	if((GetPreCompPhaseValue() != ePreCompRead)&&(GetPreCompPhaseValue() != ePreCompRAMRead)) {
 
-	for (uint32_t j = 0; j < 2; j++) {
-		KK_OTTask* task = (KK_OTTask*) malloc(sizeof(KK_OTTask));
-		task->bitlen = m_vANDs[0].bitlen;
-		task->snd_flavor = Snd_OT;
-		task->rec_flavor = Rec_OT;
-		task->nsndvals = 4;
-		task->numOTs = ceil_divide(m_nNumMTs[0], 2);
-		task->mskfct = fMaskFct;
-		if ((m_eRole ^ j) == SERVER) {
-			task->pval.sndval.X = m_vKKS.data();
-		} else {
-			task->pval.rcvval.C = m_vKKChoices[m_eRole^1];
-			task->pval.rcvval.R = &(m_vKKC[m_eRole^1]);
-		}
-#ifndef BATCH
-		cout << "Adding new KK OT task for " << m_nNumMTs[0] << " OTs on " << m_vANDs[0].bitlen << " bit-strings" << endl;
-#endif
-		setup->AddOTTask(task, j);
-	}
-	for (uint32_t i = 1; i < m_nNumANDSizes; i++) {
-#else
-	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
-#endif
-		fMaskFct = new XORMasking(m_vANDs[i].bitlen);
+	#ifdef USE_KK_OT_FOR_MT
+		fMaskFct = new XORMasking(m_vANDs[0].bitlen);
 
 		for (uint32_t j = 0; j < 2; j++) {
-			IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
-			task->bitlen = m_vANDs[i].bitlen;
-			task->snd_flavor = Snd_R_OT;
+			KK_OTTask* task = (KK_OTTask*) malloc(sizeof(KK_OTTask));
+			task->bitlen = m_vANDs[0].bitlen;
+			task->snd_flavor = Snd_OT;
 			task->rec_flavor = Rec_OT;
-			task->numOTs = m_nNumMTs[i];
+			task->nsndvals = 4;
+			task->numOTs = ceil_divide(m_nNumMTs[0], 2);
 			task->mskfct = fMaskFct;
 			if ((m_eRole ^ j) == SERVER) {
-				task->pval.sndval.X0 = &(m_vC[i]);
-				task->pval.sndval.X1 = &(m_vB[i]);
+				task->pval.sndval.X = m_vKKS.data();
 			} else {
-				task->pval.rcvval.C = &(m_vA[i]);
-				task->pval.rcvval.R = &(m_vS[i]);
+				task->pval.rcvval.C = m_vKKChoices[m_eRole^1];
+				task->pval.rcvval.R = &(m_vKKC[m_eRole^1]);
 			}
-#ifndef BATCH
-			cout << "Adding new OT task for " << m_nNumMTs[i] << " OTs on " << m_vANDs[i].bitlen << " bit-strings" << endl;
-#endif
+	#ifndef BATCH
+			cout << "Adding new KK OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
+	#endif
 			setup->AddOTTask(task, j);
+		}
+		for (uint32_t i = 1; i < m_nNumANDSizes; i++) {
+	#else
+		for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
+	#endif
+			fMaskFct = new XORMasking(m_vANDs[i].bitlen);
+
+			for (uint32_t j = 0; j < 2; j++) {
+				IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
+				task->bitlen = m_vANDs[i].bitlen;
+				task->snd_flavor = Snd_R_OT;
+				task->rec_flavor = Rec_OT;
+				task->numOTs = m_nNumMTs[i];
+				task->mskfct = fMaskFct;
+				if ((m_eRole ^ j) == SERVER) {
+					task->pval.sndval.X0 = &(m_vC[i]);
+					task->pval.sndval.X1 = &(m_vB[i]);
+				} else {
+					task->pval.rcvval.C = &(m_vA[i]);
+					task->pval.rcvval.R = &(m_vS[i]);
+				}
+	#ifndef BATCH
+				cout << "Adding new OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
+	#endif
+				setup->AddOTTask(task, j);
+			}
 		}
 	}
 }
@@ -140,7 +169,12 @@ void BoolSharing::FinishSetupPhase(ABYSetup* setup) {
 		return;
 
 	//Compute Multiplication Triples
-	ComputeMTs();
+	//ComputeMTs();
+
+	/**Entering precomputation decision function.*/
+	PreComputationPhase();
+
+
 #ifdef DEBUGBOOL
 	cout << "A: ";
 	m_vA[0].PrintBinary();
@@ -182,7 +216,6 @@ void BoolSharing::InitializeMTs() {
 		//S is a temporary buffer and contains the result of the OTs where A is used as choice bits
 		m_vS[i].Create(m_nNumMTs[i] * mtbitlen);
 
-		//TODO: might be optimizable if the buffers are only allocated in the size of each layer
 		//D snd and rcv contain the masked A values
 		m_vD_snd[i].Create(m_nNumMTs[i]);
 		m_vD_rcv[i].Create(m_nNumMTs[i]);
@@ -342,7 +375,7 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 	deque<uint32_t> localops = m_cBoolCircuit->GetLocalQueueOnLvl(depth);
 	GATE* gate;
 #ifdef BENCHBOOLTIME
-	timeval tstart, tend;
+	timespec tstart, tend;
 #endif
 	for (uint32_t i = 0; i < localops.size(); i++) {
 		gate = m_pGates + localops[i];
@@ -354,11 +387,11 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 		switch (gate->type) {
 		case G_LIN:
 #ifdef BENCHBOOLTIME
-			gettimeofday(&tstart, NULL);
+			clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 			EvaluateXORGate(localops[i]);
 #ifdef BENCHBOOLTIME
-			gettimeofday(&tend, NULL);
+			clock_gettime(CLOCK_MONOTONIC, &tend);
 			m_nXORTime += getMillies(tstart, tend);
 #endif
 			break;
@@ -380,6 +413,12 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 			break;
 		case G_CALLBACK:
 			EvaluateCallbackGate(localops[i]);
+			break;
+		case G_PRINT_VAL:
+			EvaluatePrintValGate(localops[i], C_BOOLEAN);
+			break;
+		case G_ASSERT:
+			EvaluateAssertGate(localops[i], C_BOOLEAN);
 			break;
 		default:
 			if (IsSIMDGate(gate->type)) {
@@ -464,7 +503,11 @@ inline void BoolSharing::EvaluateConstantGate(uint32_t gateid) {
 
 	for (uint32_t i = 0; i < ceil_divide(gate->nvals, GATE_T_BITS); i++) {
 		gate->gs.val[i] = value;
+		if(value) {
+			gate->gs.val[i] = ~(0L);
+		}
 	}
+	gate->gs.val[ceil_divide(gate->nvals, GATE_T_BITS)-1] &= ((1L<<(gate->nvals%64)) -1L);
 #ifdef DEBUGBOOL
 		cout << "Constant gate value: "<< value << endl;
 #endif
@@ -627,29 +670,43 @@ void BoolSharing::FinishCircuitLayer(uint32_t level) {
 	}
 #endif
 
+#ifdef DEBUGBOOL
+	cout << "Evaluating MTs" << endl;
+#endif
 	EvaluateMTs();
+#ifdef DEBUGBOOL
+	cout << "Setting Values of AND Gates" << endl;
+#endif
 	EvaluateANDGate();
+#ifdef DEBUGBOOL
+	cout << "Assigning Input Shares" << endl;
+#endif
 	AssignInputShares();
+#ifdef DEBUGBOOL
+	cout << "Assigning Output Shares" << endl;
+#endif
 	AssignOutputShares();
-
+#ifdef DEBUGBOOL
+	cout << "Initializing new layer" << endl;
+#endif
 	InitNewLayer();
 }
 
 void BoolSharing::EvaluateMTs() {
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
-		uint32_t startpos = m_vMTStartIdx[i];
-		uint32_t endpos = m_vMTIdx[i];
-		if(startpos != endpos) {//do nothing, since len = 0, TODO: there is an error somehwere that makes this check necesssary, fix!
-			uint32_t len = endpos - startpos;
-			uint32_t startposbytes = ceil_divide(startpos, 8);
-			uint32_t startposstringbits = startpos * m_vANDs[i].bitlen;
-			uint32_t startposstringbytes = startposbytes * m_vANDs[i].bitlen;
-			uint32_t lenbytes = ceil_divide(len, 8);
-			uint32_t stringbytelen = ceil_divide(m_vANDs[i].bitlen * len, 8);
-			uint32_t mtbytelen = ceil_divide(m_vANDs[i].bitlen, 8);
+		uint64_t startpos = m_vMTStartIdx[i];
+		uint64_t endpos = m_vMTIdx[i];
+		if(startpos != endpos) {//do nothing, since len = 0, TODO: there is an error somewhere that makes this check necessary, fix!
+			uint64_t len = endpos - startpos;
+			uint64_t startposbytes = ceil_divide(startpos, 8);
+			uint64_t startposstringbits = startpos * m_vANDs[i].bitlen;
+			uint64_t startposstringbytes = startposbytes * m_vANDs[i].bitlen;
+			uint64_t lenbytes = ceil_divide(len, 8);
+			uint64_t stringbytelen = ceil_divide(m_vANDs[i].bitlen * len, 8);
+			uint64_t mtbytelen = ceil_divide(m_vANDs[i].bitlen, 8);
 
 
-	/*		cout << "lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
+		/*	cout << "lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
 			", startposbytes = " << startposbytes << ", startposstring = " << startposstringbytes << ", nummts: " <<
 				m_nNumMTs[i] << ", mtidx = " << m_vMTIdx[i] << ", mtstartidx = " << m_vMTStartIdx[i] << ", numandgates: " <<
 				m_vANDs[i].numgates <<endl;*/
@@ -664,7 +721,6 @@ void BoolSharing::EvaluateMTs() {
 					", startposbytes = " << startposbytes << ", startposstring = " << startposstringbytes << ", startidx = " <<
 					m_vMTStartIdx[i] << ", idx = " << m_vMTIdx[i] << ", num ANDs = " << m_vANDs[i].numgates << ", nummts = " <<
 					m_nNumMTs[i] << ", " << m_vMTIdx[i] - m_vMTStartIdx[i] << endl;
-
 
 			cout << "A share: ";
 			m_vA[i].Print(0, len);
@@ -703,20 +759,18 @@ void BoolSharing::EvaluateMTs() {
 						}
 					}
 				} else {
+					uint8_t* tmp = (uint8_t*) malloc(ceil_divide(m_vANDs[i].bitlen, 8));
 					for (uint32_t j = 0; j < len; j++) {
 						if (m_vA[i].GetBitNoMask(j + startpos)) { //a * e
-							uint64_t tmp = m_vE_snd[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-							m_vResA[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-							//m_vResA[i].SetBitsPosOffset(m_vE_snd[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
-							//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							m_vE_snd[i].GetBits(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							m_vResA[i].SetBits(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
 						}
 						if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * b
-							uint64_t tmp = m_vB[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-							m_vResB[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-							//m_vResB[i].SetBitsPosOffset(m_vB[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
-							//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							m_vB[i].GetBits(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+							m_vResB[i].SetBits(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
 						}
 					}
+					free(tmp);
 				}
 			}
 
@@ -736,14 +790,18 @@ void BoolSharing::EvaluateMTs() {
 							}
 						}
 					} else {
+						uint8_t* tmp = (uint8_t*) malloc(ceil_divide(m_vANDs[i].bitlen, 8));
 						for (uint32_t j = 0; j < len; j++) {
 							if (m_vD_snd[i].GetBitNoMask(j + startpos)) { //d * e
-								uint64_t tmp = m_vE_snd[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
-								m_vResB[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+								//uint64_t tmp = m_vE_snd[i].Get<uint64_t>(startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+								m_vE_snd[i].GetBits(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+								//m_vResB[i].Set<uint64_t>(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
+								m_vResB[i].SetBits(tmp, startposstringbits + j*m_vANDs[i].bitlen, m_vANDs[i].bitlen);
 								//m_vResB[i].SetBitsPosOffset(m_vE_snd[i].GetArr(), startposstringbits + j * m_vANDs[i].bitlen,
 								//		startposstringbits + j * m_vANDs[i].bitlen, m_vANDs[i].bitlen);
 							}
 						}
+						free(tmp);
 					}
 				}
 				m_vResA[i].XORBytes(m_vResB[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
@@ -915,8 +973,8 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 	uint32_t vsize = gate->nvals;
 
 #ifdef BENCHBOOLTIME
-	timeval tstart, tend;
-	gettimeofday(&tstart, NULL);
+	timespec tstart, tend;
+	clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 
 	if (gate->type == G_COMBINE) {
@@ -940,7 +998,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 
 		tmp.DetachBuf();
 #ifdef BENCHBOOLTIME
-		gettimeofday(&tend, NULL);
+		clock_gettime(CLOCK_MONOTONIC, &tend);
 		m_nCombTime += getMillies(tstart, tend);
 #endif
 		/*cout << "Res value = " << (hex);
@@ -1024,6 +1082,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 #endif
 		uint32_t idparent = gate->ingates.inputs.parent;
 		uint32_t* positions = gate->gs.sub_pos.posids; //gate->gs.combinepos.input;
+		bool del_pos = gate->gs.sub_pos.copy_posids;
 		uint32_t arraypos;
 		uint32_t bitpos;
 		InstantiateGate(gate);
@@ -1035,9 +1094,10 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 			gate->gs.val[i >> 6] |= (((valptr[arraypos] >> bitpos) & 0x1) << (i & 0x3F));
 		}
 		UsedGate(idparent);
-		free(positions);
+		if(del_pos)
+			free(positions);
 #ifdef BENCHBOOLTIME
-		gettimeofday(&tend, NULL);
+		clock_gettime(CLOCK_MONOTONIC, &tend);
 		m_nSubsetTime += getMillies(tstart, tend);
 #endif
 	} else if (gate->type == G_STRUCT_COMBINE) {
@@ -1076,12 +1136,12 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 
 		free(inputs);
 #ifdef BENCHBOOLTIME
-		gettimeofday(&tend, NULL);
+		clock_gettime(CLOCK_MONOTONIC, &tend);
 		m_nCombStructTime += getMillies(tstart, tend);
 #endif
 	}
 #ifdef BENCHBOOLTIME
-	gettimeofday(&tend, NULL);
+	clock_gettime(CLOCK_MONOTONIC, &tend);
 	m_nSIMDTime += getMillies(tstart, tend);
 #endif
 }
@@ -1178,10 +1238,16 @@ void BoolSharing::Reset() {
 	m_nOutputShareRcvSize = 0;
 
 	for (uint32_t i = 0; i < m_vA.size(); i++) {
-		m_vA[i].delCBitVector();
-		m_vB[i].delCBitVector();
-		m_vC[i].delCBitVector();
-		m_vS[i].delCBitVector();
+		/**
+			Check if the precomputation mode is RAM and phase of reading. If so, the vectors associated
+		 	with the MTs are not refreshed or deleted.
+		 */
+		if(GetPreCompPhaseValue() != ePreCompRAMRead) {
+			m_vA[i].delCBitVector();
+			m_vB[i].delCBitVector();
+			m_vC[i].delCBitVector();
+			m_vS[i].delCBitVector();
+		}
 		m_vD_snd[i].delCBitVector();
 		m_vE_snd[i].delCBitVector();
 		m_vD_rcv[i].delCBitVector();
@@ -1202,4 +1268,205 @@ void BoolSharing::Reset() {
 	m_vOutputShareRcvBuf.delCBitVector();
 
 	m_cBoolCircuit->Reset();
+
+	/**Checking the role and and deciding upon the file to be deleted if the precomputation values are
+	  completely used up in a Precomputation READ mode.*/
+	if(m_eRole == SERVER) {
+		if((FileExists("pre_comp_server.dump"))&&(m_nFilePos >= FileSize("pre_comp_server.dump"))&&(GetPreCompPhaseValue() == ePreCompRead)) {
+			remove("pre_comp_server.dump");
+			m_nFilePos = -1;
+		}
+	}
+	else  {
+		if((FileExists("pre_comp_client.dump"))&&(m_nFilePos >= FileSize("pre_comp_client.dump"))&&(GetPreCompPhaseValue() == ePreCompRead)) {
+			remove("pre_comp_client.dump");
+			m_nFilePos = -1;
+		}
+	}
 }
+
+/**Pre-computations*/
+void BoolSharing::PreComputationPhase() {
+
+	/**Obtaining the precomputation mode value*/
+	ePreCompPhase phase_value = GetPreCompPhaseValue();
+
+	/**Decision of the precomputation file based on the role of executor.*/
+	char filename[50];
+	if(m_eRole == SERVER) {
+		strcpy(filename, "pre_comp_server.dump");
+	}
+	else {
+		strcpy(filename, "pre_comp_client.dump");
+	}
+
+	/**Check if the precomputation mode is in RAM Reading phase*/
+	if(phase_value == ePreCompRAMRead) {
+		return;
+	}
+	/**Check if the execution is non-Read mode or if the file to be used in READ mode doesn't exist*/
+	else if((phase_value != ePreCompRead)||(!FileExists(filename))) {
+		/**Compute the MTs normally*/
+		ComputeMTs();
+		/**Check if the mode of precomputation is store. If so store it to respective file.*/
+		if(phase_value == ePreCompStore) {
+			StoreMTsToFile(filename);
+		}
+		/**
+			Check if precompution mode is in RAM writing phase. If so, change it to RAM reading phase
+			since, the write phase mainly comprises of computation of MTs in their respective vectors.
+		*/
+		else if(phase_value == ePreCompRAMWrite) {
+			SetPreCompPhaseValue(ePreCompRAMRead);
+		}
+	}
+	/**This condition is activated once READ mode is persistent and execution of the mode is possible.*/
+	else {
+		ReadMTsFromFile(filename);
+	}
+}
+
+void BoolSharing::StoreMTsToFile(char *filename) {
+
+
+	FILE *fp;
+
+	/**
+		Condition to check if the file already exists. If so then, the mode of write would
+		be file append.
+	*/
+	if(FileExists(filename)) {
+		fp = fopen(filename, "a+b");
+	}
+	else {
+		fp = fopen(filename, "wb");
+	}
+
+	/**Initially writing the NUMANDSizes corresponding to the number of AND gate Vectors.*/
+	fwrite(&m_nNumANDSizes, sizeof(uint32_t), 1, fp);
+
+	/**Writing the MTs and bytelen of the MTs o the file.*/
+	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
+		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
+		uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
+		fwrite(&andbytelen, sizeof(uint32_t), 1, fp);
+		fwrite(m_vA[i].GetArr(), andbytelen, 1, fp);
+		fwrite(m_vB[i].GetArr(), andbytelen, 1, fp);
+		fwrite(m_vC[i].GetArr(), andbytelen, 1, fp);
+
+	}
+	/**Closing the file pointer.*/
+	fclose(fp);
+}
+
+void BoolSharing::ReadMTsFromFile(char *filename) {
+
+	FILE *fp;
+	/**Calculate the file size*/
+	uint64_t file_size = FileSize(filename);
+
+	/**Variable for the storing the NUMANDSizes value from the file.*/
+	uint32_t num_and_sizes;
+
+	/**Opening the file in read mode.*/
+	fp = fopen(filename, "rb");
+	/**BYTE pointer used as a buffer to read from the file.*/
+	BYTE *ptr;
+	/**Seek the file pointer to the location of the last read position.*/
+	fseek(fp, m_nFilePos, SEEK_SET);
+	/**Reading the num and sizes from the file.*/
+	fread(&num_and_sizes, sizeof(uint32_t), 1, fp);
+	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
+
+		/**Calculating the required ANDGatelength in bytes for the provided circuit configuration.*/
+		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
+		uint32_t org_andbytelen;
+		uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
+
+		/**Reading the ANDGate length in bytes from file.*/
+		fread(&org_andbytelen, sizeof(uint32_t), 1, fp);
+
+		/**Allocating the memory for the BYTE pointer with the read ANDGate lenght size from the file.*/
+		ptr = (BYTE*)malloc(org_andbytelen*sizeof(BYTE));
+
+		/**
+			If unequal means the bytes should be read from the file with original byte size else if
+			the configured size.
+		*/
+		if(org_andbytelen != andbytelen) {
+
+			fread(ptr, org_andbytelen, 1, fp);
+			m_vA[i].Copy(ptr, 0, andbytelen);
+			fread(ptr, org_andbytelen, 1, fp);
+			m_vB[i].Copy(ptr, 0, andbytelen);
+			fread(ptr, org_andbytelen, 1, fp);
+			m_vC[i].Copy(ptr, 0, andbytelen);
+		}
+		else {
+			fread(ptr, andbytelen, 1, fp);
+			m_vA[i].Copy(ptr, 0, andbytelen);
+			fread(ptr, andbytelen, 1, fp);
+			m_vB[i].Copy(ptr, 0, andbytelen);
+			fread(ptr, andbytelen, 1, fp);
+			m_vC[i].Copy(ptr, 0, andbytelen);
+		}
+		m_vD_snd[i].Copy(m_vA[i].GetArr(), 0, andbytelen);
+		m_vE_snd[i].Copy(m_vB[i].GetArr(), 0, stringbytelen);
+
+	}
+
+	/**Storing the current file pointer position for next iteration use of the circuit setup.*/
+	m_nFilePos = ftell(fp);
+	/**Closing the file.*/
+	fclose(fp);
+}
+
+BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, uint32_t in_circ_size) {
+
+	/**Check if the file already exists and if the existing is empty. If so, return false.*/
+	if(!FileExists(filename)||FileEmpty(filename)) {
+		/**Returning false and reverting the precomputation mode to default.*/
+		return FALSE;
+	}
+
+	/**Opening the precomputation file in read mode.*/
+	FILE *fp = fopen(filename, "rb");
+
+	uint32_t circ_size_in_file, andbytelen_in_file;
+
+	/**Reading the circuit size mainly the NUMAndGate vector size*/
+	fread(&circ_size_in_file, sizeof(uint32_t), 1, fp);
+	/**Checking if they are unequal.*/
+	if(circ_size_in_file != in_circ_size) {
+		/**Returning false and reverting the precomputation mode to default.*/
+		return FALSE;
+	}
+	/**
+	 Checking the byte length of the MTs in the file with the required size.
+	 If it is value in the file is less than the required then, the precomputation
+	 mode is reverted to defaut.
+	*/
+	for (uint32_t i = 0; i < circ_size_in_file; i++) {
+		/**Calculating the AND gate length in bytes for the provided circuit configuration.*/
+		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
+		/**Reading the AND gate length in bytes from the file.*/
+		fread(&andbytelen_in_file, sizeof(uint32_t), 1, fp);
+		uint32_t traverseMT_size_in_file = andbytelen_in_file*3;
+
+		/**Shifting through the MTs based on the ANDGate size in byte length.*/
+		fseek(fp, (ftell(fp) + traverseMT_size_in_file), SEEK_SET);
+
+		/**Checking if the condition of size of byte length in file is lower than byte length required.*/
+		if(andbytelen > andbytelen_in_file) {
+
+			/**Close the file*/
+			fclose(fp);
+			/**Returning false and reverting the precomputation mode to default.*/
+			return FALSE;
+		}
+	}
+	/**Close the file*/
+	fclose(fp);
+	return TRUE;
+}
+

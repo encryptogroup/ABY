@@ -18,11 +18,18 @@
 #include "min-euclidean-dist-circuit.h"
 
 int32_t test_min_eucliden_dist_circuit(e_role role, char* address, seclvl seclvl, uint32_t dbsize,
-		uint32_t dim, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing) {
+		uint32_t dim, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing, ePreCompPhase pre_comp_value) {
 	uint32_t bitlen = 8, i, j, temp, tempsum, maxbitlen=32;
 	uint64_t output;
 	ABYParty* party = new ABYParty(role, address, seclvl, maxbitlen, nthreads, mt_alg);
 	vector<Sharing*>& sharings = party->GetSharings();
+
+	/**
+		Setting the precomputation value being passed as the precomputation mode of operation.
+		Currently precomputation phases only active for GMW based implementations.
+	*/
+	sharings[S_BOOL]->SetPreCompPhaseValue(pre_comp_value);
+
 
 	crypto* crypt = new crypto(seclvl.symbits, (uint8_t*) const_seed);
 	uint32_t **serverdb, *clientquery;
@@ -81,24 +88,28 @@ int32_t test_min_eucliden_dist_circuit(e_role role, char* address, seclvl seclvl
 	Csqr = mincirc->PutINGate(tempsum, 2*bitlen+ceil_log2(dim), CLIENT);
 
 
-	mindst = build_min_euclidean_dist_circuit(Sshr, Cshr, dbsize, dim, Ssqr, Csqr, distcirc, (BooleanCircuit*) mincirc);
+	mindst = build_min_euclidean_dist_circuit(Sshr, Cshr, dbsize, dim, Ssqr, Csqr, distcirc, (BooleanCircuit*) mincirc, sharings, minsharing);
 
 	mindst = mincirc->PutOUTGate(mindst, ALL);
 
 	party->ExecCircuit();
+	/**
+		Condition check added because in Precomputation store mode. Online phase is skipped therefore,
+		potentially calling getclearvalue is not possible.
+	*/
+	if(pre_comp_value != ePreCompStore) {
+		output = mindst->get_clear_value<uint64_t>();
 
-	output = mindst->get_clear_value<uint64_t>();
+		CBitVector out;
+		//out.AttachBuf(output, (uint64_t) AES_BYTES * nvals);
 
-	CBitVector out;
-	//out.AttachBuf(output, (uint64_t) AES_BYTES * nvals);
+		cout << "Testing min Euclidean distance in " << get_sharing_name(dstsharing) << " and " <<
+			get_sharing_name(minsharing) << " sharing: " << endl;
 
-	cout << "Testing min Euclidean distance in " << get_sharing_name(dstsharing) << " and " <<
-		get_sharing_name(minsharing) << " sharing: " << endl;
-
-	cout << "Circuit result = " << output << endl;
-	verify = verify_min_euclidean_dist(serverdb, clientquery, dbsize, dim);
-	cout << "Verification result = " << verify << endl;
-
+		cout << "Circuit result = " << output << endl;
+		verify = verify_min_euclidean_dist(serverdb, clientquery, dbsize, dim);
+		cout << "Verification result = " << verify << endl;
+	}
 	//PrintTimings();
 
 	//TODO free
@@ -119,9 +130,11 @@ int32_t test_min_eucliden_dist_circuit(e_role role, char* address, seclvl seclvl
 
 //Build_
 share* build_min_euclidean_dist_circuit(share*** S, share** C, uint32_t n, uint32_t d, share** Ssqr, share* Csqr,
-		Circuit* distcirc, BooleanCircuit* mincirc) {
+		Circuit* distcirc, BooleanCircuit* mincirc, vector<Sharing*>& sharings, e_sharing minsharing) {
 	share **distance, *temp, *mindist;
 	uint32_t i, j;
+
+	Circuit *yaocirc = sharings[S_YAO]->GetCircuitBuildRoutine();
 
 	distance = (share**) malloc(sizeof(share*) * n);
 	assert(mincirc->GetCircuitType() == C_BOOLEAN);
@@ -133,7 +146,13 @@ share* build_min_euclidean_dist_circuit(share*** S, share** C, uint32_t n, uint3
 			distance[i] = distcirc->PutADDGate(distance[i], temp);
 		}
 		temp = mincirc->PutADDGate(Ssqr[i], Csqr);
-		distance[i] = mincirc->PutA2YGate(distance[i]);
+		if(minsharing == S_BOOL) {
+			distance[i] = ((BooleanCircuit*)yaocirc)->PutA2YGate(distance[i]);
+			distance[i] = mincirc->PutY2BGate(distance[i]);
+		}
+		else if(minsharing == S_YAO) {
+			distance[i] = mincirc->PutA2YGate(distance[i]);
+		}
 		distance[i] = mincirc->PutSUBGate(temp, distance[i]);
 	}
   

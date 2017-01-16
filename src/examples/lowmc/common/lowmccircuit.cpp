@@ -13,7 +13,7 @@
 			GNU Affero General Public License for more details.
 			You should have received a copy of the GNU Affero General Public License
 			along with this program. If not, see <http://www.gnu.org/licenses/>.
- \brief		Prototypical benchmark implementation of LowMCCiruit. Attention: Does not give correct result!
+ \brief		Prototypical benchmark implementation of LowMCCiruit. Attention: Does not yield correct result!
  */
 #include "lowmccircuit.h"
 
@@ -22,7 +22,7 @@ int32_t test_lowmc_circuit(e_role role, char* address, uint32_t nvals, uint32_t 
 		e_mt_gen_alg mt_alg, e_sharing sharing, uint32_t statesize, uint32_t keysize,
 		uint32_t sboxes, uint32_t rounds, uint32_t maxnumgates, crypto* crypt) {
 
-	LowMCParams param = { sboxes, keysize, statesize, keysize == 80 ? 64 : 128, rounds };
+	LowMCParams param = { sboxes, keysize, statesize, keysize == 80 ? 64 : (uint32_t) 128, rounds };
 	return test_lowmc_circuit(role, address, nvals, nthreads, mt_alg, sharing, &param, maxnumgates, crypt);
 }
 
@@ -90,7 +90,7 @@ share* BuildLowMCCircuit(share* val, share* key, BooleanCircuit* circ, LowMCPara
 
 	//copy the input to the current state
 	for (i = 0; i < statesize; i++)
-		state[i] = val->get_wire(i);
+		state[i] = val->get_wire_id(i);
 
 	LowMCAddRoundKey(state, key->get_wires(), statesize, 0, circ); //ARK
 	for (round = 0; round < nrounds; round++) {
@@ -101,6 +101,7 @@ share* BuildLowMCCircuit(share* val, share* key, BooleanCircuit* circ, LowMCPara
 		//multiply state with GF2Matrix
 		//LowMCMultiplyState(state, statesize, circ);//Naive version of the state multiplication
 		FourRussiansMatrixMult(state, statesize, circ);//4 Russians version of the state multiplication
+		//LowMCMultiplyStateCallback(state, statesize, circ); //use callbacks to perform the multiplication in plaintext
 
 		//XOR constants
 		LowMCXORConstants(state, statesize, circ);
@@ -150,7 +151,17 @@ void LowMCXORConstants(vector<uint32_t>& state, uint32_t lowmcstatesize, Boolean
 
 //Multiply the key with a 192x192 matrix and XOR the result on the state.
 void LowMCXORMultipliedKey(vector<uint32_t>& state, vector<uint32_t> key, uint32_t lowmcstatesize, uint32_t round, BooleanCircuit* circ) {
-	//Assume outsourced key-schedule, pre-computed in plaintext
+	uint32_t tmp;
+	/*for(uint32_t i = 0; i < MPCC_STATE_SIZE; i++) {
+	 tmp = 0;
+	 for(uint32_t j = 0; j < MPCC_STATE_SIZE; j++, m_nRndCtr++) {
+	 if(m_vRandomBits.GetBit(m_nRndCtr)) {
+	 tmp = PutXORGate(tmp, key[j]);
+	 }
+	 }
+	 state[i] = PutXORGate(state[i], tmp);
+	 }*/
+	//Assume outsourced key-schedule
 	for (uint32_t i = 0; i < lowmcstatesize; i++) {
 		state[i] = circ->PutXORGate(state[i], key[i+(1+round) * lowmcstatesize]);
 	}
@@ -216,5 +227,43 @@ void FourRussiansMatrixMult(vector<uint32_t>& state, uint32_t lowmcstatesize, Bo
 		state[i] = tmpstate[i];
 
 	free(lut);
+}
+
+void LowMCMultiplyStateCallback(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
+	vector<uint32_t> tmpstate(lowmcstatesize);
+	UGATE_T*** fourrussiansmat;
+
+	circ->PutCallbackGate(state, 0, &CallbackBuild4RMatrixAndMultiply, (void*) fourrussiansmat, 1);
+	for (uint32_t i = 1; i < lowmcstatesize-1; i++) {
+		matmul* mulinfos = (matmul*) malloc(sizeof(matmul));
+		mulinfos->column = i;
+		//mulinfos->matrix = (UGATE_T) fourrussiansmat;
+
+		tmpstate[i] = circ->PutCallbackGate(state, 0, &CallbackMultiplication, (void*) mulinfos, 1);
+	}
+	circ->PutCallbackGate(state, 0, &CallbackMultiplyAndDestroy4RMatrix, (void*) fourrussiansmat, 1);
+
+
+	for (uint32_t i = 0; i < lowmcstatesize; i++)
+		state[i] = tmpstate[i];
+}
+
+void CallbackMultiplication(GATE* gate, void* matinfos) {
+	cout << "Performing multiplication" << endl;
+	for(uint32_t i = 0; i < gate->ingates.ningates; i++) {
+
+	}
+	//alternatively, check if i == 0 and then call CallbackBuild4RMatrix(gate, matinfos.matrix); and check if i == statesize-1 and delete matrix
+	free(matinfos);
+}
+
+void CallbackBuild4RMatrixAndMultiply(GATE* gate, void* mat) {
+	//for(uint32_t i = 0; i < )
+	//TODO
+	cout << "Building 4 Russians matrix" << endl;
+}
+
+void CallbackMultiplyAndDestroy4RMatrix(GATE* gate, void* matrix) {
+	//TODO
 }
 

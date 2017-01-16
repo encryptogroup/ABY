@@ -22,22 +22,22 @@
 #include <cassert>
 
 int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
-		uint32_t neles, uint32_t bitlen, double epsilon, uint32_t nthreads, e_mt_gen_alg mt_alg,
-		e_sharing sharing) {
+		uint32_t server_neles, uint32_t client_neles, uint32_t bitlen, double epsilon, uint32_t nthreads,
+		e_mt_gen_alg mt_alg, e_sharing sharing, uint16_t port) {
 
 	uint32_t *srv_set, *cli_set, *circ_intersect, *ver_intersect, *inv_perm, *stashperm;
 	uint32_t ver_inter_ctr = 0, circ_inter_ctr = 0, internalbitlen, maxstashsize, maxbinsize;
 	share **shr_srv_hash_table, *shr_cli_hash_table, *shr_out, *shr_srv_set, **shr_cli_stash, *shr_stash_out;
 	assert(bitlen <= 32);
-	uint32_t nbins = epsilon * neles * 2;
+	uint32_t nbins = ceil(epsilon * client_neles);
 	uint8_t *client_hash_table, *server_hash_table, *stash;
 	timespec t_start, t_end;
 
 	//vector<uint32_t> sel_bits(nswapgates);
-	maxstashsize = compute_max_stash_size(neles, nbins);
+	maxstashsize = compute_max_stash_size(client_neles, nbins);
 
 	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads,
-			mt_alg);
+			mt_alg, 4000000, port);
 
 	vector<Sharing*>& sharings = party->GetSharings();
 
@@ -47,21 +47,25 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 	crypto* crypt = new crypto(seclvl.symbits, (uint8_t*) const_seed);
 
 
-	srv_set = (uint32_t*) malloc(sizeof(uint32_t) * neles);
-	cli_set = (uint32_t*) malloc(sizeof(uint32_t) * neles);
-	ver_intersect = (uint32_t*) calloc(neles, sizeof(uint32_t));
-	circ_intersect = (uint32_t*) malloc(sizeof(uint32_t) * neles);
+	srv_set = (uint32_t*) malloc(sizeof(uint32_t) * server_neles);
+	cli_set = (uint32_t*) malloc(sizeof(uint32_t) * client_neles);
+	ver_intersect = (uint32_t*) calloc(client_neles, sizeof(uint32_t));
+	circ_intersect = (uint32_t*) malloc(sizeof(uint32_t) * client_neles);
 
 	inv_perm = (uint32_t*) malloc(nbins * sizeof(uint32_t));
 
 	//sample random server and client sets
 	//sample_random_elements(neles, bitlen, srv_set, cli_set);
 	//sample fixed server and client sets (is faster than random sets for larger sets)
-	set_fixed_elements(neles, bitlen, srv_set, cli_set);
+	set_fixed_elements(server_neles, client_neles, bitlen, srv_set, cli_set);
+	/*for(uint32_t i = 0; i < neles; i++) {
+		cout << i << ": " << srv_set[i] << " , " << cli_set[i] << endl;
+	}*/
 
+	cout << "Computing the intersection between " << server_neles << " and " << client_neles << " elements with " << nbins << " bins" << endl;
 	//map the random elements to a set of bins using simple hashing or to a cuckoo table
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
-	ServerHashingRoutine((uint8_t*) srv_set, neles, bitlen, nbins, &maxbinsize, &server_hash_table,
+	ServerHashingRoutine((uint8_t*) srv_set, server_neles, bitlen, nbins, &maxbinsize, &server_hash_table,
 			&internalbitlen, 1, crypt);
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
 
@@ -72,10 +76,10 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 #endif
 
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
-	ClientHashingRoutine((uint8_t*) cli_set, neles, bitlen, nbins, &client_hash_table, inv_perm,
+	ClientHashingRoutine((uint8_t*) cli_set, client_neles, bitlen, nbins, &client_hash_table, inv_perm,
 			&internalbitlen, &stash, maxstashsize, &stashperm, 1, crypt);
 
-	clock_gettime(CLOCK_MONOTONIC, &t_end);;
+	clock_gettime(CLOCK_MONOTONIC, &t_end);
 #ifndef BATCH
 	if(role == CLIENT) {
 		cout << "Time for cuckoo hashing: " << getMillies(t_start, t_end) << endl;
@@ -109,14 +113,14 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 
 
 
-	shr_srv_set = circ->PutSIMDINGate(neles, srv_set, bitlen, SERVER);
+	shr_srv_set = circ->PutSIMDINGate(server_neles, srv_set, bitlen, SERVER);
 
 	for(uint32_t i = 0; i < maxstashsize; i++) {
 		shr_cli_stash[i] = circ->PutINGate(((uint32_t*) stash)[i], bitlen, CLIENT);
-		shr_cli_stash[i] = circ->PutRepeaterGate(neles,shr_cli_stash[i]);
+		shr_cli_stash[i] = circ->PutRepeaterGate(server_neles, shr_cli_stash[i]);
 	}
 
-	shr_stash_out = BuildPhasingStashCircuit(shr_srv_set, shr_cli_stash, neles, bitlen, maxstashsize, circ);
+	shr_stash_out = BuildPhasingStashCircuit(shr_srv_set, shr_cli_stash, server_neles, bitlen, maxstashsize, circ);
 	shr_stash_out = circ->PutOUTGate(shr_stash_out, CLIENT);
 	party->ExecCircuit();
 
@@ -151,15 +155,16 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 			cout << (hex) << setw(2) << setfill('0') << srv_set[i] << ", " << setw(2) << setfill('0') << cli_set[i] << (dec) << endl;
 		}*/
 #ifndef BATCH
-		std::sort(srv_set, srv_set+neles);
-		std::sort(cli_set, cli_set+neles);
+		std::sort(srv_set, srv_set+server_neles);
+		std::sort(cli_set, cli_set+client_neles);
 
 
-		std::set_intersection (srv_set, srv_set + neles, cli_set, cli_set + neles, ver_intersect);
+		std::set_intersection (srv_set, srv_set + server_neles, cli_set, cli_set + client_neles, ver_intersect);
 		for(ver_inter_ctr = 0; ver_intersect[ver_inter_ctr] > 0; ver_inter_ctr++) {
 			//if(ver_temp[i] > 0)
 				//cout << ver_inter_ctr << (hex) << ": " << ver_intersect[ver_inter_ctr] <<(dec)<< endl;
 		}
+
 		std::sort(ver_intersect, ver_intersect+ver_inter_ctr);
 		std::sort(circ_intersect, circ_intersect+circ_inter_ctr);
 
@@ -180,7 +185,7 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 	}
 
 #ifdef BATCH
-	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) <<
+	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL)+party->GetTiming(P_BASE_OT)  <<
 			"\t" << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) <<endl;
 #endif
 
@@ -229,13 +234,18 @@ void sample_random_elements(uint32_t neles, uint32_t bitlen, uint32_t* srv_set, 
 }
 
 //generate client and server set such that half of the elements overlap
-void set_fixed_elements(uint32_t neles, uint32_t bitlen, uint32_t* srv_set, uint32_t* cli_set) {
+void set_fixed_elements(uint32_t server_neles, uint32_t client_neles, uint32_t bitlen,
+		uint32_t* srv_set, uint32_t* cli_set) {
 	uint32_t incr = 15875162;
-	uint32_t offset = neles/2;
-	for(uint32_t i = 0; i < neles; i++) {
+	uint32_t offset = (server_neles+client_neles)/2;
+	for(uint32_t i = 0; i < server_neles; i++) {
 		srv_set[i] = incr*(i+1);
+	}
+
+	for(uint32_t i = 0; i < client_neles; i++) {
 		cli_set[i] = incr*(i+offset);
 	}
+
 }
 
 
@@ -276,7 +286,7 @@ share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint3
 		for(uint32_t j = neles; j > 1; j/=2) {
 			if(j & 0x01 > 0) { //value is odd, hence store highest value on stash
 				tmpneles = j-1;
-				odd_stash.push_back(circ->PutSubsetGate(eq, &tmpneles, 1)->get_wire(0));
+				odd_stash.push_back(circ->PutSubsetGate(eq, &tmpneles, 1)->get_wire_id(0));
 			}
 			posa = ids;
 			posb = ids+(j/2);
@@ -284,13 +294,13 @@ share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint3
 			eqb = circ->PutSubsetGate(eq, posb, j/2);
 			eq = circ->PutXORGate(eqa, eqb);
 		}
-		xoreq = eq->get_wire(0);
+		xoreq = eq->get_wire_id(0);
 		for(uint32_t j = 0; j < odd_stash.size(); j++) { //handle all odd values
 			xoreq = circ->PutXORGate(xoreq, odd_stash[j]);
 		}
 		odd_stash.clear();
 
-		out->set_wire(i, xoreq);
+		out->set_wire_id(i, xoreq);
 	}
 	free(ids);
 	//out->set_wires(circ->PutSplitterGate(shr_cli_stash[1]->get_wire(6)));
@@ -300,7 +310,7 @@ share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint3
 void ServerHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen, uint32_t nbins,
 		uint32_t *maxbinsize, uint8_t** hash_table, uint32_t* outbitlen, uint32_t ntasks, crypto* crypt) {
 
-	uint32_t nhashfuns = 2, outbytelen;
+	uint32_t nhashfuns = 3, outbytelen;
 	prf_state_ctx prf_state;
 	uint8_t *tmphashtable, *server_dummy;
 	uint32_t *nelesinbin = (uint32_t*) malloc(sizeof(uint32_t) * nbins);
@@ -317,6 +327,14 @@ void ServerHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen,
 	*hash_table = (uint8_t*) malloc(outbytelen * nbins * *maxbinsize);
 	pad_elements(tmphashtable, outbytelen, nbins, nelesinbin, *maxbinsize, *hash_table, server_dummy);
 
+	/*cout << "Server bins: " << endl;
+	for(uint32_t i = 0, ctr=0; i < nbins; i++) {
+		cout << "Bin " << i << ": ";
+		for(uint32_t j = 0; j < *maxbinsize; j++, ctr++)
+			cout << ((uint32_t*)*hash_table)[ctr] << ", ";
+		cout << endl;
+	}*/
+
 	crypt->free_prf_state(&prf_state);
 
 	free(tmphashtable);
@@ -328,7 +346,7 @@ void ClientHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen,
 		uint8_t** hash_table, uint32_t* inv_perm, uint32_t* outbitlen, uint8_t** stash,
 		uint32_t maxstashsize, uint32_t** stashperm, uint32_t ntasks, crypto* crypt) {
 
-	uint32_t nhashfuns = 2, outbytelen;
+	uint32_t nhashfuns = 3, outbytelen;
 	prf_state_ctx prf_state;
 	uint8_t *tmphashtable, *client_dummy;
 	uint32_t *nelesinbin = (uint32_t*) calloc(nbins, sizeof(uint32_t));
@@ -338,6 +356,11 @@ void ClientHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen,
 
 	*hash_table = cuckoo_hashing(elements, neles, nbins, elebitlen, outbitlen, nelesinbin,
 			perm, ntasks, stash, maxstashsize, stashperm, nhashfuns, &prf_state);
+
+	/*cout << "Client bins: " << endl;
+	for(uint32_t i = 0; i < nbins; i++) {
+		cout << "Bin " << i << ": " << ((uint32_t*)*hash_table)[i] << endl;
+	}*/
 
 	for(uint32_t i = 0, ctr = 0; i < nbins; i++) {
 		if(nelesinbin[i] > 0) {
@@ -397,7 +420,7 @@ void pad_elements(uint8_t* hash_table, uint32_t elebytelen, uint32_t nbins, uint
 }
 
 uint32_t compute_max_stash_size(uint32_t neles, uint32_t nbins) {
-	if(neles >= 1<<24) {
+	/*if(neles >= 1<<24) {
 		return 2;
 	} else if(neles >= 1<<20) {
 		return 3;
@@ -413,6 +436,7 @@ uint32_t compute_max_stash_size(uint32_t neles, uint32_t nbins) {
 		return 10;
 	} else {
 		return 12;
-	}
+	}*/
+	return 0;
 
 }

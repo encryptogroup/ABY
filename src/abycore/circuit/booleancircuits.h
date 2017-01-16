@@ -84,6 +84,8 @@ public:
 	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role);
 	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen);
 
+	share* PutDummyINGate(uint32_t bitlen);
+	share* PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen);
 
 	/* Unfortunately, a template function cannot be used due to virtual */
 	share* PutINGate(uint64_t val, uint32_t bitlen, e_role role) {
@@ -196,6 +198,9 @@ public:
 		return InternalPutSharedINGate<uint8_t>(nvals, val, bitlen);
 	};
 
+	//Shared input for Yao garbled circuits
+	uint32_t PutYaoSharedSIMDINGate(uint32_t nvals, yao_fields keys);
+	share* PutYaoSharedSIMDINGate(uint32_t nvals, yao_fields* keys, uint32_t bitlen);
 
 	uint32_t PutOUTGate(uint32_t parent, e_role dst);
 	vector<uint32_t> PutOUTGate(vector<uint32_t> parents, e_role dst);
@@ -222,6 +227,9 @@ public:
 		return m_nA2YGates;
 	}
 	;
+	uint32_t GetNumYSwitchGates() {
+		return m_nYSwitchGates;
+	}
 
 	uint32_t GetNumANDGates() {
 		return m_vANDs[0].numgates;
@@ -230,6 +238,11 @@ public:
 	uint32_t GetANDs(non_lin_vec_ctx*& inptr) {
 		inptr = m_vANDs;
 		return m_nNumANDSizes;
+	}
+	;
+	vector<vector<vector<tt_lens_ctx> > > GetTTLens() {
+		//inptr = m_vTTlens;
+		return m_vTTlens;
 	}
 	;
 	uint32_t GetNumXORVals() {
@@ -241,24 +254,33 @@ public:
 	};
 
 	share* PutMULGate(share* ina, share* inb);
-	share* PutGEGate(share* ina, share* inb);
+	share* PutGTGate(share* ina, share* inb);
 	share* PutEQGate(share* ina, share* inb);
 	share* PutMUXGate(share* ina, share* inb, share* sel);
 
-	vector<uint32_t> PutMulGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t resbitlen);
+	vector<uint32_t> PutMulGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t resbitlen, bool depth_optimized = false, bool vector_ands = false);
+
+
 	vector<uint32_t> PutAddGate(vector<uint32_t> left, vector<uint32_t> right, BOOL bCarry = FALSE);
 	share* PutADDGate(share* ina, share* inb);
 
 	vector<uint32_t> PutSizeOptimizedAddGate(vector<uint32_t> left, vector<uint32_t> right, BOOL bCarry = FALSE);
-	vector<uint32_t> PutDepthOptimizedAddGate(vector<uint32_t> lefta, vector<uint32_t> right, BOOL bCARRY = FALSE);
+	vector<uint32_t> PutDepthOptimizedAddGate(vector<uint32_t> lefta, vector<uint32_t> right, BOOL bCARRY = FALSE, bool vector_ands = false);
+	vector<uint32_t> PutLUTAddGate(vector<uint32_t> lefta, vector<uint32_t> right, BOOL bCARRY = FALSE);
 
-	vector<uint32_t> PutSUBGate(vector<uint32_t> a, vector<uint32_t> b);
+	vector<vector<uint32_t> > PutCarrySaveGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> c, uint32_t inbitlen);
+	vector<vector<uint32_t> > PutCSNNetwork(vector<vector<uint32_t> > ins);
+
+	vector<uint32_t> PutSUBGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t max_bitlen);
 	share* PutSUBGate(share* ina, share* inb);
-	vector<uint32_t> PutWideAddGate(vector<vector<uint32_t> > ins, uint32_t resbitlen);
-	uint32_t PutGEGate(vector<uint32_t> a, vector<uint32_t> b);
-	uint32_t PutSizeOptimizedGEGate(vector<uint32_t> a, vector<uint32_t> b);
-	uint32_t PutDepthOptimizedGEGate(vector<uint32_t> a, vector<uint32_t> b);
+	vector<uint32_t> PutWideAddGate(vector<vector<uint32_t> > ins);
+	uint32_t PutGTGate(vector<uint32_t> a, vector<uint32_t> b);
+	uint32_t PutSizeOptimizedGTGate(vector<uint32_t> a, vector<uint32_t> b);
+	uint32_t PutDepthOptimizedGTGate(vector<uint32_t> a, vector<uint32_t> b);
+	uint32_t PutLUTGTGate(vector<uint32_t> a, vector<uint32_t> b);
+
 	uint32_t PutEQGate(vector<uint32_t> a, vector<uint32_t> b);
+
 
 	share* PutANDVecGate(share* ina, share* inb);
 	vector<uint32_t> PutMUXGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t s, BOOL vecand = true);
@@ -267,6 +289,8 @@ public:
 	vector<uint32_t> PutVecANDMUXGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> s);
 	uint32_t PutVecANDMUXGate(uint32_t a, uint32_t b, uint32_t s);
 	uint32_t PutWideGate(e_gatetype type, vector<uint32_t> ins);
+	uint32_t PutLUTWideANDGate(vector<uint32_t> in);
+	share** PutCondSwapGate(share* a, share* b, share* s, BOOL vectorized);
 	vector<vector<uint32_t> > PutCondSwapGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t s, BOOL vectorized);
 	vector<uint32_t> PutELM0Gate(vector<uint32_t> val, uint32_t b);
 
@@ -280,13 +304,24 @@ public:
 	uint32_t PutCallbackGate(vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 	share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 
+	uint32_t PutTruthTableGate(vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable);
+	share* PutTruthTableGate(share* in, uint64_t* ttable);
+
+	vector<uint32_t> PutTruthTableMultiOutputGate(vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable);
+	share* PutTruthTableMultiOutputGate(share* in, uint32_t out_bits, uint64_t* ttable);
+
 	share* PutY2BGate(share* ina);
 	share* PutB2YGate(share* ina);
+	//TODO: not working correctly for PSI example
+	share* PutYSwitchRolesGate(share* ina);
 
 	uint32_t PutY2BCONVGate(uint32_t parentid);
 	uint32_t PutB2YCONVGate(uint32_t parentid);
+	uint32_t PutYSwitchRolesGate(uint32_t parentid);
 	vector<uint32_t> PutY2BCONVGate(vector<uint32_t> parentid);
 	vector<uint32_t> PutB2YCONVGate(vector<uint32_t> parentid);
+	vector<uint32_t> PutYSwitchRolesGate(vector<uint32_t> parentid);
+
 
 	vector<uint32_t> PutA2YCONVGate(vector<uint32_t> parentid);
 	share* PutA2YGate(share* ina);
@@ -302,7 +337,6 @@ public:
 
 	share* PutMinGate(share** a, uint32_t nvals);
 	vector<uint32_t> PutMinGate(vector<vector<uint32_t> > a);
-
 
 	/**
 	 * \brief Floating point gate with one input
@@ -355,11 +389,20 @@ private:
 	void UpdateInteractiveQueue(uint32_t);
 	void UpdateLocalQueue(uint32_t gateid);
 
+	void UpdateTruthTableSizes(uint32_t len, uint32_t nvals, uint32_t depth, uint32_t out_bits);
+
+	void PadWithLeadingZeros(vector<uint32_t> &a, vector<uint32_t> &b);
+
 	non_lin_vec_ctx* m_vANDs;
+	//first dimension: circuit depth, second dimension: num-inputs, third dimension: out_bitlen
+	vector<vector<vector<tt_lens_ctx> > > m_vTTlens;
+
 	uint32_t m_nNumANDSizes;
+	//uint32_t m_nNumTTSizes;
 
 	uint32_t m_nB2YGates;
 	uint32_t m_nA2YGates;
+	uint32_t m_nYSwitchGates;
 
 	uint32_t m_nNumXORVals;
 	uint32_t m_nNumXORGates;

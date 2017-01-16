@@ -22,7 +22,6 @@ int32_t test_millionaire_prob_circuit(e_role role, char* address, seclvl seclvl,
 		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
 		e_sharing sharing) {
 
-
 	/**
 		Step 1: Create the ABYParty object which defines the basis of all the
 		 	 	operations which are happening.	Operations performed are on the
@@ -67,14 +66,19 @@ int32_t test_millionaire_prob_circuit(e_role role, char* address, seclvl seclvl,
 
 	/**
 		Step 6: Copy the randomly generated money into the respective
-				share objects using the circuit object method PUTInGate().
+				share objects using the circuit object method PutINGate()
+				for my inputs and PutDummyINGate() for the other parties input.
 				Also mention who is sharing the object.
-				The value for the party different from role is ignored,
-				but PutINGate() must always be called for both roles.
 	*/
-
-	s_alice_money = circ->PutINGate(alice_money, (uint32_t) 32, CLIENT);
-	s_bob_money = circ->PutINGate(bob_money, (uint32_t) 32, SERVER);
+	//s_alice_money = circ->PutINGate(alice_money, bitlen, CLIENT);
+	//s_bob_money = circ->PutINGate(bob_money, bitlen, SERVER);
+	if(role == SERVER) {
+		s_alice_money = circ->PutDummyINGate(bitlen);
+		s_bob_money = circ->PutINGate(bob_money, bitlen, SERVER);
+	} else { //role == CLIENT
+		s_alice_money = circ->PutINGate(alice_money, bitlen, CLIENT);
+		s_bob_money = circ->PutDummyINGate(bitlen);
+	}
 
 	/**
 		Step 7: Call the build method for building the circuit for the
@@ -121,7 +125,7 @@ share* BuildMillionaireProbCircuit(share *s_alice, share *s_bob,
 	share* out;
 
 	/** Calling the greater than equal function in the Boolean circuit class.*/
-	out = bc->PutGEGate(s_alice, s_bob);
+	out = bc->PutGTGate(s_alice, s_bob);
 
 	return out;
 }

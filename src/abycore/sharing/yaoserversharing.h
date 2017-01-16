@@ -34,8 +34,8 @@ public:
 	/**
 	 Constructor of the class.
 	 */
-	YaoServerSharing(e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
-			YaoSharing(role, sharebitlen, circuit, crypt) {
+	YaoServerSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
+			YaoSharing(context, role, sharebitlen, circuit, crypt) {
 		InitServer();
 	}
 	;
@@ -84,6 +84,8 @@ private:
 	vector<CBitVector> m_vROTMasks; /**< Masks_______________*/
 	uint32_t m_nClientInputKexIdx; /**< Client __________*/
 	uint32_t m_nClientInputKeyCtr; /**< Client __________*/
+
+	uint64_t m_nGarbledTableSndCtr;
 
 	CBitVector m_vServerKeySndBuf; /**< Server Key Sender Buffer*/
 	vector<CBitVector> m_vClientKeySndBuf; /**< Client Key Sender Buffer*/
@@ -158,7 +160,7 @@ private:
 	 gate object.
 	 \param gate		Gate Object
 	 */
-	void EvaluateANDGate(GATE* gate);
+	void EvaluateANDGate(GATE* gate, ABYSetup* setup);
 	/**
 	 Method for evaluating SIMD gate for the inputted
 	 gateid.
@@ -188,8 +190,9 @@ private:
 	/**
 	 PrecomputeGC______________
 	 \param queue 	Dequeue Object.
+	 \param setup	Is needed to perform pipelined sending of the circuit
 	 */
-	void PrecomputeGC(deque<uint32_t>& queue);
+	void PrecomputeGC(deque<uint32_t>& queue, ABYSetup* setup);
 
 	//void EvaluateClientOutputGate(GATE* gate);
 	void CollectClientOutputShares();

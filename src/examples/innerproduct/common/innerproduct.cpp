@@ -135,11 +135,11 @@ share* BuildInnerProductCircuit(share *s_x, share *s_y, uint32_t num, Arithmetic
 	// add up the individual multiplication results and store result on wire 0
 	// in arithmetic sharing ADD is for free, and does not add circuit depth, thus simple sequential adding
 	for (i = 1; i < num; i++) {
-		s_x->set_wire(0, ac->PutADDGate(s_x->get_wire(0), s_x->get_wire(i)));
+		s_x->set_wire_id(0, ac->PutADDGate(s_x->get_wire_id(0), s_x->get_wire_id(i)));
 	}
 
 	// discard all wires, except the addition result
-	s_x->resize(1);
+	s_x->set_bitlength(1);
 
 	return s_x;
 }

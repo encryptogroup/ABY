@@ -70,7 +70,7 @@ static void init_hashing_state(hs_t* hs, uint32_t nelements, uint32_t inbitlen, 
 	hs->floor_addrbitlen = min((uint32_t) floor_log2(nbins), inbitlen);
 
 #ifdef USE_LUBY_RACKOFF
-	hs->outbitlen = hs->inbitlen - hs->addrbitlen+2;
+	hs->outbitlen = hs->inbitlen - hs->addrbitlen+3;
 #else
 	hs->outbitlen = inbitlen;
 #endif
@@ -136,13 +136,15 @@ inline void hashElement(uint8_t* element, uint32_t* address, uint8_t* val, hs_t*
 	//cout << (dec) << endl;
 #ifdef USE_LUBY_RACKOFF
 	//TODO: the table-lookup hashing is only used for elements up to 32-bit length, since it gets very inefficient for larger values
-	uint64_t i, j, L, R;
+	uint64_t i, j, L, R=0L;
 	TABLEID_T hfmaskaddr;
 	//Store the first hs->addrbitlen bits in L
 	L = *((uint32_t*) element) & SELECT_BITS[hs->addrbitlen];
-	//Store the remaining hs->outbitlen bits in R and pad correspondingly. Shift one to the left since permutation bit is added later on
-	R = ((*((uint32_t*) element) & SELECT_BITS_INV[hs->floor_addrbitlen]) >> (hs->floor_addrbitlen)) << 1;
+	//Store the remaining hs->outbitlen bits in R and pad correspondingly. Shift two to the left since permutation bit is added later on
+	R = ((*((uint32_t*) element) & SELECT_BITS_INV[hs->floor_addrbitlen]) >> (hs->floor_addrbitlen)) << 2;
 
+	//cout << "address bitlen = " << hs->addrbitlen <<", L = " << L << ", R = " << R << ", element = " << ((uint32_t*) element)[0] << endl;
+	// Zero out all nonrelevant bits
 	R &= hs->mask;//mask = (1<<32-hs->addrbitlen)
 
 

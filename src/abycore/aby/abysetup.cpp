@@ -30,6 +30,10 @@ ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg
 	}
 }
 
+ABYSetup::~ABYSetup() {
+	Cleanup();
+}
+
 BOOL ABYSetup::Init() {
 	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
 	uint32_t aes_key_bytes = m_cCrypt->get_aes_key_bytes();
@@ -66,12 +70,28 @@ BOOL ABYSetup::Init() {
 
 void ABYSetup::Cleanup() {
 
-	m_tSetupChan->synchronize_end();
-	delete m_tSetupChan;
-/*
-	delete iknp_ot_sender;
-	delete iknp_ot_receiver;
+	if(m_tSetupChan) {
+		m_tSetupChan->synchronize_end();
+		delete m_tSetupChan;
+	}
+/*	if(iknp_ot_sender) {
+		delete iknp_ot_sender;
+	}
+	if(iknp_ot_receiver) {
+		delete iknp_ot_receiver;
+	}
+
+#ifdef USE_KK_OT_FOR_MT
+	//FIXME: deleting kk_ot_receiver or sender causes a SegFault in AES with Yao
+	if(kk_ot_receiver) {	
+		delete kk_ot_receiver;
+	}
+	if(kk_ot_sender) {
+		delete kk_ot_sender;
+	}
+#endif
 */
+
 }
 
 BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
@@ -250,7 +270,6 @@ BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
 		}
 
 #endif
-		//free(X);//TODO check once running
 	}
 	m_vKKOTTasks[inverse].resize(0);
 	return success;
@@ -314,7 +333,6 @@ BOOL ABYSetup::ThreadRunPaillierMTGen(uint32_t threadid) {
 					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, djnchan);
 		}
 
-		//free(ptask);//TODO should be done by main task after the Paillier MT generation has been done
 	}
 	djnchan->synchronize_end();
 	delete djnchan;
@@ -353,7 +371,6 @@ BOOL ABYSetup::ThreadRunDGKMTGen(uint32_t threadid) {
 			m_cDGKMTGen[i]->preCompBench(ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, ptask->A->GetArr() + mystartpos,
 					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, dgkchan);
 		}
-		//free(ptask);//TODO should be done by main task after the Paillier MT generation has been done
 	}
 	dgkchan->synchronize_end();
 	delete dgkchan;

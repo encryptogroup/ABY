@@ -71,23 +71,27 @@ public:
 		while(m_qRcvedBlocks->empty())
 			m_eRcved->Wait();
 
+
 		uint8_t* ret_block = ((rcv_ctx*) m_qRcvedBlocks->front())->buf;
-		if(((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes == rcvsize) {
+		uint64_t rcved_this_call = ((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes;
+		if(rcved_this_call == rcvsize) {
 			m_qRcvedBlocks->pop();
-		} else if(rcvsize < ((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes) {
+		} else if(rcvsize < rcved_this_call) {
 			//if the block contains too much data, copy only the receive size
 			((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes -= rcvsize;
 			uint8_t* newbuf = (uint8_t*) malloc(((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes);
 			memcpy(newbuf, ((rcv_ctx*) m_qRcvedBlocks->front())->buf+rcvsize, ((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes);
 			((rcv_ctx*) m_qRcvedBlocks->front())->buf = newbuf;
+			rcved_this_call = rcvsize;
 		} else {
-			//I want to receive more data than are in that block.
-			//TODO: needs implementing current solution: exit
-			cerr << "Receiving more data than in buffer currently not implemented, exiting!" << endl;
-			exit(0);
-		}
+			//I want to receive more data than are in that block. Perform recursive call (might become troublesome for too many recursion steps)
+			m_qRcvedBlocks->pop();
+			uint8_t* new_rcvbuf_start = rcvbuf + rcved_this_call;
+			uint64_t new_rcvsize = rcvsize -rcved_this_call;
 
-		memcpy(rcvbuf, ret_block, rcvsize);
+			blocking_receive(new_rcvbuf_start, new_rcvsize);
+		}
+		memcpy(rcvbuf, ret_block, rcved_this_call);
 		free(ret_block);
 	}
 

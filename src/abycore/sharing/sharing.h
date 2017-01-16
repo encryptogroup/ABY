@@ -50,13 +50,16 @@ public:
 
 	 \brief 		Initialises the members of the class.
 	 */
-	Sharing(e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) {
+	Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) {
+		m_eContext = context;
 		m_nShareBitLen = sharebitlen;
 		m_pCircuit = circuit;
 		m_pGates = m_pCircuit->Gates();
 		m_eRole = role;
 		m_cCrypto = crypt;
 		m_nSecParamBytes = ceil_divide(m_cCrypto->get_seclvl().symbits, 8);
+		m_ePhaseValue = ePreCompDefault;
+		m_nFilePos = -1;
 	}
 	;
 	/**
@@ -68,6 +71,14 @@ public:
 
 	/**	Reset method */
 	virtual void Reset() = 0;
+
+	/*
+	Note: PrepareSetupPhase, PerformSetupPhase, FinishSetupPhases are generally triggered from
+	      the ABYParty class for the function call on ExecCircuit. Whenever a circuit is built
+	      and executed these methods mentioned above are triggered. For instance, if the circuit
+	      setup expects a execution and reset loop for n iterations, these methods would be
+	      triggered n times. Also the precomputation phase plays a huge role in these methods.
+	*/
 
 	/**	
 	 Method for preparing the sharing setup.
@@ -160,6 +171,63 @@ public:
 	 */
 	virtual Circuit* GetCircuitBuildRoutine() = 0;
 
+
+	/*Pre-computation Methods*/
+	/*Note:
+			The circuits are setup and executed into different phases: setup and online phases.
+			In setup phase the implementation uses the baseOTs to compute OTs and use the OTs
+			to communicate and compute the MTs. Online phase primarily deals with the rest of
+			the circuit execution where the circuit evaluation is performed.
+			Currently Precomputation scheme is only implemented for BoolSharing circuits or
+	 	 	GMW based circuits. The implementation involves the use of 4 different modes of
+	 	 	operation: PrecomputationStore, PrecomputationRead, PrecomputeInRAM and finally
+	 	 	the default. In precomputationStore:  the MTs are computed for the specified
+	 	 	circuit design and stored in a specific file(depending on the role) and the online
+	 	 	phase of the circuit is skipped. In precomputationRead: the MTs are not computed
+	 	 	again instead, read	from a specific file(depending on the role). Potentially, in
+	 	 	this mode Setup phase is per-se skipped and focused on the online phase.
+	 	 	In PrecomputeInRAM mode generally used with large iterations of circuits(similar to AES designs)
+	 	 	we run the setup phase in the first iteration and use the result of the MTs in the
+	 	 	following phases. Ideally such an implementation is not secure.
+	*/
+	/**
+	 Method for Pre-computation phase.
+	*/
+	virtual void PreComputationPhase() = 0;
+
+	/**
+	 Setting precomputation phase value
+	*/
+	void SetPreCompPhaseValue(ePreCompPhase in_phase_value);
+
+	/**
+	 Getting precomputation phase value
+	*/
+	ePreCompPhase GetPreCompPhaseValue();
+	/**
+	Method to delete the File which stores the precomputation values.
+	*/
+	void PreCompFileDelete();
+
+	//TODO move to utils
+	/*File Operation Methods*/
+	/**
+		Function to check if the file exists.
+	 	\param filename		Name of the file.
+	*/
+	BOOL FileExists(char *filename);
+	/**
+		Function to check if the file is empty or not.
+		\param filename		Name of the file.
+	*/
+	BOOL FileEmpty(char *filename);
+	/**
+		Function to obtain the size of a given file.
+		\param filename		Name of the file.
+	*/
+	uint64_t FileSize(char *filename);
+
+
 protected:
 	/**
 	 Method for evaluating Callback gate for the inputted
@@ -167,6 +235,31 @@ protected:
 	 \param gateid		Gate identifier
 	 */
 	void EvaluateCallbackGate(uint32_t gateid);
+	/**
+	 Method for evaluating an ASSERT gate that checks the plaintext value of
+	 a gate to a specified reference.
+	 \param gateid		Gate identifier
+	 \param	circ_type	Is it a Boolean or Arithmetic share that is print
+	 */
+	void EvaluateAssertGate(uint32_t gateid, e_circuit circ_type);
+	/**
+	 Method for evaluating a PRINT_VAL gate that prints the plaintext
+	 output of a gate.
+	 \param gateid		Gate identifier
+	 \param	circ_type	Is it a Boolean or Arithmetic share that is print
+	 */
+	void EvaluatePrintValGate(uint32_t gateid, e_circuit circ_type);
+	/**
+	 Method parsing the output of a gate into a standard format that can be
+	 printed or compared to a reference.
+	 \param gateid		Gate identifier
+	 \param	circ_type	Is it a Boolean or Arithmetic share that is print
+	 \param	bitlen		Returns the bit length of the output value
+
+	 \returns	The value of the gate in a standardized format
+	 */
+	UGATE_T* ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t* bitlen);
+
 
 	uint32_t m_nShareBitLen; /**< Bit length of shared item. */
 	GATE* m_pGates; /**< Pointer to array of Logical Gates. */
@@ -174,6 +267,11 @@ protected:
 	e_role m_eRole; /**< Role object. */
 	uint32_t m_nSecParamBytes; /**< Number of security param bytes. */
 	crypto* m_cCrypto; /**< Class that contains cryptographic routines */
+	e_sharing m_eContext; /** Which sharing is executed */
+	uint32_t m_nTypeBitLen; /** Bit-length of the arithmetic shares in arithsharing */
+	uint64_t m_nFilePos;/**< Variable which stores the position of the file pointer. */
+	ePreCompPhase m_ePhaseValue;/**< Variable storing the current Precomputation Mode */
+
 };
 
 #endif

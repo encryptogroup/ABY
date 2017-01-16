@@ -78,10 +78,13 @@ int32_t parse_options(int32_t* argcp, char*** argvp, parsing_ctx* options, uint3
 		return 0;
 
 	while ((*argcp) > 1) {
-		if ((*argvp)[1][0] != '-' || (*argvp)[1][1] == '\0' || (*argvp)[1][2] != '\0')
+		if ((*argvp)[1][0] != '-' || (*argvp)[1][1] == '\0') {
 			return result;
+		}
+		skip=false;
 		for (i = 0, skip = false; i < nops && !skip; i++) {
-			if (((*argvp)[1][1]) == options[i].opt_name) {
+			if (strncmp(&((*argvp)[1][1]), options[i].opt_name.c_str(), options[i].opt_name.size()) == 0
+					&& (strlen((*argvp)[1])-1 == options[i].opt_name.size())) {
 
 				switch (options[i].type) {
 				case T_NUM:
@@ -89,6 +92,9 @@ int32_t parse_options(int32_t* argcp, char*** argvp, parsing_ctx* options, uint3
 						++*argvp;
 						--*argcp;
 						*((uint32_t*) options[i].val) = atoi((*argvp)[1]);
+					} else {
+					    std::cerr << "Argument for parameter wrong. " << std::endl;
+						return 0;
 					}
 					break;
 				case T_DOUBLE:
@@ -111,6 +117,10 @@ int32_t parse_options(int32_t* argcp, char*** argvp, parsing_ctx* options, uint3
 				options[i].set = true;
 				skip = true;
 			}
+		}
+		if(skip == false) {
+		    std::cerr << "Parameter not recognized. " << std::endl;
+			return 0;
 		}
 	}
 

@@ -133,7 +133,7 @@ share* BuildEuclidDistanceCircuit(share *s_x1, share *s_x2, share *s_y1,
 			*check_sel_inv;
 
 	/** Following code performs (x2-x1)*(x2-x1) */
-	check_sel = bc->PutGEGate(s_x1, s_x2);
+	check_sel = bc->PutGTGate(s_x1, s_x2);
 	check_sel_inv = bc->PutINVGate(check_sel);
 	t_a = bc->PutMUXGate(s_x1, s_x2, check_sel);
 	t_b = bc->PutMUXGate(s_x1, s_x2, check_sel_inv);
@@ -143,7 +143,7 @@ share* BuildEuclidDistanceCircuit(share *s_x1, share *s_x2, share *s_y1,
 
 	/** Following code performs (y2-y1)*(y2-y1) */
 
-	check_sel = bc->PutGEGate(s_y1, s_y2);
+	check_sel = bc->PutGTGate(s_y1, s_y2);
 	check_sel_inv = bc->PutINVGate(check_sel);
 	t_a = bc->PutMUXGate(s_y1, s_y2, check_sel);
 	t_b = bc->PutMUXGate(s_y1, s_y2, check_sel_inv);

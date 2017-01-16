@@ -24,7 +24,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BATCH
 //#define ZDEBUG
 //#define PRINT_PERFORMANCE_STATS
 #define USE_MULTI_MUX_GATES //TODO Multimux gates lead to errors, fix!

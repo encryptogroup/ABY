@@ -49,7 +49,7 @@
 //#define BENCHONLINEPHASE
 //#define PRINT_PERFORMANCE_STATS
 //#define DEBUGCOMM
-#define BATCH
+
 
 using namespace std;
 
@@ -59,8 +59,7 @@ using namespace std;
 
 class ABYParty {
 public:
-	ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo = MT_OT, uint32_t maxgates = 4000000, uint16_t port = 7766);
-//TODO only up to 4.000.000 gates are be built by default, is probably changing in the future. Set maxgates above.
+	ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen = 32, uint32_t nthreads = 2, e_mt_gen_alg mg_algo = MT_OT, uint32_t maxgates = 4000000, uint16_t port = 7766);
 	~ABYParty();
 
 	vector<Sharing*>& GetSharings() {
@@ -128,9 +127,6 @@ private:
 
 	// Input values
 	CBitVector m_vInputBits;
-
-	//constant 128-bit seed, IMPORTANT: exclude if used in practice
-	BYTE* m_cConstantInsecureSeed;
 
 	vector<Sharing*> m_vSharings;
 

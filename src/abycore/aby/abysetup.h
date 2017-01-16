@@ -114,9 +114,7 @@ class ABYSetup {
 
 public:
 	ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg mtalgo);
-	~ABYSetup() {
-		Cleanup();
-	}
+	~ABYSetup();
 
 	void Reset();
 
@@ -124,7 +122,6 @@ public:
 	BOOL PerformSetupPhase();
 	BOOL FinishSetupPhase();
 
-	//TODO: the OTTasks are still quite unstraightforward, also combine in an intuitive way with multthreading
 	void AddOTTask(IKNP_OTTask* task, uint32_t inverse) {
 		m_vIKNPOTTasks[inverse].push_back(task);
 	}

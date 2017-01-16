@@ -28,6 +28,7 @@ using namespace std;
 using namespace std;
 #endif
 
+
 ABYParty::ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo, uint32_t maxgates, uint16_t port) {
 	StartWatch("Initialization", P_INIT);
 
@@ -86,6 +87,8 @@ ABYParty::ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint3
 }
 
 ABYParty::~ABYParty() {
+
+	m_vSharings[S_BOOL]->PreCompFileDelete();
 	Cleanup();
 }
 
@@ -93,10 +96,8 @@ BOOL ABYParty::Init() {
 	//Threads that support execution by e.g. concurrent sending / receiving
 	m_nHelperThreads = 2;
 
-	m_cConstantInsecureSeed = (BYTE*) "00112233445566778899AABBCCDDEEFFF";
-
 	//m_vSockets.resize(m_nNumOTThreads * 2);
-	m_vSockets.resize(3);
+	m_vSockets.resize(2);
 
 	//Initialize necessary routines for computing the setup phase
 	m_pSetup = new ABYSetup(m_cCrypt, m_nNumOTThreads, m_eRole, m_eMTGenAlg);
@@ -125,6 +126,8 @@ void ABYParty::Cleanup() {
 		delete m_vSharings[S_BOOL];
 	if(m_vSharings[S_YAO])
 		delete m_vSharings[S_YAO];
+	if(m_vSharings[S_YAO_REV])
+		delete m_vSharings[S_YAO_REV];
 	if(m_vSharings[S_ARITH])
 		delete m_vSharings[S_ARITH];
 
@@ -150,8 +153,6 @@ CBitVector ABYParty::ExecCircuit() {
 #ifndef BATCH
 	cout << "Finishing circuit generation" << endl;
 #endif
-	//Finish the circuit generation TODO check if this is required in later program versions
-	m_pCircuit->FinishCircuitGeneration();
 
 	CBitVector result;
 	StartRecording("Starting execution", P_TOTAL, m_vSockets);
@@ -176,24 +177,41 @@ CBitVector ABYParty::ExecCircuit() {
 #ifndef BATCH
 		cout << "Performing setup phase for " << m_vSharings[i]->sharing_type() << " sharing" << endl;
 #endif
-		if (i == S_YAO) {
-			StartRecording("Starting Circuit Garbling", P_GARBLE, m_vSockets);
+		if(i == S_YAO) {
+			StartWatch("Starting Circuit Garbling", P_GARBLE);
+			if(m_eRole == SERVER) {
+				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup);
+				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup);
+			} else {
+				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup);
+				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup);
+			}
+			/*m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup);
+			m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup);*/
+			m_vSharings[S_YAO]->FinishSetupPhase(m_pSetup);
+			m_vSharings[S_YAO_REV]->FinishSetupPhase(m_pSetup);
+			StopWatch("Time for Circuit garbling: ", P_GARBLE);
+		} else if (i == S_YAO_REV) {
+			//Do nothing, was done in parallel to Yao
+		} else {
+			m_vSharings[i]->PerformSetupPhase(m_pSetup);
+			m_vSharings[i]->FinishSetupPhase(m_pSetup);
 		}
-		m_vSharings[i]->PerformSetupPhase(m_pSetup);
-		m_vSharings[i]->FinishSetupPhase(m_pSetup);
-		if (i == S_YAO) {
-			StopRecording("Time for Circuit garbling: ", P_GARBLE, m_vSockets);
-		}
+
 	}
 	StopRecording("Time for setup phase: ", P_SETUP, m_vSockets);
 
 #ifndef BATCH
 	cout << "Evaluating circuit" << endl;
 #endif
+
 	//Online phase
-	StartRecording("Starting online phase: ", P_ONLINE, m_vSockets);
-	EvaluateCircuit();
-	StopRecording("Time for online phase: ", P_ONLINE, m_vSockets);
+	if(m_vSharings[S_BOOL]->GetPreCompPhaseValue() != ePreCompStore) {
+		StartRecording("Starting online phase: ", P_ONLINE, m_vSockets);
+		EvaluateCircuit();
+		StopRecording("Time for online phase: ", P_ONLINE, m_vSockets);
+	}
+
 
 	StopRecording("Total Time: ", P_TOTAL, m_vSockets);
 
@@ -210,78 +228,36 @@ CBitVector ABYParty::ExecCircuit() {
 	return result;
 }
 
-//TODO: deprecated!
-CBitVector ABYParty::ExecSetupPhase() {
-
-	//Finish the circuit generation TODO check if this is required in later program versions
-	m_pCircuit->FinishCircuitGeneration();
-
-	CBitVector result;
-	StartWatch("Starting execution", P_TOTAL);
-
-	//Setup phase
-	StartWatch("Starting setup phase: ", P_SETUP);
-	for (uint32_t i = 0; i < m_vSharings.size(); i++)
-		m_vSharings[i]->PrepareSetupPhase(m_pSetup);
-
-	StartWatch("Starting OT Extension", P_OT_EXT);
-	m_pSetup->PerformSetupPhase();
-	StopWatch("Time for OT Extension phase: ", P_OT_EXT);
-
-	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
-		if (i == S_YAO) {
-			StartWatch("Starting Circuit Garbling", P_GARBLE);
-		}
-		m_vSharings[i]->PerformSetupPhase(m_pSetup);
-		m_vSharings[i]->FinishSetupPhase(m_pSetup);
-		if (i == S_YAO) {
-			StopWatch("Time for Circuit garbling: ", P_GARBLE);
-		}
-	}
-	StopWatch("Time for setup phase: ", P_SETUP);
-
-	StopWatch("Total Time: ", P_TOTAL);
-
-#ifdef PRINT_OUTPUT
-	//Print input and output gates
-	PrintInput();
-	PrintOutput();
-#endif
-
-
-#ifdef PRINT_PERFORMANCE_STATS
-	PrintPerformanceStatistics();
-#endif
-
-	return result;
-}
 
 BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
 	// Specification of maximum amount of gates in constructor in abyparty.h
 	m_pCircuit = new ABYCircuit(maxgates);
 
-	//TODO change YaoSharing such that right class is passed back just given the role
 	m_vSharings.resize(S_LAST);
-	m_vSharings[S_BOOL] = new BoolSharing(m_eRole, 1, m_pCircuit, m_cCrypt);
-	if (m_eRole == SERVER)
-		m_vSharings[S_YAO] = new YaoServerSharing(m_eRole, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
-	else
-		m_vSharings[S_YAO] = new YaoClientSharing(m_eRole, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
+	m_vSharings[S_BOOL] = new BoolSharing(S_BOOL, m_eRole, 1, m_pCircuit, m_cCrypt);
+	if (m_eRole == SERVER) {
+		m_vSharings[S_YAO] = new YaoServerSharing(S_YAO, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
+		m_vSharings[S_YAO_REV] = new YaoClientSharing(S_YAO_REV, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
+	}
+	else {
+		m_vSharings[S_YAO] = new YaoClientSharing(S_YAO, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
+		m_vSharings[S_YAO_REV] = new YaoServerSharing(S_YAO_REV, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
+	}
 	switch (bitlen) {
 	case 8:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT8_T>(m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT8_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
 		break;
 	case 16:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT16_T>(m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT16_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
 		break;
 	case 32:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
 		break;
 	case 64:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT64_T>(m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT64_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
 		break;
 	default:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
 		break;
 	}
 
@@ -380,7 +356,9 @@ BOOL ABYParty::EvaluateCircuit() {
 	cout << "Online time is distributed as follows: " << endl;
 	cout << "Bool: local gates: " << localops[S_BOOL] << ", interactive gates: " << interactiveops[S_BOOL] << ", layer finish: " << fincirclayer[S_BOOL] << endl;
 	cout << "Yao: local gates: " << localops[S_YAO] << ", interactive gates: " << interactiveops[S_YAO] << ", layer finish: " << fincirclayer[S_YAO] << endl;
+	cout << "Yao Rev: local gates: " << localops[S_YAO_REV] << ", interactive gates: " << interactiveops[S_YAO_REV] << ", layer finish: " << fincirclayer[S_YAO_REV] << endl;
 	cout << "Arith: local gates: " << localops[S_ARITH] << ", interactive gates: " << interactiveops[S_ARITH] << ", layer finish: " << fincirclayer[S_ARITH] << endl;
+	cout << "Bool No MT: local gates: " << localops[S_BOOL_NO_MT] << ", interactive gates: " << interactiveops[S_BOOL_NO_MT] << ", layer finish: " << fincirclayer[S_BOOL_NO_MT] << endl;
 	cout << "Communication: " << interaction << endl;
 #endif
 	return true;
@@ -406,6 +384,7 @@ BOOL ABYParty::ThreadSendValues() {
 				cout << "(" << m_nDepth << ") Sending " << sndbytes[j][i] << " bytes on socket " << m_eRole << " for sharing " << j << endl;
 #endif
 		}
+
 	}
 	uint8_t* snd_buf_total = (uint8_t*) malloc(snd_buf_size_total);
 	for (uint32_t j = 0; j < m_vSharings.size(); j++) {
@@ -418,7 +397,8 @@ BOOL ABYParty::ThreadSendValues() {
 	}
 	//gettimeofday(&tstart, NULL);
 	if(snd_buf_size_total > 0) {
-		m_vSockets[2]->Send(snd_buf_total, snd_buf_size_total);
+		//m_vSockets[2]->Send(snd_buf_total, snd_buf_size_total);
+		m_tPartyChan->send(snd_buf_total, snd_buf_size_total);
 	}
 
 	for (uint32_t j = 0; j < m_vSharings.size(); j++) {
@@ -427,8 +407,7 @@ BOOL ABYParty::ThreadSendValues() {
 	}
 	sendbuf.clear();
 	sndbytes.clear();
-
-	free(snd_buf_total);
+	//free(snd_buf_total);
 
 	return true;
 }
@@ -453,8 +432,10 @@ BOOL ABYParty::ThreadReceiveValues() {
 	}
 	uint8_t* rcvbuftotal = (uint8_t*) malloc(rcvbytestotal);
 	//gettimeofday(&tstart, NULL);
-	if(rcvbytestotal > 0)
-		m_vSockets[2]->Receive(rcvbuftotal, rcvbytestotal);
+	if(rcvbytestotal > 0) {
+		//m_vSockets[2]->Receive(rcvbuftotal, rcvbytestotal);
+		m_tPartyChan->blocking_receive(rcvbuftotal, rcvbytestotal);
+	}
 	//gettimeofday(&tend, NULL);
 	//cout << "(" << m_nDepth << ") Time taken for receiving " << rcvbytestotal << " bytes: " << getMillies(tstart, tend) << endl;
 
@@ -483,7 +464,9 @@ void ABYParty::PrintPerformanceStatistics() {
 	cout << "Complexities: " << endl;
 	m_vSharings[S_BOOL]->PrintPerformanceStatistics();
 	m_vSharings[S_YAO]->PrintPerformanceStatistics();
+	m_vSharings[S_YAO_REV]->PrintPerformanceStatistics();
 	m_vSharings[S_ARITH]->PrintPerformanceStatistics();
+	m_vSharings[S_BOOL_NO_MT]->PrintPerformanceStatistics();
 	cout << "Total number of gates: " << m_pCircuit->GetGateHead() << endl;
 	PrintTimings();
 	PrintCommunication();
@@ -533,7 +516,6 @@ BOOL ABYParty::ABYPartyListen() {
 		tempsocks[i].resize(m_vSockets.size());
 
 		for(uint32_t j = 0; j < m_vSockets.size(); j++) {
-			tempsocks[i][j] = new CSocket();
 			tempsocks[i][j] = new CSocket();
 		}
 	}

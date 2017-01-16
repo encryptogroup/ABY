@@ -33,6 +33,7 @@
 #include "../examples/psi_phasing/common/phasing_circuit.h"
 #include "../examples/aes/common/aescircuit.h"
 #include "../examples/sha1/common/sha1_circuit.h"
+#include "../examples/lowmc/common/lowmccircuit.h"
 #include "../examples/min-euclidean-dist/common/min-euclidean-dist-circuit.h"
 
 

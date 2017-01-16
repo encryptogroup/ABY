@@ -26,7 +26,7 @@ using namespace std;
 
 int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 		uint32_t neles, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
-		e_sharing sharing) {
+		uint32_t prot_version, bool verify) {
 
 	uint32_t *srv_set, *cli_set, *circ_intersect, *ver_intersect;
 	uint32_t seqsize = 2* neles, ver_inter_ctr = 0, circ_inter_ctr = 0;
@@ -35,16 +35,32 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 	assert(bitlen <= 32);
 	uint64_t mask = ((uint64_t) 1 << bitlen)-1;
 
+	e_sharing sort, permute;
+	if(prot_version == 0) {
+		sort = S_BOOL;
+		permute = S_BOOL;
+	} else if (prot_version == 1) {
+		sort = S_YAO;
+		permute = S_YAO;
+	} else if (prot_version == 2) {
+		sort = S_YAO;
+		permute = S_BOOL;
+	} else if (prot_version == 3) {
+		sort = S_YAO;
+		permute = S_YAO_REV;
+	}
 
 	//vector<uint32_t> sel_bits(nswapgates);
 
 	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads,
-			mt_alg);
+			mt_alg, 40000000);
 
 	vector<Sharing*>& sharings = party->GetSharings();
 
-	BooleanCircuit* circ = (BooleanCircuit*) sharings[sharing]->GetCircuitBuildRoutine();
-	assert(circ->GetCircuitType() == C_BOOLEAN);
+	BooleanCircuit* sortcirc = (BooleanCircuit*) sharings[sort]->GetCircuitBuildRoutine();
+	BooleanCircuit* permcirc = (BooleanCircuit*) sharings[permute]->GetCircuitBuildRoutine();
+
+	assert(sortcirc->GetCircuitType() == C_BOOLEAN && permcirc->GetCircuitType() == C_BOOLEAN);
 
 	srv_set = (uint32_t*) malloc(sizeof(uint32_t) * neles);
 	cli_set = (uint32_t*) malloc(sizeof(uint32_t) * neles);
@@ -87,22 +103,22 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 
 	//Set input gates to the circuit
 	for (uint32_t i = 0; i < neles; i++) {
-		shr_server_set[i] = circ->PutSIMDINGate(bitlen, srv_set[i], 1, SERVER);
-		shr_client_set[i] = circ->PutSIMDINGate(bitlen, cli_set[neles-i-1], 1, CLIENT);
+		shr_server_set[i] = sortcirc->PutSIMDINGate(bitlen, srv_set[i], 1, SERVER);
+		shr_client_set[i] = sortcirc->PutSIMDINGate(bitlen, cli_set[neles-i-1], 1, CLIENT);
 	}
 
 	//Get inputs for the selection bits of the swap gate in the waksman network
 	vector<uint32_t> selbits(nswapgates);
 	for (uint32_t i = 0; i < nswapgates; i++) {
-		selbits[i] = ((share*) circ->PutINGate((uint32_t) rand() % 2, 1, SERVER))->get_wire(0);
+		selbits[i] = ((share*) permcirc->PutINGate((uint32_t) rand() % 2, 1, SERVER))->get_wire_id(0);
 	}
 
-	vector<uint32_t> out = BuildSCSPSICircuit(shr_server_set, shr_client_set, selbits, neles, bitlen, circ, circ, 0);
+	vector<uint32_t> out = BuildSCSPSICircuit(shr_server_set, shr_client_set, selbits, neles, bitlen, sortcirc, permcirc, prot_version);
 
 	for(uint32_t i = 0; i < out.size(); i++) {
-		shr_out[i] = new boolshare(1, circ);
-		shr_out[i]->set_wire(0, out[i]);
-		shr_out[i] = circ->PutOUTGate(shr_out[i], CLIENT);
+		shr_out[i] = new boolshare(1, permcirc);
+		shr_out[i]->set_wire_id(0, out[i]);
+		shr_out[i] = permcirc->PutOUTGate(shr_out[i], CLIENT);
 	}
 	party->ExecCircuit();
 
@@ -117,26 +133,41 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 			}
 		}
 
-		/*cout << "Server and client input for bitlen = " << bitlen << ": " << endl;
-		for(uint32_t i = 0; i < neles; i++) {
-			cout << (hex) << srv_set[i] << ", " << cli_set[neles -1 -i] << (dec) << endl;
-		}
-		cout << "Number of intersections: " << ver_inter_ctr << ", " << circ_inter_ctr << endl;*/
+		//cout << "Server and client input for bitlen = " << bitlen << ": " << endl;
+		//for(uint32_t i = 0; i < neles; i++) {
+		//	cout << (hex) << srv_set[i] << ", " << cli_set[neles -1 -i] << (dec) << endl;
+		//}
+		//cout << "Number of intersections: " << ver_inter_ctr << ", " << circ_inter_ctr << endl;
 
 		std::sort(ver_intersect, ver_intersect+ver_inter_ctr);
 		std::sort(circ_intersect, circ_intersect+circ_inter_ctr);
-		/*for(uint32_t i = 0; i < ver_inter_ctr; i++) {
-			cout << "Verification " << i << ": " << (hex) << ver_intersect[i] << (dec) << endl;
+		//for(uint32_t i = 0; i < ver_inter_ctr; i++) {
+		//	cout << "Verification " << i << ": " << (hex) << ver_intersect[i] << (dec) << endl;
+		//}
+		//for(uint32_t i = 0; i < circ_inter_ctr; i++) {
+		//	cout << "Circuit " << i << ": " << (hex) << circ_intersect[i] << (dec) << endl;
+		//}
+		if(verify) {
+			assert(circ_inter_ctr == ver_inter_ctr);
+			for(uint32_t i = 0; i < ver_inter_ctr; i++) {
+				assert(ver_intersect[i] == circ_intersect[i]);
+			}
 		}
-		for(uint32_t i = 0; i < circ_inter_ctr; i++) {
-			cout << "Circuit " << i << ": " << (hex) << circ_intersect[i] << (dec) << endl;
-		}*/
-		assert(circ_inter_ctr == ver_inter_ctr);
-		for(uint32_t i = 0; i < ver_inter_ctr; i++) {
-			assert(ver_intersect[i] == circ_intersect[i]);
-		}
-		cout << "Intersection of size " << circ_inter_ctr << " correctly computed" << endl;
+		//cout << "Intersection of size " << circ_inter_ctr << " correctly computed" << endl;
 	}
+
+#ifdef BATCH
+	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) <<
+			"\t" << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) << "\t";
+	if(prot_version > 1 ) {
+		cout << sharings[sort]->GetNumNonLinearOperations()	+ sharings[permute]->GetNumNonLinearOperations() << "\t" << sharings[permute]->GetMaxCommunicationRounds()<< endl;
+	} else {
+		cout << sharings[sort]->GetNumNonLinearOperations()	<< "\t" << sharings[permute]->GetMaxCommunicationRounds()<< endl;
+	}
+
+#endif
+
+	delete party;
 
 	free(srv_set);
 	free(cli_set);
@@ -151,20 +182,7 @@ int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
 
 //type: 0 - Boolean only, 1 - Yao only, 2 - mixed
 vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, vector<uint32_t> shr_sel_bits,
-		uint32_t neles, uint32_t bitlen, BooleanCircuit* bc, BooleanCircuit* yc, uint32_t type) {
-
-	BooleanCircuit* sccirc;
-	BooleanCircuit* permcirc;
-	if (type == 0) {
-		sccirc = yc;
-		permcirc = yc;
-	} else if (type == 1) {
-		sccirc = bc;
-		permcirc = bc;
-	} else {
-		sccirc = yc;
-		permcirc = bc;
-	}
+		uint32_t neles, uint32_t bitlen, BooleanCircuit* sortcirc, BooleanCircuit* permcirc, uint32_t type) {
 
 	uint32_t seqsize = 2 * neles;
 	vector<uint32_t> duptemppos((seqsize - 1) / 2);
@@ -179,7 +197,15 @@ vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, ve
 	vector<uint32_t> a;
 	vector<uint32_t> out(seqsize / 2);
 
-	a = PutVectorBitonicSortGate(shr_srv_set, shr_cli_set, neles, bitlen, sccirc);
+	a = PutVectorBitonicSortGate(shr_srv_set, shr_cli_set, neles, bitlen, sortcirc);
+
+	if(type == 3) {
+		a = permcirc->PutYSwitchRolesGate(a);
+		sortcirc = permcirc;
+	}
+	/*for(uint32_t i = 0; i < a.size(); i++) {
+		a[i] = permcirc->PutYSwitchRolesGate(a[i]);
+	}*/
 
 	//cout << "Building Duplicate selection layer" << endl;
 	//Build 3-input duplicate selection circuit
@@ -190,17 +216,17 @@ vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, ve
 				duptempin[j] = a[2 * j + i];
 				duptemppos[j] = k;
 			}
-			dupvec[i][k] = sccirc->PutCombineAtPosGate(duptempin, k);
+			dupvec[i][k] = sortcirc->PutCombineAtPosGate(duptempin, k);
 		}
 	}
 
-	duptempvec = PutDupSelect3Gate(dupvec[0], dupvec[1], dupvec[2], sccirc);
+	duptempvec = PutDupSelect3Gate(dupvec[0], dupvec[1], dupvec[2], sortcirc);
 
 	for (uint32_t i = 0; i < seqsize / 2; i++)
 		temp[i].resize(bitlen);
 
 	for (uint32_t k = 0; k < bitlen; k++) {
-		duptempin = sccirc->PutSplitterGate(duptempvec[k]);
+		duptempin = sortcirc->PutSplitterGate(duptempvec[k]);
 		for (uint32_t i = 0; i < duptempin.size(); i++) {
 			temp[i][k] = duptempin[i];
 		}
@@ -209,9 +235,9 @@ vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, ve
 	//Put remaining DupSelect2 Gate if necessary
 	if (seqsize % 2 == 0) {
 		tempbits.resize(2);
-		tempbits[0] = sccirc->PutSplitterGate(a[seqsize - 2]);
-		tempbits[1] = sccirc->PutSplitterGate(a[seqsize - 1]);
-		temp[seqsize / 2 - 1] = PutDupSelect2Gate(tempbits[0], tempbits[1], sccirc);
+		tempbits[0] = sortcirc->PutSplitterGate(a[seqsize - 2]);
+		tempbits[1] = sortcirc->PutSplitterGate(a[seqsize - 1]);
+		temp[seqsize / 2 - 1] = PutDupSelect2Gate(tempbits[0], tempbits[1], sortcirc);
 	}
 
 	if (type == 2) {
@@ -251,7 +277,6 @@ vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, ve
 	for (uint32_t i = 0; i < tempvec.size(); i++)
 		out[i] = tempvec[i][0];
 
-
 	return out;
 }
 
@@ -284,8 +309,8 @@ vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint
 
 	//Combine all values of a and b into a single vector c
 	for (i = 0; i < neles; i++) {
-		c[i] = srv_set[i]->get_wire(0);
-		c[i + neles] = cli_set[i]->get_wire(0);
+		c[i] = srv_set[i]->get_wire_id(0);
+		c[i + neles] = cli_set[i]->get_wire_id(0);
 	}
 
 	//Build bitonic sort gate for all values in C
@@ -314,7 +339,7 @@ vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint
 		}
 
 
-		selbitsvec = circ->PutGEGate(tempcmpveca, tempcmpvecb);
+		selbitsvec = circ->PutGTGate(tempcmpveca, tempcmpvecb);
 
 		selbits = circ->PutSplitterGate(selbitsvec);
 		for (k = 0; k < ctr; k++) {

@@ -160,7 +160,7 @@ void CBitVector::SetBitsToZero(int bitpos, int bitlen) {
 }
 
 void CBitVector::SetBytesToZero(int bytepos, int bytelen) {
-	assert(bytepos + bytelen < m_nByteSize);
+	assert(bytepos + bytelen <= m_nByteSize);
 	memset(m_pBits + bytepos, 0x00, bytelen);
 }
 
@@ -393,6 +393,7 @@ void CBitVector::Print(int fromBit, int toBit) {
 
 void CBitVector::PrintHex(int fromByte, int toByte, bool linebreak) {
 	int to = toByte > (m_nByteSize) ? (m_nByteSize) : toByte;
+
 	for (int i = fromByte; i < to; i++) {
 		cout << setw(2) << setfill('0') << (hex) << ((unsigned int) m_pBits[i]);
 	}

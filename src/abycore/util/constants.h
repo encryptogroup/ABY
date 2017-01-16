@@ -21,6 +21,9 @@
 
 #include "typedefs.h"
 
+/* Uncomment production to circumvent output reconstruction in the PrintValue and Assert gates */
+//#define ABY_PRODUCTION
+
 #define AES_KEY_BITS			128
 #define AES_KEY_BYTES			16
 #define AES_BITS				128
@@ -40,9 +43,17 @@
 #define DGK_CHANNEL DJN_CHANNEL
 #define OT_BASE_CHANNEL 0
 
+//Controls the number of OTs that are processed in one block. Lower values are better for lower latency networks.
 #define NUMOTBLOCKS 128
 #define BUFFER_OT_KEYS 128
+/**
+ \def 	GARBLED_TABLE_WINDOW
+ \brief	Window size of Yao's garbled circuits in pipelined execution
+ */
+#define GARBLED_TABLE_WINDOW NUMOTBLOCKS * AES_BITS//1 * AES_BITS//1048575 //1048575 //=0xFFFFF for faster modulo operation
 
+
+#define BATCH
 #define ABY_OT
 #define FIXED_KEY_AES_HASHING //for OT routines
 
@@ -101,7 +112,10 @@ enum e_gatetype {
 	G_CONV = 0x07, /**< Enum for CONVERSION gates (dst is used to specify the sharing to convert to) */
 	G_CALLBACK = 0x08, /**< Enum for Callback gates where the developer specifies a routine which is called upon gate evaluation */
 	G_SHARED_OUT = 0x09, /**< Enum for shared output gate, where the output is kept secret-shared between parties after the evaluation*/
+	G_TT = 0x0A, /**< Enum for computing an arbitrary truth table gate. Is needed for the 1ooN OT in BoolNonMTSharing */
 	G_SHARED_IN = 0x0B, /**< Enum for pre-shared input gate, where the parties dont secret-share (e.g. in outsourcing) */
+	G_PRINT_VAL = 0x40, /**< Enum gate that reconstructs the shares and prints the plaintext value with the designated string */
+	G_ASSERT = 0x41, /**< Enum gate that reconstructs the shares and compares it to an provided input plaintext value */
 	G_COMBINE = 0x80, /**< Enum for COMBINER gates that combine multiple single-value gates to one multi-value gate  */
 	G_SPLIT = 0x81, /**< Enum for SPLITTER gates that split a multi-value gate to multiple single-value gates */
 	G_REPEAT = 0x82, /**< Enum for REPEATER gates that repeat the value of a single-value gate to form a new multi-value gate */
@@ -109,7 +123,7 @@ enum e_gatetype {
 	G_COMBINEPOS = 0x84, /**< Enum for COMBINE_AT_POSITION gates that form a new multi-value gate from specific positions of old multi-value gates */
 	G_SUBSET = 0x85, /**< Enum for SUBSET gates that form a new multi-value gate from multiple positions of one multi-value gate */
 	G_STRUCT_COMBINE = 0x86, /**< Enum for STRUCTURIZED COMBINER gates which combine one or multiple input gates based on an increase value*/
-	G_LIN_SUB = 0x0C, /**< Enum for LINEAR gates (SUB in Arithmetic circuits) */
+//G_YAO_BUILD 		/**< Enum for  */
 };
 
 /**
@@ -130,6 +144,7 @@ enum e_operation {
 	OP_MUL_VEC = 9, /**< Enum for performing VECTORED MULTIPLICATION*/
 	OP_SHARE_OUT = 10, /**< Enum for Shared Output without reconstruction. */
 	OP_SHARE_IN = 11, /**< Enum for Pre-Shared Input without input sharing (communication). */
+	OP_TT = 12, /**< Enum for computing an arbitrary truth table. Is needed for the 1ooN OT in BoolNonMTSharing */
 	OP_IN, /**< Enum for performing INPUT*/
 	OP_OUT, /**< Enum for performing OUTPUT*/
 	OP_INV, /**< Enum for performing INVERSION*/
@@ -139,7 +154,13 @@ enum e_operation {
 	OP_B2A, /**< Enum for performing BOOL TO ARITHEMETIC CONVERSION*/
 	OP_B2Y, /**< Enum for performing BOOL TO YAO CONVERSION*/
 	OP_Y2B, /**< Enum for performing YAO TO BOOL CONVERSION*/
+	OP_A2B, /**< Enum for performing ARITH TO BOOL CONVERSION*/
+	OP_Y2A, /**< Enum for performing YAO TO ARITH CONVERSION*/
+	OP_YSWITCH, /**< Enum for transferring roles in YAO sharing */
 	OP_IO, /**< Enum for performing a SHARING followed by a RECONSTRUCT operation */
+	OP_SBOX, /**< Enum for evaluating the AES S-box on an 8-bit input*/
+	OP_PRINT_VAL = 0x40,/**< Enum for printing the plaintext output of a gate */
+	OP_ASSERT = 0x41, /**< Enum for checking the plaintext output of a gate to a reference value */
 	OP_COMBINE = 0x80, /**< Enum for COMBINING multiple single-value gates into one multi-gate */
 	OP_SPLIT = 0x81, /**< Enum for SPLITTING one multi-value gate into multiple single-value gates */
 	OP_REPEAT = 0x82, /**< Enum for REPEATING the value of a single-value gate to create a multi-value gate */
@@ -156,8 +177,9 @@ enum e_sharing {
 	S_BOOL = 0, /**< Enum for performing bool sharing*/
 	S_YAO = 1, /**< Enum for performing yao sharing*/
 	S_ARITH = 2, /**< Enum for performing arithemetic sharing*/
-	S_LAST = 3, /**< Enum for indicating the last enum value. DO NOT PUT ANOTHER ENUM AFTER THIS ONE! !*/
-	S_YAO_PIPE = 8, /**< TODO Enum for performing yao sharing in pipelined mode*/
+	S_YAO_REV= 3, /**< Enum for performing yao sharing with reverse roles to enable inter-party parallelization (see Buescher et al. USENIX'15)*/
+	S_LAST = 4, /**< Enum for indicating the last enum value. DO NOT PUT ANOTHER ENUM AFTER THIS ONE! !*/
+	S_BOOL_NO_MT = 5, /**< Enum for performing boolean sharing based on 1ooN OT */
 
 };
 
@@ -194,6 +216,18 @@ enum rec_ot_flavor {
 	Rec_OT, Rec_R_OT, Rec_OT_LAST
 };
 
+
+/**
+	\def ePreCompPhase
+	\brief Enumeration for pre-computation phase
+*/
+enum ePreCompPhase {
+	ePreCompDefault = 0,
+	ePreCompStore	= 1,
+	ePreCompRead	= 2,
+	ePreCompRAMWrite = 3,
+	ePreCompRAMRead = -3
+};
 
 /**
  \struct 	aby_ops_t
@@ -234,11 +268,15 @@ static string get_role_name(e_role r) {
 static string get_sharing_name(e_sharing s) {
 	switch (s) {
 	case S_BOOL:
-		return "BOOL";
+		return "Bool";
 	case S_YAO:
-		return "YAO";
+		return "Yao";
+	case S_YAO_REV:
+		return "Reverse Yao";
 	case S_ARITH:
-		return "ARITH";
+		return "Arith";
+	case S_BOOL_NO_MT:
+		return "1ooN Bool";
 	default:
 		return "NN";
 	}
@@ -252,6 +290,7 @@ static string get_gate_type_name(e_gatetype g) {
 	case G_NON_LIN_VEC: return "Vector-Non-Linear";
 	case G_IN: return "Input";
 	case G_OUT: return "Output";
+	case G_SHARED_OUT: return "Shared output";
 	case G_INV: return "Inversion";
 	case G_CONSTANT: return "Constant";
 	case G_CONV: return "Conversion";
@@ -260,6 +299,9 @@ static string get_gate_type_name(e_gatetype g) {
 	case G_REPEAT: return "Repeater";
 	case G_PERM: return "Permutation";
 	case G_COMBINEPOS: return "Combiner-Position";
+	case G_TT: return "Truth-Table";
+	case G_ASSERT: return "Assertion";
+	case G_PRINT_VAL: return "Printer";
 	default: return "NN";
 	}
 }
@@ -305,6 +347,10 @@ static string get_op_name(e_operation op) {
 		return "B2Y";
 	case OP_Y2B:
 		return "Y2B";
+	case OP_A2B:
+		return "A2B";
+	case OP_Y2A:
+		return "Y2A";
 	case OP_COMBINE:
 		return "CMB";
 	case OP_SPLIT:
@@ -356,12 +402,6 @@ static const char* getFieldType(field_type ftype) {
 	}
 }
 
-/**
- \def 	GARBLED_TABLE_WINDOW
- \brief	Window size of Yao's garbled circuits in pipelined execution
- */
-#define GARBLED_TABLE_WINDOW 10000000//1048575 //1048575 //=0xFFFFF for faster modulo operation
-
 /** \var g_TruthTable
  \brief A truth-table for an AND gate
  */
@@ -375,10 +415,89 @@ const uint8_t m_vFixedKeyAESSeed[AES_KEY_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44
  */
 const uint8_t m_vSeed[AES_KEY_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
 
+/**\var m_vLUT_GT_IN
+ * \brief Lookup-Table for the Greater-than functionality on input bits in No-MT sharing
+ */
+const uint64_t m_vLUT_GT_IN[4][8] = {
+		{0x2L, 0x9L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x20f2, 0x9009L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x20f20000ffff20f2L, 0x9009000000009009L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x20f20000ffff20f2L, 0xffffffffffffffffL, 0x0L, 0x20f20000ffff20f2L, 0x9009000000009009L, 0x0L, 0x0L, 0x9009000000009009L}};
+
+/**\var m_vLUT_GT_INTERNAL
+ * \brief Lookup-Table for the Greater-than functionality on internal bits in No-MT sharing
+ */
+const uint64_t m_vLUT_GT_INTERNAL[3][8] = {
+		{0x5af0L, 0xcc00L, 0L, 0L, 0L, 0L, 0L, 0L},
+		{0xa50f5af0ffff0000L, 0xcc00cc0000000000L, 0L, 0L, 0L, 0L, 0L, 0L},
+		{0x0L, 0xffffffffffffffffL, 0xa50f5af0ffff0000L, 0x5af0a50f0000ffffL, 0x0L, 0x0L, 0xcc00cc0000000000L, 0xcc00cc0000000000L}};
+
+
+
+
+/**\var m_vLUT_ADD_IN
+ * \brief Lookup-Table for the addition functionality on inputs in No-MT sharing
+ */
+const uint64_t m_vLUT_ADD_IN[4][24] = {
+		{0x8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x8888L, 0x660L, 0xf880L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x8888888888888888L, 0x660066006600660L, 0xf880f880f880f880L, 0xffff000000000000L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		//{0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x8888888888888888L, 0x8888888888888888L, 0x8888888888888888L, 0x8888888888888888L, 0x660066006600660L, 0x660066006600660L, 0x660066006600660L, 0x660066006600660L,
+				0xf880f880f880f880L, 0xf880f880f880f880L, 0xf880f880f880f880L, 0xf880f880f880f880L, 0xffff000000000000L, 0xffff000000000000L, 0xffff000000000000L, 0xffff000000000000L,
+				0x0L, 0x66006600000L, 0x66006600000L, 0x0L, 0x0L, 0xfffff880f8800000L, 0xfffff880f8800000L, 0xffffffffffffffffL}
+};
+
+/**\var m_vLUT_ADD_N_OUTS
+ * \brief Number of outputs for the m_vLUT_ADD_IN LUT
+ */
+const uint32_t m_vLUT_ADD_N_OUTS[4] = {1, 3, 4, 6};
+
+
+/**\var m_vLUT_ADD_INTERNAL
+ * \brief Lookup-Table for the addition functionality on internal signals in No-MT sharing
+ */
+const uint64_t m_vLUT_ADD_INTERNAL[2][16] = {
+		{0xa0a0L, 0xffc0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0xa0a0a0a0a0a0a0a0L, 0xa0a0a0a0a0a0a0a0L, 0xa0a0a0a0a0a0a0a0L, 0xa0a0a0a0a0a0a0a0L, 0xffc0ffc0ffc0ffc0L, 0xffc0ffc0ffc0ffc0L, 0xffc0ffc0ffc0ffc0L, 0xffc0ffc0ffc0ffc0L,
+				0x0L, 0xa0a00000a0a00000L, 0x0L, 0xa0a00000a0a00000L, 0x0L, 0xffffffffffc00000L, 0xffffffffffffffffL, 0xffffffffffffffffL}
+};
+
+/**\var m_vLUT_ADD_CRIT_IN
+ * \brief Lookup-Table for the addition functionality on the critical path where the inputs are real values in No-MT sharing
+ */
+const uint64_t m_vLUT_ADD_CRIT_IN[4][16] = {
+		{0x8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x8888L, 0xf880L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x8888888888888888L, 0xf880f880f880f880L, 0xfffff880f8800000L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x8888888888888888L, 0x8888888888888888L, 0x8888888888888888L, 0x8888888888888888L, 0xf880f880f880f880L, 0xf880f880f880f880L, 0xf880f880f880f880L, 0xf880f880f880f880L,
+				0xfffff880f8800000L, 0xfffff880f8800000L, 0xfffff880f8800000L, 0xfffff880f8800000L, 0x0L, 0xfffff880f8800000L, 0xfffff880f8800000L, 0xffffffffffffffffL}
+};
+
+/**\var m_vLUT_ADD_CRIT
+ * \brief Lookup-Table for the addition functionality on the critical path where the inputs are parity/carry signals in No-MT sharing
+ */
+const uint64_t m_vLUT_ADD_CRIT[3][6] = {
+		{0xf8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0xf8f8f8f8, 0xfffff800, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0xf8f8f8f8f8f8f8f8L, 0xf8f8f8f8f8f8f8f8L, 0xfffff800fffff800L, 0xfffff800fffff800L, 0xfffff80000000000L, 0xffffffffffffffffL}
+};
+
+/**\var m_vLUT_ADD_INV
+ * \brief Lookup-Table for the addition functionality on the inverse carry tree in No-MT sharing
+ */
+const uint64_t m_vLUT_ADD_INV[3][6] = {
+		{0xf8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0xf8f8f8f8, 0xffffaa00, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0xf8f8f8f8f8f8f8f8L, 0xf8f8f8f8f8f8f8f8L, 0xffffaa00ffffaa00L, 0xffffaa00ffffaa00L, 0xffffaa0000000000L, 0xffffffffffffffffL}
+};
+
+
 /** \var m_tAllOps
  \brief All operations in the different sharings that are available in ABY
  */
-static const aby_ops_t m_tAllOps[] = { {OP_IO, S_BOOL, "iobool"},
+static const aby_ops_t m_tAllOps[] = {
+//	{OP_IO, S_BOOL, "iobool"},
 	{OP_XOR, S_BOOL, "xorbool"},
 	{OP_AND, S_BOOL, "andbool"},
 	{OP_ADD, S_BOOL, "addbool"},
@@ -402,8 +521,20 @@ static const aby_ops_t m_tAllOps[] = { {OP_IO, S_BOOL, "iobool"},
 	{OP_Y2B, S_YAO, "y2b"},
 	{OP_B2A, S_BOOL, "b2a"},
 	{OP_B2Y, S_BOOL, "b2y"},
-	{OP_AND_VEC, S_BOOL, "vec-and"},
-	{OP_A2Y, S_ARITH, "a2y"}
+	{OP_A2Y, S_ARITH, "a2y"},
+	{OP_A2B, S_ARITH, "a2b"},
+	{OP_Y2A, S_YAO, "y2a"},
+	{OP_AND_VEC, S_BOOL, "vec-and"}
+
+//	{OP_IO, S_BOOL_NO_MT, "io1ooN"},
+//	{OP_XOR, S_BOOL_NO_MT, "xor1ooN"},
+//	{OP_AND, S_BOOL_NO_MT, "and1ooN"},
+//	{OP_ADD, S_BOOL_NO_MT, "add1ooN"},
+//	{OP_MUL, S_BOOL_NO_MT, "mul1ooN"},
+//	{OP_CMP, S_BOOL_NO_MT, "cmp1ooN"},
+//	{OP_EQ, S_BOOL_NO_MT, "eq1ooN"},
+//	{OP_MUX, S_BOOL_NO_MT, "mux1ooN"},
+//	{OP_SUB, S_BOOL_NO_MT, "sub1ooN"}
 };
 
 #endif /* CONSTANTS_H_ */

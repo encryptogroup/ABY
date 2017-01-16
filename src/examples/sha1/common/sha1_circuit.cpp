@@ -99,8 +99,8 @@ share* BuildSHA1Circuit(share* s_msgS, share* s_msgC, uint8_t* msgS, uint8_t* ms
 	//Copy shared input into one msg
 	share* s_msg = new boolshare(ABY_SHA1_INPUT_BITS, circ);
 	for(uint32_t i = 0; i < party_in_bitlen; i++) {
-		s_msg->set_wire(i, s_msgS->get_wire(i));
-		s_msg->set_wire(i+party_in_bitlen, s_msgC->get_wire(i));
+		s_msg->set_wire_id(i, s_msgS->get_wire_id(i));
+		s_msg->set_wire_id(i+party_in_bitlen, s_msgC->get_wire_id(i));
 	}
 
 	//Copy plaintext input into one msg
@@ -130,9 +130,9 @@ share* BuildSHA1Circuit(share* s_msgS, share* s_msgC, uint8_t* msgS, uint8_t* ms
 	share* s_one = circ->PutSIMDCONSGate(nvals, one, 1);
 	for(uint32_t i = 0; i < 512; i++) {
 		if(i != 7 && i != 497) {
-			s_msg->set_wire(i, s_zero->get_wire(0));
+			s_msg->set_wire_id(i, s_zero->get_wire_id(0));
 		} else {
-			s_msg->set_wire(i, s_one->get_wire(0));
+			s_msg->set_wire_id(i, s_one->get_wire_id(0));
 		}
 	}
 	for(uint32_t i = 0; i < 64; i++) {
@@ -209,7 +209,7 @@ share* process_block(share* s_msg, uint8_t* msg, uint8_t* plain_out, share** s_h
 			} else {
 				wid = 0;
 			}
-			out->set_wire(i*32+j, s_h[i]->get_wire(wid + (j%8)));
+			out->set_wire_id(i*32+j, s_h[i]->get_wire_id(wid + (j%8)));
 		}
 	}
 
@@ -245,7 +245,7 @@ void break_message_to_chunks(share** s_w, share* s_msg, uint32_t* w, uint8_t* ms
 			} else {
 				wid = 0;
 			}
-			s_w[i]->set_wire((j%8)+wid, s_msg->get_wire(i*32+ j));
+			s_w[i]->set_wire_id((j%8)+wid, s_msg->get_wire_id(i*32+ j));
 		}
 		w[i] = msg[i*4] << 24;
 		w[i] |= (msg[i*4+1] << 16);
@@ -266,7 +266,7 @@ void expand_ws(share** s_w, uint32_t* w, BooleanCircuit* circ) {
 		s_wtmp = circ->PutXORGate(s_wtmp, s_w[i-16]);
 		//leftrotate by 1
 		for(uint32_t j = 0; j < 32; j++) {
-			s_w[i]->set_wire((j+1)%32, s_wtmp->get_wire(j));
+			s_w[i]->set_wire_id((j+1)%32, s_wtmp->get_wire_id(j));
 		}
 
 		w[i] = SHA1CircularShift(1, w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16]);
@@ -285,11 +285,11 @@ void sha1_main_loop(share** s_h, share** s_w, uint32_t* h, uint32_t* w, uint32_t
 	s_d = new boolshare(32, circ);
 	s_e = new boolshare(32, circ);
 
-	s_a->set_wires(s_h[0]->get_wires());
-	s_b->set_wires(s_h[1]->get_wires());
-	s_c->set_wires(s_h[2]->get_wires());
-	s_d->set_wires(s_h[3]->get_wires());
-	s_e->set_wires(s_h[4]->get_wires());
+	s_a->set_wire_ids(s_h[0]->get_wires());
+	s_b->set_wire_ids(s_h[1]->get_wires());
+	s_c->set_wire_ids(s_h[2]->get_wires());
+	s_d->set_wire_ids(s_h[3]->get_wires());
+	s_e->set_wire_ids(s_h[4]->get_wires());
 
 	uint32_t a, b, c, d, e;
 	a = h[0]; b = h[1]; c = h[2]; d = h[3]; e = h[4];
@@ -361,7 +361,7 @@ void sha1_main_loop(share** s_h, share** s_w, uint32_t* h, uint32_t* w, uint32_t
 		 */
 		s_tmp = new boolshare(32, circ);
 		for(uint32_t j = 0; j <32; j++) {
-			s_tmp->set_wire((j+5)%32, s_a->get_wire(j));
+			s_tmp->set_wire_id((j+5)%32, s_a->get_wire_id(j));
 		}
 		s_tmp = circ->PutADDGate(s_tmp, s_f);
 		s_tmp = circ->PutADDGate(s_tmp, s_e);
@@ -375,21 +375,21 @@ void sha1_main_loop(share** s_h, share** s_w, uint32_t* h, uint32_t* w, uint32_t
 		tmp = (tmp + w[i]) & 0xFFFFFFFF;
 
 		// e = d
-		s_e->set_wires(s_d->get_wires());
+		s_e->set_wire_ids(s_d->get_wires());
 		e = d;
         // d = c
-		s_d->set_wires(s_c->get_wires());
+		s_d->set_wire_ids(s_c->get_wires());
 		d = c;
 		// c = b leftrotate 30
 		for(uint32_t j = 0; j <32; j++) {
-			s_c->set_wire((j+30)%32, s_b->get_wire(j));
+			s_c->set_wire_id((j+30)%32, s_b->get_wire_id(j));
 		}
 		c = SHA1CircularShift(30, b);
 		// b = a
-		s_b->set_wires(s_a->get_wires());
+		s_b->set_wire_ids(s_a->get_wires());
 		b = a;
 		// a = temp
-		s_a->set_wires(s_tmp->get_wires());
+		s_a->set_wire_ids(s_tmp->get_wires());
 		a = tmp;
 
 	}

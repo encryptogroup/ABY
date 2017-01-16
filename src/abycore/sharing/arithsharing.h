@@ -32,8 +32,8 @@ class ArithSharing: public Sharing {
 
 public:
 	/** Constructor of the class.*/
-	ArithSharing(e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, e_mt_gen_alg mt_alg) :
-			Sharing(role, sharebitlen, circuit, crypt) {
+	ArithSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, e_mt_gen_alg mt_alg) :
+			Sharing(context, role, sharebitlen, circuit, crypt) {
 		m_eMTGenAlg = mt_alg;
 		Init();
 	}
@@ -55,6 +55,10 @@ public:
 	void FinishCircuitLayer(uint32_t depth);
 
 	void PrepareOnlinePhase();
+
+	void PreComputationPhase() {
+		return;
+	}
 
 	void InstantiateGate(GATE* gate);
 	void UsedGate(uint32_t gateid);
@@ -112,7 +116,6 @@ private:
 	uint32_t m_nMTs;
 	uint32_t m_nNumCONVs;
 
-	uint32_t m_nTypeBitLen;
 	uint64_t m_nTypeBitMask;
 
 	vector<uint32_t> m_vMTStartIdx;
