@@ -20,11 +20,17 @@ ARCHITECTURE = $(shell uname -m)
 ifeq (${ARCHITECTURE},x86_64)
 MIRACL_MAKE:=linux64
 GNU_LIB_PATH:=x86_64
+ARCH_LIB_PATH:=64
 else
 MIRACL_MAKE:=linux
 GNU_LIB_PATH:=i386
+ARCH_LIB_PATH:=32
 endif
 
+#Include for Arch, Manjaro and the like
+#INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib${ARCH_LIB_PATH}/glib-2.0/include
+
+#Include for Debian, Ubuntu, Mint and the like
 INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
 
 LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lglib-2.0 -lrt
@@ -83,8 +89,7 @@ ${TEST}: miracl otext core examples
 
 # this will run the previously compiled test-aby executables #TODO: take care of the output and errors
 runtest: ${TEST}
-	${BIN}/test-aby.exe -r 0 &
-	${BIN}/test-aby.exe -r 1
+	sh runtest_scr.sh
 
 examples: miracl otext core ${EXAMPLE_SUBDIRS}
 
