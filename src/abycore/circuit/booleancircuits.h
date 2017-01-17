@@ -268,7 +268,7 @@ public:
 	vector<uint32_t> PutDepthOptimizedAddGate(vector<uint32_t> lefta, vector<uint32_t> right, BOOL bCARRY = FALSE, bool vector_ands = false);
 	vector<uint32_t> PutLUTAddGate(vector<uint32_t> lefta, vector<uint32_t> right, BOOL bCARRY = FALSE);
 
-	vector<vector<uint32_t> > PutCarrySaveGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> c, uint32_t inbitlen);
+	vector<vector<uint32_t> > PutCarrySaveGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> c, uint32_t inbitlen, bool bCarry = FALSE);
 	vector<vector<uint32_t> > PutCSNNetwork(vector<vector<uint32_t> > ins);
 
 	vector<uint32_t> PutSUBGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t max_bitlen);

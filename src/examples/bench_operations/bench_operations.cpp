@@ -31,12 +31,12 @@ static const aby_ops_t m_tBenchOps[] = { { OP_XOR, S_BOOL, "xorbool" }, { OP_AND
 		{ OP_SBOX, S_BOOL, "sboxsobool" }, { OP_SBOX, S_BOOL, "sboxdobool" }, { OP_SBOX, S_BOOL, "sboxdovecbool" },
 		 {OP_XOR, S_YAO, "xoryao" }, { OP_AND, S_YAO, "andyao" }, { OP_ADD, S_YAO, "addyao" }, { OP_MUL, S_YAO, "mulyao" }, { OP_CMP, S_YAO, "cmpyao" },
 		{ OP_EQ, S_YAO, "eqyao" }, { OP_MUX, S_YAO, "muxyao" },  { OP_SBOX, S_YAO, "sboxsoyao" },{ OP_ADD, S_ARITH, "addarith" }, { OP_MUL, S_ARITH, "mularith" }, { OP_Y2B, S_YAO, "y2b" }, { OP_B2A, S_BOOL, "b2a" },
-		{ OP_B2Y, S_BOOL, "b2y" }, { OP_A2Y, S_ARITH, "a2y" }, { OP_ADD, S_BOOL_NO_MT, "addsplut"}, { OP_CMP, S_BOOL_NO_MT, "cmpsplut"},
-		{ OP_EQ, S_BOOL_NO_MT, "eqsplut"},	{ OP_SBOX, S_BOOL_NO_MT, "sboxlut" }, { OP_ADD, S_YAO_REV, "addyaoipp" }, { OP_MUL, S_YAO_REV, "mulyaoipp" }};
+		{ OP_B2Y, S_BOOL, "b2y" }, { OP_A2Y, S_ARITH, "a2y" }, { OP_ADD, S_YAO_REV, "addyaoipp" }, { OP_MUL, S_YAO_REV, "mulyaoipp" }};
+
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* bitlen, uint32_t* secparam,
 		string* address, uint16_t* port, int32_t* operation, bool* verbose, uint32_t* nops, uint32_t* nruns,
-		uint32_t* threads, bool* no_verify, bool* detailed, bool* shared_in_out) {
+		uint32_t* threads, bool* no_verify, bool* detailed) {
 
 	uint32_t int_role = 0, int_port = 0;
 	bool useffc = false;
@@ -56,8 +56,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* 
 			{ (void*) no_verify, T_FLAG, "t", "No output verification (default: false)",	false, false },
 			{ (void*) detailed, T_FLAG, "d", "Give detailed online/setup time and communication (default: false)",	false, false },
 			{ (void*) nops, T_NUM, "n", "Number of parallel operations, default: 1", false, false },
-			{ (void*) threads, T_NUM, "h", "Number of threads, default: 1", false, false },
-			{ (void*) shared_in_out, T_FLAG, "e", "Shared input and output (default: false)",	false, false }
+			{ (void*) threads, T_NUM, "h", "Number of threads, default: 1", false, false }
 	};
 
 	success = parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx));
@@ -94,11 +93,13 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* 
 
 int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, uint32_t* bitlens,
 		uint32_t nbitlens, uint32_t nvals, uint32_t nruns, e_role role, uint32_t symsecbits, bool verbose,
-		bool no_verify,	bool detailed, bool shared_in_out) {
+		bool no_verify,	bool detailed) {
 	uint64_t *avec, *bvec, *cvec, *verifyvec, typebitmask = 0;
 	uint32_t tmpbitlen, tmpnvals;
 	uint8_t *sa, *sb;
-	share *shra, *shrb, *shrres, *shrout, *shrsel, *shrayr, *shrby, *shray, *shrbyr, *shr_out_a, *shr_out_b;
+	share *shra, *shrb, *shrres, *shrout, *shrsel, *shr_out_a, *shr_out_b;
+	//Shares for Yao IPP
+	share *shray, *shrayr, *shrby, *shrbyr, *shrresy, *shrresyr, *shrouty, *shroutyr;
 	vector<Sharing*>& sharings = party->GetSharings();
 	Circuit *bc, *yc, *ac, *ycr;
 	double op_time, o_time, s_time, o_comm, s_comm;
@@ -113,9 +114,9 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 
 	verifyvec = (uint64_t*) malloc(nvals * sizeof(uint64_t));
 
-	bc = sharings[0]->GetCircuitBuildRoutine();
-	yc = sharings[1]->GetCircuitBuildRoutine();
-	ac = sharings[2]->GetCircuitBuildRoutine();
+	bc = sharings[S_BOOL]->GetCircuitBuildRoutine();
+	yc = sharings[S_YAO]->GetCircuitBuildRoutine();
+	ac = sharings[S_ARITH]->GetCircuitBuildRoutine();
 	ycr = sharings[S_YAO_REV]->GetCircuitBuildRoutine();
 
 
@@ -148,9 +149,6 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 	for (uint32_t i = 0; i < nops; i++) {
 		if (!verbose) {
 			cout << bench_ops[i].opname << "\t";
-			if(nruns > 1) {
-				cout << endl;
-			}
 		}
 		for (uint32_t b = 0; b < nbitlens; b++) {
 			uint32_t bitlen = bitlens[b];
@@ -174,16 +172,13 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 
 
 			for (uint32_t r = 0; r < nruns; r++) {
-				//if (!verbose)
-				//	cout << "Running benchmark no. " << i << " on operation " << bench_ops[i].opname <<
-				//	" on " << bitlen << " bit-length and mask = " << typebitmask << endl;
-
 				Circuit* circ = sharings[bench_ops[i].sharing]->GetCircuitBuildRoutine();
 
 				for (uint32_t j = 0; j < nvals; j++) {
 					avec[j] = (((uint64_t) rand()<<(sizeof(uint32_t)*8)) + rand()) & typebitmask;
 					bvec[j] = (((uint64_t) rand()<<(sizeof(uint32_t)*8)) + rand()) & typebitmask;
 				}
+
 				if(bench_ops[i].sharing == S_YAO_REV) {
 					yrnvals = nvals/2;
 					ynvals = nvals - yrnvals;
@@ -206,71 +201,6 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 					shrb->set_max_bitlength(bitlen);
 				}
 
-				if(shared_in_out) {
-					if(bench_ops[i].sharing == S_YAO_REV) {
-						yrnvals = nvals/2;
-						ynvals = nvals - yrnvals;
-
-						share* shroutay = yc->PutSharedOUTGate(shray);
-						share* shroutby = yc->PutSharedOUTGate(shrby);
-
-						share *shroutayr, *shroutbyr;
-						if(yrnvals > 0) {
-							shroutayr = ycr->PutSharedOUTGate(shrayr);
-							shroutbyr = ycr->PutSharedOUTGate(shrbyr);
-						}
-
-						party->ExecCircuit();
-
-						yao_fields* yao_shrd_out_ay = ((boolshare*) shroutay)->get_internal_yao_keys();
-						yao_fields* yao_shrd_out_by = ((boolshare*) shroutby)->get_internal_yao_keys();
-
-						yao_fields *yao_shrd_out_ayr, *yao_shrd_out_byr;
-						if(yrnvals > 0) {
-							yao_shrd_out_ayr = ((boolshare*) shroutayr)->get_internal_yao_keys();
-							yao_shrd_out_byr = ((boolshare*) shroutbyr)->get_internal_yao_keys();
-						}
-
-						party->Reset();
-
-						shray = ((BooleanCircuit*) yc)->PutYaoSharedSIMDINGate(ynvals, yao_shrd_out_ay, bitlen);
-						shrby = ((BooleanCircuit*) yc)->PutYaoSharedSIMDINGate(ynvals, yao_shrd_out_by, bitlen);
-
-						if(yrnvals > 0) {
-							shrayr = ((BooleanCircuit*) ycr)->PutYaoSharedSIMDINGate(yrnvals, yao_shrd_out_ayr, bitlen);
-							shrbyr = ((BooleanCircuit*) ycr)->PutYaoSharedSIMDINGate(yrnvals, yao_shrd_out_byr, bitlen);
-						}
-					} else {
-						buf_shrd_out_a = shr_out_a->get_clear_value();
-						buf_shrd_out_b = shr_out_b->get_clear_value();
-					}
-
-					party->Reset();
-					if(bench_ops[i].sharing == S_YAO) {
-						/*if(role == SERVER) {
-							for(uint32_t i = 0; i < bitlen; i++) {
-								cout << "A" << i << ": " << (hex) << ((uint64_t*)yao_shrd_out_a[i].outKey)[0] << ((uint64_t*) yao_shrd_out_a[i].outKey)[1]
-								       << " : " << (uint32_t) yao_shrd_out_a[i].pi[0] <<(dec)<< endl;
-							}
-							for(uint32_t i = 0; i < bitlen; i++) {
-								cout << "B" << i << ": " << (hex) << ((uint64_t*)yao_shrd_out_b[i].outKey)[0] << ((uint64_t*) yao_shrd_out_b[i].outKey)[1]
-								       << " : " << (uint32_t) yao_shrd_out_b[i].pi[0] <<(dec)<< endl;
-							}
-						} else {
-							for(uint32_t i = 0; i < bitlen; i++) {
-								cout << "A" << i << ": " << (hex) << ((uint64_t*)yao_shrd_out_a[i].outKey)[0] << ((uint64_t*) yao_shrd_out_a[i].outKey)[1] <<(dec)<< endl;
-							}
-							for(uint32_t i = 0; i < bitlen; i++) {
-								cout << "B" << i << ": " << (hex) << ((uint64_t*)yao_shrd_out_b[i].outKey)[0] << ((uint64_t*) yao_shrd_out_b[i].outKey)[1] <<(dec)<< endl;
-							}
-						}*/
-						shra = ((BooleanCircuit*) circ)->PutYaoSharedSIMDINGate(nvals, yao_shrd_out_a, bitlen);
-						shrb = ((BooleanCircuit*) circ)->PutYaoSharedSIMDINGate(nvals, yao_shrd_out_b, bitlen);
-					} else {
-						shra = circ->PutSharedSIMDINGate(nvals, buf_shrd_out_a, bitlen);
-						shrb = circ->PutSharedSIMDINGate(nvals, buf_shrd_out_b, bitlen);
-					}
-				}
 
 				switch (bench_ops[i].op) {
 				case OP_ADD:
@@ -278,6 +208,11 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 						shrres = new boolshare(((BooleanCircuit*)circ)->PutSizeOptimizedAddGate(shra->get_wires(), shrb->get_wires()), circ);
 					} else if(bench_ops[i].opname.compare("adddovecbool") == 0) {
 						shrres = new boolshare(((BooleanCircuit*)circ)->PutDepthOptimizedAddGate(shra->get_wires(), shrb->get_wires(), false, true), circ);
+					} else if(bench_ops[i].sharing == S_YAO_REV) {
+						shrresy = yc->PutADDGate(shray, shrby);
+						if(yrnvals > 0) {
+							shrresyr = ycr->PutADDGate(shrayr, shrbyr);
+						}
 					} else {
 						shrres = circ->PutADDGate(shra, shrb);
 					}
@@ -302,6 +237,11 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 							shrres = new boolshare(((BooleanCircuit*) circ)->PutMulGate(shra->get_wires(), shrb->get_wires(), bitlen, false, true), circ);
 						} else if(bench_ops[i].opname.compare("muldovecbool") == 0) {
 							shrres = new boolshare(((BooleanCircuit*) circ)->PutMulGate(shra->get_wires(), shrb->get_wires(), bitlen, true, true), circ);
+						} else if(bench_ops[i].sharing == S_YAO_REV) {
+							shrresy = yc->PutMULGate(shray, shrby);
+							if(yrnvals > 0) {
+								shrresyr = ycr->PutMULGate(shrayr, shrbyr);
+							}
 						} else {
 							shrres = circ->PutMULGate(shra, shrb);
 						}
@@ -336,24 +276,17 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 						verifyvec[j] = avec[j] == bvec[j];
 					break;
 				case OP_MUX:
-					/*for(uint32_t j = 0; j < nvals; j++) {
-						sa[j] = (uint8_t) (rand() & 0x01);
-						sb[j] = (uint8_t) (rand() & 0x01);
-					}
-					shrsel = circ->PutXORGate(circ->PutSIMDINGate(nvals, sa, 1, SERVER), circ->PutSIMDINGate(nvals, sb, 1, CLIENT));*/
 					shrsel = new boolshare(1, circ);
 					shrsel->set_wire_id(0, circ->PutXORGate(shra->get_wire_ids_as_share(0), shrb->get_wire_ids_as_share(0))->get_wire_id(0));
 
 					if(bench_ops[i].opname.compare("muxvecbool") == 0) {
 						shrres = new boolshare(bitlen, circ);
 						((BooleanCircuit*) circ)->PutMultiMUXGate(&shra, &shrb, shrsel, 1, &shrres);
-						//shrres = new boolshare(((BooleanCircuit*)circ)->PutMUXGate(shra->get_wires(), shrb->get_wires(), shrsel->get_wire(0), false), circ);
 					} else if(bench_ops[i].opname.compare("muxbool") == 0) {
 						shrres = new boolshare(((BooleanCircuit*)circ)->PutMUXGate(shra->get_wires(), shrb->get_wires(), shrsel->get_wire_id(0), false), circ);
 
 					} else {
 						shrres = circ->PutMUXGate(shra, shrb, shrsel);
-
 					}
 					for (uint32_t j = 0; j < nvals; j++)
 						verifyvec[j] = ((avec[j] & 0x01) ^ (bvec[j] & 0x01)) == 0 ? bvec[j] : avec[j];
@@ -409,8 +342,12 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 						verifyvec[j] = avec[j] + bvec[j];
 					break;	//ids that are required for the vector_and optimization
 				}
-				if(shared_in_out) {
-					shrout = circ->PutSharedOUTGate(shrres);
+
+				if(bench_ops[i].sharing == S_YAO_REV) {
+					shrouty = yc->PutOUTGate(shrresy, ALL);
+					if(yrnvals > 0) {
+						shroutyr = ycr->PutOUTGate(shrresyr, ALL);
+					}
 				} else {
 					shrout = circ->PutOUTGate(shrres, ALL);
 				}
@@ -418,10 +355,21 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 				party->ExecCircuit();
 
 				//cout << "Size of output: " << shrout->size() << endl;
-				if(!shared_in_out) {
-					shrout->get_clear_value_vec(&cvec, &tmpbitlen, &tmpnvals);
+				if(bench_ops[i].sharing == S_YAO_REV) {
+					uint32_t tmpyrnvals;
+					cvec = (uint64_t*) malloc(sizeof(uint64_t*) * nvals);
+					uint64_t* tmpcvec;
+					shrouty->get_clear_value_vec(&tmpcvec, &tmpbitlen, &tmpnvals);
+					memcpy(cvec, tmpcvec, sizeof(uint64_t) * ynvals);
+					free(tmpcvec);
+					if(yrnvals > 0) {
+						shroutyr->get_clear_value_vec(&tmpcvec, &tmpbitlen, &tmpyrnvals);
+						memcpy(cvec+ynvals, tmpcvec, sizeof(uint64_t) * yrnvals);
+						free(tmpcvec);
+						tmpnvals += tmpyrnvals;
+					}
 				} else {
-					//No output verification, omit!
+					shrout->get_clear_value_vec(&cvec, &tmpbitlen, &tmpnvals);
 				}
 
 
@@ -442,9 +390,8 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 				party->Reset();
 
 
-				if(!no_verify && !shared_in_out) {
-					//cout << "Running verify" << endl;
-
+				if(!no_verify) {
+					//cout << "Running verification" << endl;
 					assert(tmpnvals == nvals);
 
 					for (uint32_t j = 0; j < nvals; j++) {
@@ -483,8 +430,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 
 
 bool run_bench(e_role role, char* address, seclvl seclvl, int32_t operation, int32_t bitlen, uint32_t nvals,
-		uint32_t nruns, e_mt_gen_alg mt_alg, uint32_t nthreads, bool verbose, bool no_verify, bool detailed,
-		bool shared_in_out) {
+		uint32_t nruns, e_mt_gen_alg mt_alg, uint32_t nthreads, bool verbose, bool no_verify, bool detailed) {
 
 	uint32_t nops, nbitlens;
 	uint64_t seed = 0xAAAAAAAAAAAAAAAA;
@@ -525,7 +471,7 @@ bool run_bench(e_role role, char* address, seclvl seclvl, int32_t operation, int
 
 	srand(seed);
 
-	bench_operations(op, nops, party, bitlens, nbitlens, nvals, nruns, role, seclvl.symbits, verbose, no_verify, detailed, shared_in_out);
+	bench_operations(op, nops, party, bitlens, nbitlens, nvals, nruns, role, seclvl.symbits, verbose, no_verify, detailed);
 
 	delete party;
 
@@ -543,15 +489,14 @@ int main(int argc, char** argv) {
 	bool verbose = false;
 	bool no_verify = false;
 	bool detailed = false;
-	bool shared_in_out = false;
 	uint32_t nthreads = 1;
 	e_mt_gen_alg mt_alg = MT_OT;
 
-	read_test_options(&argc, &argv, &role, &bitlen, &secparam, &address, &port, &operation, &verbose, &nvals, &nruns, &nthreads, &no_verify, &detailed, &shared_in_out);
+	read_test_options(&argc, &argv, &role, &bitlen, &secparam, &address, &port, &operation, &verbose, &nvals, &nruns, &nthreads, &no_verify, &detailed);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	run_bench(role, (char*) address.c_str(), seclvl, operation, bitlen, nvals, nruns, mt_alg, nthreads, verbose, no_verify, detailed, shared_in_out);
+	run_bench(role, (char*) address.c_str(), seclvl, operation, bitlen, nvals, nruns, mt_alg, nthreads, verbose, no_verify, detailed);
 
 	return 0;
 }

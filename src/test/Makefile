@@ -19,6 +19,7 @@ OBJECTS_SHA1_CIRC=${SRC}/examples/sha1/common/sha1_circuit.o
 OBJECTS_PSI_CIRC=${SRC}/examples/psi_scs/common/*.o
 OBJECTS_PHASING_CIRC=${SRC}/examples/psi_phasing/common/*.o
 OBJECTS_HASHING_CIRC=${SRC}/examples/psi_phasing/common/hashing/*.o
+OBJECTS_LOWMC_CIRC=${SRC}/examples/lowmc/common/lowmccircuit.o
 
 # directory for the Miracl library
 MIRACL_LIB_DIR=${CORE}/util/miracl_lib
@@ -45,9 +46,16 @@ GNU_LIB_PATH:=x86_64
 else
 GNU_LIB_PATH:=i386
 endif
-INCLUDE=-I..  -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
+
+#Include for Arch, Manjaro and the like
+#INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib${ARCH_LIB_PATH}/glib-2.0/include
+
+#Include for Debian, Ubuntu, Mint and the like
+#INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
+
+
 CFLAGS=
-LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lglib-2.0 -lrt
+LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lrt
 
 #name fixed to test-aby
 EXAMPLE = test-aby

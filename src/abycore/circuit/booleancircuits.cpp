@@ -67,6 +67,10 @@ void BooleanCircuit::Init() {
 
 }
 
+/*void BooleanCircuit::UpdateANDsOnLayers() {
+
+}*/
+
 void BooleanCircuit::Cleanup() {
 	//TODO implement
 }
@@ -78,7 +82,7 @@ uint32_t BooleanCircuit::PutANDGate(uint32_t inleft, uint32_t inright) {
 
 		if (m_eContext == S_BOOL) {
 			UpdateInteractiveQueue(gateid);
-		} else if (m_eContext == S_YAO) {
+		} else if (m_eContext == S_YAO || m_eContext == S_YAO_REV) {
 			//if context == YAO, no communication round is required
 			UpdateLocalQueue(gateid);
 		} else {
@@ -1168,28 +1172,41 @@ vector<uint32_t> BooleanCircuit::PutDepthOptimizedAddGate(vector<uint32_t> a, ve
 
 
 // A carry-save adder
-vector<vector<uint32_t> > BooleanCircuit::PutCarrySaveGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> c, uint32_t inbitlen) {
+vector<vector<uint32_t> > BooleanCircuit::PutCarrySaveGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> c, uint32_t inbitlen, bool carry) {
 	vector<uint32_t> axc(inbitlen);
 	vector<uint32_t> acNbc(inbitlen);
 	vector<vector<uint32_t> > out(2);
 
+	/*PutPrintValueGate(new boolshare(a, this), "Carry Input A");
+	PutPrintValueGate(new boolshare(b, this), "Carry Input B");
+	PutPrintValueGate(new boolshare(c, this), "Carry Input C");*/
+
 	for (uint32_t i = 0; i < inbitlen; i++) {
 		axc[i] = PutXORGate(a[i],c[i]); //i*3 - 2
-		PutANDGate(axc[i], PutXORGate(b[i],c[i])); //2+i*3
+		acNbc[i] = PutANDGate(axc[i], PutXORGate(b[i],c[i])); //2+i*3
 	}
 
-	//out[0] =  m_nFrontier;
-	out[0].resize(inbitlen+1);
+	if(carry) {
+		out[0].resize(inbitlen+1);
+		out[0][inbitlen] = PutConstantGate(0, GetNumVals(out[0][0]));
+		out[1].resize(inbitlen+1);
+		out[1][inbitlen] = PutXORGate(acNbc[inbitlen-1],c[inbitlen-1]);
+	} else {
+		out[0].resize(inbitlen);
+		out[1].resize(inbitlen);
+	}
+
 	for (uint32_t i = 0; i < inbitlen; i++) {
 		out[0][i] = PutXORGate(b[i],axc[i]);
 	}
-	out[0][inbitlen] = PutConstantGate(0, GetNumVals(out[0][0]));
 
-	out[1].resize(inbitlen+1);
 	out[1][0] = PutConstantGate(0, GetNumVals(out[0][0]));
-	for (uint32_t i = 0; i < inbitlen; i++) {
+	for (uint32_t i = 0; i < inbitlen-1; i++) {
 		out[1][i+1] = PutXORGate(acNbc[i],c[i]);
 	}
+
+	/*PutPrintValueGate(new boolshare(out[0], this), "Carry Output 0");
+	PutPrintValueGate(new boolshare(out[1], this), "Carry Output 1");*/
 
 	return out;
 }
@@ -1381,6 +1398,11 @@ vector<uint32_t> BooleanCircuit::PutMulGate(vector<uint32_t> a, vector<uint32_t>
 	PadWithLeadingZeros(a, b);
 	//cout << "a.size() = " << a.size() << ", b.size() = " << b.size() << endl;
 	uint32_t rep = a.size();
+
+	if(rep == 1) {
+		return PutANDGate(a, b);
+	}
+
 	vector<vector<uint32_t> > vAdds(rep);
 	uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals);
 
@@ -1446,7 +1468,6 @@ vector<uint32_t> BooleanCircuit::PutMulGate(vector<uint32_t> a, vector<uint32_t>
 
 
 	if (depth_optimized) {
-		//TODO: CSNNetwork is not working correctly, fix!
 		vector<vector<uint32_t> > out = PutCSNNetwork(vAdds);
 		return PutDepthOptimizedAddGate(out[0], out[1]);
 	} else {
@@ -1498,16 +1519,15 @@ vector<uint32_t> BooleanCircuit::PutWideAddGate(vector<vector<uint32_t> > ins) {
 	return survivors[0];
 }
 
-//TODO: CSNNetwork is not working correctly, fix!
 vector<vector<uint32_t> > BooleanCircuit::PutCSNNetwork(vector<vector<uint32_t> > ins) {
 	// build a balanced carry-save network
 	uint32_t rep = ins[0].size();
-	vector<vector<uint32_t> > survivors(ins.size() * 2);// = ins;
-	vector<vector<uint32_t> > carry_lines(rep-2);
+	uint32_t wires = ins.size();
+	vector<vector<uint32_t> > survivors(wires * 2);// = ins;
+	vector<vector<uint32_t> > carry_lines(wires-2);
 	vector<vector<uint32_t> > rem(8);
 	vector<vector<uint32_t> > out(2);
-	uint32_t wires = rep;
-	int p_head=rep, p_tail = 0, c_head = 0, c_tail = 0, temp_gates;
+	int p_head=wires, p_tail = 0, c_head = 0, c_tail = 0, temp_gates;
 	vector<uint32_t> dummy(rep);
 
 	for(uint32_t i = 0; i < ins.size(); i++) {
@@ -1523,7 +1543,7 @@ vector<vector<uint32_t> > BooleanCircuit::PutCSNNetwork(vector<vector<uint32_t> 
 			cout << "ctail: " << c_tail << ", c_head: " << c_head << endl;
 #endif
 			//temp_gates = m_nFrontier;
-			out = PutCarrySaveGate(carry_lines[c_tail], carry_lines[c_tail+1], carry_lines[c_tail+2], rep-1);
+			out = PutCarrySaveGate(carry_lines[c_tail], carry_lines[c_tail+1], carry_lines[c_tail+2], rep);
 #ifdef ZDEBUG
 	cout << "Computing Carry CSA for gates " << survivors[p_tail] << ", " << survivors[p_tail+1] << ", " << survivors[p_tail+2] << " and bitlen: " << (2*rep-1) << ", gates before: " << temp_gates << ", gates after: " << m_nFrontier << endl;
 #endif
@@ -1536,7 +1556,7 @@ vector<vector<uint32_t> > BooleanCircuit::PutCSNNetwork(vector<vector<uint32_t> 
 			cout << "ptail: " << p_tail << ", p_head: " << p_head << endl;
 #endif
 			//temp_gates = m_nFrontier;
-			out = PutCarrySaveGate(survivors[p_tail], survivors[p_tail+1], survivors[p_tail+2], rep-1);
+			out = PutCarrySaveGate(survivors[p_tail], survivors[p_tail+1], survivors[p_tail+2], rep);
 #ifdef ZDEBUG
 	cout << "Computing Parity CSA for gates " << survivors[p_tail] << ", " << survivors[p_tail+1] << ", " << survivors[p_tail+2] << " and bitlen: " << (2*rep-1) <<  ", gates before: " << temp_gates << ", gates after: " << m_nFrontier << endl;
 #endif
@@ -1558,7 +1578,7 @@ vector<vector<uint32_t> > BooleanCircuit::PutCSNNetwork(vector<vector<uint32_t> 
 				cout << "left: " << left << ", j: " << j << endl;
 #endif
 				//temp_gates = m_nFrontier;
-				out = PutCarrySaveGate(rem[j], rem[j+1], rem[j+2], rep-1);
+				out = PutCarrySaveGate(rem[j], rem[j+1], rem[j+2], rep);
 #ifdef ZDEBUG
 	cout << "Computing Finish CSA for gates " << rem[j] << ", " << rem[j+1] << ", " << rem[j+2] << " and bitlen: " << (2*rep-1) << ", wires: " << wires << ", gates before: " << temp_gates << ", gates after: " << m_nFrontier << endl;
 #endif
