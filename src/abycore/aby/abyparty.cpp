@@ -466,7 +466,7 @@ void ABYParty::PrintPerformanceStatistics() {
 	m_vSharings[S_YAO]->PrintPerformanceStatistics();
 	m_vSharings[S_YAO_REV]->PrintPerformanceStatistics();
 	m_vSharings[S_ARITH]->PrintPerformanceStatistics();
-	m_vSharings[S_BOOL_NO_MT]->PrintPerformanceStatistics();
+	//m_vSharings[S_BOOL_NO_MT]->PrintPerformanceStatistics(); //TODO: enable once S_BOOL_NO_MT works
 	cout << "Total number of gates: " << m_pCircuit->GetGateHead() << endl;
 	PrintTimings();
 	PrintCommunication();
