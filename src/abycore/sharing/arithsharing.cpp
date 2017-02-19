@@ -152,8 +152,8 @@ template<typename T>
 void ArithSharing<T>::FinishSetupPhase(ABYSetup* setup) {
 #ifdef DEBUGARITH
 	for(uint32_t i = 0; i < m_nMTs; i++) {
-		cout << "Output from OT: A: " << (UINT64_T) m_vA[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << ", B: " << (UINT64_T) m_vB[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen)
-		<< ", C: " << (UINT64_T) m_vC[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << ", S: " << (UINT64_T) m_vS[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << endl;
+		cout << "Output from OT: A: " << (UINT64_T) m_vA[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << ", B: " << (UINT64_T) m_vB[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen)
+		<< ", C: " << (UINT64_T) m_vC[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << ", S: " << (UINT64_T) m_vS[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << endl;
 	}
 #endif
 	if (m_eMTGenAlg == MT_OT) {
@@ -205,14 +205,14 @@ void ArithSharing<T>::ComputeMTsFromOTs() {
 
 	T tmp;
 	for (uint32_t i = 0; i < m_nMTs; i++) {
-		tmp = m_vA[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) * m_vB[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen);
-		tmp += m_vC[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen);
-		tmp += m_vS[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen);
-		m_vC[0].Set<T>(tmp, i * m_nTypeBitLen, m_nTypeBitLen);
+		tmp = m_vA[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) * m_vB[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen);
+		tmp += m_vC[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen);
+		tmp += m_vS[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen);
+		m_vC[0].template Set<T>(tmp, i * m_nTypeBitLen, m_nTypeBitLen);
 #ifdef DEBUGARITH
 		cout << "Computed MT " << i << ": ";
-		cout << "A: " << (UINT64_T) m_vA[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << ", B: " << (UINT64_T) m_vB[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen)
-		<< ", C: " << (UINT64_T) m_vC[0].Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << endl;
+		cout << "A: " << (UINT64_T) m_vA[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << ", B: " << (UINT64_T) m_vB[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen)
+		<< ", C: " << (UINT64_T) m_vC[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << endl;
 #endif
 
 	}
@@ -400,11 +400,11 @@ void ArithSharing<T>::ShareValues(GATE* gate) {
 	InstantiateGate(gate);
 
 	for (uint32_t i = 0; i < gate->nvals; i++, m_nInputShareSndCtr++) {
-		tmpval = m_vInputShareSndBuf.Get<T>(m_nInputShareSndCtr);
+		tmpval = m_vInputShareSndBuf.template Get<T>(m_nInputShareSndCtr);
 		((T*) gate->gs.aval)[i] = MOD_SUB(input[i], tmpval, m_nTypeBitMask);
 #ifdef DEBUGARITH
 							cout << "Shared: " << (UINT64_T) ((T*)gate->gs.aval)[i] << " = " << (UINT64_T) input[i] << " - " <<
-									(UINT64_T) m_vInputShareSndBuf.Get<T>(m_nInputShareSndCtr) << ", " << m_nTypeBitMask <<
+									(UINT64_T) m_vInputShareSndBuf.template Get<T>(m_nInputShareSndCtr) << ", " << m_nTypeBitMask <<
 									", inputid on this layer = " << m_nInputShareSndCtr << ", tmpval = " << tmpval << endl;
 							m_vInputShareSndBuf.PrintHex();
 #endif
@@ -459,7 +459,7 @@ void ArithSharing<T>::ReconstructValue(GATE* gate) {
 	uint32_t parentid = gate->ingates.inputs.parent;
 
 	for (uint32_t i = 0; i < gate->nvals; i++, m_nOutputShareSndCtr++) {
-			m_vOutputShareSndBuf.Set<T>(((T*) m_pGates[parentid].gs.aval)[i], m_nOutputShareSndCtr);
+			m_vOutputShareSndBuf.template Set<T>(((T*) m_pGates[parentid].gs.aval)[i], m_nOutputShareSndCtr);
 #ifdef DEBUGARITH
 				cout << "Sending output share: " << (UINT64_T) ((T*)m_pGates[parentid].gs.aval)[i] << endl;
 #endif
@@ -475,14 +475,14 @@ void ArithSharing<T>::SelectiveOpen(GATE* gate) {
 
 	T d, e, x, y, a, b;
 	for (uint32_t i = 0; i < gate->nvals; i++, m_vMTIdx[0]++) {
-		a = m_vD_snd[0].Get<T>(m_vMTIdx[0]);
+		a = m_vD_snd[0].template Get<T>(m_vMTIdx[0]);
 		x = ((T*) m_pGates[idleft].gs.aval)[i];
 		d = MOD_SUB(x, a, m_nTypeBitMask); //a > x ? m_nTypeBitMask - (a - 1) + x : x - a;
-		m_vD_snd[0].Set<T>(d, m_vMTIdx[0]);
-		b = m_vE_snd[0].Get<T>(m_vMTIdx[0]);
+		m_vD_snd[0].template Set<T>(d, m_vMTIdx[0]);
+		b = m_vE_snd[0].template Get<T>(m_vMTIdx[0]);
 		y = ((T*) m_pGates[idright].gs.aval)[i];
 		e = MOD_SUB(y, b, m_nTypeBitMask); //b > y ? m_nTypeBitMask - (b - 1) + y : y - b;
-		m_vE_snd[0].Set<T>(e, m_vMTIdx[0]);
+		m_vE_snd[0].template Set<T>(e, m_vMTIdx[0]);
 	}
 	m_vMULGates.push_back(gate);
 
@@ -496,13 +496,13 @@ void ArithSharing<T>::FinishCircuitLayer(uint32_t depth) {
 	if(m_nInputShareRcvCtr > 0) {
 		cout << "Received "<< m_nInputShareRcvCtr << " input shares: ";
 		for(uint32_t i = 0; i < m_nInputShareRcvCtr; i++)
-			cout << m_vInputShareRcvBuf.Get<T>(i) << endl;
+			cout << m_vInputShareRcvBuf.template Get<T>(i) << endl;
 		//m_vInputShareRcvBuf.Print(0, m_nInputShareRcvCtr);
 	}
 	if(m_nOutputShareRcvCtr > 0) {
 		cout << "Received " << m_nOutputShareRcvCtr << " output shares: ";
 		for(uint32_t i = 0; i < m_nOutputShareRcvCtr; i++)
-			cout << m_vOutputShareRcvBuf.Get<T>(i) << endl;
+			cout << m_vOutputShareRcvBuf.template Get<T>(i) << endl;
 		//m_vOutputShareRcvBuf.Print(0, m_nOutputShareRcvCtr);
 	}
 #endif
@@ -524,15 +524,15 @@ void ArithSharing<T>::EvaluateMTs() {
 
 	T a, b, c, dsnd, esnd, drcv, ercv, e, d, tempres;
 	for (uint32_t i = startid; i < endid; i++) {
-		a = m_vA[0].Get<T>(i);
-		b = m_vB[0].Get<T>(i);
-		c = m_vC[0].Get<T>(i);
+		a = m_vA[0].template Get<T>(i);
+		b = m_vB[0].template Get<T>(i);
+		c = m_vC[0].template Get<T>(i);
 
-		dsnd = m_vD_snd[0].Get<T>(i);
-		esnd = m_vE_snd[0].Get<T>(i);
+		dsnd = m_vD_snd[0].template Get<T>(i);
+		esnd = m_vE_snd[0].template Get<T>(i);
 
-		drcv = m_vD_rcv[0].Get<T>(i);
-		ercv = m_vE_rcv[0].Get<T>(i);
+		drcv = m_vD_rcv[0].template Get<T>(i);
+		ercv = m_vE_rcv[0].template Get<T>(i);
 
 		d = (dsnd + drcv) & m_nTypeBitMask;
 		e = (esnd + ercv) & m_nTypeBitMask;
@@ -546,7 +546,7 @@ void ArithSharing<T>::EvaluateMTs() {
 		cout << "mt result = " << (UINT64_T) tempres << " = ((" << (UINT64_T) a << " * " << (UINT64_T) e << " ) + ( " << (UINT64_T) b
 		<< " * " << (UINT64_T) d << ") + " << (UINT64_T) c << ")" << endl;
 #endif
-		m_vResA[0].Set<T>(tempres, i);
+		m_vResA[0].template Set<T>(tempres, i);
 	}
 }
 
@@ -558,7 +558,7 @@ void ArithSharing<T>::EvaluateMULGate() {
 		InstantiateGate(gate);
 
 		for (uint32_t j = 0; j < gate->nvals; j++, idx++) {
-			((T*) gate->gs.aval)[j] = m_vResA[0].Get<T>(idx);
+			((T*) gate->gs.aval)[j] = m_vResA[0].template Get<T>(idx);
 		}
 	}
 
@@ -573,9 +573,9 @@ void ArithSharing<T>::AssignInputShares() {
 		InstantiateGate(gate);
 
 		for (uint32_t j = 0; j < gate->nvals; j++, rcvshareidx++) {
-			((T*) gate->gs.aval)[j] = m_vInputShareRcvBuf.Get<T>(rcvshareidx);
+			((T*) gate->gs.aval)[j] = m_vInputShareRcvBuf.template Get<T>(rcvshareidx);
 #ifdef DEBUGARITH
-			cout << "Received inshare: " << (UINT64_T) ((T*)gate->gs.aval)[j] << " = " << (UINT64_T) m_vInputShareRcvBuf.Get<T>(rcvshareidx) << endl;
+			cout << "Received inshare: " << (UINT64_T) ((T*)gate->gs.aval)[j] << " = " << (UINT64_T) m_vInputShareRcvBuf.template Get<T>(rcvshareidx) << endl;
 #endif
 		}
 	}
@@ -590,10 +590,10 @@ void ArithSharing<T>::AssignOutputShares() {
 		InstantiateGate(gate);
 
 		for (uint32_t j = 0; j < gate->nvals; j++, rcvshareidx++) {
-			((T*) gate->gs.val)[j] = ((T*) m_pGates[parentid].gs.aval)[j] + m_vOutputShareRcvBuf.Get<T>(rcvshareidx) & m_nTypeBitMask;
+			((T*) gate->gs.val)[j] = ((T*) m_pGates[parentid].gs.aval)[j] + m_vOutputShareRcvBuf.template Get<T>(rcvshareidx) & m_nTypeBitMask;
 #ifdef DEBUGARITH
-			cout << "Received output share: " << m_vOutputShareRcvBuf.Get<T>(rcvshareidx) << endl;
-			cout << "Computed output: " << (UINT64_T) ((T*)gate->gs.aval)[j] << " = " << (UINT64_T) ((T*)m_pGates[parentid].gs.aval)[j] << " + " << (UINT64_T) m_vOutputShareRcvBuf.Get<T>(rcvshareidx) << endl;
+			cout << "Received output share: " << m_vOutputShareRcvBuf.template Get<T>(rcvshareidx) << endl;
+			cout << "Computed output: " << (UINT64_T) ((T*)gate->gs.aval)[j] << " = " << (UINT64_T) ((T*)m_pGates[parentid].gs.aval)[j] << " + " << (UINT64_T) m_vOutputShareRcvBuf.template Get<T>(rcvshareidx) << endl;
 #endif
 		}
 		UsedGate(parentid);
@@ -644,24 +644,24 @@ void ArithSharing<T>::AssignServerConversionShares() {
 				clientpermbit = m_vConvShareRcvBuf.GetBitNoMask(lctr);
 				cor = (m_pGates[parentids[j]].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01;
 
-				tmpa = (m_nTypeBitMask - (m_vConversionRandomness.Get<T>(gctr) - 1)) + (cor) * (1L << j);
-				tmpb = (m_nTypeBitMask - (m_vConversionRandomness.Get<T>(gctr) - 1)) + (!cor) * (1L << j);
+				tmpa = (m_nTypeBitMask - (m_vConversionRandomness.template Get<T>(gctr) - 1)) + (cor) * (1L << j);
+				tmpb = (m_nTypeBitMask - (m_vConversionRandomness.template Get<T>(gctr) - 1)) + (!cor) * (1L << j);
 
-				tmpa = m_vConversionMasks[clientpermbit].Get<T>(gctr) ^ tmpa;
-				tmpb = m_vConversionMasks[!clientpermbit].Get<T>(gctr) ^ tmpb;
+				tmpa = m_vConversionMasks[clientpermbit].template Get<T>(gctr) ^ tmpa;
+				tmpb = m_vConversionMasks[!clientpermbit].template Get<T>(gctr) ^ tmpb;
 
-				tmpsum[k] += m_vConversionRandomness.Get<T>(gctr);
+				tmpsum[k] += m_vConversionRandomness.template Get<T>(gctr);
 
 #ifdef DEBUGARITH
-				cout << "Gate " << i << ", " << j << ", " << k << ": " << m_vConversionRandomness.Get<T>(gctr) <<
-						", A: " << m_vConversionMasks[clientpermbit].Get<T>(gctr) << ", " << tmpa <<
-						", B: " << m_vConversionMasks[!clientpermbit].Get<T>(gctr) << ", " << tmpb << ", tmpsum = " << tmpsum[k] << ", gctr = " << gctr << endl;
+				cout << "Gate " << i << ", " << j << ", " << k << ": " << m_vConversionRandomness.template Get<T>(gctr) <<
+						", A: " << m_vConversionMasks[clientpermbit].template Get<T>(gctr) << ", " << tmpa <<
+						", B: " << m_vConversionMasks[!clientpermbit].template Get<T>(gctr) << ", " << tmpb << ", tmpsum = " << tmpsum[k] << ", gctr = " << gctr << endl;
 				//cout << "gctr = " << gctr << ", nconvmasks = " << m_vConversionMasks[clientpermbit].GetSize() <<", nconvgates = " << m_nNumCONVs << endl;
 				assert(gate->nvals == 1);
 #endif
 
-				m_vConvShareSndBuf.Set<T>(tmpa, 2 * lctr);
-				m_vConvShareSndBuf.Set<T>(tmpb, 2 * lctr + 1);
+				m_vConvShareSndBuf.template Set<T>(tmpa, 2 * lctr);
+				m_vConvShareSndBuf.template Set<T>(tmpb, 2 * lctr + 1);
 			}
 			UsedGate(parentids[j]);
 		}
@@ -706,8 +706,8 @@ void ArithSharing<T>::AssignClientConversionShares() {
 
 		for (uint32_t j = 0; j < nparents; j++) {
 			for (uint32_t k = 0; k < m_pGates[parentids[j]].nvals; k++, lctr++, gctr++) {
-				rcv = m_vConvShareRcvBuf.Get<T>((2 * lctr + ((m_pGates[parentids[j]].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01)) * m_nTypeBitLen, m_nTypeBitLen);
-				mask = m_vConversionMasks[1].Get<T>(gctr * m_nTypeBitLen, m_nTypeBitLen);
+				rcv = m_vConvShareRcvBuf.template Get<T>((2 * lctr + ((m_pGates[parentids[j]].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01)) * m_nTypeBitLen, m_nTypeBitLen);
+				mask = m_vConversionMasks[1].template Get<T>(gctr * m_nTypeBitLen, m_nTypeBitLen);
 				tmp = rcv ^ mask;
 				tmpsum[k] += tmp;
 #ifdef DEBUGARITH
@@ -787,12 +787,12 @@ void ArithSharing<T>::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sn
 	if(m_nInputShareSndCtr > 0) {
 		cout << "Sending " << m_nInputShareSndCtr << " Input shares : ";
 		for(uint32_t i = 0; i < m_nInputShareSndCtr; i++)
-			cout << m_vInputShareSndBuf.Get<T>(i) << endl;
+			cout << m_vInputShareSndBuf.template Get<T>(i) << endl;
 	}
 	if(m_nOutputShareSndCtr > 0) {
 		cout << "Sending " << m_nOutputShareSndCtr << " Output shares : ";
 		for(uint32_t i = 0; i < m_nOutputShareSndCtr; i++)
-			cout << m_vOutputShareSndBuf.Get<T>(i) << endl;
+			cout << m_vOutputShareSndBuf.template Get<T>(i) << endl;
 		//m_vOutputShareSndBuf.Print(0, m_nOutputShareSndCtr);
 	}
 
@@ -998,9 +998,9 @@ void ArithSharing<T>::VerifyArithMT(ABYSetup* setup) {
 
 		T a, b, c, res, c1, c2;
 		for(uint32_t i = 0; i < m_nMTs; i++) {
-			a = m_vA[0].Get<T>(i) + Arcv.Get<T>(i);
-			b = m_vB[0].Get<T>(i) + Brcv.Get<T>(i);
-			c = m_vC[0].Get<T>(i) + Crcv.Get<T>(i);
+			a = m_vA[0].template Get<T>(i) + Arcv.template Get<T>(i);
+			b = m_vB[0].template Get<T>(i) + Brcv.template Get<T>(i);
+			c = m_vC[0].template Get<T>(i) + Crcv.template Get<T>(i);
 			res = a * b;
 			if(res != c) {
 				cerr << "Error: " << i << "-th multiplication triples differs: a (" << (UINT64_T) a << ") * b (" <<
@@ -1032,7 +1032,7 @@ uint32_t ArithSharing<T>::AssignInput(CBitVector& inputvals) {
 			UGATE_T* inval = (UGATE_T*) calloc(ceil_divide(gate->nvals, typebytes), sizeof(UGATE_T));
 
 			for (uint32_t j = 0; j < gate->nvals; j++) {
-				((T*) inval)[j] = inputvals.Get<T>(inbitctr);
+				((T*) inval)[j] = inputvals.template Get<T>(inbitctr);
 				inbitctr++;
 			}
 			gate->gs.ishare.inval = inval;
@@ -1053,7 +1053,7 @@ uint32_t ArithSharing<T>::GetOutput(CBitVector& out) {
 		gate = m_pGates + myoutgates[i];
 
 		for (uint32_t j = 0; j < gate->nvals; j++) {
-			out.Set<T>(((T*) gate->gs.val)[j], outbitctr);
+			out.template Set<T>(((T*) gate->gs.val)[j], outbitctr);
 			outbitctr++;
 		}
 	}
