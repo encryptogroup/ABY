@@ -43,7 +43,7 @@ This code is provided as a experimental implementation for testing purposes and 
 
 1. **Recursively clone** the ABY git repository (including its submodules) by running:
 	```
-	git clone --recursive git://github.com/encryptogroup/ABY
+	git clone --recursive https://github.com/encryptogroup/ABY.git
 	```
 Please **don't** download the .zip file, since it doesn't include submodules. Also note that there has been an update where the OT extension code has been outsourced as **submodule**. In case an older code version is updated to the current version, please run `git submodule init` and `git submodule update`.
 
