@@ -224,7 +224,11 @@ public:
 	uint64_t Receive(void* pBuf, uint64_t nLen, int nFlags = 0) {
 		char* p = (char*) pBuf;
 		uint64_t n = nLen;
-		uint64_t ret = 0;
+#ifdef WIN32
+		int ret = 0;
+#else // POSIX
+		ssize_t ret = 0;
+#endif
 
 		m_nRcvCount += nLen;
 
@@ -234,7 +238,7 @@ public:
 #ifdef WIN32
 			if( ret <= 0 )
 			{
-				return ret;
+				return nLen - n;
 			}
 #else
 			if (ret < 0) {
@@ -245,15 +249,15 @@ public:
 				} else {
 					cerr << "socket recv error: " << errno << endl;
 					perror("Socket error ");
-					return ret;
+					return nLen - n;
 				}
 			} else if (ret == 0) {
-				return ret;
+				return nLen - n;
 			}
 #endif
 
 			p += ret;
-			n -= ret;
+			n -= static_cast<uint64_t>(ret);
 		}
 		return nLen;
 	}
