@@ -32,29 +32,7 @@ OBJECTS_CORE := $(SOURCES_CORE:.cpp=.o)
 # compiler settings
 CC=g++
 
-#Most aggressive optimizations, asserts are ignored
-#COMPILER_OPTIONS=-O3 -DNDEBUG
-#Optimizations
-COMPILER_OPTIONS=-O2 -march=native
-#DEBUG
-#COMPILER_OPTIONS=-g3 -ggdb -O0 -fno-omit-frame-pointer -fsanitize=address # -Wall -Wextra
-
-
-
 BATCH=
-ARCHITECTURE = $(shell uname -m)
-ifeq (${ARCHITECTURE},x86_64)
-GNU_LIB_PATH:=x86_64
-else
-GNU_LIB_PATH:=i386
-endif
-
-#Include for Arch, Manjaro and the like
-#INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib${ARCH_LIB_PATH}/glib-2.0/include
-
-#Include for Debian, Ubuntu, Mint and the like
-#INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
-
 
 CFLAGS=
 LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lrt
@@ -70,7 +48,7 @@ ${BIN}/${EXAMPLE}.exe: ${OBJECTS_CORE} ${OBJECTS} ${OBJECTS_MILLIONAIRE_CIRC} ${
 
 
 %.o: %.cpp
-	${CC} $^ ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
+	${CC} $^ ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 .PHONY: clean
 

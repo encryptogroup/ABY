@@ -8,11 +8,13 @@ CORE=${SRC}/abycore
 CC=g++
 
 #Most aggressive optimizations, asserts are ignored
-#COMPILER_OPTIONS=-O3 -DNDEBUG
+#ABY_COMPILER_OPTIONS=-O3 -DNDEBUG
 #Optimizations
-COMPILER_OPTIONS=-O2 -march=native
+ABY_COMPILER_OPTIONS=-O2 -march=native
 #DEBUG
-#COMPILER_OPTIONS=-g3 -ggdb -O0 -fno-omit-frame-pointer -fsanitize=address #Wall -Wextra
+#ABY_COMPILER_OPTIONS=-g3 -ggdb -O0 -fno-omit-frame-pointer -fsanitize=address #Wall -Wextra
+
+export ABY_COMPILER_OPTIONS
 
 BATCH=
 
@@ -80,8 +82,11 @@ otext: miracl
 
 core: miracl otext ${OBJECTS_CORE}
 
-%.o:%.cpp %.h
-	${CC} $< ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
+%.o:%.cpp
+	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $
+
+@%.o:%.cpp %.h
+	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 # check that core is built, then call test makefile
 ${TEST}: miracl otext core examples

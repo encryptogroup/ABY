@@ -1,4 +1,4 @@
-#Special Makefile for bench_operations. Not a symlink to ../../Example_Makefile !
+#Special Makefile for bench_operations. *Not* a symlink to ../../Example_Makefile !
 
 #DO NOT MODIFY THIS FILE, unless you know what you're doing
 
@@ -27,13 +27,6 @@ OBJECTS_MIRACL=${MIRACL_LIB_DIR}/*.o
 # compiler settings
 CC=g++
 
-#Most aggressive optimizations, asserts are ignored
-#COMPILER_OPTIONS=-O3 -DNDEBUG
-#Optimizations
-COMPILER_OPTIONS=-O2 -march=native
-#DEBUG
-#COMPILER_OPTIONS=-g3 -ggdb -O0 -fno-omit-frame-pointer -fsanitize=address # -Wall -Wextra
-
 BATCH=
 ARCHITECTURE = $(shell uname -m)
 ifeq (${ARCHITECTURE},x86_64)
@@ -59,10 +52,10 @@ EXAMPLE = $(lastword $(subst /, ,${CURDIR}))
 all: ${BIN}/${EXAMPLE}.exe
 
 ${BIN}/${EXAMPLE}.exe: ${OBJECTS} ${OBJECTS_CORE} ${OBJECTS_MIRACL} ${OBJECTS_AES}
-	${CC} ${COMPILER_OPTIONS} ${CFLAGS} $^ ${LIBRARIES} -o $@
+	${CC} ${ABY_COMPILER_OPTIONS} ${CFLAGS} $^ ${LIBRARIES} -o $@
 
-%.o: %.cpp %.h
-	${CC} $< ${COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
+%.o: %.cpp
+	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 .PHONY: clean
 
