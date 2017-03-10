@@ -25,8 +25,16 @@ uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint
 	ctx = (sheg_ctx*) malloc(sizeof(sheg_ctx) * ntasks);
 	table = (sht_ctx*) malloc(sizeof(sht_ctx) * ntasks);
 
+
+	//in case no maxbinsize is specified, compute based on Eq3 in eprint 2016/930
+	if(*maxbinsize == 0) {
+		int maxbin = compute_maxbin(nhashfuns * neles, hs.nbins);
+		assert(maxbin != -1);
+		*maxbinsize = (uint32_t) maxbin;
+	}
+
 	for(i = 0; i < ntasks; i++) {
-		init_hash_table(table + i, ceil_divide(neles, ntasks), &hs);
+		init_hash_table(table + i, ceil_divide(neles, ntasks), &hs, *maxbinsize);
 	}
 
 	//for(i = 0; i < nbins; i++)
@@ -149,12 +157,11 @@ inline void insert_element(sht_ctx* table, uint8_t* element, uint32_t* address, 
 	}
 }
 
-void init_hash_table(sht_ctx* table, uint32_t nelements, hs_t* hs) {
+void init_hash_table(sht_ctx* table, uint32_t nelements, hs_t* hs, uint32_t maxbinsize) {
 	uint32_t i;
 
-
-	table->maxbinsize = get_max_bin_size(hs->nbins, hs->nhashfuns*nelements);
 	table->nbins = hs->nbins;
+	table->maxbinsize = maxbinsize;
 
 	table->bins = (bin_ctx*) calloc(hs->nbins, sizeof(bin_ctx));
 
@@ -204,3 +211,104 @@ void increase_max_bin_size(sht_ctx* table, uint32_t valbytelen) {
 	}
 	table->maxbinsize = new_maxsize;
 }
+
+//computes res = n choose k
+void nchoosek_mul(mpf_t res, int n, int k) {
+	mpf_t tmp;
+	mpf_init(tmp);
+
+
+	mpf_set_ui(tmp, 1);
+	mpf_set_ui(res, 1);
+
+	for(int i = 1; i <= k; i++) {
+		mpf_set_ui(tmp, n - (k - i));
+		mpf_div_ui(tmp, tmp, i);
+		mpf_mul(res, res, tmp);
+	}
+
+	mpf_clear(tmp);
+}
+
+
+//computes the number of maximum balls in a bin using the EQ3 in eprint 2016/930.
+//first argument: number of balls, n, second argument: number of bins
+int compute_maxbin(uint32_t balls_int, uint32_t bins_int) {
+
+	//cout << "Computing parameters for balls = " << balls_int << ", and bins = " << bins_int << endl;
+
+	mpf_set_default_prec(1024);
+
+	int neg_40 = 40;
+	int maxbin = -1;
+
+	mpf_t b, p, pinv, cmb, p1, p2, sum, tmp, p40, two;
+	mpf_init(b);
+	mpf_init(p);
+	mpf_init(p1);
+	mpf_init(p2);
+	mpf_init(pinv);
+	mpf_init(cmb);
+	mpf_init(sum);
+	mpf_init(tmp);
+	mpf_init(p40);
+	mpf_init(two);
+
+	mpf_set_d(two, (double) 0.5);
+
+	mpf_pow_ui(p40, two, neg_40);
+
+	//Set the number of elements and the number of bins
+	mpf_set_ui(b, bins_int);
+
+	//Compute the probability of mapping to a bin as well as its inverse
+	mpf_ui_div(p, 1L, b);
+	mpf_ui_sub(pinv, 1L, p);
+
+	mpf_set_ui(sum, 0);
+
+	bool gotp40=false;
+
+	for(int i = 0; i < 150000 && !gotp40; i++) {
+		nchoosek_mul(cmb, balls_int, i);
+
+		//(1/b)^i
+		mpf_pow_ui(p1, p, i);
+
+		//(1-1/b)^(n-i)
+		mpf_pow_ui(p2, pinv, balls_int-i);
+
+		//cmb * p1 * p2 * b
+		mpf_mul(tmp, cmb, p1);
+		mpf_mul(tmp, tmp, p2);
+		mpf_add(sum, sum, tmp);
+
+		mpf_pow_ui(tmp, sum, bins_int);
+		mpf_ui_sub(tmp, 1, tmp);
+
+		if(mpf_cmp(tmp, p40) < 1  && !gotp40) {
+			maxbin = i;
+			//cout << ", 2^-{40}: " << i << endl;
+			gotp40=true;
+		}
+	}
+
+	mpf_clear(b);
+	mpf_clear(p);
+	mpf_clear(p1);
+	mpf_clear(p2);
+	mpf_clear(pinv);
+	mpf_clear(cmb);
+	mpf_clear(sum);
+	mpf_clear(tmp);
+	mpf_clear(p40);
+	mpf_clear(two);
+
+	//cout << "Resulting maxbin = " << maxbin << endl;
+
+	return maxbin;
+}
+
+
+
+

@@ -56,8 +56,10 @@
 #define BATCH
 #define ABY_OT
 #define FIXED_KEY_AES_HASHING //for OT routines
-
-
+#define USE_KK_OT
+//#define USE_PIPELINED_AES_NI
+//#define USE_KK_OT_FOR_MT
+//#define GETCLEARVALUE_DEBUG
 
 /**
  \enum	field_type
@@ -112,7 +114,7 @@ enum e_gatetype {
 	G_CONV = 0x07, /**< Enum for CONVERSION gates (dst is used to specify the sharing to convert to) */
 	G_CALLBACK = 0x08, /**< Enum for Callback gates where the developer specifies a routine which is called upon gate evaluation */
 	G_SHARED_OUT = 0x09, /**< Enum for shared output gate, where the output is kept secret-shared between parties after the evaluation*/
-	G_TT = 0x0A, /**< Enum for computing an arbitrary truth table gate. Is needed for the 1ooN OT in BoolNonMTSharing */
+	G_TT = 0x0A, /**< Enum for computing an arbitrary truth table gate. Is needed for the 1ooN OT in SPLUT */
 	G_SHARED_IN = 0x0B, /**< Enum for pre-shared input gate, where the parties dont secret-share (e.g. in outsourcing) */
 	G_PRINT_VAL = 0x40, /**< Enum gate that reconstructs the shares and prints the plaintext value with the designated string */
 	G_ASSERT = 0x41, /**< Enum gate that reconstructs the shares and compares it to an provided input plaintext value */
@@ -144,7 +146,7 @@ enum e_operation {
 	OP_MUL_VEC = 9, /**< Enum for performing VECTORED MULTIPLICATION*/
 	OP_SHARE_OUT = 10, /**< Enum for Shared Output without reconstruction. */
 	OP_SHARE_IN = 11, /**< Enum for Pre-Shared Input without input sharing (communication). */
-	OP_TT = 12, /**< Enum for computing an arbitrary truth table. Is needed for the 1ooN OT in BoolNonMTSharing */
+	OP_TT = 12, /**< Enum for computing an arbitrary truth table. Is needed for the 1ooN OT in SPLUT */
 	OP_IN, /**< Enum for performing INPUT*/
 	OP_OUT, /**< Enum for performing OUTPUT*/
 	OP_INV, /**< Enum for performing INVERSION*/
@@ -178,8 +180,8 @@ enum e_sharing {
 	S_YAO = 1, /**< Enum for performing yao sharing*/
 	S_ARITH = 2, /**< Enum for performing arithemetic sharing*/
 	S_YAO_REV= 3, /**< Enum for performing yao sharing with reverse roles to enable inter-party parallelization (see Buescher et al. USENIX'15)*/
-	S_LAST = 4, /**< Enum for indicating the last enum value. DO NOT PUT ANOTHER ENUM AFTER THIS ONE! !*/
-	S_BOOL_NO_MT = 5, /**< Enum for performing boolean sharing based on 1ooN OT */
+	S_SPLUT = 4, /**< Enum for the SP-LUT sharing */
+	S_LAST = 5, /**< Enum for indicating the last enum value. DO NOT PUT ANOTHER ENUM AFTER THIS ONE! !*/
 
 };
 
@@ -275,8 +277,8 @@ static string get_sharing_name(e_sharing s) {
 		return "Reverse Yao";
 	case S_ARITH:
 		return "Arith";
-	case S_BOOL_NO_MT:
-		return "1ooN Bool";
+	case S_SPLUT:
+		return "SP-LUT";
 	default:
 		return "NN";
 	}
@@ -419,18 +421,18 @@ const uint8_t m_vSeed[AES_KEY_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x6
  * \brief Lookup-Table for the Greater-than functionality on input bits in No-MT sharing
  */
 const uint64_t m_vLUT_GT_IN[4][8] = {
-		{0x2L, 0x9L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x20f2, 0x9009L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x20f20000ffff20f2L, 0x9009000000009009L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x20f20000ffff20f2L, 0xffffffffffffffffL, 0x0L, 0x20f20000ffff20f2L, 0x9009000000009009L, 0x0L, 0x0L, 0x9009000000009009L}};
+		{0x86L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x86005586L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x5555555586005586L, 0x8600558600000000L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x5555555586005586L, 0x8600558600000000L, 0x5555555555555555L, 0x5555555555555555L, 0x0L, 0x0L, 0x5555555586005586L, 0x8600558600000000L}};
 
 /**\var m_vLUT_GT_INTERNAL
  * \brief Lookup-Table for the Greater-than functionality on internal bits in No-MT sharing
  */
 const uint64_t m_vLUT_GT_INTERNAL[3][8] = {
-		{0x5af0L, 0xcc00L, 0L, 0L, 0L, 0L, 0L, 0L},
-		{0xa50f5af0ffff0000L, 0xcc00cc0000000000L, 0L, 0L, 0L, 0L, 0L, 0L},
-		{0x0L, 0xffffffffffffffffL, 0xa50f5af0ffff0000L, 0x5af0a50f0000ffffL, 0x0L, 0x0L, 0xcc00cc0000000000L, 0xcc00cc0000000000L}};
+		{0xb1e45500, 0L, 0L, 0L, 0L, 0L, 0L, 0L},
+		{0x5555555500000000L, 0xe4b10055b1e45500L, 0L, 0L, 0L, 0L, 0L, 0L},
+		{0x0L, 0x0L, 0x5555555555555555L, 0x5555555555555555L, 0x5555555500000000L, 0xe4b10055b1e45500L, 0x55555555L, 0xb1e45500e4b10055L}};
 
 
 
@@ -440,12 +442,11 @@ const uint64_t m_vLUT_GT_INTERNAL[3][8] = {
  */
 const uint64_t m_vLUT_ADD_IN[4][24] = {
 		{0x8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x8888L, 0x660L, 0xf880L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x8888888888888888L, 0x660066006600660L, 0xf880f880f880f880L, 0xffff000000000000L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		//{0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x8888888888888888L, 0x8888888888888888L, 0x8888888888888888L, 0x8888888888888888L, 0x660066006600660L, 0x660066006600660L, 0x660066006600660L, 0x660066006600660L,
-				0xf880f880f880f880L, 0xf880f880f880f880L, 0xf880f880f880f880L, 0xf880f880f880f880L, 0xffff000000000000L, 0xffff000000000000L, 0xffff000000000000L, 0xffff000000000000L,
-				0x0L, 0x66006600000L, 0x66006600000L, 0x0L, 0x0L, 0xfffff880f8800000L, 0xfffff880f8800000L, 0xffffffffffffffffL}
+		{0xb24a90a90200L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x5444522052201000L, 0x5444522052201000L, 0x5444522052201000L, 0xdcccdaa8daa89888L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x2080142080040000L, 0x8004000014410414L, 0x1441041420801420L, 0x2080142080040000L, 0x8824820814410414L, 0x34c30c34a28834a2L, 0x2080142080040000L, 0x8004000014410414L, 0x9649249524809524L, 0x2480952480040000L,
+				0xa8a68a2896492495L, 0xb6cb2cb6aaa8b6aaL, 0x2080142080040000L, 0x8004000014410414L, 0x9649249524809524L, 0x2480952480040000L, 0xa8a68a2896492495L, 0xb6cb2cb6aaa8b6aaL,	0x28a09628a0860820L, 0xa086082096492496L,
+				0x9649249628a09628L, 0x28a09628a0860820L, 0xa8a68a2896492496L, 0xb6cb2cb6aaa8b6aaL}
 };
 
 /**\var m_vLUT_ADD_N_OUTS
@@ -458,9 +459,9 @@ const uint32_t m_vLUT_ADD_N_OUTS[4] = {1, 3, 4, 6};
  * \brief Lookup-Table for the addition functionality on internal signals in No-MT sharing
  */
 const uint64_t m_vLUT_ADD_INTERNAL[2][16] = {
-		{0xa0a0L, 0xffc0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0xa0a0a0a0a0a0a0a0L, 0xa0a0a0a0a0a0a0a0L, 0xa0a0a0a0a0a0a0a0L, 0xa0a0a0a0a0a0a0a0L, 0xffc0ffc0ffc0ffc0L, 0xffc0ffc0ffc0ffc0L, 0xffc0ffc0ffc0ffc0L, 0xffc0ffc0ffc0ffc0L,
-				0x0L, 0xa0a00000a0a00000L, 0x0L, 0xa0a00000a0a00000L, 0x0L, 0xffffffffffc00000L, 0xffffffffffffffffL, 0xffffffffffffffffL}
+		{0xeeaae400L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x3232222232100000L, 0x3232222232100000L, 0x3232222232100000L, 0x3232222232100000L, 0x3232222232100000L, 0xfafaaaaafa500000L, 0xbabaaaaaba988888L, 0xfafaaaaafad88888L,
+				0xbabaaaaaba988888L, 0xbabaaaaaba988888L, 0xbabaaaaaba988888L, 0xbabaaaaaba988888L, 0xbabaaaaaba988888L, 0xfafaaaaafad88888L, 0xbabaaaaaba988888L, 0xfafaaaaafad88888L}
 };
 
 /**\var m_vLUT_ADD_CRIT_IN
@@ -468,10 +469,10 @@ const uint64_t m_vLUT_ADD_INTERNAL[2][16] = {
  */
 const uint64_t m_vLUT_ADD_CRIT_IN[4][16] = {
 		{0x8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x8888L, 0xf880L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x8888888888888888L, 0xf880f880f880f880L, 0xfffff880f8800000L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0x8888888888888888L, 0x8888888888888888L, 0x8888888888888888L, 0x8888888888888888L, 0xf880f880f880f880L, 0xf880f880f880f880L, 0xf880f880f880f880L, 0xf880f880f880f880L,
-				0xfffff880f8800000L, 0xfffff880f8800000L, 0xfffff880f8800000L, 0xfffff880f8800000L, 0x0L, 0xfffff880f8800000L, 0xfffff880f8800000L, 0xffffffffffffffffL}
+		{0x3222300030001000L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x200692600600200L, 0xe00200fb6e00e0L, 0xfb6f24f24b24fb6eL, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0x3222300030001000L, 0x7666700070001000L, 0x7666700070001000L, 0x7666744474445444L, 0x3222300030001000L, 0xfeeef000f0001000L, 0xfeeef000f0001000L, 0xfeeefcccfcccdcccL,
+				0x3222300030001000L, 0xfeeef000f0001000L, 0xfeeef000f0001000L, 0xfeeefcccfcccdcccL,	0xbaaab888b8889888L, 0xfeeef888f8889888L, 0xfeeef888f8889888L, 0xfeeefcccfcccdcccL}
 };
 
 /**\var m_vLUT_ADD_CRIT
@@ -479,8 +480,8 @@ const uint64_t m_vLUT_ADD_CRIT_IN[4][16] = {
  */
 const uint64_t m_vLUT_ADD_CRIT[3][6] = {
 		{0xf8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0xf8f8f8f8, 0xfffff800, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0xf8f8f8f8f8f8f8f8L, 0xf8f8f8f8f8f8f8f8L, 0xfffff800fffff800L, 0xfffff800fffff800L, 0xfffff80000000000L, 0xffffffffffffffffL}
+		{0xffeaffeaffc05540L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0xb6926db600249200L, 0x2492006db6926dL, 0xffffb6ffffb6fffeL, 0xffb6ffff24b6db24L, 0x24b6db24ffffb6ffL, 0xffffb6ffffb6ffffL}
 };
 
 /**\var m_vLUT_ADD_INV
@@ -488,8 +489,8 @@ const uint64_t m_vLUT_ADD_CRIT[3][6] = {
  */
 const uint64_t m_vLUT_ADD_INV[3][6] = {
 		{0xf8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0xf8f8f8f8, 0xffffaa00, 0x0L, 0x0L, 0x0L, 0x0L},
-		{0xf8f8f8f8f8f8f8f8L, 0xf8f8f8f8f8f8f8f8L, 0xffffaa00ffffaa00L, 0xffffaa00ffffaa00L, 0xffffaa0000000000L, 0xffffffffffffffffL}
+		{0xffeaffeaddc85540L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
+		{0xb692659610249200L, 0x302492006db6926dL, 0xffffb6ffffb6e79eL,	0xffb6f7df34b6db24L, 0x34b6db24ffffb6ffL, 0xffffb6ffffb6f7dfL}
 };
 
 
@@ -524,17 +525,16 @@ static const aby_ops_t m_tAllOps[] = {
 	{OP_A2Y, S_ARITH, "a2y"},
 	{OP_A2B, S_ARITH, "a2b"},
 	{OP_Y2A, S_YAO, "y2a"},
-	{OP_AND_VEC, S_BOOL, "vec-and"}
-
-//	{OP_IO, S_BOOL_NO_MT, "io1ooN"},
-//	{OP_XOR, S_BOOL_NO_MT, "xor1ooN"},
-//	{OP_AND, S_BOOL_NO_MT, "and1ooN"},
-//	{OP_ADD, S_BOOL_NO_MT, "add1ooN"},
-//	{OP_MUL, S_BOOL_NO_MT, "mul1ooN"},
-//	{OP_CMP, S_BOOL_NO_MT, "cmp1ooN"},
-//	{OP_EQ, S_BOOL_NO_MT, "eq1ooN"},
-//	{OP_MUX, S_BOOL_NO_MT, "mux1ooN"},
-//	{OP_SUB, S_BOOL_NO_MT, "sub1ooN"}
+	{OP_AND_VEC, S_BOOL, "vec-and"},
+	{OP_IO, S_SPLUT, "io1splut"},
+	{OP_XOR, S_SPLUT, "xorsplut"},
+	{OP_AND, S_SPLUT, "andsplut"},
+	{OP_CMP, S_SPLUT, "cmpsplut"},
+	{OP_ADD, S_SPLUT, "addsplut"},
+	{OP_MUL, S_SPLUT, "mulsplut"},
+	{OP_EQ, S_SPLUT, "eqsplut"},
+	{OP_MUX, S_SPLUT, "muxsplut"},
+	{OP_SUB, S_SPLUT, "subsplut"}
 };
 
 #endif /* CONSTANTS_H_ */

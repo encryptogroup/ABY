@@ -58,6 +58,7 @@ void YaoClientSharing::PrepareSetupPhase(ABYSetup* setup) {
 	m_nANDGates = m_cBoolCircuit->GetNumANDGates();
 
 	gt_size = ((uint64_t) m_nANDGates) * KEYS_PER_GATE_IN_TABLE * m_nSecParamBytes;
+
 	if (m_cBoolCircuit->GetMaxDepth() == 0)
 		return;
 

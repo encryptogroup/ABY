@@ -112,7 +112,9 @@ int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nva
 
 #ifndef BATCH
 	cout << "Testing AES encryption in " << get_sharing_name(sharing) << " sharing: " << endl;
+#endif
 	for (uint32_t i = 0; i < nvals; i++) {
+#ifndef BATCH
 		if(!verbose) {
 			cout << "(" << i << ") Input:\t";
 			input.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
@@ -123,8 +125,10 @@ int32_t test_aes_circuit(e_role role, char* address, seclvl seclvl, uint32_t nva
 			cout << "(" << i << ") Verify:\t";
 			verify.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
 		}
+#endif
 		assert(verify.IsEqual(out, i*AES_BITS, (i+1)*AES_BITS));
 	}
+#ifndef BATCH
 	cout << "all tests succeeded" << endl;
 #else
 	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_GARBLE) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) <<
@@ -192,6 +196,9 @@ share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ, bool use_ve
 		}
 	}
 
+	//free(pos_even);
+	//free(pos_odd);
+
 	return new boolshare(out, circ);
 }
 
@@ -244,8 +251,8 @@ vector<vector<uint32_t> > PutAESMixColumnGate(vector<vector<uint32_t> >& rows, B
 
 
 vector<uint32_t> PutAESSBoxGate(vector<uint32_t> input, BooleanCircuit* circ, bool use_vec_ands) {
-	if(circ->GetContext() == S_BOOL_NO_MT) {
-		return AESSBox_Forward_BOOL_NO_MT(input, circ);
+	if(circ->GetContext() == S_SPLUT) {
+		return AESSBox_Forward_SPLUT(input, circ);
 	} else if(circ->GetContext() == S_YAO || circ->GetContext() == S_YAO_REV) {
 		return AESSBox_Forward_BP_Size_Optimized(input, circ);
 	} else if(circ->GetContext() == S_BOOL) {
@@ -673,10 +680,12 @@ vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, Boolean
 	return out;
 }
 
-vector<uint32_t> AESSBox_Forward_BOOL_NO_MT(vector<uint32_t> input, BooleanCircuit* circ) {
+vector<uint32_t> AESSBox_Forward_SPLUT(vector<uint32_t> input, BooleanCircuit* circ) {
 	vector<uint32_t> out(8);
 
+	//out = circ->PutTruthTableMultiOutputGate(input, 8, (uint64_t*) aes_sbox_multi_out_ttable);
 	out = circ->PutTruthTableMultiOutputGate(input, 8, (uint64_t*) aes_sbox_multi_seq_out_ttable);
+
 	return out;
 }
 

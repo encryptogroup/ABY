@@ -172,16 +172,19 @@ void CBitVector::Invert() {
 
 
 void CBitVector::GetBits(BYTE* p, int pos, int len) {
-	if (len < 1 || (pos + len) > m_nByteSize << 3)
+	if (len < 1 || (pos + len) > (m_nByteSize << 3)) {
 		return;
+	}
 	if (len == 1) {
 		*p = GetBitNoMask(pos);
 		return;
 	}
+
 	if (!((pos & 0x07) || (len & 0x07))) {
 		GetBytes(p, pos >> 3, len >> 3);
 		return;
 	}
+
 	int posctr = pos >> 3;
 	int lowermask = pos & 7;
 	int uppermask = 8 - lowermask;
@@ -195,7 +198,7 @@ void CBitVector::GetBits(BYTE* p, int pos, int len) {
 	int remlen = len & 0x07;
 	if (remlen) {
 		if (remlen <= uppermask) {
-			p[i] = ((m_pBits[posctr] & (((1 << remlen) - 1 << lowermask))) >> lowermask) & 0xFF;
+			p[i] = ((m_pBits[posctr] & ((((1 << remlen) - 1) << lowermask))) >> lowermask) & 0xFF;
 		} else {
 			p[i] = ((m_pBits[posctr] & GET_BIT_POSITIONS[lowermask]) >> lowermask) & 0xFF;
 			p[i] |= (m_pBits[posctr + 1] & (((1 << (remlen - uppermask)) - 1))) << uppermask;

@@ -102,7 +102,7 @@ private:
 	uint32_t m_nOutputShareRcvCtr; /**< Output Share Receiver Counter*/
 
 	uint64_t m_nPermBitCtr; /**< _____________*/
-	uint32_t m_nServerInBitCtr; /**< _____________*/
+	uint64_t m_nServerInBitCtr; /**< _____________*/
 
 	uint32_t m_nServerKeyCtr; /**< _____________*/
 	uint32_t m_nClientInBitCtr; /**< _____________*/

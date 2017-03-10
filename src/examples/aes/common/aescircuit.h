@@ -143,7 +143,7 @@ vector<uint32_t> PutAESSBoxGate(vector<uint32_t> input, BooleanCircuit* circ, bo
 vector<uint32_t> AESSBox_Forward_BP_Depth_Optimized(vector<uint32_t> input, BooleanCircuit* circ);
 vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(vector<uint32_t> input, BooleanCircuit* circ);
 vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(vector<uint32_t> input, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
-vector<uint32_t> AESSBox_Forward_BOOL_NO_MT(vector<uint32_t> input, BooleanCircuit* circ);
+vector<uint32_t> AESSBox_Forward_SPLUT(vector<uint32_t> input, BooleanCircuit* circ);
 vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
 
 #endif /* __AESCIRCUIT_H_ */

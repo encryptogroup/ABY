@@ -48,33 +48,33 @@ int main(int argc, char** argv) {
 	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL);
 	cout << "Testing AES circuit in Yao sharing" << endl;
 	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_YAO);
-//	cout << "Testing AES circuit in Bool 1ooN sharing" << endl;
-//	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL_NO_MT);
+	cout << "Testing AES circuit in Setup-LUT sharing" << endl;
+	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_SPLUT);
 
 	//Test the SHA1 circuit TODO: Constant gates are limited to nvals < 64. Fix!
 	cout << "Testing SHA1 circuit in Boolean sharing" << endl;
 	test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_BOOL);
 	cout << "Testing SHA1 circuit in Yao sharing" << endl;
 	test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_YAO);
-//	cout << "Testing SHA1 circuit in Bool 1ooN sharing" << endl;
-//	test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_BOOL_NO_MT);
+	//cout << "Testing SHA1 circuit in Setup-LUT sharing" << endl;
+	//test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_SPLUT);
 
 	//Test the Sort-Compare-Shuffle PSI circuit
 	cout << "Testing SCS PSI circuit in Boolean sharing" << endl;
 	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, 0, true);
 	cout << "Testing SCS PSI circuit in Yao sharing" << endl;
 	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, 1, true);
-//	cout << "Testing SCS PSI circuit in Bool 1ooN sharing" << endl;
-//	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_BOOL_NO_MT);
+	//cout << "Testing SCS PSI circuit in Setup-LUT sharing" << endl;
+	//test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_SPLUT);
 
 
 	//Test the Phasing PSI circuit
 	cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
-	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL);
+	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL, 1, 0, 3);
 	cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
-	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_YAO);
-//	cout << "Testing PSI Phasing circuit in Bool 1ooN sharing" << endl;
-//	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL_NO_MT);
+	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_YAO, 1, 0, 3);
+	cout << "Testing PSI Phasing circuit in Setup-LUT sharing" << endl;
+	test_phasing_circuit(role, (char*) address.c_str(), seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_SPLUT, 1, 0, 3);
 
 
 	//test_lowmc_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL, (LowMCParams*) &stp);
@@ -174,7 +174,7 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 				sb = rand() % 2;
 				shrsel = circ->PutXORGate(circ->PutINGate(sa, 1, SERVER), circ->PutINGate(sb, 1, CLIENT));
 				shrres = circ->PutMUXGate(shra, shrb, shrsel);
-				verify = sa ^ sb == 0 ? b : a;
+				verify = (sa ^ sb) == 0 ? b : a;
 				break;
 			case OP_Y2B:
 				shrres = circ->PutADDGate(shra, shrb);

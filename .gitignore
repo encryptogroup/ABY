@@ -9,3 +9,5 @@
 .settings
 *.db
 README.html
+docs/*
+*.dump

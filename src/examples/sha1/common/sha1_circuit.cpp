@@ -65,14 +65,18 @@ int32_t test_sha1_circuit(e_role role, char* address, seclvl seclvl, uint32_t nv
 
 	verify_SHA1_hash(msgS.GetArr(), msgC.GetArr(), sha1bytes_per_party, nvals, verify.GetArr());
 
+#ifndef BATCH
 	cout << "Plaintext output: " << (hex) << endl;
 	for(uint32_t i = 0; i < 20; i++) {
 		cout << (uint32_t) plain_out[i];
 	}
 	cout << (dec) << endl;
 
+
 	cout << "Testing SHA1 hash in " << get_sharing_name(sharing) << " sharing: " << endl;
+#endif
 	for (uint32_t i = 0; i < nvals; i++) {
+#ifndef BATCH
 		cout << "(" << i << ") Server Input:\t";
 		msgS.PrintHex(i * sha1bytes_per_party, (i + 1) * sha1bytes_per_party);
 		cout << "(" << i << ") Client Input:\t";
@@ -81,6 +85,7 @@ int32_t test_sha1_circuit(e_role role, char* address, seclvl seclvl, uint32_t nv
 		out.PrintHex(i * ABY_SHA1_OUTPUT_BYTES, (i + 1) * ABY_SHA1_OUTPUT_BYTES);
 		cout << "(" << i << ") Verify:\t";
 		verify.PrintHex(i * ABY_SHA1_OUTPUT_BYTES, (i + 1) * ABY_SHA1_OUTPUT_BYTES);
+#endif
 		assert(verify.IsEqual(out, i*ABY_SHA1_OUTPUT_BITS, (i+1)*ABY_SHA1_OUTPUT_BITS));
 	}
 

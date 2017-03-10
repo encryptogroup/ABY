@@ -21,6 +21,7 @@ void BoolSharing::Init() {
 
 	m_nTotalNumMTs = 0;
 	m_nXORGates = 0;
+	m_nOPLUT_Tables = 0;
 
 	m_nNumANDSizes = 0;
 
@@ -57,9 +58,21 @@ void BoolSharing::InitNewLayer() {
 	for (uint32_t i = 0; i < m_vANDGates.size(); i++)
 		m_vANDGates[i].clear();
 
+	for(map<uint64_t,vector<uint32_t> >::iterator it=m_vOPLUTGates.begin(); it!=m_vOPLUTGates.end(); it++) {
+		it->second.clear();
+	}
+
 	m_vInputShareGates.clear();
 	m_vOutputShareGates.clear();
 
+
+	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
+		it->second = 0;
+		//if(it->second > 0) {
+		//	sendbuf.push_back(m_vOP_LUT_RecSelOpeningBuf[it->first]->GetArr());
+		//	sndbytes.push_back(ceil_divide(it->second, 8));
+		//}
+	}
 }
 
 void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
@@ -101,16 +114,35 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 	}
 
 
-	if (m_nTotalNumMTs == 0)
-		return;
 
+	/*
+	 * If no MTs need to be pre-computed omit this method
+	 */
+	if(m_nTotalNumMTs > 0) {
+		PrepareSetupPhaseMTs(setup);
+
+	}
+	/*
+	 * If no OP-LUT tables need to be pre-computed omit this method
+	 */
+	//Get the data that corresponds to the OP-LUT tables
+	//tmplens: first dimension: circuit depth, second dimension: num-inputs, third dimension: out_bitlen. We can ignore the circuit depth here!
+	vector<vector<vector<tt_lens_ctx> > > tmplens = m_cBoolCircuit->GetTTLens();
+	if (!(tmplens.size() == 1 && tmplens[0].size() == 1 && tmplens[0][0].size() == 1 && tmplens[0][0][0].numgates == 0)) {
+		PrepareSetupPhaseOPLUT(setup);
+	}
+
+}
+
+
+void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 	/**
-	   If the precomputation is READ or in Reading phase when in RAM mode, the MTs doesn't need to be
-	   computed again and therefore following check is done.
+		   If the precomputation is READ or in Reading phase when in RAM mode, the MTs doesn't need to be
+		   computed again and therefore following check is done.
 	 */
 	if((GetPreCompPhaseValue() != ePreCompRead)&&(GetPreCompPhaseValue() != ePreCompRAMRead)) {
 
-	#ifdef USE_KK_OT_FOR_MT
+#ifdef USE_KK_OT_FOR_MT
 		fMaskFct = new XORMasking(m_vANDs[0].bitlen);
 
 		for (uint32_t j = 0; j < 2; j++) {
@@ -127,15 +159,15 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 				task->pval.rcvval.C = m_vKKChoices[m_eRole^1];
 				task->pval.rcvval.R = &(m_vKKC[m_eRole^1]);
 			}
-	#ifndef BATCH
+#ifndef BATCH
 			cout << "Adding new KK OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
-	#endif
+#endif
 			setup->AddOTTask(task, j);
 		}
 		for (uint32_t i = 1; i < m_nNumANDSizes; i++) {
-	#else
+#else
 		for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
-	#endif
+#endif
 			fMaskFct = new XORMasking(m_vANDs[i].bitlen);
 
 			for (uint32_t j = 0; j < 2; j++) {
@@ -152,20 +184,164 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 					task->pval.rcvval.C = &(m_vA[i]);
 					task->pval.rcvval.R = &(m_vS[i]);
 				}
-	#ifndef BATCH
+#ifndef BATCH
 				cout << "Adding new OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
-	#endif
+#endif
 				setup->AddOTTask(task, j);
 			}
 		}
 	}
 }
 
+//Initialize data for the OP-LUT protocol, count how many tables need to be pre-computed, and set the number of OTs that need to be computed
+void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
+	vector<vector<vector<tt_lens_ctx> > > tmplens = m_cBoolCircuit->GetTTLens();
+	uint32_t rnd_rot_bits, rnd_table_bits;
+	uint64_t address, n_inbits, n_outbits;
+	map<uint64_t, uint64_t> max_num_gates; //keeps track of the maximum number of OP-LUT gates for the layers of each input/output combination
+
+	vector<vector<tt_lens_ctx> > depth_red_tmplens(tmplens[0].size());
+	for(uint32_t i = 0; i < tmplens[0].size(); i++) {
+		depth_red_tmplens[i].resize(tmplens[0][i].size());
+
+		for(uint32_t j = 0; j < tmplens[0][i].size(); j++) {
+			depth_red_tmplens[i][j].tt_len = tmplens[0][i][j].tt_len;
+			depth_red_tmplens[i][j].out_bits = tmplens[0][i][j].out_bits;
+			depth_red_tmplens[i][j].numgates = 0;
+			address = (uint64_t) ceil_log2(depth_red_tmplens[i][j].tt_len);
+			address = (address << 32) | ((uint64_t) depth_red_tmplens[i][j].out_bits);
+			max_num_gates[address] = 0;
+
+			//sum all gates up and combine all tables onto a single buffer
+			for(uint32_t d = 0; d < tmplens.size(); d++) {
+				if(tmplens[d][i][j].numgates > 0) {
+					depth_red_tmplens[i][j].numgates += tmplens[d][i][j].numgates;
+					depth_red_tmplens[i][j].ttable_values.reserve(depth_red_tmplens[i][j].numgates);
+
+					depth_red_tmplens[i][j].ttable_values.insert(depth_red_tmplens[i][j].ttable_values.end(),
+							tmplens[d][i][j].ttable_values.begin(), tmplens[d][i][j].ttable_values.end());
+
+					//conditional update on the maximal number of gates
+					if(tmplens[d][i][j].numgates > max_num_gates[address]) {
+						max_num_gates[address] = tmplens[d][i][j].numgates;
+					}
+				}
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < depth_red_tmplens.size(); i++) {
+		for(uint32_t j = 0; j < depth_red_tmplens[i].size(); j++) {
+			if(depth_red_tmplens[i][j].numgates > 0) {
+				n_inbits = ceil_log2(depth_red_tmplens[i][j].tt_len);
+				n_outbits = depth_red_tmplens[i][j].out_bits;
+
+				op_lut_ctx* lut_data = (op_lut_ctx*) malloc(sizeof(op_lut_ctx));
+				lut_data->sel_opening_ctr = 0;
+				lut_data->mask_ctr = 0;
+				lut_data->n_inbits = n_inbits;
+				lut_data->n_outbits = n_outbits;
+				lut_data->n_gates = depth_red_tmplens[i][j].numgates;
+				m_nOPLUT_Tables += lut_data->n_gates;
+
+				//Initialize and generate the random rotation values
+				rnd_rot_bits = n_inbits * depth_red_tmplens[i][j].numgates;
+				lut_data->rot_val = new CBitVector(rnd_rot_bits, m_cCrypto);
+				if(m_eRole == CLIENT) {
+					//TODO: There is a really strange problem that makes this routine fail for larger sizes. This hack is required to get rid of the problem!
+					CBitVector* tmp = new CBitVector(rnd_rot_bits, m_cCrypto);
+					for(uint32_t p = 0; p < lut_data->n_gates; p++) {
+						lut_data->rot_val->Set<uint8_t>(tmp->Get<uint8_t>(p*n_inbits, n_inbits)&0x0F, p * n_inbits, n_inbits);
+					}
+					tmp->delCBitVector();
+				}
+
+				//Initialize the truth table. The server will generate its randomness in this vector while the client will assign the output of the OT to it
+				rnd_table_bits = depth_red_tmplens[i][j].tt_len * n_outbits * lut_data->n_gates;
+				lut_data->table_mask = new CBitVector(rnd_table_bits);
+				if(m_eRole == SERVER) {
+					lut_data->table_mask->FillRand(rnd_table_bits, m_cCrypto);
+				}
+
+				//copy the pointers to the truth table values
+
+				lut_data->table_data = depth_red_tmplens[i][j].ttable_values.data();
+
+				//The server initializes the possible values for the OT and pre-compute the rotated truth-tables
+				//TODO: Optimize with rotation instead of Set Bits! Also change loop order to make it more efficient!
+				if(m_eRole == SERVER) {
+					uint32_t tab_ele_bits = sizeof(uint64_t) * 8;
+					uint32_t tt_len = 1<<lut_data->n_inbits;
+					lut_data->rot_OT_vals = (CBitVector**) malloc(sizeof(CBitVector*) * tt_len);
+
+					for(uint32_t s = 0; s < tt_len; s++) {
+						lut_data->rot_OT_vals[s] = new CBitVector(rnd_table_bits);
+						for(uint32_t m = 0; m < lut_data->n_gates; m++) {
+							uint64_t rot_val = lut_data->rot_val->Get<uint64_t>(m * n_inbits, n_inbits)^s; //compute r \oplus s for all possible s
+							uint64_t* tab_ptr = lut_data->table_data[m];
+
+							//tmp_tab.AttachBuf(ut_data->table_data[m], ceil_divide(tt_len * n_outbits, 8));
+							//lut_data->rot_OT_vals.SetBitsRot((uint8_t*) lut_data->table_data[m], l, m * (1<<lut_data->n_inbits), 1<<lut_data->n_inbits);
+							for(uint32_t n = 0; n < tt_len; n++) {
+								lut_data->rot_OT_vals[s]->SetBitsPosOffset((uint8_t*) tab_ptr, (rot_val^n) * lut_data->n_outbits, m*tt_len*lut_data->n_outbits+n * lut_data->n_outbits, lut_data->n_outbits);
+										//.Getm * tt_len+n, (tt_ptr[(n^rot_val)/tab_ele_bits]>>((n^rot_val)%tab_ele_bits))&0x01);
+							}
+						}
+						lut_data->rot_OT_vals[s]->XORBits(lut_data->table_mask->GetArr(), 0, rnd_table_bits);
+					}
+				}
+
+				//insert the lut into the map
+				address = (n_inbits << 32) | (n_outbits);
+				m_vOP_LUT_data.insert(pair<uint64_t, op_lut_ctx*>(address, lut_data));
+				CBitVector* snd_sel_opening_buf = new CBitVector(lut_data->n_inbits * max_num_gates[address]);
+				CBitVector* rec_sel_opening_buf = new CBitVector(lut_data->n_inbits * max_num_gates[address]);
+				m_vOP_LUT_SndSelOpeningBuf.insert(pair<uint64_t, CBitVector*>(address, snd_sel_opening_buf));
+				m_vOP_LUT_RecSelOpeningBuf.insert(pair<uint64_t, CBitVector*>(address, rec_sel_opening_buf));
+				//	cout << "Created new OP-LUT data structure with " << n_inbits << " input bits, " << n_outbits << " output bits, and "<<
+				//			tmplens[i][i][j].numgates << " gates" << endl;
+			}
+		}
+	}
+
+	max_num_gates.clear();
+
+
+	//iterate over all elements in the map and create new 1ooN OT-tasks for each of them
+	for(map<uint64_t,op_lut_ctx*>::iterator it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
+
+		//for (uint32_t j = 0; j < 2; j++) {
+		KK_OTTask* task = (KK_OTTask*) malloc(sizeof(KK_OTTask));
+		task->bitlen = (1<<it->second->n_inbits) * it->second->n_outbits;
+		task->snd_flavor = Snd_OT;
+		task->rec_flavor = Rec_OT;
+		task->nsndvals = 1<<it->second->n_inbits;
+		task->numOTs = it->second->n_gates;
+
+		fMaskFct = new XORMasking(task->bitlen);
+		task->mskfct = fMaskFct;
+		if (m_eRole == SERVER) {
+			//cout << "I assigned sender" << endl;
+			task->pval.sndval.X = it->second->rot_OT_vals;
+		} else {
+			task->pval.rcvval.C = it->second->rot_val;
+			task->pval.rcvval.R = it->second->table_mask;
+		}
+//#ifndef BATCH
+		cout << "Adding new 1oo" << task->nsndvals << " OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
+//#endif
+		setup->AddOTTask(task, 0);
+		//}
+	}
+
+}
+
+
 void BoolSharing::PerformSetupPhase(ABYSetup* setup) {
 	//Do nothing
 }
 void BoolSharing::FinishSetupPhase(ABYSetup* setup) {
-	if (m_nTotalNumMTs == 0)
+	if (m_nTotalNumMTs == 0 && m_nOPLUT_Tables == 0)
 		return;
 
 	//Compute Multiplication Triples
@@ -173,6 +349,22 @@ void BoolSharing::FinishSetupPhase(ABYSetup* setup) {
 
 	/**Entering precomputation decision function.*/
 	PreComputationPhase();
+
+	//Delete the X values for OP-LUT of the sender when pre-computing the OTs
+	for(map<uint64_t,op_lut_ctx*>::iterator it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
+		if(it->second->n_gates > 0 && m_eRole == SERVER) {
+			for(uint32_t i = 0; i < 1<<it->second->n_inbits; i++) {
+				it->second->rot_OT_vals[i]->delCBitVector();
+			}
+			free(it->second->rot_OT_vals);
+		}
+#ifdef DEBUGBOOL
+		if(it->second->n_gates > 0 && m_eRole == CLIENT) {
+			cout << "Resutling shared table:" << endl;
+			it->second->table_mask->PrintHex();
+		}
+#endif
+	}
 
 
 #ifdef DEBUGBOOL
@@ -469,6 +661,9 @@ void BoolSharing::EvaluateInteractiveOperations(uint32_t depth) {
 				ReconstructValue(interactiveops[i]);
 			}
 			break;
+		case G_TT:
+			SelectiveOpenOPLUT(interactiveops[i]);
+			break;
 		case G_CALLBACK:
 			EvaluateCallbackGate(interactiveops[i]);
 			break;
@@ -657,6 +852,45 @@ inline void BoolSharing::SelectiveOpenVec(uint32_t gateid) {
 	UsedGate(idvector);
 }
 
+
+inline void BoolSharing::SelectiveOpenOPLUT(uint32_t gateid) {
+	GATE* gate = m_pGates + gateid, *ingate;
+	uint32_t* input = gate->ingates.inputs.parents;
+	uint32_t nparents = gate->ingates.ningates;
+	uint32_t typebitlen = sizeof(uint64_t) * 8;
+	uint32_t nvals = m_pGates[input[0]].nvals;
+	uint32_t outbits = (uint64_t) gate->nvals / nvals;
+
+	uint64_t op_lut_id = (((uint64_t) nparents) << 32) | outbits ;
+
+#ifdef DEBUGBOOL
+	cout << "Evaluating LUT with " << nparents << " input wires and " << outbits << " output wires" << endl;
+#endif
+	assert(m_vOP_LUT_data.find(op_lut_id) != m_vOP_LUT_data.end());
+	op_lut_ctx* lut_ctx = m_vOP_LUT_data.find(op_lut_id)->second;
+
+	//Get the shares on the input wires
+	for(uint32_t i = 0; i < nvals; i++) {
+		uint64_t selective_opening = 0L;
+
+		//iterate over all parent wires and construct the input gate value
+		for(uint32_t j = 0; j < nparents; j++) {
+			ingate = m_pGates + input[j];
+			selective_opening |= (((ingate->gs.val[(i/typebitlen)] >> (i%typebitlen)) & 0x01)<<j);
+		}
+		selective_opening = selective_opening ^ lut_ctx->rot_val->Get<uint64_t>(lut_ctx->sel_opening_ctr * nparents, nparents);
+		m_vOP_LUT_SndSelOpeningBuf[op_lut_id]->Set<uint64_t>(selective_opening, m_vOP_LUT_SelOpeningBitCtr[op_lut_id] + i * nparents, nparents);
+		lut_ctx->sel_opening_ctr++;
+		//cout << "Selective opening to be sent: " << selective_opening << endl;
+	}
+	m_vOP_LUT_SelOpeningBitCtr[op_lut_id] += (nparents * nvals);
+
+	m_vOPLUTGates[op_lut_id].push_back(gateid);
+#ifdef DEBUGBOOL
+	m_vOP_LUT_SndSelOpeningBuf[op_lut_id]->PrintHex();
+#endif
+}
+
 void BoolSharing::FinishCircuitLayer(uint32_t level) {
 	//Compute the values of the AND gates
 #ifdef DEBUGBOOL
@@ -678,6 +912,10 @@ void BoolSharing::FinishCircuitLayer(uint32_t level) {
 	cout << "Setting Values of AND Gates" << endl;
 #endif
 	EvaluateANDGate();
+#ifdef DEBUGBOOL
+	cout << "Assigning values to OP-LUT Gates" << endl;
+#endif
+	EvaluateOPLUTGates();
 #ifdef DEBUGBOOL
 	cout << "Assigning Input Shares" << endl;
 #endif
@@ -843,6 +1081,63 @@ void BoolSharing::EvaluateANDGate() {
 	}
 }
 
+void BoolSharing::EvaluateOPLUTGates() {
+	GATE* gate;
+	uint64_t op_lut_id, table_out;
+	uint32_t nparents, outbits, nvals, tableid;
+	uint32_t* inputs;
+	uint32_t gatevalbitlen = sizeof(uint64_t) * 8;
+
+	//Compute the masked table indice and store it in the Receive Buffer for later use
+	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
+		if(it->second > 0) {
+			m_vOP_LUT_RecSelOpeningBuf[it->first]->XORBits(m_vOP_LUT_SndSelOpeningBuf[it->first]->GetArr(), 0, it->second);
+#ifdef DEBUGBOOL
+			cout << "Combined Selective Openings:" <<endl;
+			m_vOP_LUT_RecSelOpeningBuf[it->first]->PrintHex();
+#endif
+		}
+	}
+
+
+	for(map<uint64_t,vector<uint32_t> >::iterator it=m_vOPLUTGates.begin(); it!=m_vOPLUTGates.end(); it++) {
+		op_lut_id = it->first;
+		uint32_t gatectr = 0;
+		uint32_t maskbit_ctr = m_vOP_LUT_data[op_lut_id]->mask_ctr * (1<<m_vOP_LUT_data[op_lut_id]->n_inbits) * m_vOP_LUT_data[op_lut_id]->n_outbits;
+		for(uint32_t i = 0; i < it->second.size(); i++) {
+			gate = m_pGates+it->second[i];
+
+			inputs = gate->ingates.inputs.parents;
+			nparents = gate->ingates.ningates;
+			nvals = m_pGates[inputs[0]].nvals;
+			outbits = (uint64_t) gate->nvals / nvals;
+
+			InstantiateGate(gate);
+
+			for(uint32_t n = 0; n < nvals; n++) {
+				tableid = m_vOP_LUT_RecSelOpeningBuf[op_lut_id]->Get<uint64_t>(gatectr, nparents);
+				table_out = m_vOP_LUT_data[op_lut_id]->table_mask->Get<uint64_t>(maskbit_ctr + tableid * outbits, outbits);
+#ifdef DEBUGBOOL
+				cout << "table output = " << (hex) << table_out << " for tableid = " << tableid << (dec) << " and ctr+n = " << m_vOP_LUT_data[op_lut_id]->mask_ctr+n << endl;
+#endif
+				for(uint32_t o = 0; o < outbits; o++) {
+					gate->gs.val[(o*nvals+n)/gatevalbitlen] |= (((table_out>>o) & 0x01L)<<((o*nvals+n)%gatevalbitlen));
+				}
+				gatectr+=nparents;
+				maskbit_ctr+= ((1<<m_vOP_LUT_data[op_lut_id]->n_inbits) * m_vOP_LUT_data[op_lut_id]->n_outbits);
+			}
+
+			m_vOP_LUT_data[op_lut_id]->mask_ctr +=nvals;
+
+			for(uint32_t j = 0; j < nparents; j++) {
+				UsedGate(inputs[j]);
+			}
+			free(inputs);
+		}
+	}
+}
+
+
 void BoolSharing::AssignInputShares() {
 	GATE* gate;
 	for (uint32_t i = 0, j, rcvshareidx = 0, bitstocopy, len; i < m_vInputShareGates.size(); i++) {
@@ -911,6 +1206,14 @@ void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbyt
 #endif
 	}
 
+	//OP-LUT selective openings
+	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
+		if(it->second > 0) {
+			sendbuf.push_back(m_vOP_LUT_SndSelOpeningBuf[it->first]->GetArr());
+			sndbytes.push_back(ceil_divide(it->second, 8));
+		}
+	}
+
 #ifdef DEBUGBOOL
 	if(m_nInputShareSndSize > 0) {
 		cout << "Sending " << m_nInputShareSndSize << " Input shares : ";
@@ -950,6 +1253,14 @@ void BoolSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& r
 			rcvbytes.push_back(mtbytelen);
 			rcvbuf.push_back(m_vE_rcv[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8) * m_vANDs[i].bitlen);
 			rcvbytes.push_back(mtbytelen * m_vANDs[i].bitlen);
+		}
+	}
+
+	//OP-LUT selective openings
+	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
+		if(it->second > 0) {
+			rcvbuf.push_back(m_vOP_LUT_RecSelOpeningBuf[it->first]->GetArr());
+			rcvbytes.push_back(ceil_divide(it->second, 8));
 		}
 	}
 }
@@ -1024,6 +1335,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		uint32_t pos = gate->gs.sinput.pos;
 		uint32_t idparent = gate->ingates.inputs.parent;
 		InstantiateGate(gate);
+		//TODO optimize
 		for (uint32_t i = 0; i < vsize; i++) {
 			gate->gs.val[i / GATE_T_BITS] |= ((m_pGates[idparent].gs.val[(pos + i) / GATE_T_BITS] >> ((pos + i) % GATE_T_BITS)) & 0x1) << (i % GATE_T_BITS);
 		}
@@ -1213,6 +1525,7 @@ void BoolSharing::PrintPerformanceStatistics() {
 
 void BoolSharing::Reset() {
 	m_nTotalNumMTs = 0;
+	m_nOPLUT_Tables = 0;
 	m_nXORGates = 0;
 
 	m_nNumANDSizes = 0;
@@ -1268,6 +1581,30 @@ void BoolSharing::Reset() {
 	m_vOutputShareRcvBuf.delCBitVector();
 
 	m_cBoolCircuit->Reset();
+
+	//Reset the OP-LUT data structures
+	if(!m_vOP_LUT_data.empty()) {
+		cout << "Doing the deletion" << endl;
+		for (map<uint64_t,op_lut_ctx*>::iterator it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
+			free(it->second);
+		}
+		m_vOP_LUT_data.clear();
+	}
+	if(!m_vOP_LUT_SndSelOpeningBuf.empty()) {
+		for (map<uint64_t,CBitVector*>::iterator it=m_vOP_LUT_SndSelOpeningBuf.begin(); it!=m_vOP_LUT_SndSelOpeningBuf.end(); it++) {
+			it->second->delCBitVector();
+		}
+		m_vOP_LUT_SndSelOpeningBuf.clear();
+	}
+	if(!m_vOP_LUT_RecSelOpeningBuf.empty()) {
+		for (map<uint64_t,CBitVector*>::iterator it=m_vOP_LUT_RecSelOpeningBuf.begin(); it!=m_vOP_LUT_RecSelOpeningBuf.end(); it++) {
+			it->second->delCBitVector();
+		}
+		m_vOP_LUT_RecSelOpeningBuf.clear();
+	}
+	if(!m_vOP_LUT_SelOpeningBitCtr.empty()) {
+		m_vOP_LUT_SelOpeningBitCtr.clear();
+	}
 
 	/**Checking the role and and deciding upon the file to be deleted if the precomputation values are
 	  completely used up in a Precomputation READ mode.*/

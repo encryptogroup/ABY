@@ -669,6 +669,16 @@ public:
 	*/
 	void SetBitsToZero(int bitpos, int bitlen);
 
+	/**
+		Sets the bits from position pos to position pos+bitlen from the CBitVector to the value of src rotated
+		by rot_val bits to the left.
+		\param	src			-	Source value to which the CBitVector is set
+		\param	rot_val		-	Bit value by which the source value is cyclic left rotated
+		\param 	pos			- 	Start bit position to which the src value is copied into the CBitVector
+		\param 	bitlen		-	Number of bits to copy into the CBitVector
+	*/
+	void SetBitsRotL(uint8_t* src, uint32_t rot_val, uint32_t pos, uint32_t bitlen);
+
 	/*
 	 * XOR Operations
 	 */

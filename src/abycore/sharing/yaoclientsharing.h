@@ -77,13 +77,13 @@ private:
 	CBitVector m_vChoiceBits; /**< random choice bits of the client in the OTs*/
 	uint32_t m_nKeyInputRcvIdx; /**< Key Input Receiver Index.*/
 
-	uint32_t m_nServerInBitCtr; /**< Server Input Bit Counter.*/
+	uint64_t m_nServerInBitCtr; /**< Server Input Bit Counter.*/
 	uint32_t m_nClientSndOTCtr; /**< Client Send OT Counter*/
 	uint32_t m_nClientRcvKeyCtr; /**< Client Receiver Key Counter*/
 	uint32_t m_nClientOutputShareCtr;/**< Client Output Share Counter*/
 	uint32_t m_nServerOutputShareCtr;/**< Server Output Share Counter*/
 
-	uint32_t m_nClientOUTBitCtr; /**< Client Output Bit Counter.*/
+	uint64_t m_nClientOUTBitCtr; /**< Client Output Bit Counter.*/
 
 	CBitVector m_vServerKeyRcvBuf; /**< Server Key Receiver Buffer*/
 	vector<CBitVector> m_vClientKeyRcvBuf; /**< Client Key Receiver Buffer*/

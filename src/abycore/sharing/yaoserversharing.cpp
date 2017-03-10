@@ -824,7 +824,7 @@ void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
 					PrintKey(m_vClientInputKeys.GetArr() + m_nClientInputKexIdx * m_nSecParamBytes);
 					cout << endl;
 #endif
-					if (m_vClientROTRcvBuf.GetBitNoMask(linbitctr) ^ permval == 1) {
+					if ((m_vClientROTRcvBuf.GetBitNoMask(linbitctr) ^ permval) == 1) {
 						m_pKeyOps->XOR(m_vClientKeySndBuf[0].GetArr() + linbitctr * m_nSecParamBytes, m_vROTMasks[0].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes,
 								m_bTempKeyBuf); //One - key
 						m_pKeyOps->XOR(m_vClientKeySndBuf[1].GetArr() + linbitctr * m_nSecParamBytes, m_vROTMasks[1].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes,

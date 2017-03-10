@@ -37,7 +37,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 			{ (void*) secparam, T_NUM, "s", "Symmetric Security Bits, default: 128", false, false },
 			{ (void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
 			{ (void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false },
-			{ (void*) &int_sharing, T_NUM, "g", "Sharing in which the AES circuit should be evaluated [0: BOOL, 1: YAO, 3: BOOL_NO_MT], default: BOOL", false, false },
+			{ (void*) &int_sharing, T_NUM, "g", "Sharing in which the AES circuit should be evaluated [0: BOOL, 1: YAO, 4: SP_LUT], default: BOOL", false, false },
 			{ (void*) verbose, T_FLAG, "v", "Do not print the result of the evaluation, default: off", false, false },
 			{ (void*) nthreads, T_NUM, "t", "Number of threads, default: 1", false, false },
 			{ (void*) use_vec_ands, T_FLAG, "u", "Use vector AND optimization for AES circuit for Bool sharing, default: off", false, false } };

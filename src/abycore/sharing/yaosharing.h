@@ -25,7 +25,6 @@
 #include "../util/constants.h"
 
 #define FIXED_KEY_GARBLING
-//#define MAXSHAREBUFSIZE 1000000
 
 typedef struct {
 	uint32_t gateid;
@@ -59,6 +58,7 @@ public:
 	;
 	/** Destructor for the class. */
 	~YaoSharing() {
+		//TODO deallocate things here
 	}
 	;
 

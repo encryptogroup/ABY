@@ -12,7 +12,7 @@ CC=g++
 #Optimizations
 COMPILER_OPTIONS=-O2 -march=native
 #DEBUG
-#COMPILER_OPTIONS=-g3 -ggdb -O0 #Wall -Wextra
+#COMPILER_OPTIONS=-g3 -ggdb -O0 -fno-omit-frame-pointer -fsanitize=address #Wall -Wextra
 
 BATCH=
 

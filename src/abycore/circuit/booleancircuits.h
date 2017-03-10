@@ -309,6 +309,9 @@ public:
 
 	vector<uint32_t> PutTruthTableMultiOutputGate(vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable);
 	share* PutTruthTableMultiOutputGate(share* in, uint32_t out_bits, uint64_t* ttable);
+	vector<uint32_t> PutLUTGateFromFile(const string filename, vector<uint32_t> inputs);
+	share* PutLUTGateFromFile(const string filename, share* input);
+
 
 	share* PutY2BGate(share* ina);
 	share* PutB2YGate(share* ina);
@@ -385,11 +388,14 @@ public:
 
 	void PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_t nshares, share** Sout);
 
+        share* PutFullAdderGate(uint32_t a, uint32_t b, uint32_t carry_in);
+    	share* PutADDChainGate(vector <uint32_t> a, vector <uint32_t> b, uint32_t carry_in);
+
 private:
 	void UpdateInteractiveQueue(uint32_t);
 	void UpdateLocalQueue(uint32_t gateid);
 
-	void UpdateTruthTableSizes(uint32_t len, uint32_t nvals, uint32_t depth, uint32_t out_bits);
+	void UpdateTruthTableSizes(uint32_t len, uint32_t gateid, uint32_t out_bits);
 
 	void PadWithLeadingZeros(vector<uint32_t> &a, vector<uint32_t> &b);
 

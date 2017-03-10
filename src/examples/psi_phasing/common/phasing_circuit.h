@@ -29,7 +29,8 @@
 
 int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 		uint32_t server_neles, uint32_t client_neles, uint32_t bitlen, double epsilon,
-		uint32_t nthreads, e_mt_gen_alg mt_alg,	e_sharing sharing, uint16_t port = 7766);
+		uint32_t nthreads, e_mt_gen_alg mt_alg,	e_sharing sharing, int ext_stash_size,
+		uint32_t maxbinsize, uint32_t mhashfuns, uint16_t port = 7766);
 
 void 	sample_random_elements(uint32_t neles, uint32_t bitlen, uint32_t* srv_set, uint32_t* cli_set);
 void 	set_fixed_elements(uint32_t server_neles, uint32_t client_neles, uint32_t bitlen, uint32_t* srv_set, uint32_t* cli_set);
@@ -41,15 +42,15 @@ share* 	BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint
 		uint32_t maxstashsize, BooleanCircuit* circ);
 
 void 	ServerHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen, uint32_t nbins,
-		uint32_t* maxbinsize, uint8_t** hash_table, uint32_t* outbitlen, uint32_t ntasks, crypto* crypt);
+		uint32_t* maxbinsize, uint8_t** hash_table, uint32_t* outbitlen, uint32_t ntasks, crypto* crypt, uint32_t nhashfuns);
 
 void 	ClientHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen, uint32_t nbins,
 		uint8_t** hash_table, uint32_t* inv_perm, uint32_t* outbitlen, uint8_t** stash, uint32_t maxstashsize,
-		uint32_t** stashperm, uint32_t ntasks, crypto* crypt);
+		uint32_t** stashperm, uint32_t ntasks, crypto* crypt, uint32_t nhashfuns);
 
 void 	pad_elements(uint8_t* hash_table, uint32_t elebytelen, uint32_t nbins, uint32_t* nelesinbin,
 		uint32_t maxbinsize, uint8_t* padded_hash_table, uint8_t* dummy_element);
 
-uint32_t compute_max_stash_size(uint32_t neles, uint32_t nbins);
+uint32_t	assign_max_stash_size(uint32_t neles);
 
 #endif /* __PHASING_CIRCUIT_ */

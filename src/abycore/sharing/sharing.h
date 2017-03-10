@@ -31,11 +31,6 @@
 #include <assert.h>
 //#define DEBUGSHARING
 
-/**
- \def MAXSHAREBUFSIZE
- \brief Maximum size of share buffer.
- */
-#define MAXSHAREBUFSIZE 1000000
 
 /**
  Generic class for specifying different types of sharing.
@@ -60,12 +55,13 @@ public:
 		m_nSecParamBytes = ceil_divide(m_cCrypto->get_seclvl().symbits, 8);
 		m_ePhaseValue = ePreCompDefault;
 		m_nFilePos = -1;
+		m_nTypeBitLen = sharebitlen;
 	}
 	;
 	/**
 	 Destructor of class.
 	 */
-	~Sharing() {
+	virtual ~Sharing() {
 	}
 	;
 

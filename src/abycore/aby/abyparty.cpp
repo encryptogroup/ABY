@@ -122,14 +122,11 @@ void ABYParty::Cleanup() {
 	if (m_pSetup)
 		delete m_pSetup;
 
-	if(m_vSharings[S_BOOL])
-		delete m_vSharings[S_BOOL];
-	if(m_vSharings[S_YAO])
-		delete m_vSharings[S_YAO];
-	if(m_vSharings[S_YAO_REV])
-		delete m_vSharings[S_YAO_REV];
-	if(m_vSharings[S_ARITH])
-		delete m_vSharings[S_ARITH];
+	for(uint32_t i = 0; i < S_LAST; i++) {
+		if(m_vSharings[i]) {
+			delete m_vSharings[i];
+		}
+	}
 
 	for (uint32_t i = 0; i < m_nHelperThreads; i++) {
 		m_vThreads[i]->PutJob(e_Party_Stop);
@@ -260,6 +257,7 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
 		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
 		break;
 	}
+	m_vSharings[S_SPLUT] = new SetupLUT(S_SPLUT, m_eRole, 1, m_pCircuit, m_cCrypt);
 
 	m_pGates = m_pCircuit->Gates();
 
@@ -273,10 +271,11 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
 BOOL ABYParty::EvaluateCircuit() {
 #ifdef BENCHONLINEPHASE
 	timespec tstart, tend;
-	double interaction=0;
-	vector<double> localops(4,0);
-	vector<double> interactiveops(4,0);
-	vector<double> fincirclayer(4,0);
+	uint32_t num_sharings = m_vSharings.size();
+	double interaction = 0;
+	vector<double> localops(num_sharings,0);
+	vector<double> interactiveops(num_sharings,0);
+	vector<double> fincirclayer(num_sharings,0);
 #endif
 	m_nDepth = 0;
 
@@ -358,7 +357,7 @@ BOOL ABYParty::EvaluateCircuit() {
 	cout << "Yao: local gates: " << localops[S_YAO] << ", interactive gates: " << interactiveops[S_YAO] << ", layer finish: " << fincirclayer[S_YAO] << endl;
 	cout << "Yao Rev: local gates: " << localops[S_YAO_REV] << ", interactive gates: " << interactiveops[S_YAO_REV] << ", layer finish: " << fincirclayer[S_YAO_REV] << endl;
 	cout << "Arith: local gates: " << localops[S_ARITH] << ", interactive gates: " << interactiveops[S_ARITH] << ", layer finish: " << fincirclayer[S_ARITH] << endl;
-	cout << "Bool No MT: local gates: " << localops[S_BOOL_NO_MT] << ", interactive gates: " << interactiveops[S_BOOL_NO_MT] << ", layer finish: " << fincirclayer[S_BOOL_NO_MT] << endl;
+	cout << "SPLUT: local gates: " << localops[S_SPLUT] << ", interactive gates: " << interactiveops[S_SPLUT] << ", layer finish: " << fincirclayer[S_SPLUT] << endl;
 	cout << "Communication: " << interaction << endl;
 #endif
 	return true;
@@ -380,11 +379,13 @@ BOOL ABYParty::ThreadSendValues() {
 		m_vSharings[j]->GetDataToSend(sendbuf[j], sndbytes[j]);
 		for (uint32_t i = 0; i < sendbuf[j].size(); i++) {
 			snd_buf_size_total += sndbytes[j][i];
+			//m_tPartyChan->send(sendbuf[j][i], sndbytes[j][i]);
 #ifdef DEBUGCOMM
 				cout << "(" << m_nDepth << ") Sending " << sndbytes[j][i] << " bytes on socket " << m_eRole << " for sharing " << j << endl;
 #endif
 		}
-
+		//sendbuf[j].clear();
+		//sndbytes[j].clear();
 	}
 	uint8_t* snd_buf_total = (uint8_t*) malloc(snd_buf_size_total);
 	for (uint32_t j = 0; j < m_vSharings.size(); j++) {
@@ -425,17 +426,20 @@ BOOL ABYParty::ThreadReceiveValues() {
 		m_vSharings[j]->GetBuffersToReceive(rcvbuf[j], rcvbytes[j]);
 		for (uint32_t i = 0; i < rcvbuf[j].size(); i++) {
 			rcvbytestotal+=rcvbytes[j][i];
+		//	m_tPartyChan->blocking_receive(sendbuf[j][i], sndbytes[j][i]);
 #ifdef DEBUGCOMM
-				cout << "(" << m_nDepth << ") Receiving " << rcvbytes[i] << " bytes on socket " << (m_eRole^1) << " for sharing " << j << endl;
+			cout << "(" << m_nDepth << ") Receiving " << rcvbytes[j][i] << " bytes on socket " << (m_eRole^1) << " for sharing " << j << endl;
 #endif
 		}
 	}
 	uint8_t* rcvbuftotal = (uint8_t*) malloc(rcvbytestotal);
+	assert(rcvbuftotal != NULL);
 	//gettimeofday(&tstart, NULL);
 	if(rcvbytestotal > 0) {
 		//m_vSockets[2]->Receive(rcvbuftotal, rcvbytestotal);
 		m_tPartyChan->blocking_receive(rcvbuftotal, rcvbytestotal);
 	}
+
 	//gettimeofday(&tend, NULL);
 	//cout << "(" << m_nDepth << ") Time taken for receiving " << rcvbytestotal << " bytes: " << getMillies(tstart, tend) << endl;
 
@@ -466,7 +470,7 @@ void ABYParty::PrintPerformanceStatistics() {
 	m_vSharings[S_YAO]->PrintPerformanceStatistics();
 	m_vSharings[S_YAO_REV]->PrintPerformanceStatistics();
 	m_vSharings[S_ARITH]->PrintPerformanceStatistics();
-	//m_vSharings[S_BOOL_NO_MT]->PrintPerformanceStatistics(); //TODO: enable once S_BOOL_NO_MT works
+	m_vSharings[S_SPLUT]->PrintPerformanceStatistics();
 	cout << "Total number of gates: " << m_pCircuit->GetGateHead() << endl;
 	PrintTimings();
 	PrintCommunication();

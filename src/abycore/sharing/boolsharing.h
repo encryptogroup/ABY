@@ -28,6 +28,19 @@
 /**
  BOOL SHARING - <DETAILED EXPLANATION PLEASE>
  */
+
+typedef struct op_lut_precomp {
+	uint32_t n_inbits; //number of input bits
+	uint32_t n_outbits; //number of output bits
+	uint32_t n_gates; //number of OP-LUT gates that were built for this input/output bit combination
+	CBitVector* rot_val; //stores the random rotation values
+	CBitVector* table_mask; //stores the random table
+	uint32_t sel_opening_ctr; //keeps track which rotation values have already been used
+	uint32_t mask_ctr; //keeps track of which masks have already been used. Counts independently of sel_opening_ctr, since the steps are done separately.
+	uint64_t** table_data;//stores the truth table values that are necessary for pre-computation
+	CBitVector** rot_OT_vals;//truth table values that are input into the OT by the sender
+} op_lut_ctx;
+
 class BoolSharing: public Sharing {
 
 public:
@@ -39,7 +52,8 @@ public:
 	}
 	;
 	/** Destructor of the class.*/
-	virtual ~BoolSharing() {
+	~BoolSharing() {
+		Reset();
 	}
 	;
 
@@ -97,6 +111,7 @@ public:
 private:
 
 	uint32_t m_nTotalNumMTs;
+	uint32_t m_nOPLUT_Tables;
 	vector<uint32_t> m_nNumMTs;
 	uint32_t m_nXORGates;
 
@@ -135,6 +150,14 @@ private:
 	vector<CBitVector*> m_vKKS;
 	vector<CBitVector*> m_vKKChoices;
 
+	//Values that are needed for the OP-LUT protocol. The different dimensions correspond to the different input sizes and output sizes of the LUTs
+	map<uint64_t, op_lut_ctx*> 	m_vOP_LUT_data; //maps input and output bit-lengths to array indices for the m_vOP_LUT protocol
+	map<uint64_t, CBitVector*> 	m_vOP_LUT_SndSelOpeningBuf; //maps input and output bit-lengths to a send buffer which stores the selective openings
+	map<uint64_t, CBitVector*> 	m_vOP_LUT_RecSelOpeningBuf; //maps input and output bit-lengths to a receive buffer stores the received selective openings
+	map<uint64_t, uint64_t>		m_vOP_LUT_SelOpeningBitCtr; //Counts the bits in m_vOP_LUT_SndSelOpeningBuf to be send and in m_vOP_LUT_RecSelOpeningBuf to be received this round
+	map<uint64_t, vector<uint32_t> > m_vOPLUTGates;
+
+
 
 	CBitVector m_vInputShareSndBuf;
 	CBitVector m_vOutputShareSndBuf;
@@ -151,6 +174,18 @@ private:
 	double m_nSIMDTime;
 	double m_nXORTime;
 #endif
+
+	/**
+	 Perform the setup phase preparation for MTs
+	 \param 	setup	Pointer to an ABYSetup class, which receives the numeber of OTs to be computed
+	 */
+	void PrepareSetupPhaseMTs(ABYSetup* setup);
+
+	/**
+	 Perform the setup phase preparation for OP-LUT
+	 \param 	setup	Pointer to an ABYSetup class, which receives the numeber of OTs to be computed
+	 */
+	void PrepareSetupPhaseOPLUT(ABYSetup* setup);
 
 	/** 
 	 Share Values
@@ -183,6 +218,11 @@ private:
 	 */
 	inline void SelectiveOpenVec(uint32_t gateid);
 	/**
+	 Method for selective open of LUTs in the OPLUT protocol
+	 \param gateid 	Gate Identifier
+	 */
+	inline void SelectiveOpenOPLUT(uint32_t gateid);
+	/**
 	 Method for Evaluating MTs.
 	 */
 	void EvaluateMTs();
@@ -214,6 +254,10 @@ private:
 	 \param gateid		Gate identifier
 	 */
 	inline void EvaluateConstantGate(uint32_t gateid);
+	/**
+	 Method for assigning values to OP-LUT gates after the interaction of this round has finished.
+	 */
+	void EvaluateOPLUTGates();
 	/**
 	 Method for initializing MTs.
 	 */

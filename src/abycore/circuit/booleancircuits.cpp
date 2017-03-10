@@ -41,7 +41,7 @@ void BooleanCircuit::Init() {
 		m_nRoundsXOR = 0;
 		m_nRoundsIN.resize(2, 1);
 		m_nRoundsOUT.resize(3, 1);
-	} else if(m_eContext == S_BOOL_NO_MT) {
+	} else if(m_eContext == S_SPLUT) {
 		m_nRoundsAND = 1;
 		m_nRoundsXOR = 0;
 		m_nRoundsIN.resize(2, 1);
@@ -77,7 +77,7 @@ void BooleanCircuit::Cleanup() {
 
 uint32_t BooleanCircuit::PutANDGate(uint32_t inleft, uint32_t inright) {
 	uint32_t gateid;
-	if(m_eContext != S_BOOL_NO_MT) {
+	if(m_eContext != S_SPLUT) {
 		gateid = m_cCircuit->PutPrimitiveGate(G_NON_LIN, inleft, inright, m_nRoundsAND);
 
 		if (m_eContext == S_BOOL) {
@@ -873,7 +873,7 @@ vector<uint32_t> BooleanCircuit::PutTruthTableMultiOutputGate(vector<uint32_t> i
 	//ttable = transposeTT(1<<in.size(), out_bits, ttable);
 	uint32_t tmpgate = PutTruthTableGate(in, out_bits, ttable);
 	vector<uint32_t> bitlens(out_bits, m_pGates[in[0]].nvals);
-	assert(out_bits <= 8);
+	//assert(out_bits <= 8);
 
 	vector<uint32_t> output = m_cCircuit->PutSplitterGate(tmpgate, bitlens);
 	for(uint32_t i = 0; i < output.size(); i++) {
@@ -889,9 +889,9 @@ share* BooleanCircuit::PutTruthTableMultiOutputGate(share* in, uint32_t output_b
 
 uint32_t BooleanCircuit::PutTruthTableGate(vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable) {
 
-	assert(m_eContext == S_BOOL_NO_MT);
+	assert(m_eContext == S_SPLUT || m_eContext == S_BOOL);
 	uint32_t gateid = m_cCircuit->PutTruthTableGate(in, 1, out_bits, ttable);
-	UpdateTruthTableSizes(1<<in.size(), m_pGates[gateid].nvals/out_bits, m_pGates[gateid].depth, out_bits);
+	UpdateTruthTableSizes(1<<in.size(), gateid, out_bits);
 
 	UpdateInteractiveQueue(gateid);
 
@@ -906,8 +906,10 @@ share* BooleanCircuit::PutTruthTableGate(share* in, uint64_t* ttable) {
 }
 
 //check if the len exists, otherwise allocate new and update
-void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t nvals, uint32_t depth, uint32_t out_bits) {
+void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t gateid, uint32_t out_bits) {
 	//check depth and resize if required
+	uint32_t depth = m_pGates[gateid].depth;
+	uint32_t nvals = m_pGates[gateid].nvals/out_bits;
 	if(depth >= m_vTTlens.size()) {
 		uint32_t old_depth = m_vTTlens.size();
 		uint32_t nlens = m_vTTlens[0].size();
@@ -923,7 +925,6 @@ void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t nvals, uint32_
 					m_vTTlens[i][j][k].tt_len = m_vTTlens[0][j][k].tt_len;
 					m_vTTlens[i][j][k].out_bits = m_vTTlens[0][j][k].out_bits;
 				}
-
 			}
 		}
 	}
@@ -941,6 +942,12 @@ void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t nvals, uint32_
 				if(m_vTTlens[depth][i][j].out_bits == out_bits) {
 					outs_exist = true;
 					m_vTTlens[depth][i][j].numgates += nvals;
+					//In case of OP-LUT, also save the truth table which is needed in the setup phase
+					if(m_eContext == S_BOOL) {
+						for(uint32_t n = 0; n < nvals; n++) {
+							m_vTTlens[depth][i][j].ttable_values.push_back(m_pGates[gateid].gs.tt.table);
+						}
+					}
 				}
 			}
 		}
@@ -957,6 +964,12 @@ void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t nvals, uint32_
 		}
 		//m_vTTlens[depth][old_lens].tt_len = len;//should work without this too
 		m_vTTlens[depth][old_in_lens][0].numgates = nvals;
+		//In case of OP-LUT, also save the truth table which is needed in the setup phase
+		if(m_eContext == S_BOOL) {
+			for(uint32_t n = 0; n < nvals; n++) {
+				m_vTTlens[depth][old_in_lens][0].ttable_values.push_back(m_pGates[gateid].gs.tt.table);
+			}
+		}
 		outs_exist = true;
 	}
 
@@ -971,6 +984,12 @@ void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t nvals, uint32_
 		}
 		//m_vTTlens[depth][id][old_out_lens].tt_len = len;//should work without this too
 		m_vTTlens[depth][id][old_out_lens].numgates = nvals;
+		//In case of OP-LUT, also save the truth table which is needed in the setup phase
+		if(m_eContext == S_BOOL) {
+			for(uint32_t n = 0; n < nvals; n++) {
+				m_vTTlens[depth][id][old_out_lens].ttable_values.push_back(m_pGates[gateid].gs.tt.table);
+			}
+		}
 		outs_exist = true;
 	}
 }
@@ -1027,7 +1046,7 @@ vector<uint32_t> BooleanCircuit::PutAddGate(vector<uint32_t> left, vector<uint32
 	PadWithLeadingZeros(left, right);
 	if (m_eContext == S_BOOL) {
 		return PutDepthOptimizedAddGate(left, right, bCarry);
-	} if (m_eContext == S_BOOL_NO_MT) {
+	} if (m_eContext == S_SPLUT) {
 		return PutLUTAddGate(left, right, bCarry);
 	} else {
 		return PutSizeOptimizedAddGate(left, right, bCarry);
@@ -1807,7 +1826,7 @@ uint32_t BooleanCircuit::PutEQGate(vector<uint32_t> a, vector<uint32_t> b) {
 	}
 
 	// AND of all xor's
-	if(m_eContext == S_BOOL_NO_MT) {
+	if(m_eContext == S_SPLUT) {
 		return PutLUTWideANDGate(xors);
 	} else {
 		return PutWideGate(G_NON_LIN, xors);
@@ -2478,6 +2497,131 @@ vector<uint32_t> BooleanCircuit::PutGateFromFile(const string filename, vector<u
 	return outputs;
 }
 
+share* BooleanCircuit::PutLUTGateFromFile(const string filename, share* input) {
+	return new boolshare(PutLUTGateFromFile(filename, input->get_wires()), this);
+}
+
+vector<uint32_t> BooleanCircuit::PutLUTGateFromFile(const string filename, vector<uint32_t> inputs){
+	string line;
+	vector<uint32_t> tokens, outputs;
+	map<uint32_t, uint32_t> wires;
+	vector<uint32_t> lut_inputs, lut_outputs, token_outputs;
+
+	uint32_t n_inputs, n_outputs, ttable_vals, ctr;
+	ifstream myfile;
+
+	uint32_t* ttable;
+
+	//cout << "opening " << filename <<  endl;
+	myfile.open(filename.c_str());
+
+	if (myfile.is_open()) {
+		while (getline(myfile, line)) {
+
+			if (line != "") {
+
+				tokenize_verilog(line, tokens);
+
+				switch (line.at(0)) {
+
+				case 'I': // map the input wires to the gate
+					assert(inputs.size() == tokens.size());
+
+					//cout << "Input wires to Gate: ";
+					for (uint32_t i = 0; i < tokens.size(); i++) {
+						wires[tokens[i]] = inputs[i];
+						//cout << wires[tokens[i]] << ", ";
+					}
+					//cout << endl;
+					break;
+
+				case 'X': // XOR Gate
+					wires[tokens[2]] = PutXORGate(wires[tokens[0]], wires[tokens[1]]);
+					break;
+
+
+				case 'A': // Assign Operation
+					wires[tokens[1]] = wires[tokens[0]];
+					break;
+
+				case 'N': // Logical NOT Operation
+					wires[tokens[1]] = PutINVGate(wires[tokens[0]]);
+					break;
+
+				case 'L': // Parse LUT
+					ctr = 0;
+					//First value specifies the number of input wires
+					n_inputs = tokens[ctr++];
+					//Second value specifies the number of output wires
+					n_outputs = tokens[ctr++];
+
+					//cout << "n_inputs: " << n_inputs << ", n_outputs = " << n_outputs << endl;
+					//next will follow n_inputs input wires. Prepare to assign them to a temporary vector for later use
+					lut_inputs.resize(n_inputs);
+					//cout << "Inputs to LUT: ";
+					for(uint32_t i = 0; i < n_inputs; i++) {
+						lut_inputs[i] = wires[tokens[ctr++]];
+						//cout << tokens[ctr-1] << "(" << wires[tokens[ctr-1]] << "), ";
+					}
+					//cout << endl;
+
+					//next up are the contents of the LUT for each output wire, which is broken into ceil(2^{n_inputs} / 32) 32-bit values.
+					//For each output wire, we first have the content, followed by the id of the output wire.
+					token_outputs.resize(n_outputs);
+					ttable_vals = ceil_divide(1<<n_inputs, sizeof(uint32_t) * 8);
+					ttable = (uint32_t*) malloc(ceil_divide(1<<n_inputs, sizeof(UGATE_T) * 8) * n_outputs * sizeof(UGATE_T));
+					//cout << "(" << ttable_vals << ") TTable values : " << endl;;
+					for(uint32_t i = 0; i < n_outputs; i++) {
+						//cout << "Output wire " << i << ": ";
+						token_outputs[i] = tokens[ctr++];
+						//cout << "(" << token_outputs[i] << ")" << endl;
+					}
+
+					for(uint32_t i = 0; i < n_outputs; i++) {
+						for(uint32_t j = 0; j < ttable_vals; j++) {
+							ttable[i*ttable_vals + j] = tokens[ctr++];
+							//cout << ttable[i*ttable_vals+j] << " ";
+						}
+					}
+
+					//Build the LUT gate
+					lut_outputs = PutTruthTableMultiOutputGate(lut_inputs, n_outputs, (uint64_t*) ttable);
+
+					//do the mapping for all output gates
+					//cout << "Outputs from LUT: ";
+					for(uint32_t i = 0; i < n_outputs; i++) {
+						wires[token_outputs[i]] = lut_outputs[i];
+						//cout << wires[token_outputs[i]] <<", ";
+					}
+					//cout << endl;
+
+					break;
+
+				case 'O': // map the output wires from the gate to the output of this function
+					//cout << endl << "Setting output wires: ";
+					for (uint32_t i = 0; i < tokens.size(); i++) {
+						outputs.push_back(wires[tokens[i]]);
+						//cout << tokens[i] << "(" << wires[tokens[i]] << "), ";
+					}
+					//cout << endl;
+					break;
+				}
+			}
+		}
+		myfile.close();
+	}
+
+	else {
+		cerr << "Error: Unable to open circuit file " << filename << endl;
+	}
+
+	wires.clear();
+	tokens.clear();
+
+	return outputs;
+}
+
+
 uint32_t BooleanCircuit::GetInputLengthFromFile(const string filename){
 	string line;
 	vector<uint32_t> tokens;
@@ -2608,12 +2752,7 @@ void BooleanCircuit::Reset() {
 	m_vTTlens[0][0][0].tt_len = 4;
 	m_vTTlens[0][0][0].numgates = 0;
 	m_vTTlens[0][0][0].out_bits = 1;
-
-	/*free(m_vTTlens);
-	m_nNumTTSizes = 1;
-	m_vTTlens = (tt_lens_ctx*) malloc(sizeof(tt_lens_ctx) * m_nNumTTSizes);
-	m_vTTlens[0].tt_len = 4;
-	m_vTTlens[0].numgates = 0;*/
+	m_vTTlens[0][0][0].ttable_values.clear();
 }
 
 void BooleanCircuit::PadWithLeadingZeros(vector<uint32_t> &a, vector<uint32_t> &b) {
@@ -2624,3 +2763,43 @@ void BooleanCircuit::PadWithLeadingZeros(vector<uint32_t> &a, vector<uint32_t> &
 		b.resize(maxlen, zerogate);
 	}
 }
+
+share* BooleanCircuit::PutFullAdderGate(uint32_t a, uint32_t b, uint32_t carry_in) {
+    vector<uint32_t> out(2);
+    vector<uint32_t> in(3);
+    in[2] = a;
+    in[1] = b;
+    in[0] = carry_in;
+    share* s_in = new boolshare(in, this);
+
+    uint32_t sum, carry_out;
+    sum = PutXORGate(PutXORGate(a, b), carry_in);
+    carry_out = PutXORGate(PutANDGate(PutXORGate(a, b), PutXORGate(b, carry_in)), b);
+    out[1] = carry_out;
+    out[0] = sum;
+    share* s_out = new boolshare(out, this);
+    
+#ifdef ZDEBUG
+    PutPrintValueGate(s_in, "Full Adder Input");
+    PutPrintValueGate(s_out, "Full Adder Output");
+#endif
+    
+    return s_out;
+}
+
+share* BooleanCircuit::PutADDChainGate(vector <uint32_t> a, vector <uint32_t> b, uint32_t carry_in) {
+    PadWithLeadingZeros(a, b);
+    vector<uint32_t> out(a.size());
+    share * last = PutFullAdderGate(a[0], b[0], carry_in);
+    out[0] = last->get_wires()[0];
+    for (size_t i = 1; i < out.size(); ++i) {
+        share * tmp = PutFullAdderGate(a[i], b[i], last->get_wires()[1]);
+        out[i] = tmp->get_wires()[0];
+        last = tmp;
+    }
+    vector<uint32_t> l = last->get_wires();
+    if (last->get_wires()[1] && out.size() < last->get_max_bitlength())
+        out.insert(out.end(), &l[1], &l[2]);
+    return new boolshare(out, this);
+}
+

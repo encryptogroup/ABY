@@ -166,6 +166,7 @@ struct tt_lens_ctx {
 	uint32_t tt_len;
 	uint32_t numgates;
 	uint32_t out_bits;
+	vector<uint64_t*> ttable_values;//only needed for OP-LUT, since the tables need to be known during the setup phase
 };
 
 uint32_t FindBitLenPositionInVec(uint32_t bitlen, non_lin_vec_ctx* list, uint32_t listentries);

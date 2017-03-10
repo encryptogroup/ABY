@@ -81,7 +81,7 @@ void ABYSetup::Cleanup() {
 		delete iknp_ot_receiver;
 	}
 
-#ifdef USE_KK_OT_FOR_MT
+#ifdef USE_KK_OT
 	//FIXME: deleting kk_ot_receiver or sender causes a SegFault in AES with Yao
 	if(kk_ot_receiver) {	
 		delete kk_ot_receiver;
@@ -102,7 +102,7 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
 
-#ifdef USE_KK_OT_FOR_MT
+#ifdef USE_KK_OT
 		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
 #endif
@@ -110,7 +110,7 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt,  m_tComm->rcv_inv, m_tComm->snd_inv);
 
-#ifdef USE_KK_OT_FOR_MT
+#ifdef USE_KK_OT
 		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		kk_ot_sender = new KKOTExtSnd(m_cCrypt,  m_tComm->rcv_inv, m_tComm->snd_inv);
 #endif
@@ -132,7 +132,7 @@ BOOL ABYSetup::PerformSetupPhase() {
 	WakeupWorkerThreads(e_IKNPOTExt);
 	BOOL success = WaitWorkerThreads();
 
-#ifdef USE_KK_OT_FOR_MT
+#ifdef USE_KK_OT
 	WakeupWorkerThreads(e_KKOTExt);
 	success &= WaitWorkerThreads();
 #endif
@@ -171,7 +171,7 @@ BOOL ABYSetup::FinishSetupPhase() {
 BOOL ABYSetup::ThreadRunNPSnd(uint32_t exec) {
 	BOOL success = true;
 	iknp_ot_sender->ComputeBaseOTs(P_FIELD);
-#ifdef USE_KK_OT_FOR_MT
+#ifdef USE_KK_OT
 	kk_ot_sender->ComputeBaseOTs(P_FIELD);
 #endif
 	return success;
@@ -180,7 +180,7 @@ BOOL ABYSetup::ThreadRunNPSnd(uint32_t exec) {
 BOOL ABYSetup::ThreadRunNPRcv(uint32_t exec) {
 	BOOL success = true;
 	iknp_ot_receiver->ComputeBaseOTs(P_FIELD);
-#ifdef USE_KK_OT_FOR_MT
+#ifdef USE_KK_OT
 	kk_ot_receiver->ComputeBaseOTs(P_FIELD);
 #endif
 	return success;
@@ -258,6 +258,12 @@ BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
 		uint32_t numOTs = task->numOTs;
 		X = task->pval.sndval.X;
 
+		/*cout << "Address of X = " << (uint64_t) X << endl;
+		for(uint32_t j = 0; j < task->nsndvals; j++) {
+			cout << (uint64_t) X[j] << endl;
+		}*/
+
+
 #ifndef BATCH
 		cout << "Starting 1oo" << task->nsndvals << " KK OT sender routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
 #endif
@@ -288,7 +294,7 @@ BOOL ABYSetup::ThreadRunKKRcv(uint32_t exec) {
 		uint32_t numOTs = task->numOTs;
 
 #ifndef BATCH
-		cout << "Starting 1oo" << task->nsndvals << " KK OT receiver routine for " << numOTs << " OTs" << task->bitlen << " bit strings " << endl;
+		cout << "Starting 1oo" << task->nsndvals << " KK OT receiver routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
 #endif
 		success = kk_ot_receiver->receive(numOTs, task->bitlen, task->nsndvals, (task->pval.rcvval.C), (task->pval.rcvval.R), task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP

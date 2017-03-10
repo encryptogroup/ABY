@@ -23,18 +23,17 @@
 
 int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 		uint32_t server_neles, uint32_t client_neles, uint32_t bitlen, double epsilon, uint32_t nthreads,
-		e_mt_gen_alg mt_alg, e_sharing sharing, uint16_t port) {
+		e_mt_gen_alg mt_alg, e_sharing sharing, int ext_stash_size, uint32_t maxbinsize,
+		uint32_t nhashfuns, uint16_t port) {
 
 	uint32_t *srv_set, *cli_set, *circ_intersect, *ver_intersect, *inv_perm, *stashperm;
-	uint32_t ver_inter_ctr = 0, circ_inter_ctr = 0, internalbitlen, maxstashsize, maxbinsize;
+	uint32_t ver_inter_ctr = 0, circ_inter_ctr = 0, internalbitlen, maxstashsize;
 	share **shr_srv_hash_table, *shr_cli_hash_table, *shr_out, *shr_srv_set, **shr_cli_stash, *shr_stash_out;
 	assert(bitlen <= 32);
 	uint32_t nbins = ceil(epsilon * client_neles);
 	uint8_t *client_hash_table, *server_hash_table, *stash;
 	timespec t_start, t_end;
 
-	//vector<uint32_t> sel_bits(nswapgates);
-	maxstashsize = compute_max_stash_size(client_neles, nbins);
 
 	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads,
 			mt_alg, 4000000, port);
@@ -46,13 +45,18 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 
 	crypto* crypt = new crypto(seclvl.symbits, (uint8_t*) const_seed);
 
-
 	srv_set = (uint32_t*) malloc(sizeof(uint32_t) * server_neles);
 	cli_set = (uint32_t*) malloc(sizeof(uint32_t) * client_neles);
 	ver_intersect = (uint32_t*) calloc(client_neles, sizeof(uint32_t));
 	circ_intersect = (uint32_t*) malloc(sizeof(uint32_t) * client_neles);
 
 	inv_perm = (uint32_t*) malloc(nbins * sizeof(uint32_t));
+
+	if(ext_stash_size == -1) {
+		maxstashsize = assign_max_stash_size(server_neles);
+	} else {
+		maxstashsize = (uint32_t) ext_stash_size;
+	}
 
 	//sample random server and client sets
 	//sample_random_elements(neles, bitlen, srv_set, cli_set);
@@ -62,11 +66,10 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 		cout << i << ": " << srv_set[i] << " , " << cli_set[i] << endl;
 	}*/
 
-	cout << "Computing the intersection between " << server_neles << " and " << client_neles << " elements with " << nbins << " bins" << endl;
 	//map the random elements to a set of bins using simple hashing or to a cuckoo table
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
 	ServerHashingRoutine((uint8_t*) srv_set, server_neles, bitlen, nbins, &maxbinsize, &server_hash_table,
-			&internalbitlen, 1, crypt);
+			&internalbitlen, 1, crypt, nhashfuns);
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
 
 #ifndef BATCH
@@ -77,9 +80,13 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
 	ClientHashingRoutine((uint8_t*) cli_set, client_neles, bitlen, nbins, &client_hash_table, inv_perm,
-			&internalbitlen, &stash, maxstashsize, &stashperm, 1, crypt);
+			&internalbitlen, &stash, maxstashsize, &stashperm, 1, crypt, nhashfuns);
 
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
+
+	//cout << "Computing the intersection between " << server_neles << " and " << client_neles << " elements with " << nbins <<
+	//		" bins, " << nhashfuns << " hash functions, a stash of size " << maxstashsize << ", and maxbin = " << maxbinsize << endl;
+
 #ifndef BATCH
 	if(role == CLIENT) {
 		cout << "Time for cuckoo hashing: " << getMillies(t_start, t_end) << endl;
@@ -154,7 +161,6 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 		for(uint32_t i = 0; i < neles; i++) {
 			cout << (hex) << setw(2) << setfill('0') << srv_set[i] << ", " << setw(2) << setfill('0') << cli_set[i] << (dec) << endl;
 		}*/
-#ifndef BATCH
 		std::sort(srv_set, srv_set+server_neles);
 		std::sort(cli_set, cli_set+client_neles);
 
@@ -167,9 +173,10 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 
 		std::sort(ver_intersect, ver_intersect+ver_inter_ctr);
 		std::sort(circ_intersect, circ_intersect+circ_inter_ctr);
-
+#ifndef BATCH
 		cout << "Number of intersections: " << ver_inter_ctr << " (ver), " << circ_inter_ctr <<
 				" (circ), with a stash of size " << maxstashsize << endl;
+#endif
 
 		/*for(uint32_t i = 0; i < ver_inter_ctr; i++) {
 			cout << "Verification " << i << ": " << (hex) << ver_intersect[i] << (dec) << endl;
@@ -181,7 +188,6 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 		for(uint32_t i = 0; i < circ_inter_ctr; i++) {
 			assert(ver_intersect[i] == circ_intersect[i]);
 		}
-#endif
 	}
 
 #ifdef BATCH
@@ -284,7 +290,7 @@ share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint3
 		eq = circ->PutEQGate(shr_srv_set, shr_cli_stash[i]);
 
 		for(uint32_t j = neles; j > 1; j/=2) {
-			if(j & 0x01 > 0) { //value is odd, hence store highest value on stash
+			if(j & 0x01) { //value is odd, hence store highest value on stash
 				tmpneles = j-1;
 				odd_stash.push_back(circ->PutSubsetGate(eq, &tmpneles, 1)->get_wire_id(0));
 			}
@@ -308,9 +314,10 @@ share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint3
 }
 
 void ServerHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen, uint32_t nbins,
-		uint32_t *maxbinsize, uint8_t** hash_table, uint32_t* outbitlen, uint32_t ntasks, crypto* crypt) {
+		uint32_t *maxbinsize, uint8_t** hash_table, uint32_t* outbitlen, uint32_t ntasks, crypto* crypt,
+		uint32_t nhashfuns) {
 
-	uint32_t nhashfuns = 3, outbytelen;
+	uint32_t outbytelen;
 	prf_state_ctx prf_state;
 	uint8_t *tmphashtable, *server_dummy;
 	uint32_t *nelesinbin = (uint32_t*) malloc(sizeof(uint32_t) * nbins);
@@ -344,9 +351,9 @@ void ServerHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen,
 
 void ClientHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen, uint32_t nbins,
 		uint8_t** hash_table, uint32_t* inv_perm, uint32_t* outbitlen, uint8_t** stash,
-		uint32_t maxstashsize, uint32_t** stashperm, uint32_t ntasks, crypto* crypt) {
+		uint32_t maxstashsize, uint32_t** stashperm, uint32_t ntasks, crypto* crypt, uint32_t nhashfuns) {
 
-	uint32_t nhashfuns = 3, outbytelen;
+	uint32_t outbytelen;
 	prf_state_ctx prf_state;
 	uint8_t *tmphashtable, *client_dummy;
 	uint32_t *nelesinbin = (uint32_t*) calloc(nbins, sizeof(uint32_t));
@@ -419,8 +426,9 @@ void pad_elements(uint8_t* hash_table, uint32_t elebytelen, uint32_t nbins, uint
 	}*/
 }
 
-uint32_t compute_max_stash_size(uint32_t neles, uint32_t nbins) {
-	/*if(neles >= 1<<24) {
+//Assign stash sizes according to Tab V in eprint 2016 / 930 for equal set size experiments
+uint32_t assign_max_stash_size(uint32_t neles) {
+	if(neles >= 1<<24) {
 		return 2;
 	} else if(neles >= 1<<20) {
 		return 3;
@@ -436,7 +444,7 @@ uint32_t compute_max_stash_size(uint32_t neles, uint32_t nbins) {
 		return 10;
 	} else {
 		return 12;
-	}*/
+	}
 	return 0;
 
 }

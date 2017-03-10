@@ -28,6 +28,7 @@
 #include "abysetup.h"
 #include "../sharing/sharing.h"
 #include "../sharing/boolsharing.h"
+#include "../sharing/splut.h"
 #include <vector>
 #include "../util/timer.h"
 #include "../sharing/yaoclientsharing.h"
