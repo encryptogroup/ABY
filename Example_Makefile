@@ -35,7 +35,7 @@ EXAMPLE = $(lastword $(subst /, ,${CURDIR}))
 all: ${BIN}/${EXAMPLE}.exe
 
 ${BIN}/${EXAMPLE}.exe: ${OBJECTS} ${OBJECTS_CORE} ${OBJECTS_MIRACL}
-	${CC} ${COMPILER_OPTIONS} ${CFLAGS} $^ ${LIBRARIES} -o $@
+	${CC} ${ABY_COMPILER_OPTIONS} ${CFLAGS} $^ ${LIBRARIES} -o $@
 
 %.o: %.cpp
 	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
