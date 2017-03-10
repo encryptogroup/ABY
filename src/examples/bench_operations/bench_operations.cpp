@@ -31,8 +31,8 @@ static const aby_ops_t m_tBenchOps[] = { { OP_XOR, S_BOOL, "xorbool" }, { OP_AND
 		{ OP_SBOX, S_BOOL, "sboxsobool" }, { OP_SBOX, S_BOOL, "sboxdobool" }, { OP_SBOX, S_BOOL, "sboxdovecbool" },
 		 {OP_XOR, S_YAO, "xoryao" }, { OP_AND, S_YAO, "andyao" }, { OP_ADD, S_YAO, "addyao" }, { OP_MUL, S_YAO, "mulyao" }, { OP_CMP, S_YAO, "cmpyao" },
 		{ OP_EQ, S_YAO, "eqyao" }, { OP_MUX, S_YAO, "muxyao" },  { OP_SBOX, S_YAO, "sboxsoyao" },{ OP_ADD, S_ARITH, "addarith" }, { OP_MUL, S_ARITH, "mularith" }, { OP_Y2B, S_YAO, "y2b" }, { OP_B2A, S_BOOL, "b2a" },
-		{ OP_B2Y, S_BOOL, "b2y" }, { OP_A2Y, S_ARITH, "a2y" }, { OP_ADD, S_YAO_REV, "addyaoipp" }, { OP_MUL, S_YAO_REV, "mulyaoipp" }};
-
+		{ OP_B2Y, S_BOOL, "b2y" }, { OP_A2Y, S_ARITH, "a2y" }, { OP_ADD, S_YAO_REV, "addyaoipp" }, { OP_MUL, S_YAO_REV, "mulyaoipp" },
+		{ OP_ADD, S_SPLUT, "addsplut"}, { OP_CMP, S_SPLUT, "cmpsplut"}, { OP_EQ, S_SPLUT, "eqsplut"},	{ OP_SBOX, S_SPLUT, "sboxlut" }};
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* bitlen, uint32_t* secparam,
 		string* address, uint16_t* port, int32_t* operation, bool* verbose, uint32_t* nops, uint32_t* nruns,
