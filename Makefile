@@ -83,9 +83,9 @@ otext: miracl
 core: miracl otext ${OBJECTS_CORE}
 
 %.o:%.cpp
-	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $
+	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
-@%.o:%.cpp %.h
+%.o:%.cpp %.h
 	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 # check that core is built, then call test makefile
