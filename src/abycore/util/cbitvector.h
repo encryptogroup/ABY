@@ -163,17 +163,16 @@ public:
 			\link delCBitVector() \endlink.
 	*/
 	~CBitVector(){
-		//delCBitVector();//TODO: the call breaks something in the underlying OT. Find out what and fix!
-	}
+		delCBitVector();
+	};
 
 	/**
 		This method is used to deallocate the bit pointer and size explicitly. This method needs to be called by the programmer explicitly.
 	*/
 	void delCBitVector() {
-		if (m_nByteSize > 0) {
+		if (( m_nByteSize > 0 )&& (m_pBits != NULL)) {
 			free(m_pBits);
 		}
-
 		m_nByteSize = 0;
 		m_pBits = NULL;
 	}
@@ -300,7 +299,7 @@ public:
 		This method is used to resize the bytes allocated to CBitVector with newly provided size. And also accommodate the data from previous allocation to new one.
 		\param newSizeBytes		-	This variable provides the new size to which the cbitvector needs to be modified to user's needs.
 	*/
-	void ResizeinBytes(int newSizeBytes);
+	void ResizeinBytes(uint64_t newSizeBytes);
 
 	/**
 		This method is used to reset the values in the given CBitVector. This method sets all bit values to zeros. This is a slight variant of the method
@@ -317,6 +316,8 @@ public:
 		\param 	tobyte		-	The destination byte position until which the values needs to be reset to.
 	*/
 	void ResetFromTo(int frombyte, int tobyte) {
+		assert(frombyte <= tobyte);
+		assert(tobyte < m_nByteSize);
 		memset(m_pBits + frombyte, 0, tobyte - frombyte);
 	}
 
@@ -437,6 +438,7 @@ public:
 		\return The byte which has got just the bit in it.
 	*/
 	BYTE GetBit(int idx) {
+		assert(idx < (m_nByteSize << 3));
 		return !!(m_pBits[idx >> 3] & MASK_BIT[idx & 0x7]);
 	}
 	/**
@@ -447,6 +449,7 @@ public:
 		\param	b		-		The bit which being written in the provided index.
 	*/
 	void SetBit(int idx, BYTE b) {
+		assert(idx < (m_nByteSize << 3));
 		m_pBits[idx >> 3] = (m_pBits[idx >> 3] & CMASK_BIT[idx & 0x7]) | MASK_SET_BIT_C[!(b & 0x01)][idx & 0x7];
 	}
 	/* Deprecated */
@@ -458,6 +461,7 @@ public:
 		\param	b		-		The bit which being XORed in the provided index.
 	*/
 	void XORBit(int idx, BYTE b) {
+		assert(idx < (m_nByteSize << 3));
 		m_pBits[idx >> 3] ^= MASK_SET_BIT_C[!(b & 0x01)][idx & 0x7];
 	}
 
@@ -470,6 +474,7 @@ public:
 		\param	b		-		The bit which being ANDed in the provided index.
 	*/
 	void ANDBit(int idx, BYTE b) {
+		assert(idx < (m_nByteSize << 3));
 		if (!b)
 			m_pBits[idx >> 3] &= CMASK_BIT[idx & 0x7];
 	}
@@ -483,6 +488,7 @@ public:
 		\return The byte which has got just the bit in it.
 	*/
 	BYTE GetBitNoMask(uint64_t idx) {
+		assert(idx < (m_nByteSize << 3));
 		return !!(m_pBits[idx >> 3] & BIT[idx & 0x7]);
 	}
 
@@ -493,6 +499,7 @@ public:
 		\param	b		-		The bit which being written in the provided index.
 	*/
 	void SetBitNoMask(int idx, BYTE b) {
+		assert(idx < (m_nByteSize << 3));
 		m_pBits[idx >> 3] = (m_pBits[idx >> 3] & C_BIT[idx & 0x7]) | SET_BIT_C[!(b & 0x01)][idx & 0x7];
 	}
 
@@ -503,6 +510,7 @@ public:
 		\param	b		-		The bit which being XORed in the provided index.
 	*/
 	void XORBitNoMask(int idx, BYTE b) {
+		assert(idx < (m_nByteSize << 3));
 		m_pBits[idx >> 3] ^= SET_BIT_C[!(b & 0x01)][idx & 0x7];
 	}
 
@@ -514,6 +522,7 @@ public:
 		\param	b		-		The bit which being ANDed in the provided index.
 	*/
 	void ANDBitNoMask(int idx, BYTE b) {
+		assert(idx < (m_nByteSize << 3));
 		if (!b)
 			m_pBits[idx >> 3] &= C_BIT[idx & 0x7];
 	}
@@ -528,6 +537,7 @@ public:
 		\param	p		-	Byte which needs to be copied to.
 	*/
 	void SetByte(int idx, BYTE p) {
+		assert(idx < m_nByteSize);
 		m_pBits[idx] = p;
 	}
 
@@ -537,6 +547,7 @@ public:
 		\return Byte is returned from CBitVector at the given index.
 	*/
 	BYTE GetByte(int idx) {
+		assert(idx < m_nByteSize);
 		return m_pBits[idx];
 	}
 
@@ -547,6 +558,7 @@ public:
 		\param	b		- 	Byte to be XORed with the CBitVector.
 	*/
 	void XORByte(int idx, BYTE b) {
+		assert(idx < m_nByteSize);
 		m_pBits[idx] ^= b;
 	}
 	/**
@@ -555,6 +567,7 @@ public:
 		\param	b		- 	Byte to be ANDed with the CBitVector.
 	*/
 	void ANDByte(int idx, BYTE b) {
+		assert(idx < m_nByteSize);
 		m_pBits[idx] &= b;
 	}
 
@@ -593,6 +606,7 @@ public:
 		\return	returns the value/values for the provided range.
 	*/
 	template<class T> T Get(int pos, int len) {
+		assert(len <= sizeof(T) * 8);
 		T val = 0;
 		GetBits((BYTE*) &val, pos, len);
 		return val;
@@ -659,6 +673,7 @@ public:
 		\param	len		- 	The range limit of obtaining the data from the CBitVector.
 	*/
 	template<class T> void Set(T val, int pos, int len) {
+		assert(len <= sizeof(T) * 8);
 		SetBits((BYTE*) &val, (uint64_t) pos, (uint64_t) len);
 	}
 
@@ -718,6 +733,7 @@ public:
 		\link XORBits(BYTE* p, int pos, int len) \endlink.
 	*/
 	template<class T> void XOR(T val, int pos, int len) {
+		assert(len <= sizeof(T) * 8);
 		XORBits((BYTE*) &val, pos, len);
 	}
 
@@ -842,10 +858,9 @@ public:
 		m_nByteSize = size;
 	}
 
+
 	/**
-		This method is used to detach the buffer from the CBitVector.
-	*//* The definition of this method is similar to that of Init(). I don't understand why you need to methods
-	which performs exactly the same work. */
+		This method is used to detach the buffer from the CBitVector. */
 	void DetachBuf() {
 		m_pBits = NULL;
 		m_nByteSize = 0;

@@ -76,7 +76,7 @@ void CBitVector::Create(uint64_t numelementsDimA, uint64_t numelementsDimB, uint
 	m_nNumElementsDimB = numelementsDimB;
 }
 
-void CBitVector::ResizeinBytes(int newSizeBytes) {
+void CBitVector::ResizeinBytes(uint64_t newSizeBytes) {
 	BYTE* tBits = m_pBits;
 	uint64_t tSize = (m_nByteSize<newSizeBytes)? m_nByteSize:newSizeBytes; //fix for overflow condition in memcpy.
 
@@ -101,8 +101,9 @@ void CBitVector::Copy(BYTE* p, int pos, int len) {
 
 //pos and len in bits
 void CBitVector::SetBits(BYTE* p, uint64_t pos, uint64_t len) {
-	if (len < 1 || (pos + len) > (m_nByteSize << 3))
+	if (len < 1 || (pos + len) > (m_nByteSize << 3)){
 		return;
+	}
 
 	if (len == 1) {
 		SetBitNoMask(pos, *p);
@@ -207,6 +208,7 @@ void CBitVector::GetBits(BYTE* p, int pos, int len) {
 }
 
 void CBitVector::XORBytesReverse(BYTE* p, int pos, int len) {
+	assert((pos + len) <= m_nByteSize); 
 	BYTE* src = p;
 	BYTE* dst = m_pBits + pos;
 	BYTE* lim = dst + len;
@@ -217,6 +219,7 @@ void CBitVector::XORBytesReverse(BYTE* p, int pos, int len) {
 
 //XOR bits given an offset on the bits for p which is not necessarily divisible by 8
 void CBitVector::XORBitsPosOffset(BYTE* p, int ppos, int pos, int len) {
+	assert((pos + len) <= (m_nByteSize<<3)); 
 	for (int i = pos, j = ppos; j < ppos + len; i++, j++) {
 		m_pBits[i / 8] ^= (((p[j / 8] & (1 << (j % 8))) >> j % 8) << i % 8);
 	}
@@ -258,12 +261,13 @@ void CBitVector::XORBits(BYTE* p, int pos, int len) {
 }
 
 void CBitVector::ORByte(int pos, BYTE p) {
+	assert(pos <= m_nByteSize); 
 	m_pBits[pos] |= p;
 }
 
 //optimized bytewise for set operation
 void CBitVector::GetBytes(BYTE* p, int pos, int len) {
-
+	assert(pos+len <= m_nByteSize); 
 	BYTE* src = m_pBits + pos;
 	BYTE* dst = p;
 	//Do many operations on REGSIZE types first and then (if necessary) use bytewise operations
@@ -274,7 +278,6 @@ void CBitVector::GetBytes(BYTE* p, int pos, int len) {
 }
 
 template<class T> void CBitVector::GetBytes(T* dst, T* src, T* lim) {
-	//TODO:Warning there could be potential memory leak if the src size is less than limit.
 	while (dst != lim) {
 		*dst++ = *src++;
 	}
@@ -309,8 +312,8 @@ template<class T> void CBitVector::XORBytes(T* dst, T* src, T* lim) {
 }
 
 
-
 void CBitVector::XORRepeat(BYTE* p, int pos, int len, int num) {
+	assert(pos+len <= m_nByteSize); 
 	unsigned short* dst = (unsigned short*) (m_pBits + pos);
 	unsigned short* src = (unsigned short*) p;
 	unsigned short* lim = (unsigned short*) (m_pBits + pos + len);
@@ -325,7 +328,7 @@ void CBitVector::XORRepeat(BYTE* p, int pos, int len, int num) {
 
 //optimized bytewise for set operation
 void CBitVector::SetBytes(BYTE* p, int pos, int len) {
-
+	assert(pos+len <= m_nByteSize); 
 	BYTE* dst = m_pBits + pos;
 	BYTE* src = p;
 
@@ -344,7 +347,7 @@ template<class T> void CBitVector::SetBytes(T* dst, T* src, T* lim) {
 
 //optimized bytewise for AND operation
 void CBitVector::ANDBytes(BYTE* p, int pos, int len) {
-
+	assert(pos+len <= m_nByteSize); 
 	BYTE* dst = m_pBits + pos;
 	BYTE* src = p;
 	//Do many operations on REGSIZE types first and then (if necessary) use bytewise operations
@@ -487,6 +490,9 @@ void CBitVector::XOR_no_mask(int p, int bitPos, int bitLen) {
 }
 
 unsigned int CBitVector::GetInt(int bitPos, int bitLen) {
+	assert(bitLen <= sizeof(int) * 8);
+	assert(bitPos + bitLen <= (m_nByteSize <<3));
+
 	int ret = 0, i = bitPos >> 3, j = (bitPos & 0x7), k;
 	ret = (m_pBits[i++] >> (j)) & (GetMask(min(8, bitLen)));
 	if (bitLen == 1)
