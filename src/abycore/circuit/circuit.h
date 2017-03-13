@@ -484,8 +484,8 @@ protected:
 };
 
 
-static share* create_new_share(uint32_t size, Circuit* circ);
-static share* create_new_share(vector<uint32_t> vals, Circuit* circ);
+share* create_new_share(uint32_t size, Circuit* circ);
+share* create_new_share(vector<uint32_t> vals, Circuit* circ);
 
 #include "share.h"
 

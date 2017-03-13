@@ -361,8 +361,7 @@ void Circuit::ExportCircuitInBristolFormat(share* ingates_client, share* ingates
 			outgates->get_wires(), filename);
 }
 
-
-static share* create_new_share(uint32_t size, Circuit* circ) {
+share* create_new_share(uint32_t size, Circuit* circ) {
 	switch (circ->GetCircuitType()) {
 	case C_BOOLEAN:
 		return new boolshare(size, circ);
@@ -374,7 +373,7 @@ static share* create_new_share(uint32_t size, Circuit* circ) {
 	}
 }
 
-static share* create_new_share(vector<uint32_t> vals, Circuit* circ) {
+share* create_new_share(vector<uint32_t> vals, Circuit* circ) {
 	switch (circ->GetCircuitType()) {
 	case C_BOOLEAN:
 		return new boolshare(vals, circ);
