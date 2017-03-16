@@ -134,7 +134,7 @@ private:
 	crypto* m_cCrypt;
 
 	enum EPartyJobType {
-		e_Party_Comm, e_Party_Stop,
+		e_Party_Comm, e_Party_Stop, e_Party_Undefined
 	};
 
 	comm_ctx* m_tComm;
@@ -145,12 +145,14 @@ private:
 	public:
 		CPartyWorkerThread(uint32_t id, ABYParty* callback) :
 				threadid(id), m_pCallback(callback) {
-		}
-		;
+			m_eJob = e_Party_Undefined;
+		};
+
 		void PutJob(EPartyJobType e) {
 			m_eJob = e;
 			m_evt.Set();
 		}
+
 		void ThreadMain();
 		uint32_t threadid;
 		ABYParty* m_pCallback;
