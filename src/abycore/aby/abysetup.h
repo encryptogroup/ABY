@@ -197,7 +197,7 @@ private:
 	/* Thread information */
 
 	enum EJobType {
-		e_IKNPOTExt, e_KKOTExt, e_NP, e_Send, e_Receive, e_Transmit, e_Stop, e_MTPaillier, e_MTDGK,
+		e_IKNPOTExt, e_KKOTExt, e_NP, e_Send, e_Receive, e_Transmit, e_Stop, e_MTPaillier, e_MTDGK, e_Undefined
 	};
 
 	BOOL WakeupWorkerThreads(EJobType);
@@ -208,6 +208,7 @@ private:
 	public:
 		CWorkerThread(uint32_t i, ABYSetup* callback) :
 				threadid(i), m_pCallback(callback) {
+			m_eJob = e_Undefined;
 		}
 		void PutJob(EJobType e) {
 			m_eJob = e;

@@ -111,7 +111,9 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 
 	m_vOutputShareSndBuf.Create(m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT));
 
-	m_vOutputDestionations = (e_role*) malloc(sizeof(e_role) * m_cBoolCircuit->GetOutputGatesForParty(CLIENT).size()+m_cBoolCircuit->GetOutputGatesForParty(SERVER).size());
+	m_vOutputDestionations = (e_role*) malloc(
+			sizeof(e_role) * (m_cBoolCircuit->GetOutputGatesForParty(CLIENT).size()
+					+ m_cBoolCircuit->GetOutputGatesForParty(SERVER).size()));
 	m_nOutputDestionationsCtr = 0;
 	//deque<uint32_t> out = m_cBoolCircuit->GetOutputGatesForParty(CLIENT);
 
@@ -1068,11 +1070,9 @@ void YaoServerSharing::Reset() {
 	m_vOutputShareGates.clear();
 	m_vServerOutputGates.clear();
 
-	//cout << "Output ctr: " << m_nOutputDestionationsCtr << endl;
-	if(m_nOutputDestionationsCtr>0)
+	if (m_nOutputDestionationsCtr > 0)
 		free(m_vOutputDestionations);
 	m_nOutputDestionationsCtr = 0;
-
 
 	m_nANDGates = 0;
 	m_nXORGates = 0;

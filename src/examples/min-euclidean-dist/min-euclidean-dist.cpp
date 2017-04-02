@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	test_min_eucliden_dist_circuit(role, (char*) address.c_str(), seclvl, nvals, dim, nthreads, mt_alg, S_ARITH, S_BOOL, precomp_phase_value);
+	test_min_eucliden_dist_circuit(role, (char*) address.c_str(), port, seclvl, nvals, dim, nthreads, mt_alg, S_ARITH, S_BOOL, precomp_phase_value);
 
 	return 0;
 }

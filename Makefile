@@ -10,9 +10,9 @@ CC=g++
 #Most aggressive optimizations, asserts are ignored
 #ABY_COMPILER_OPTIONS=-O3 -DNDEBUG
 #Optimizations
-ABY_COMPILER_OPTIONS=-O2 -march=native
+ABY_COMPILER_OPTIONS=-O2 -std=c++11 -march=native
 #DEBUG
-#ABY_COMPILER_OPTIONS=-g3 -ggdb -O0 -fno-omit-frame-pointer -fsanitize=address #Wall -Wextra
+#ABY_COMPILER_OPTIONS=-g3 -ggdb -O0 -std=c++11 -fno-omit-frame-pointer -fsanitize=address #Wall -Wextra -pedantic
 
 export ABY_COMPILER_OPTIONS
 
@@ -45,7 +45,7 @@ OBJECTS_MIRACL=${MIRACL_LIB_DIR}/*.o
 
 OTEXT_DIR=${CORE}/ot
 OTEXT_SUB_DIR=${OTEXT_DIR}/external/ot
-OT_SUBDIR_FILES=${OTEXT_SUB_DIR}/baseOT.h ${OTEXT_SUB_DIR}/iknp-ot-ext-rec.cpp ${OTEXT_SUB_DIR}/iknp-ot-ext-rec.h ${OTEXT_SUB_DIR}/iknp-ot-ext-snd.cpp ${OTEXT_SUB_DIR}/iknp-ot-ext-snd.h ${OTEXT_SUB_DIR}/naor-pinkas.cpp ${OTEXT_SUB_DIR}/naor-pinkas.h ${OTEXT_SUB_DIR}/ot-ext.cpp ${OTEXT_SUB_DIR}/ot-ext.h ${OTEXT_SUB_DIR}/ot-ext-snd.cpp ${OTEXT_SUB_DIR}/ot-ext-snd.h ${OTEXT_SUB_DIR}/ot-ext-rec.cpp ${OTEXT_SUB_DIR}/ot-ext-rec.h ${OTEXT_SUB_DIR}/xormasking.h ${OTEXT_SUB_DIR}/maskingfunction.h ${OTEXT_SUB_DIR}/kk-ot-ext-snd.h ${OTEXT_SUB_DIR}/kk-ot-ext-snd.cpp ${OTEXT_SUB_DIR}/kk-ot-ext-rec.h ${OTEXT_SUB_DIR}/kk-ot-ext-rec.cpp ${OTEXT_SUB_DIR}/kk-ot-ext.h  
+OT_SUBDIR_FILES=${OTEXT_SUB_DIR}/baseOT.h ${OTEXT_SUB_DIR}/iknp-ot-ext-rec.cpp ${OTEXT_SUB_DIR}/iknp-ot-ext-rec.h ${OTEXT_SUB_DIR}/iknp-ot-ext-snd.cpp ${OTEXT_SUB_DIR}/iknp-ot-ext-snd.h ${OTEXT_SUB_DIR}/naor-pinkas.cpp ${OTEXT_SUB_DIR}/naor-pinkas.h ${OTEXT_SUB_DIR}/ot-ext.cpp ${OTEXT_SUB_DIR}/ot-ext.h ${OTEXT_SUB_DIR}/ot-ext-snd.cpp ${OTEXT_SUB_DIR}/ot-ext-snd.h ${OTEXT_SUB_DIR}/ot-ext-rec.cpp ${OTEXT_SUB_DIR}/ot-ext-rec.h ${OTEXT_SUB_DIR}/xormasking.h ${OTEXT_SUB_DIR}/maskingfunction.h ${OTEXT_SUB_DIR}/kk-ot-ext-snd.h ${OTEXT_SUB_DIR}/kk-ot-ext-snd.cpp ${OTEXT_SUB_DIR}/kk-ot-ext-rec.h ${OTEXT_SUB_DIR}/kk-ot-ext-rec.cpp ${OTEXT_SUB_DIR}/kk-ot-ext.h
 OT_FILES=${OTEXT_DIR}/baseOT.h ${OTEXT_DIR}/iknp-ot-ext-rec.cpp ${OTEXT_DIR}/iknp-ot-ext-rec.h ${OTEXT_DIR}/iknp-ot-ext-snd.cpp ${OTEXT_DIR}/iknp-ot-ext-snd.h ${OTEXT_DIR}/naor-pinkas.cpp ${OTEXT_DIR}/naor-pinkas.h ${OTEXT_DIR}/ot-ext.cpp ${OTEXT_DIR}/ot-ext.h ${OTEXT_DIR}/ot-ext-snd.cpp ${OTEXT_DIR}/ot-ext-snd.h ${OTEXT_DIR}/ot-ext-rec.cpp ${OTEXT_DIR}/ot-ext-rec.h ${OTEXT_DIR}/xormasking.h ${OTEXT_DIR}/maskingfunction.h ${OTEXT_DIR}/kk-ot-ext-snd.h ${OTEXT_DIR}/kk-ot-ext-snd.cpp ${OTEXT_DIR}/kk-ot-ext-rec.h ${OTEXT_DIR}/kk-ot-ext-rec.cpp ${OTEXT_DIR}/kk-ot-ext.h
 
 # all source files and corresponding object files in abycore
@@ -82,10 +82,10 @@ otext: miracl
 
 core: miracl otext ${OBJECTS_CORE}
 
-%.o:%.cpp
+%.o:%.cpp %.h
 	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
-%.o:%.cpp %.h
+%.o:%.cpp
 	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 # check that core is built, then call test makefile
@@ -110,6 +110,10 @@ clean:
 # clean example objects, test object, aby core objects and binaries
 cleanmore: clean
 	rm -f ${OBJECTS_CORE}
+
+# clean example objects, test object, aby core objects, binaries and OTExtension
+cleanmost: cleanmore
+	rm -f ${OT_FILES}
 
 # this will clean everything(!): example objects, test object and binaries and the Miracl library, the copied OT files
 cleanall: cleanmore

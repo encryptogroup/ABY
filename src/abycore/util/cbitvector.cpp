@@ -327,10 +327,10 @@ void CBitVector::XORRepeat(BYTE* p, int pos, int len, int num) {
 }
 
 //optimized bytewise for set operation
-void CBitVector::SetBytes(BYTE* p, int pos, int len) {
-	assert(pos+len <= m_nByteSize); 
-	BYTE* dst = m_pBits + pos;
-	BYTE* src = p;
+void CBitVector::SetBytes(const BYTE *src, const uint64_t pos, const uint64_t len) {
+	assert(pos + len <= m_nByteSize);
+
+	BYTE *dst = m_pBits + pos;
 
 	//Do many operations on REGSIZE types first and then (if necessary) use bytewise operations
 	SetBytes((REGSIZE*) dst, (REGSIZE*) src, ((REGSIZE*) dst) + (len >> SHIFTVAL));
@@ -339,8 +339,8 @@ void CBitVector::SetBytes(BYTE* p, int pos, int len) {
 	SetBytes(dst, src, dst + (len & ((1 << SHIFTVAL) - 1)));
 }
 
-template<class T> void CBitVector::SetBytes(T* dst, T* src, T* lim) {
-	while (dst != lim) {
+template<class T> void CBitVector::SetBytes(T* dst, const T* src, const T* lim) {
+	while (dst < lim) {
 		*dst++ = *src++;
 	}
 }

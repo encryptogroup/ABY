@@ -34,7 +34,7 @@ void ArithSharing<T>::Init() {
 	m_nConvShareIdx = 0;
 	m_nConvShareSndCtr = 0;
 	m_nConvShareRcvCtr = 0;
-
+	
 	m_nInputShareSndCtr = 0;
 	m_nOutputShareSndCtr = 0;
 	m_nInputShareRcvCtr = 0;

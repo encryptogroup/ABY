@@ -41,6 +41,7 @@ public:
 	/** Destructor of the class.*/
 	~ArithSharing() {
 		Reset();
+		delete m_cArithCircuit;
 	}
 	;
 

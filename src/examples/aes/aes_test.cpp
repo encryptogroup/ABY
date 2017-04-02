@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	test_aes_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, sharing, port, verbose, use_vec_ands);
+	test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, sharing, verbose, use_vec_ands);
 
 	return 0;
 }

@@ -17,11 +17,11 @@
  */
 #include "min-euclidean-dist-circuit.h"
 
-int32_t test_min_eucliden_dist_circuit(e_role role, char* address, seclvl seclvl, uint32_t dbsize,
+int32_t test_min_eucliden_dist_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t dbsize,
 		uint32_t dim, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing, ePreCompPhase pre_comp_value) {
 	uint32_t bitlen = 8, i, j, temp, tempsum, maxbitlen=32;
 	uint64_t output;
-	ABYParty* party = new ABYParty(role, address, seclvl, maxbitlen, nthreads, mt_alg);
+	ABYParty* party = new ABYParty(role, address, port, seclvl, maxbitlen, nthreads, mt_alg);
 	vector<Sharing*>& sharings = party->GetSharings();
 
 	/**

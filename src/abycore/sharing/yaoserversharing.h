@@ -44,6 +44,7 @@ public:
 	 */
 	~YaoServerSharing() {
 		Reset();
+		delete m_cBoolCircuit;
 	}
 	;
 

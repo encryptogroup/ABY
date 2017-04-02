@@ -25,7 +25,7 @@
 #include "../../../abycore/aby/abyparty.h"
 #include <cassert>
 
-int32_t test_psi_scs_circuit(e_role role, char* address, seclvl seclvl,
+int32_t test_psi_scs_circuit(e_role role, char* address, uint16_t port, seclvl seclvl,
 		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
 		uint32_t prot_version, bool verify);
 vector<uint32_t> BuildSCSPSICircuit(share** shr_srv_set, share** shr_cli_set, vector<uint32_t> shr_sel_bits,

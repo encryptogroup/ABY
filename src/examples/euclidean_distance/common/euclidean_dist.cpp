@@ -18,7 +18,7 @@
 
 #include "euclidean_dist.h"
 
-int32_t test_euclid_dist_circuit(e_role role, char* address, seclvl seclvl,
+int32_t test_euclid_dist_circuit(e_role role, char* address, uint16_t port, seclvl seclvl,
 		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
 		e_sharing sharing) {
 
@@ -28,7 +28,7 @@ int32_t test_euclid_dist_circuit(e_role role, char* address, seclvl seclvl,
 				are on the basis of the role played by this object.
 	*/
 
-	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads,	mt_alg);
+	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
 
 	/**
 		Step 2: Get to know all the sharings available in the program.
@@ -116,7 +116,7 @@ int32_t test_euclid_dist_circuit(e_role role, char* address, seclvl seclvl,
 	printf(" Circuit result: %lf ", sqrt(output));
 
 	printf("\n Verification: %lf \n\n",
-			sqrt((pow(abs(y2 - y1), 2) + pow(abs(x2 - x1), 2))));
+			sqrt((pow((double)abs(y2 - y1), (double)2) + pow((double)abs(x2 - x1),(double) 2))));
 
 	delete party;
 	return 0;

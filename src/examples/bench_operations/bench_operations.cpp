@@ -429,7 +429,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 }
 
 
-bool run_bench(e_role role, char* address, seclvl seclvl, int32_t operation, int32_t bitlen, uint32_t nvals,
+bool run_bench(e_role role, char* address, uint16_t port, seclvl seclvl, int32_t operation, int32_t bitlen, uint32_t nvals,
 		uint32_t nruns, e_mt_gen_alg mt_alg, uint32_t nthreads, bool verbose, bool no_verify, bool detailed) {
 
 	uint32_t nops, nbitlens;
@@ -461,11 +461,11 @@ bool run_bench(e_role role, char* address, seclvl seclvl, int32_t operation, int
 		bitlens = (uint32_t*) malloc(sizeof(uint32_t));
 		bitlens[0] = bitlen;
 		nbitlens = 1;
-		party =  new ABYParty(role, address, seclvl, bitlen, nthreads, mt_alg);
+		party =  new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
 	} else {
 		bitlens = (uint32_t*) m_vBitLens;
 		nbitlens = sizeof(m_vBitLens) / sizeof(uint32_t);
-		party =  new ABYParty(role, address, seclvl, 64, nthreads, mt_alg);
+		party =  new ABYParty(role, address, port, seclvl, 64, nthreads, mt_alg);
 	}
 
 
@@ -496,7 +496,7 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	run_bench(role, (char*) address.c_str(), seclvl, operation, bitlen, nvals, nruns, mt_alg, nthreads, verbose, no_verify, detailed);
+	run_bench(role, (char*) address.c_str(), port, seclvl, operation, bitlen, nvals, nruns, mt_alg, nthreads, verbose, no_verify, detailed);
 
 	return 0;
 }

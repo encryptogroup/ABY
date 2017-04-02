@@ -21,10 +21,10 @@
 #include <math.h>
 #include <cassert>
 
-int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
+int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl seclvl,
 		uint32_t server_neles, uint32_t client_neles, uint32_t bitlen, double epsilon, uint32_t nthreads,
 		e_mt_gen_alg mt_alg, e_sharing sharing, int ext_stash_size, uint32_t maxbinsize,
-		uint32_t nhashfuns, uint16_t port) {
+		uint32_t nhashfuns) {
 
 	uint32_t *srv_set, *cli_set, *circ_intersect, *ver_intersect, *inv_perm, *stashperm;
 	uint32_t ver_inter_ctr = 0, circ_inter_ctr = 0, internalbitlen, maxstashsize;
@@ -35,8 +35,8 @@ int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
 	timespec t_start, t_end;
 
 
-	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads,
-			mt_alg, 4000000, port);
+	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads,
+			mt_alg, 4000000);
 
 	vector<Sharing*>& sharings = party->GetSharings();
 

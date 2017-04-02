@@ -47,6 +47,16 @@ typedef struct SECURITYLEVELS {
 	int ecckcbits;
 } seclvl;
 
+/// Operation type enum
+typedef enum op_t{
+    ADD, MUL, SUB, DIV, SIN, SQRT, EXP, EXP2, CMP, LN, LOG2, COS, SQR
+}op_t;
+
+///Floating point operation cinfiguration. 
+typedef enum fp_op_setting{
+    ieee, no_status
+}fp_op_setting;
+
 typedef int BOOL;
 typedef long LONG;
 

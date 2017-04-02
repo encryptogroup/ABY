@@ -18,24 +18,24 @@
 #include "lowmccircuit.h"
 
 //sboxes (m), key-length (k), statesize (n), data (d), rounds (r)
-int32_t test_lowmc_circuit(e_role role, char* address, uint32_t nvals, uint32_t nthreads,
+int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t nvals, uint32_t nthreads,
 		e_mt_gen_alg mt_alg, e_sharing sharing, uint32_t statesize, uint32_t keysize,
 		uint32_t sboxes, uint32_t rounds, uint32_t maxnumgates, crypto* crypt) {
 
 	LowMCParams param = { sboxes, keysize, statesize, keysize == 80 ? 64 : (uint32_t) 128, rounds };
-	return test_lowmc_circuit(role, address, nvals, nthreads, mt_alg, sharing, &param, maxnumgates, crypt);
+	return test_lowmc_circuit(role, address, port, nvals, nthreads, mt_alg, sharing, &param, maxnumgates, crypt);
 }
 
-int32_t test_lowmc_circuit(e_role role, char* address, uint32_t nvals, uint32_t nthreads,
+int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t nvals, uint32_t nthreads,
 		e_mt_gen_alg mt_alg, e_sharing sharing, LowMCParams* param, uint32_t maxgates, crypto* crypt) {
 
 	uint32_t bitlen = 32, ctr = 0, exp_key_bitlen = param->blocksize * (param->nrounds+1), zero_gate;
 
 	ABYParty* party;
 	if(maxgates > 0)
-		party = new ABYParty(role, address, crypt->get_seclvl(), bitlen, nthreads, mt_alg, maxgates);
+		party = new ABYParty(role, address, port, crypt->get_seclvl(), bitlen, nthreads, mt_alg, maxgates);
 	else
-		party = new ABYParty(role, address, crypt->get_seclvl(), bitlen, nthreads, mt_alg);
+		party = new ABYParty(role, address, port, crypt->get_seclvl(), bitlen, nthreads, mt_alg);
 
 	vector<Sharing*>& sharings = party->GetSharings();
 

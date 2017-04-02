@@ -37,10 +37,10 @@ all: ${BIN}/${EXAMPLE}.exe
 ${BIN}/${EXAMPLE}.exe: ${OBJECTS} ${OBJECTS_CORE} ${OBJECTS_MIRACL}
 	${CC} ${ABY_COMPILER_OPTIONS} ${CFLAGS} $^ ${LIBRARIES} -o $@
 
-%.o: %.cpp
+%.o: %.cpp %.h
 	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
-%.o: %.cpp %.h
+%.o: %.cpp
 	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
 
 .PHONY: clean

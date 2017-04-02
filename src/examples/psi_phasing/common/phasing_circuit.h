@@ -27,10 +27,10 @@
 #include "hashing/simple_hashing.h"
 #include <cassert>
 
-int32_t test_phasing_circuit(e_role role, char* address, seclvl seclvl,
+int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl seclvl,
 		uint32_t server_neles, uint32_t client_neles, uint32_t bitlen, double epsilon,
 		uint32_t nthreads, e_mt_gen_alg mt_alg,	e_sharing sharing, int ext_stash_size,
-		uint32_t maxbinsize, uint32_t mhashfuns, uint16_t port = 7766);
+		uint32_t maxbinsize, uint32_t mhashfuns);
 
 void 	sample_random_elements(uint32_t neles, uint32_t bitlen, uint32_t* srv_set, uint32_t* cli_set);
 void 	set_fixed_elements(uint32_t server_neles, uint32_t client_neles, uint32_t bitlen, uint32_t* srv_set, uint32_t* cli_set);

@@ -39,6 +39,7 @@ public:
 	/** Destructor of the class.*/
 	~YaoClientSharing() {
 		Reset();
+		delete m_cBoolCircuit;
 	}
 	;
 

@@ -25,6 +25,8 @@
 #include "circuit.h"
 #include <map>
 #include <fstream>
+#include <algorithm>
+#include "../util/convtypes.h"
 #include "../util/parse_options.h"
 
 /** BooleanCircuit class. */
@@ -36,7 +38,7 @@ public:
 	}
 	;
 	~BooleanCircuit() {
-		//Cleanup();
+		Cleanup();
 	}
 	;
 
@@ -388,8 +390,159 @@ public:
 
 	void PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_t nshares, share** Sout);
 
+
+        /**
+         * Constructs optimal Hamming Weight Gate. Described by Boyar, Joan, and
+         * René Peralta in "Tight bounds for the multiplicative complexity of
+         * symmetric functions."
+         * @param s_in Input share
+         * @return Number of 1's in the input bit string
+         */
+        share* PutHammingWeightGate(share* s_in);
+        
+        /**
+         * Constructs optimal Hamming Weight Gate. Described by Boyar, Joan, and
+         * René Peralta in "Tight bounds for the multiplicative complexity of
+         * symmetric functions."
+         * @param s_in Input share
+         * @param bitlen Bit length of the input
+         * @return Number of 1's in the input bit string
+         */
+        share* PutHammingWeightGate(share* s_in, uint32_t bitlen);
+        
+        /**
+         * Recursively constructs optimal Hamming Weight Gate. Described by
+         * Boyar, Joan, and René Peralta in "Tight bounds for the multiplicative
+         * complexity of symmetric functions."
+         * @param array Array of wires
+         * @param bitlen Bit length of the input
+         * @return Number of 1's in the input bit string
+         */
+        share* PutHammingWeightGateRec(uint32_t * array, uint32_t bitlen);
+        
+        /**
+         * Constructs Full Adder Gate
+         * @param a Input bit a
+         * @param b Input bit b
+         * @param carry_in Input bit carry in
+         * @return sum of input bits
+         */
         share* PutFullAdderGate(uint32_t a, uint32_t b, uint32_t carry_in);
+        
+        /**
+         * Constructs Adder Chain Gate
+         * @param a vector of wires a
+         * @param b vector of wires b
+         * @param carry_in optional carry in bit c (zero gate if not needed)
+         * @return sum of values on wires a and b
+         */
     	share* PutADDChainGate(vector <uint32_t> a, vector <uint32_t> b, uint32_t carry_in);
+        
+
+        /**
+         * Converts unsigned integer input to floating point number of double precision
+         * @param input unsigned integer input
+         * @return floating point number of double precision
+         */
+        share* PutUint2DoubleGate(share* input);
+        
+        /**
+         * Converts a number "value" from the type "from" to the type "to" 
+         * @param value input value
+         * @param from type of the value
+         * @param to type to which value will be converted
+         * @return converted value
+         */
+        share* PutConvTypeGate(share* value, ConvType* from, ConvType* to);
+        
+        /**
+         * Converts a number "value" from the type "from" to the type "to" 
+         * @param wires wires of the input value
+         * @param from type of the value
+         * @param to type to which value will be converted
+         * @return wires of the converted value
+         */
+        vector<uint32_t> PutConvTypeGate(vector<uint32_t> wires, ConvType* from, ConvType* to);
+        
+        /**
+         * Converts unsigned integer to floating point number
+         * @param wires wires of the input value
+         * @param from type of the value
+         * @param to type to which value will be converted
+         * @return wires of the converted value
+         */
+        vector<uint32_t> PutUint2FpGate(vector<uint32_t> wires, UINTType* from, FPType* to);
+        
+        /**
+         * Converts floating point to unsigned integer number
+         * @param wires wires of the input value
+         * @param from type of the value
+         * @param to type to which value will be converted
+         * @return wires of the converted value
+         */
+        vector<uint32_t> PutFp2UintGate(vector<uint32_t> wires, FPType* from, UINTType* to);
+        
+        /**
+         * Computes Prefix Or operation, thus, zeros before first seen 1 and 1s after (e.g. 0010100 => 0011111).
+         * @param input input value
+         * @return return value of prefix or
+         */
+        share * PutPreOrGate(share * input);
+
+        /**
+         * Computes Prefix Or operation, thus, zeros before first seen 1 and 1s after (e.g. 0010100 => 0011111).
+         * @param wires input value
+         * @return value of prefix or
+         */
+        vector<uint32_t> PutPreOrGate(vector<uint32_t> wires);
+        
+        /**
+         * Uses MUXs to shift bits of the value to the right.
+         * @param input input value
+         * @param n number of bits to shift
+         * @return shifted value
+         */
+        share * PutBarrelRightShifterGate(share * input, share * n);
+        /**
+         * Uses MUXs to shift bits of the value to the right.
+         * @param wires input value
+         * @param n number of bits to shift
+         * @return shifted value
+         */
+        vector<uint32_t> PutBarrelRightShifterGate(vector<uint32_t> wires, vector<uint32_t> n);
+        /**
+         * Uses MUXs to shift bits of the value to the left.
+         * @param input input value
+         * @param n number of bits to shift
+         * @return shifted value
+         */
+        share * PutBarrelLeftShifterGate(share * input, share * n);
+        /**
+         * Uses MUXs to shift bits of the value to the left.
+         * @param wires input value
+         * @param n number of bits to shift
+         * @return shifted value
+         */
+        vector<uint32_t> PutBarrelLeftShifterGate(vector<uint32_t> wires, vector<uint32_t> n);
+        
+        /**
+         * Put floating point gate with one input
+         * @param in input share
+         * @param op operation to perform
+         * @param s setting for operation
+         * @return result of the operation
+         */
+        share * PutFPGate(share * in, op_t op, fp_op_setting s = no_status);
+        
+        /**
+         * Put floating point gate with two inputs
+         * @param in_a input share a
+         * @param in_b input share b
+         * @param op operation to perform
+         * @param s setting for operation
+         * @return result of the operation
+         */
+        share * PutFPGate(share * in_a, share * in_b, op_t op, fp_op_setting s = no_status);
 
 private:
 	void UpdateInteractiveQueue(uint32_t);

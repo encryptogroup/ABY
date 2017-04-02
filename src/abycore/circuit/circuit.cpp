@@ -44,7 +44,15 @@ void Circuit::Init() {
 ;
 
 void Circuit::Cleanup() {
-	//TODO
+	//TODO implement
+
+	//should not be necessary
+	//m_vInputGates.clear();
+	//m_vOutputGates.clear();
+	//m_vInputBits.clear();
+	//m_vOutputBits.clear();
+	//m_vInputBits.clear();
+	//m_vOutputBits.clear();
 }
 ;
 
@@ -194,8 +202,8 @@ share* Circuit::PutCombinerGate(share* input) {
 share* Circuit::PutCombinerGate(share* ina, share* inb) {
 	assert(ina->get_circuit_type() == inb->get_circuit_type());
 	vector<uint32_t> wires(ina->get_bitlength() + inb->get_bitlength());
-	//cout << "Size on left = " << ina->size() << " (" << m_pGates[ina->get_wire(0)].nvals << ") on right = " << inb->size()
-	//		<< " ("<< m_pGates[inb->get_wire(0)].nvals << ")" << endl;
+//	cout << "Size on left = " << ina->get_bitlength() << " (" << m_pGates[ina->get_wire_id(0)].nvals << ") on right = " << inb->get_bitlength()
+//			<< " ("<< m_pGates[inb->get_wire_id(0)].nvals << ")" << endl;
 
 	for(uint32_t i = 0; i < ina->get_bitlength(); i++) {
 		wires[i] = ina->get_wire_id(i);

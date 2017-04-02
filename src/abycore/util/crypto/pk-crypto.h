@@ -31,6 +31,8 @@ class pk_crypto {
 public:
 	pk_crypto(seclvl sp, uint8_t* seed) {
 		fe_bytelen = 0;
+		order = 0;
+		secparam = sp;
 	}
 	;
 	virtual ~pk_crypto() {};

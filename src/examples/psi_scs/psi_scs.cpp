@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,	nthreads, mt_alg, prot_version, verify_output);
+	test_psi_scs_circuit(role, (char*) address.c_str(), port, seclvl, neles, bitlen, nthreads, mt_alg, prot_version, verify_output);
 
 
 	cout << "PSI circuit successfully executed" << endl;

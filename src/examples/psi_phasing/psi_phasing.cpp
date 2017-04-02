@@ -106,8 +106,8 @@ int main(int argc, char** argv) {
 	}
 
 	//if(useyao) {
-	test_phasing_circuit(role, (char*) address.c_str(), seclvl, server_neles, client_neles, bitlen,
-			epsilon, nthreads, mt_alg, sharing, stash, maxbin, nhashfuns, port);
+	test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, server_neles, client_neles, bitlen,
+			epsilon, nthreads, mt_alg, sharing, stash, maxbin, nhashfuns);
 	/*} else {
 		test_phasing_circuit(role, (char*) address.c_str(), seclvl, neles, bitlen,
 				epsilon, nthreads, mt_alg, S_BOOL);

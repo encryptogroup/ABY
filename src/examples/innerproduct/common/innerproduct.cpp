@@ -18,7 +18,7 @@
 
 #include "innerproduct.h"
 
-int32_t test_inner_product_circuit(e_role role, char* address, seclvl seclvl,
+int32_t test_inner_product_circuit(e_role role, char* address, uint16_t port, seclvl seclvl,
 		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
 		e_sharing sharing, uint32_t num) {
 
@@ -27,7 +27,7 @@ int32_t test_inner_product_circuit(e_role role, char* address, seclvl seclvl,
 	 operations which are happening.	Operations performed are on the
 	 basis of the role played by this object.
 	 */
-	ABYParty* party = new ABYParty(role, address, seclvl, bitlen, nthreads,
+	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads,
 			mt_alg);
 
 	/**

@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	test_sha1_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, sharing);
+	test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, sharing);
 
 	return 0;
 }

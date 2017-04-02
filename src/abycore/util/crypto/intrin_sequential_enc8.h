@@ -1,13 +1,13 @@
 /*
  * intrin_sequential_enc8.h
  * Copied and modified from Shay Gueron's code from intrinsic.h
-/********************************************************************/
-/* Copyright(c) 2014, Intel Corp.                                   */
-/* Developers and authors: Shay Gueron (1) (2)                      */
-/* (1) University of Haifa, Israel                                  */
-/* (2) Intel, Israel                                                */
-/* IPG, Architecture, Israel Development Center, Haifa, Israel      */
-/********************************************************************/
+ *
+ * Copyright(c) 2014, Intel Corp.
+ * Developers and authors: Shay Gueron (1) (2)
+ * (1) University of Haifa, Israel
+ * (2) Intel, Israel
+ * IPG, Architecture, Israel Development Center, Haifa, Israel
+ */
 
 #include "../constants.h"
 

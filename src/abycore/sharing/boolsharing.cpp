@@ -1609,14 +1609,16 @@ void BoolSharing::Reset() {
 	/**Checking the role and and deciding upon the file to be deleted if the precomputation values are
 	  completely used up in a Precomputation READ mode.*/
 	if(m_eRole == SERVER) {
-		if((FileExists("pre_comp_server.dump"))&&(m_nFilePos >= FileSize("pre_comp_server.dump"))&&(GetPreCompPhaseValue() == ePreCompRead)) {
-			remove("pre_comp_server.dump");
+		if((FileExists((char*)"pre_comp_server.dump"))&&(m_nFilePos >=
+                        FileSize((char*)"pre_comp_server.dump"))&&(GetPreCompPhaseValue() == ePreCompRead)) {
+			remove((char*)"pre_comp_server.dump");
 			m_nFilePos = -1;
 		}
 	}
 	else  {
-		if((FileExists("pre_comp_client.dump"))&&(m_nFilePos >= FileSize("pre_comp_client.dump"))&&(GetPreCompPhaseValue() == ePreCompRead)) {
-			remove("pre_comp_client.dump");
+		if((FileExists((char*)"pre_comp_client.dump"))&&(m_nFilePos >=
+                        FileSize((char*)"pre_comp_client.dump"))&&(GetPreCompPhaseValue() == ePreCompRead)) {
+			remove((char*)"pre_comp_client.dump");
 			m_nFilePos = -1;
 		}
 	}
@@ -1710,9 +1712,11 @@ void BoolSharing::ReadMTsFromFile(char *filename) {
 	/**BYTE pointer used as a buffer to read from the file.*/
 	BYTE *ptr;
 	/**Seek the file pointer to the location of the last read position.*/
-	fseek(fp, m_nFilePos, SEEK_SET);
+	if(fseek(fp, m_nFilePos, SEEK_SET))
+            cout << "Error occured in fseek" << endl;
 	/**Reading the num and sizes from the file.*/
-	fread(&num_and_sizes, sizeof(uint32_t), 1, fp);
+	if(!fread(&num_and_sizes, sizeof(uint32_t), 1, fp))
+            cout << "Error occured in fread" << endl;;
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 
 		/**Calculating the required ANDGatelength in bytes for the provided circuit configuration.*/
@@ -1721,7 +1725,8 @@ void BoolSharing::ReadMTsFromFile(char *filename) {
 		uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
 
 		/**Reading the ANDGate length in bytes from file.*/
-		fread(&org_andbytelen, sizeof(uint32_t), 1, fp);
+		if(!fread(&org_andbytelen, sizeof(uint32_t), 1, fp))
+                    cout << "Error occured in fread" << endl;
 
 		/**Allocating the memory for the BYTE pointer with the read ANDGate lenght size from the file.*/
 		ptr = (BYTE*)malloc(org_andbytelen*sizeof(BYTE));
@@ -1732,19 +1737,25 @@ void BoolSharing::ReadMTsFromFile(char *filename) {
 		*/
 		if(org_andbytelen != andbytelen) {
 
-			fread(ptr, org_andbytelen, 1, fp);
+			if(!fread(ptr, org_andbytelen, 1, fp))
+                            cout << "Error occured in fread" << endl;
 			m_vA[i].Copy(ptr, 0, andbytelen);
-			fread(ptr, org_andbytelen, 1, fp);
+			if(!fread(ptr, org_andbytelen, 1, fp))
+                            cout << "Error occured in fread" << endl;
 			m_vB[i].Copy(ptr, 0, andbytelen);
-			fread(ptr, org_andbytelen, 1, fp);
+			if(!fread(ptr, org_andbytelen, 1, fp))
+                                cout << "Error occured in fread" << endl;
 			m_vC[i].Copy(ptr, 0, andbytelen);
 		}
 		else {
-			fread(ptr, andbytelen, 1, fp);
+			if(!fread(ptr, andbytelen, 1, fp))
+                            cout << "Error occured in fread" << endl;
 			m_vA[i].Copy(ptr, 0, andbytelen);
-			fread(ptr, andbytelen, 1, fp);
+			if(!fread(ptr, andbytelen, 1, fp))
+                                cout << "Error occured in fread" << endl;
 			m_vB[i].Copy(ptr, 0, andbytelen);
-			fread(ptr, andbytelen, 1, fp);
+			if(!fread(ptr, andbytelen, 1, fp))
+                            cout << "Error occured in fread" << endl;
 			m_vC[i].Copy(ptr, 0, andbytelen);
 		}
 		m_vD_snd[i].Copy(m_vA[i].GetArr(), 0, andbytelen);
@@ -1772,7 +1783,8 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 	uint32_t circ_size_in_file, andbytelen_in_file;
 
 	/**Reading the circuit size mainly the NUMAndGate vector size*/
-	fread(&circ_size_in_file, sizeof(uint32_t), 1, fp);
+	if(!fread(&circ_size_in_file, sizeof(uint32_t), 1, fp))
+            cout << "Error occured in fread" << endl;
 	/**Checking if they are unequal.*/
 	if(circ_size_in_file != in_circ_size) {
 		/**Returning false and reverting the precomputation mode to default.*/
@@ -1787,7 +1799,8 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 		/**Calculating the AND gate length in bytes for the provided circuit configuration.*/
 		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
 		/**Reading the AND gate length in bytes from the file.*/
-		fread(&andbytelen_in_file, sizeof(uint32_t), 1, fp);
+		if(!fread(&andbytelen_in_file, sizeof(uint32_t), 1, fp))
+                    cout << "Error occured in fread" << endl;
 		uint32_t traverseMT_size_in_file = andbytelen_in_file*3;
 
 		/**Shifting through the MTs based on the ANDGate size in byte length.*/

@@ -63,6 +63,8 @@ public:
 	;
 	/** Destructor of the class.*/
 	virtual ~SetupLUT() {
+		Reset();
+		delete m_cBoolCircuit;
 	}
 	;
 

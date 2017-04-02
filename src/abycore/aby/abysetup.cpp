@@ -35,8 +35,8 @@ ABYSetup::~ABYSetup() {
 }
 
 BOOL ABYSetup::Init() {
-	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
-	uint32_t aes_key_bytes = m_cCrypt->get_aes_key_bytes();
+//	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
+//	uint32_t aes_key_bytes = m_cCrypt->get_aes_key_bytes();
 
 	m_vIKNPOTTasks.resize(2);
 	m_vKKOTTasks.resize(2);
@@ -220,7 +220,7 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 	bool success = true;
 
 	uint32_t inverse = exec ^ m_eRole;
-	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
+//	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
 	uint32_t nsndvals = 2;
 
 	for (uint32_t i = 0; i < m_vIKNPOTTasks[inverse].size(); i++) {
@@ -285,8 +285,8 @@ BOOL ABYSetup::ThreadRunKKRcv(uint32_t exec) {
 	bool success = true;
 
 	uint32_t inverse = exec ^ m_eRole;
-	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
-	uint32_t nsndvals = 2;
+//	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
+//	uint32_t nsndvals = 2;
 
 	for (uint32_t i = 0; i < m_vKKOTTasks[inverse].size(); i++) {
 
@@ -500,6 +500,10 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 		case e_Receive:
 			bSuccess = m_pCallback->ThreadReceiveData(threadid);
 			break;
+		case e_Transmit:
+		case e_Undefined:
+		default:
+			cerr << "Error: Undefined / unimplemented OT Job!" << endl;
 		}
 		m_pCallback->ThreadNotifyTaskDone(bSuccess);
 	}
@@ -514,7 +518,5 @@ void ABYSetup::Reset() {
 	for (uint32_t i = 0; i < m_vKKOTTasks.size(); i++) {
 		m_vKKOTTasks[i].clear();
 	}
-
-
 }
 

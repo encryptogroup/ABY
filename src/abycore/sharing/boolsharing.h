@@ -54,6 +54,7 @@ public:
 	/** Destructor of the class.*/
 	~BoolSharing() {
 		Reset();
+		delete m_cBoolCircuit;
 	}
 	;
 

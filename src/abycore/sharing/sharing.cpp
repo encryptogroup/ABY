@@ -57,7 +57,8 @@ void Sharing::PreCompFileDelete() {
 		}
 		else {
 			truncation_size = FileSize(filename) - m_nFilePos;
-			truncate(filename, truncation_size);
+			if(truncate(filename, truncation_size))
+                        cout << "Error occured in truncate" << endl;
 		}
 	}
 }

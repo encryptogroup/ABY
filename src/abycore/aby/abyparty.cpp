@@ -29,7 +29,7 @@ using namespace std;
 #endif
 
 
-ABYParty::ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo, uint32_t maxgates, uint16_t port) {
+ABYParty::ABYParty(e_role pid, char* addr, uint16_t port, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo, uint32_t maxgates) {
 	StartWatch("Initialization", P_INIT);
 
 	m_eRole = pid;
@@ -42,7 +42,7 @@ ABYParty::ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen, uint3
 	m_eMTGenAlg = mg_algo;
 
 	//
-	m_cCrypt = new crypto(seclvl.symbits, (uint8_t*) const_seed[pid]);
+	m_cCrypt = new crypto(seclvl.symbits);
 	//m_aSeed = (uint8_t*) malloc(sizeof(uint8_t) * m_cCrypt->get_hash_bytes());
 
 	//Are doubled to have both parties play both roles
@@ -373,7 +373,6 @@ BOOL ABYParty::ThreadSendValues() {
 	vector<vector<BYTE*> >sendbuf(m_vSharings.size());
 	vector<vector<uint64_t> >sndbytes(m_vSharings.size());
 
-	timeval tstart, tend;
 	uint64_t snd_buf_size_total = 0, ctr = 0;
 	for (uint32_t j = 0; j < m_vSharings.size(); j++) {
 		m_vSharings[j]->GetDataToSend(sendbuf[j], sndbytes[j]);
@@ -414,19 +413,17 @@ BOOL ABYParty::ThreadSendValues() {
 }
 
 BOOL ABYParty::ThreadReceiveValues() {
-	vector<vector<BYTE*> >rcvbuf(m_vSharings.size());
-	vector<vector<uint64_t> >rcvbytes(m_vSharings.size());
+	vector<vector<BYTE*> > rcvbuf(m_vSharings.size());
+	vector<vector<uint64_t> > rcvbytes(m_vSharings.size());
 
-	timeval tstart, tend;
-	uint8_t* tmpbuf;
-
+//	timeval tstart, tend;
 
 	uint64_t rcvbytestotal = 0;
 	for (uint32_t j = 0; j < m_vSharings.size(); j++) {
 		m_vSharings[j]->GetBuffersToReceive(rcvbuf[j], rcvbytes[j]);
 		for (uint32_t i = 0; i < rcvbuf[j].size(); i++) {
-			rcvbytestotal+=rcvbytes[j][i];
-		//	m_tPartyChan->blocking_receive(sendbuf[j][i], sndbytes[j][i]);
+			rcvbytestotal += rcvbytes[j][i];
+			//	m_tPartyChan->blocking_receive(sendbuf[j][i], sndbytes[j][i]);
 #ifdef DEBUGCOMM
 			cout << "(" << m_nDepth << ") Receiving " << rcvbytes[j][i] << " bytes on socket " << (m_eRole^1) << " for sharing " << j << endl;
 #endif
@@ -435,7 +432,7 @@ BOOL ABYParty::ThreadReceiveValues() {
 	uint8_t* rcvbuftotal = (uint8_t*) malloc(rcvbytestotal);
 	assert(rcvbuftotal != NULL);
 	//gettimeofday(&tstart, NULL);
-	if(rcvbytestotal > 0) {
+	if (rcvbytestotal > 0) {
 		//m_vSockets[2]->Receive(rcvbuftotal, rcvbytestotal);
 		m_tPartyChan->blocking_receive(rcvbuftotal, rcvbytestotal);
 	}
@@ -445,9 +442,9 @@ BOOL ABYParty::ThreadReceiveValues() {
 
 	for (uint32_t j = 0, ctr = 0; j < m_vSharings.size(); j++) {
 		for (uint32_t i = 0; i < rcvbuf[j].size(); i++) {
-			if(rcvbytes[j][i] > 0) {
-				memcpy(rcvbuf[j][i], rcvbuftotal+ctr, rcvbytes[j][i]);
-				ctr+= rcvbytes[j][i];
+			if (rcvbytes[j][i] > 0) {
+				memcpy(rcvbuf[j][i], rcvbuftotal + ctr, rcvbytes[j][i]);
+				ctr += rcvbytes[j][i];
 			}
 		}
 	}
@@ -626,6 +623,9 @@ void ABYParty::CPartyWorkerThread::ThreadMain() {
 				bSuccess = m_pCallback->ThreadReceiveValues();
 			}
 			break;
+		case e_Party_Undefined:
+		default:
+			cerr << "Error: Unhandled Thread Job!" << endl;
 		}
 
 		m_pCallback->ThreadNotifyTaskDone(bSuccess);

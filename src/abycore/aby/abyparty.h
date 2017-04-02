@@ -60,7 +60,8 @@ using namespace std;
 
 class ABYParty {
 public:
-	ABYParty(e_role pid, char* addr, seclvl seclvl, uint32_t bitlen = 32, uint32_t nthreads = 2, e_mt_gen_alg mg_algo = MT_OT, uint32_t maxgates = 4000000, uint16_t port = 7766);
+	ABYParty(e_role pid, char* addr = (char*) "127.0.0.1", uint16_t port = 7766, seclvl seclvl = LT, uint32_t bitlen = 32,
+			uint32_t nthreads =	2, e_mt_gen_alg mg_algo = MT_OT, uint32_t maxgates = 4000000);
 	~ABYParty();
 
 	vector<Sharing*>& GetSharings() {

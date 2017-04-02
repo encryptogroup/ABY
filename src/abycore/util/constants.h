@@ -498,7 +498,7 @@ const uint64_t m_vLUT_ADD_INV[3][6] = {
  \brief All operations in the different sharings that are available in ABY
  */
 static const aby_ops_t m_tAllOps[] = {
-//	{OP_IO, S_BOOL, "iobool"},
+	{OP_IO, S_BOOL, "iobool"},
 	{OP_XOR, S_BOOL, "xorbool"},
 	{OP_AND, S_BOOL, "andbool"},
 	{OP_ADD, S_BOOL, "addbool"},

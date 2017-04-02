@@ -193,7 +193,7 @@ void crypto::init_aes_key(AES_KEY_CTX* aes_key, uint32_t symbits, uint8_t* seed,
 }
 
 void crypto::seed_aes_key(AES_KEY_CTX* aeskey, uint8_t* seed, bc_mode mode, const uint8_t* iv, bool encrypt) {
-	seed_aes_key(aeskey, secparam.symbits, seed, mode, iv);
+	seed_aes_key(aeskey, secparam.symbits, seed, mode, iv, encrypt);
 }
 
 void crypto::clean_aes_key(AES_KEY_CTX* aeskey) {
@@ -273,6 +273,7 @@ void crypto::hash_non_threadsafe(uint8_t* resbuf, uint32_t noutbytes, uint8_t* i
 }
 
 //A fixed-key hashing scheme that uses AES, should not be used for real hashing, hashes to AES_BYTES bytes
+//TODO not thread safe
 void crypto::fixed_key_aes_hash(AES_KEY_CTX* aes_key, uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t ninbytes) {
 	uint32_t i;
 	int32_t dummy;
@@ -440,18 +441,27 @@ void sha512_hash(uint8_t* resbuf, uint32_t noutbytes, uint8_t* inbuf, uint32_t n
 
 //Read random bytes from /dev/random - copied from stackoverflow (post by zneak)
 void gen_secure_random(uint8_t* dest, uint32_t nbytes) {
-	int32_t randomData = open("/dev/random", O_RDONLY);
-	uint32_t bytectr = 0;
+	int fd = open("/dev/random", O_RDONLY);
+	if (fd < 0)
+	{
+		cerr << "Unable to open /dev/random, exiting" << endl;
+		exit(0);
+	}
+	size_t bytectr = 0;
 	while (bytectr < nbytes) {
-		uint32_t result = read(randomData, dest + bytectr, nbytes - bytectr);
+		ssize_t result = read(fd, dest + bytectr, nbytes - bytectr);
 		if (result < 0) {
 			cerr << "Unable to read from /dev/random, exiting" << endl;
 			exit(0);
 		}
-		bytectr += result;
+		bytectr += static_cast<size_t>(result);
 	}
-	close(randomData);
+	if (close(fd) < 0)
+	{
+		cerr << "Unable to close /dev/random" << endl;
+	}
 }
+
 
 seclvl get_sec_lvl(uint32_t symsecbits) {
 	if (symsecbits == ST.symbits)
