@@ -80,7 +80,12 @@ void Circuit::Reset() {
 	for (int i = 0; i < m_vOutputBits.size(); i++)
 		m_vOutputBits[i] = 0;
 
-
+	// reset number of SIMD gates
+	ncombgates = 0;
+	nsplitgates = 0;
+	npermgates = 0;
+	nsubsetgates = 0;
+	nstructcombgates = 0;
 
 	//free(m_vNonLinOnLayer.num_on_layer);
 	//m_vNonLinOnLayer.max_depth = 0;
