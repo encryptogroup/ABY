@@ -799,11 +799,11 @@ uint32_t FindBitLenPositionInVec(uint32_t bitlen, non_lin_vec_ctx* list, uint32_
 }
 
 void ABYCircuit::Reset() {
-	//TODO: causes segfault in Boolean sharing if only one party gets output, fix!
-	/*for(uint32_t i = 0; i < m_nNextFreeGate; i++) {
-	 if(m_pGates[i].type == G_OUT)
-	 free(m_pGates[i].gs.val);
-	 }*/
+	//FIXME: causes segfault in Boolean sharing if only one party gets output, fix!
+	for (uint32_t i = 0; i < m_nNextFreeGate; i++) {
+		if (m_pGates[i].type == G_OUT)
+			free(m_pGates[i].gs.val);
+	}
 	memset(m_pGates, 0, sizeof(GATE) * m_nMaxGates);
 	m_nNextFreeGate = 0;
 	m_nMaxVectorSize = 1;
