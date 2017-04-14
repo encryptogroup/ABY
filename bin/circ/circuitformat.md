@@ -4,7 +4,7 @@ _v0.1 - 2017-04-13_
 
 This circuit format can be parsed by the [ABY framework](https://github.com/encryptogroup/ABY). It was used to implement (among others) floating point gates, which were generated and optimized using hardware synthesis tools. Details on that can be found in [our CCS'15 paper](http://dl.acm.org/citation.cfm?id=2813678).
 
-This circuit format is similar to human-readable [bristol format](https://www.cs.bris.ac.uk/Research/CryptographySecurity/MPC/), but a bit simpler.
+This circuit format is similar to human-readable [Bristol format](https://www.cs.bris.ac.uk/Research/CryptographySecurity/MPC/), but a bit simpler.
 The differences to the bristol format are
 * We currently assume all gates to have a fixed number of input wires, so we do not need to encode this info.
 * The files are sorted topologically, i.e., gates are defined strictly in order from input to output, or put differently, a wire id is always defined or written to before it is read or output.
@@ -27,7 +27,7 @@ Later this idea was dropped but the syntax is still in the ABY files. Currently 
 `O 101 102 103` denotes the three output wire labels 101, 102, and 103. We assume that 101, 102 and 103 are at some point defined as inputs or outputs from function gates. Usually output wires have the highest wire IDs in the circuit. These are used to specifically hint what meaningful circuit outputs are. In principle, every wire ID could be an output.
 
 ### Constant Wire
-`0 -2` and `1 -3` denote the constant zero and one wires with IDs -2 and -3, respectively and are hard-coded.
+`0 -2` and `1 -3` denote the constant zero and one wires with IDs -2 and -3, respectively. They need only be defined once and are typically hard-coded.
 
 
 ## Function Gate Types
@@ -55,3 +55,8 @@ Every character at the beginning of a line that does not denote one of the previ
 
 ## Usage with ABY
 In order to use the built-in methods for floating-point computation in ABY, the circuit files must be placed in a subdirectory `circ`, which must be located in the same directory as the executable.
+
+### Floating-point circuit files
+Most floating-point gates come in different bit lengths of 16, 42, and 64 bit precision. Gates are available as full IEEE version, that includes status outputs that denote division by zero, overflows, etc. FP circuits denoted with _nostatus_ do not contain these outputs and are thus marginally smaller.
+
+All circuits are optimized for both low depth and low number of AND gates, with a priority on low-depth, i.e. there might be gates that have a lower number of AND gates but higher depth.
