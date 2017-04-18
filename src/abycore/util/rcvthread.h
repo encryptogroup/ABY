@@ -42,7 +42,7 @@ public:
 	}
 	;
 	~RcvThread() {
-		//this->Kill();
+		this->Kill();
 		delete rcvlock;
 		free(listeners);
 	}
