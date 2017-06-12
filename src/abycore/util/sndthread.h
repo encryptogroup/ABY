@@ -84,7 +84,7 @@ public:
 		snd_task* task = (snd_task*) malloc(sizeof(snd_task));
 		task->channelid = ADMIN_CHANNEL;
 		task->bytelen = 1;
-		task->snd_buf = (uint8_t*) malloc(1);
+		task->snd_buf = (uint8_t*) calloc(1, 1);
 
 		sndlock->Lock();
 		send_tasks.push(task);
