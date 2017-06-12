@@ -137,6 +137,8 @@ void ABYParty::Cleanup() {
 
 	delete m_tComm->snd_std;
 	delete m_tComm->snd_inv;
+	delete m_tComm->rcv_std;
+	delete m_tComm->rcv_inv;
 
 	free(m_tComm);
 
@@ -631,4 +633,3 @@ void ABYParty::CPartyWorkerThread::ThreadMain() {
 		m_pCallback->ThreadNotifyTaskDone(bSuccess);
 	}
 }
-
