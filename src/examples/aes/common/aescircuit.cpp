@@ -301,7 +301,7 @@ vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(vector<uint32_t> input, Boole
 	vector<uint32_t> y(22);
 	vector<uint32_t> t(68);
 	vector<uint32_t> s(8);
-	vector<uint32_t> z(17);
+	vector<uint32_t> z(18);
 	vector<uint32_t> out(8);
 
 	for(uint32_t i = 0; i < x.size(); i++) {
@@ -698,4 +698,3 @@ void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t
 	}
 	free(aes_key);
 }
-
