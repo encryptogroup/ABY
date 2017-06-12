@@ -74,7 +74,7 @@ void ABYSetup::Cleanup() {
 		m_tSetupChan->synchronize_end();
 		delete m_tSetupChan;
 	}
-/*	if(iknp_ot_sender) {
+	if(iknp_ot_sender) {
 		delete iknp_ot_sender;
 	}
 	if(iknp_ot_receiver) {
@@ -83,14 +83,14 @@ void ABYSetup::Cleanup() {
 
 #ifdef USE_KK_OT
 	//FIXME: deleting kk_ot_receiver or sender causes a SegFault in AES with Yao
-	if(kk_ot_receiver) {	
+	if(kk_ot_receiver) {
 		delete kk_ot_receiver;
 	}
 	if(kk_ot_sender) {
 		delete kk_ot_sender;
 	}
 #endif
-*/
+
 
 }
 
@@ -519,4 +519,3 @@ void ABYSetup::Reset() {
 		m_vKKOTTasks[i].clear();
 	}
 }
-
