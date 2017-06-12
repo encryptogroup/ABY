@@ -131,7 +131,6 @@ void ABYParty::Cleanup() {
 	for (uint32_t i = 0; i < m_nHelperThreads; i++) {
 		m_vThreads[i]->PutJob(e_Party_Stop);
 		m_vThreads[i]->Wait();
-		m_vThreads[i]->Kill();
 		delete m_vThreads[i];
 	}
 

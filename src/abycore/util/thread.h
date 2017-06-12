@@ -4,12 +4,12 @@
  \copyright	________________
  */
 
-#ifndef __THREAD_H__BY_SGCHOI  
-#define __THREAD_H__BY_SGCHOI 
+#ifndef __THREAD_H__BY_SGCHOI
+#define __THREAD_H__BY_SGCHOI
 
 #include "typedefs.h"
 
-#ifdef WIN32 
+#ifdef WIN32
 
 #include <process.h>
 
@@ -108,7 +108,7 @@ protected:
 	HANDLE m_hHandle;
 };
 
-#else // NOT WIN32 
+#else // NOT WIN32
 #include <pthread.h>
 class CThread {
 public:
@@ -253,4 +253,3 @@ public:
 };
 
 #endif //__THREAD_H__BY_SGCHOI
-
