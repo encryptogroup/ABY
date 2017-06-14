@@ -69,6 +69,11 @@ BOOL ABYSetup::Init() {
 }
 
 void ABYSetup::Cleanup() {
+	for(size_t i = 0; i < m_vThreads.size(); i++) {
+		m_vThreads[i]->PutJob(e_Stop);
+		m_vThreads[i]->Wait();
+		delete m_vThreads[i];
+	}
 	if(m_tSetupChan) {
 		m_tSetupChan->synchronize_end();
 		delete m_tSetupChan;
@@ -89,7 +94,6 @@ void ABYSetup::Cleanup() {
 		delete kk_ot_sender;
 	}
 #endif
-
 
 }
 
