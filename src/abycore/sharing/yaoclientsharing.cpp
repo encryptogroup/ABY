@@ -35,7 +35,6 @@ void YaoClientSharing::InitClient() {
 
 	fMaskFct = new XORMasking(m_cCrypto->get_seclvl().symbits);
 
-	//TODO free memory after use
 	m_vTmpEncBuf = (uint8_t**) malloc(sizeof(uint8_t*) * KEYS_PER_GATE_IN_TABLE);
 	for(uint32_t i = 0; i < KEYS_PER_GATE_IN_TABLE; i++)
 		m_vTmpEncBuf[i] = (uint8_t*) malloc(sizeof(uint8_t) * AES_BYTES);
@@ -44,6 +43,11 @@ void YaoClientSharing::InitClient() {
 
 YaoClientSharing::~YaoClientSharing() {
 		Reset();
+		for(size_t i = 0; i < KEYS_PER_GATE_IN_TABLE; i++) {
+			free(m_vTmpEncBuf[i]);
+		}
+		free(m_vTmpEncBuf);
+		delete fMaskFct;
 }
 
 //Pre-set values for new layer
@@ -72,7 +76,6 @@ void YaoClientSharing::PrepareSetupPhase(ABYSetup* setup) {
 	m_nClientInputBits = m_cBoolCircuit->GetNumInputBitsForParty(CLIENT);
 	m_nConversionInputBits = m_cBoolCircuit->GetNumB2YGates() + m_cBoolCircuit->GetNumA2YGates() + m_cBoolCircuit->GetNumYSwitchGates();
 
-	m_vGarbledCircuit.Create(0); //m_nANDGates * KEYS_PER_GATE_IN_TABLE * m_sSecLvl.symbits);
 	buf = (BYTE*) malloc(gt_size);
 	m_vGarbledCircuit.AttachBuf(buf, gt_size);
 

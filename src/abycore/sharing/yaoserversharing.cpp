@@ -49,6 +49,14 @@ void YaoServerSharing::InitServer() {
 
 YaoServerSharing::~YaoServerSharing() {
 		Reset();
+		for(size_t i = 0; i < 2; i++) {
+			free(m_bLMaskBuf[i]);
+			free(m_bRMaskBuf[i]);
+			free(m_bOKeyBuf[i]);
+		}
+		free(m_bLKeyBuf);
+		free(m_bTmpBuf);
+		delete fMaskFct;
 }
 
 //Pre-set values for new layer
