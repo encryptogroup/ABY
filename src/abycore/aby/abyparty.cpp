@@ -87,7 +87,6 @@ ABYParty::ABYParty(e_role pid, char* addr, uint16_t port, seclvl seclvl, uint32_
 }
 
 ABYParty::~ABYParty() {
-
 	m_vSharings[S_BOOL]->PreCompFileDelete();
 	Cleanup();
 }

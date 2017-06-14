@@ -69,7 +69,6 @@ BOOL ABYSetup::Init() {
 }
 
 void ABYSetup::Cleanup() {
-
 	if(m_tSetupChan) {
 		m_tSetupChan->synchronize_end();
 		delete m_tSetupChan;
