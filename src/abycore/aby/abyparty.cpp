@@ -143,6 +143,7 @@ void ABYParty::Cleanup() {
 	for (uint32_t i = 0; i < m_vSockets.size(); i++) {
 		m_vSockets[i]->Close();
 	}
+	delete m_cCrypt;
 }
 
 CBitVector ABYParty::ExecCircuit() {
@@ -401,13 +402,7 @@ BOOL ABYParty::ThreadSendValues() {
 		m_tPartyChan->send(snd_buf_total, snd_buf_size_total);
 	}
 
-	for (uint32_t j = 0; j < m_vSharings.size(); j++) {
-		sendbuf[j].clear();
-		sndbytes[j].clear();
-	}
-	sendbuf.clear();
-	sndbytes.clear();
-	//free(snd_buf_total);
+	free(snd_buf_total);
 
 	return true;
 }

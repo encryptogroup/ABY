@@ -214,8 +214,10 @@ BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
 		cout << "X1: ";
 		task->pval.sndval.X1->PrintHex();
 #endif
+		free(task);
 	}
 	m_vIKNPOTTasks[inverse].resize(0);
+	free(X);
 	return success;
 }
 
@@ -242,6 +244,7 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 		cout << "R: ";
 		task->pval.rcvval.R->PrintHex();
 #endif
+		free(task);
 	}
 	m_vIKNPOTTasks[inverse].resize(0);
 	return success;
@@ -256,10 +259,9 @@ BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
 
 	for (uint32_t i = 0; i < m_vKKOTTasks[inverse].size(); i++) {
 		KK_OTTask* task = m_vKKOTTasks[inverse][i];
-		CBitVector** X = (CBitVector**) malloc(sizeof(CBitVector*) * task->nsndvals);
 
 		uint32_t numOTs = task->numOTs;
-		X = task->pval.sndval.X;
+		CBitVector** X = task->pval.sndval.X;
 
 		/*cout << "Address of X = " << (uint64_t) X << endl;
 		for(uint32_t j = 0; j < task->nsndvals; j++) {
@@ -277,8 +279,8 @@ BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
 			cout << "X" << j << ": ";
 			X[j]->PrintHex();
 		}
-
 #endif
+		free(task);
 	}
 	m_vKKOTTasks[inverse].resize(0);
 	return success;
@@ -307,6 +309,7 @@ BOOL ABYSetup::ThreadRunKKRcv(uint32_t exec) {
 		cout << "R: ";
 		task->pval.rcvval.R->PrintHex();
 #endif
+		free(task);
 	}
 	m_vKKOTTasks[inverse].resize(0);
 	return success;
