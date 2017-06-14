@@ -19,7 +19,7 @@
 #include "abycircuit.h"
 
 void ABYCircuit::Cleanup() {
-	//TODO
+	Reset();
 	free(m_pGates);
 }
 
