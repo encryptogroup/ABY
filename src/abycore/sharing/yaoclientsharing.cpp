@@ -42,6 +42,10 @@ void YaoClientSharing::InitClient() {
 
 }
 
+YaoClientSharing::~YaoClientSharing() {
+		Reset();
+}
+
 //Pre-set values for new layer
 void YaoClientSharing::InitNewLayer() {
 	m_nServerInBitCtr = 0;

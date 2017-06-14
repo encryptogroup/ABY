@@ -37,8 +37,8 @@ typedef struct {
 } a2y_gate_pos_t;
 
 
-/** 
- \def 	KEYS_PER_GATE_IN_TABLE 
+/**
+ \def 	KEYS_PER_GATE_IN_TABLE
  \brief	____________________
  */
 #define KEYS_PER_GATE_IN_TABLE 2
@@ -57,10 +57,7 @@ public:
 	}
 	;
 	/** Destructor for the class. */
-	~YaoSharing() {
-		//TODO deallocate things here
-	}
-	;
+	virtual ~YaoSharing();
 
 	// METHODS FROM SUPER CLASS SHARING...
 	virtual void Reset() = 0;
@@ -103,7 +100,7 @@ public:
 	void PrintPerformanceStatistics();
 	//SUPER CLASS METHODS END HERE...
 
-	/** 
+	/**
 	 Evaluating SIMD Gate.
 	 \param 	gateid 	Identifier of the gate to be evaluated.
 	 */
@@ -156,11 +153,11 @@ protected:
 	/** Initiator function. This method is invoked from the constructor of the class.*/
 	void Init();
 
-	/**	
-	 Encrypt Wire Function <DETAILED DESCRIPTION> 
+	/**
+	 Encrypt Wire Function <DETAILED DESCRIPTION>
 	 \param  c 		________________
 	 \param  p 		________________
-	 \param  id 		________________	
+	 \param  id 		________________
 	 */
 	BOOL EncryptWire(BYTE* c, BYTE* p, uint32_t id);
 

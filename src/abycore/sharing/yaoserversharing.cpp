@@ -47,6 +47,10 @@ void YaoServerSharing::InitServer() {
 	InitNewLayer();
 }
 
+YaoServerSharing::~YaoServerSharing() {
+		Reset();
+}
+
 //Pre-set values for new layer
 void YaoServerSharing::InitNewLayer() {
 	m_nServerKeyCtr = 0;

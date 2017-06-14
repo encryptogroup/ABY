@@ -37,11 +37,7 @@ public:
 	}
 	;
 	/** Destructor of the class.*/
-	~YaoClientSharing() {
-		Reset();
-		delete m_cBoolCircuit;
-	}
-	;
+	~YaoClientSharing();
 
 	//MEMBER FUNCTIONS FROM SUPER CLASS YAO SHARING
 	void Reset();

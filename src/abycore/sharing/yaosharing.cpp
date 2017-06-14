@@ -21,7 +21,7 @@
 void YaoSharing::Init() {
 	/* init the class for correctly sized Yao key operations*/
 	InitYaoKey(&m_pKeyOps, m_cCrypto->get_seclvl().symbits);
-	
+
 	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext);
 
 	m_bZeroBuf = (BYTE*) calloc(m_nSecParamBytes, sizeof(BYTE));
@@ -36,6 +36,18 @@ void YaoSharing::Init() {
 #endif
 
 	m_nSecParamIters = ceil_divide(m_nSecParamBytes, sizeof(UGATE_T));
+}
+
+YaoSharing::~YaoSharing() {
+	delete m_pKeyOps;
+	delete m_cBoolCircuit;
+	free(m_bZeroBuf);
+	free(m_bTempKeyBuf);
+#ifdef FIXED_KEY_GARBLING
+	free(m_bResKeyBuf);
+	m_cCrypto->clean_aes_key(m_kGarble);
+	free(m_kGarble);
+#endif
 }
 
 BOOL YaoSharing::EncryptWire(BYTE* c, BYTE* p, uint32_t id)

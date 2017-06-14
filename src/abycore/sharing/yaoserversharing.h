@@ -42,11 +42,7 @@ public:
 	/**
 	 Destructor of the class.
 	 */
-	~YaoServerSharing() {
-		Reset();
-		delete m_cBoolCircuit;
-	}
-	;
+	~YaoServerSharing();
 
 	//MEMBER FUNCTIONS FROM SUPER CLASS YAO SHARING
 	void Reset();
