@@ -1684,31 +1684,32 @@ void SetupLUT::Reset() {
 	for (uint32_t i = 0; i < m_vPreCompOTX.size(); i++) {
 		for(uint32_t k = 0; k < m_vPreCompOTX[i].size(); k++) {
 			for(uint32_t j = 0; j < (1<<i); j++) {
-				m_vPreCompOTX[i][k][j]->delCBitVector();
+				delete m_vPreCompOTX[i][k][j];
 			}
+			free(m_vPreCompOTX[i][k]);
 			//m_vPreCompOTX[i][k].resize(0);
 			//free(m_vPreCompOTX[i]);
-			m_vPreCompOTMasks[i][k]->delCBitVector();
+			delete m_vPreCompOTMasks[i][k];
 
-			m_vPreCompOTC[i][k]->delCBitVector();
-			m_vPreCompOTR[i][k]->delCBitVector();
+			delete m_vPreCompOTC[i][k];
+			delete m_vPreCompOTR[i][k];
 
 			//TODO: setting to 0 is probably not required. test this and remove if so
 			m_vPreCompMaskIdx[i][k] = 0;
 			m_vPreCompChoiceIdx[i][k] = 0;
 
 			m_nMaskUpdateSndCtr[i][k] = 0;
-			m_vMaskUpdateSndBuf[i][k]->delCBitVector();
+			delete m_vMaskUpdateSndBuf[i][k];
 			m_nMaskUpdateRcvCtr[i][k] = 0;
-			m_vMaskUpdateRcvBuf[i][k]->delCBitVector();
+			delete m_vMaskUpdateRcvBuf[i][k];
 
 			m_nChoiceUpdateSndCtr[i][k] = 0;
-			m_vChoiceUpdateSndBuf[i][k]->delCBitVector();
+			delete m_vChoiceUpdateSndBuf[i][k];
 			m_nChoiceUpdateRcvCtr[i][k] = 0;
-			m_vChoiceUpdateRcvBuf[i][k]->delCBitVector();
+			delete m_vChoiceUpdateRcvBuf[i][k];
 
 			m_nTableRndIdx[i][k] = 0;
-			m_vTableRnd[i][k]->delCBitVector();
+			delete m_vTableRnd[i][k];
 		}
 		m_vPreCompOTX[i].resize(0);
 		m_vPreCompOTMasks[i].resize(0);
