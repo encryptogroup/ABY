@@ -43,11 +43,12 @@ public:
 	;
 	~RcvThread() {
 		this->Wait();
-		delete rcvlock;
 		for(uint32_t i = 0; i < MAX_NUM_COMM_CHANNELS; i++) {
+			flush_queue(i);
 			delete listeners[i].rcv_buf;
 		}
 		free(listeners);
+		delete rcvlock;
 	}
 	;
 

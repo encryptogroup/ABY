@@ -30,7 +30,6 @@ public:
 		if(m_bRcvAlive) {
 			m_cRcver->remove_listener(m_bChannelID);
 		}
-
 		delete m_eRcved;
 		delete m_eFin;
 	}
@@ -60,8 +59,10 @@ public:
 		assert(m_bRcvAlive);
 		while(m_qRcvedBlocks->empty())
 			m_eRcved->Wait();
-		uint8_t* ret_block = ((rcv_ctx*)m_qRcvedBlocks->front())->buf;
+		rcv_ctx* ret = (rcv_ctx*) m_qRcvedBlocks->front();
+		uint8_t* ret_block = ret->buf;
 		m_qRcvedBlocks->pop();
+		free(ret);
 
 		return ret_block;
 	}
@@ -71,8 +72,8 @@ public:
 		while(m_qRcvedBlocks->empty())
 			m_eRcved->Wait();
 
-
-		uint8_t* ret_block = ((rcv_ctx*) m_qRcvedBlocks->front())->buf;
+		rcv_ctx* ret = (rcv_ctx*) m_qRcvedBlocks->front();
+		uint8_t* ret_block = ret->buf;
 		uint64_t rcved_this_call = ((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes;
 		if(rcved_this_call == rcvsize) {
 			m_qRcvedBlocks->pop();
@@ -93,6 +94,7 @@ public:
 		}
 		memcpy(rcvbuf, ret_block, rcved_this_call);
 		free(ret_block);
+		free(ret);
 	}
 
 
