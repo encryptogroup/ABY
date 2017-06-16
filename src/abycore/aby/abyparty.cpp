@@ -142,6 +142,7 @@ void ABYParty::Cleanup() {
 
 	for (uint32_t i = 0; i < m_vSockets.size(); i++) {
 		m_vSockets[i]->Close();
+		delete m_vSockets[i];
 	}
 	delete m_cCrypt;
 }

@@ -1819,4 +1819,3 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 	fclose(fp);
 	return TRUE;
 }
-

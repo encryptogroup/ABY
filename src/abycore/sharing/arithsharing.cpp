@@ -34,7 +34,7 @@ void ArithSharing<T>::Init() {
 	m_nConvShareIdx = 0;
 	m_nConvShareSndCtr = 0;
 	m_nConvShareRcvCtr = 0;
-	
+
 	m_nInputShareSndCtr = 0;
 	m_nOutputShareSndCtr = 0;
 	m_nInputShareRcvCtr = 0;
@@ -77,7 +77,6 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 
 	InitMTs();
 
-	ArithMTMasking<T> *fMaskFct = new ArithMTMasking<T>(1, &(m_vB[0])); //TODO to implement the vector multiplication change first argument
 	if (m_nMTs > 0) {
 		if (m_eMTGenAlg == MT_PAILLIER || m_eMTGenAlg == MT_DGK) {
 			PKMTGenVals* pgentask = (PKMTGenVals*) malloc(sizeof(PKMTGenVals));
@@ -88,6 +87,7 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 			pgentask->sharebitlen = m_nTypeBitLen;
 			setup->AddPKMTGenTask(pgentask);
 		} else {
+			ArithMTMasking<T> *fMaskFct = new ArithMTMasking<T>(1, &(m_vB[0])); //TODO to implement the vector multiplication change first argument
 			for (uint32_t i = 0; i < 2; i++) {
 				IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 				task->bitlen = m_nTypeBitLen;
@@ -1116,4 +1116,3 @@ template class ArithSharing<UINT8_T> ;
 template class ArithSharing<UINT16_T> ;
 template class ArithSharing<UINT32_T> ;
 template class ArithSharing<UINT64_T> ;
-

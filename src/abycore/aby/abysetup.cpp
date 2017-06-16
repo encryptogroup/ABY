@@ -214,6 +214,7 @@ BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
 		cout << "X1: ";
 		task->pval.sndval.X1->PrintHex();
 #endif
+		delete task->mskfct;
 		free(task);
 	}
 	m_vIKNPOTTasks[inverse].resize(0);
@@ -244,6 +245,7 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 		cout << "R: ";
 		task->pval.rcvval.R->PrintHex();
 #endif
+		delete task->mskfct;
 		free(task);
 	}
 	m_vIKNPOTTasks[inverse].resize(0);
@@ -280,6 +282,7 @@ BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
 			X[j]->PrintHex();
 		}
 #endif
+		delete task->mskfct;
 		free(task);
 	}
 	m_vKKOTTasks[inverse].resize(0);
@@ -309,6 +312,7 @@ BOOL ABYSetup::ThreadRunKKRcv(uint32_t exec) {
 		cout << "R: ";
 		task->pval.rcvval.R->PrintHex();
 #endif
+		delete task->mskfct;
 		free(task);
 	}
 	m_vKKOTTasks[inverse].resize(0);
@@ -344,7 +348,7 @@ BOOL ABYSetup::ThreadRunPaillierMTGen(uint32_t threadid) {
 			m_cPaillierMTGen->preCompBench(ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, ptask->A->GetArr() + mystartpos,
 					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, djnchan);
 		}
-
+		free(ptask);
 	}
 	djnchan->synchronize_end();
 	delete djnchan;
@@ -383,6 +387,7 @@ BOOL ABYSetup::ThreadRunDGKMTGen(uint32_t threadid) {
 			m_cDGKMTGen[i]->preCompBench(ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, ptask->A->GetArr() + mystartpos,
 					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, dgkchan);
 		}
+		free(ptask);
 	}
 	dgkchan->synchronize_end();
 	delete dgkchan;

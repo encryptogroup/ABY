@@ -47,7 +47,7 @@ YaoClientSharing::~YaoClientSharing() {
 			free(m_vTmpEncBuf[i]);
 		}
 		free(m_vTmpEncBuf);
-		delete fMaskFct;
+		// don't delete fMaskFct: this is done in the ABYSetup::ThreadRun* functions
 }
 
 //Pre-set values for new layer
