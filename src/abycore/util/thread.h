@@ -128,6 +128,7 @@ public:
 	BOOL Wait() {
 		if (!m_bRunning)
 			return TRUE;
+		m_bRunning = FALSE;
 		return pthread_join(m_pThread, NULL) == 0;
 	}
 
@@ -147,7 +148,6 @@ protected:
 	static void* ThreadMainHandler(void* p) {
 		CThread* pThis = (CThread*) p;
 		pThis->ThreadMain();
-		pThis->m_bRunning = FALSE;
 		return 0;
 	}
 
