@@ -95,6 +95,7 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 				task->rec_flavor = Rec_OT;
 				task->numOTs = m_nMTs * m_nTypeBitLen;
 				task->mskfct = fMaskFct;
+				task->delete_mskfct = (i == 0 ? TRUE : FALSE);
 				if ((m_eRole ^ i) == SERVER) {
 					task->pval.sndval.X0 = &(m_vC[0]);
 					task->pval.sndval.X1 = &(m_vC[0]);
@@ -120,6 +121,7 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 		task->rec_flavor = Rec_OT;
 		task->numOTs = m_nNumCONVs * m_nTypeBitLen;
 		task->mskfct = fXORMaskFct;
+		task->delete_mskfct = TRUE;
 		if ((m_eRole) == SERVER) {
 			m_vConversionMasks[0].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
 			m_vConversionMasks[1].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);

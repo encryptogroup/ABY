@@ -153,6 +153,7 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 			task->nsndvals = 4;
 			task->numOTs = ceil_divide(m_nNumMTs[0], 2);
 			task->mskfct = fMaskFct;
+			task->delete_mskfct = (i == 0 ? TRUE : FALSE);
 			if ((m_eRole ^ j) == SERVER) {
 				task->pval.sndval.X = m_vKKS.data();
 			} else {
@@ -320,6 +321,7 @@ void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
 
 		fMaskFct = new XORMasking(task->bitlen);
 		task->mskfct = fMaskFct;
+		task->delete_mskfct = TRUE;
 		if (m_eRole == SERVER) {
 			//cout << "I assigned sender" << endl;
 			task->pval.sndval.X = it->second->rot_OT_vals;

@@ -86,6 +86,7 @@ struct IKNP_OTTask {
 	uint32_t numOTs;	//number of OTs that are performed
 	uint32_t bitlen; //bitlen in the OTs
 	MaskingFunction* mskfct; //the masking function used
+	BOOL delete_mskfct; // whether or not to delete mskfct when the task is done
 	IKNPPartyValues pval;   //contains the sender and receivers input and output
 };
 
@@ -97,6 +98,7 @@ struct KK_OTTask {
 	uint32_t numOTs;	//number of OTs that are performed
 	uint32_t bitlen; //bitlen in the OTs
 	MaskingFunction* mskfct; //the masking function used
+	BOOL delete_mskfct; // whether or not to delete mskfct when the task is done
 	KKPartyValues pval;   //contains the sender and receivers input and output
 };
 
@@ -232,4 +234,3 @@ private:
 };
 
 #endif //__ABYSETUP_H__
-

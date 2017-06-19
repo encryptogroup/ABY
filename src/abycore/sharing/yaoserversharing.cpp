@@ -135,6 +135,7 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 	task->rec_flavor = Rec_OT;
 	task->numOTs = m_nClientInputBits + m_nConversionInputBits;
 	task->mskfct = fMaskFct;
+	task->delete_mskfct = FALSE; // is deleted in destructor
 	task->pval.sndval.X0 = &(m_vROTMasks[0]);
 	task->pval.sndval.X1 = &(m_vROTMasks[1]);
 
