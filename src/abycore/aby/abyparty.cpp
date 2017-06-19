@@ -521,8 +521,8 @@ BOOL ABYParty::ABYPartyListen() {
 	bool success = Listen(m_cAddress, m_nPort, tempsocks, m_vSockets.size(), (uint32_t) m_eRole);
 	for(uint32_t i = 0; i < m_vSockets.size(); i++) {
 		m_vSockets[i] = tempsocks[1][i];
+		delete tempsocks[0][i];
 	}
-	tempsocks[0][0]->Close();
 	return success;
 }
 
