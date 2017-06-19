@@ -352,6 +352,7 @@ BOOL ABYParty::EvaluateCircuit() {
 		cout << "Done with online phase; synchronizing "<< endl;
 #endif
 	m_tPartyChan->synchronize_end();
+	delete m_tPartyChan;
 
 #ifdef BENCHONLINEPHASE
 	cout << "Online time is distributed as follows: " << endl;
