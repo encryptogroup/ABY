@@ -143,8 +143,6 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 	if((GetPreCompPhaseValue() != ePreCompRead)&&(GetPreCompPhaseValue() != ePreCompRAMRead)) {
 
 #ifdef USE_KK_OT_FOR_MT
-		fMaskFct = new XORMasking(m_vANDs[0].bitlen);
-
 		for (uint32_t j = 0; j < 2; j++) {
 			KK_OTTask* task = (KK_OTTask*) malloc(sizeof(KK_OTTask));
 			task->bitlen = m_vANDs[0].bitlen;
@@ -152,8 +150,8 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 			task->rec_flavor = Rec_OT;
 			task->nsndvals = 4;
 			task->numOTs = ceil_divide(m_nNumMTs[0], 2);
-			task->mskfct = fMaskFct;
-			task->delete_mskfct = (i == 0 ? TRUE : FALSE);
+			task->mskfct = new XORMasking(m_vANDs[0].bitlen);
+			task->delete_mskfct = TRUE;
 			if ((m_eRole ^ j) == SERVER) {
 				task->pval.sndval.X = m_vKKS.data();
 			} else {
@@ -169,15 +167,14 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 #else
 		for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 #endif
-			fMaskFct = new XORMasking(m_vANDs[i].bitlen);
-
 			for (uint32_t j = 0; j < 2; j++) {
 				IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 				task->bitlen = m_vANDs[i].bitlen;
 				task->snd_flavor = Snd_R_OT;
 				task->rec_flavor = Rec_OT;
 				task->numOTs = m_nNumMTs[i];
-				task->mskfct = fMaskFct;
+				task->mskfct = new XORMasking(m_vANDs[i].bitlen);
+				task->delete_mskfct = TRUE;
 				if ((m_eRole ^ j) == SERVER) {
 					task->pval.sndval.X0 = &(m_vC[i]);
 					task->pval.sndval.X1 = &(m_vB[i]);

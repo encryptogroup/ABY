@@ -87,15 +87,15 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 			pgentask->sharebitlen = m_nTypeBitLen;
 			setup->AddPKMTGenTask(pgentask);
 		} else {
-			ArithMTMasking<T> *fMaskFct = new ArithMTMasking<T>(1, &(m_vB[0])); //TODO to implement the vector multiplication change first argument
 			for (uint32_t i = 0; i < 2; i++) {
+				ArithMTMasking<T> *fMaskFct = new ArithMTMasking<T>(1, &(m_vB[0])); //TODO to implement the vector multiplication change first argument
 				IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 				task->bitlen = m_nTypeBitLen;
 				task->snd_flavor = Snd_C_OT;
 				task->rec_flavor = Rec_OT;
 				task->numOTs = m_nMTs * m_nTypeBitLen;
 				task->mskfct = fMaskFct;
-				task->delete_mskfct = (i == 0 ? TRUE : FALSE);
+				task->delete_mskfct = TRUE;
 				if ((m_eRole ^ i) == SERVER) {
 					task->pval.sndval.X0 = &(m_vC[0]);
 					task->pval.sndval.X1 = &(m_vC[0]);
