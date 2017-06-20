@@ -755,6 +755,7 @@ inline void BoolSharing::EvaluateCONVGate(uint32_t gateid) {
 	uint32_t parentid = gate->ingates.inputs.parents[0];
 	if (m_pGates[parentid].context == S_ARITH)
 		cerr << "can't convert from arithmetic representation directly into Boolean" << endl;
+	assert(m_pGates[parentid].context == S_YAO);
 	InstantiateGate(gate);
 
 	memset(gate->gs.val, 0, ceil_divide(gate->nvals, 8));
@@ -1276,6 +1277,11 @@ inline void BoolSharing::UsedGate(uint32_t gateid) {
 	//If the gate is needed in another subsequent gate, delete it
 	if (!m_pGates[gateid].nused) {
 		free(m_pGates[gateid].gs.val);
+		if(m_eRole == SERVER && m_pGates[gateid].context == S_YAO) {
+			// free additional field of Y2B conversion gates
+			free(m_pGates[gateid].gs.yinput.pi);
+		}
+		m_pGates[gateid].instantiated = false;
 	}
 }
 
