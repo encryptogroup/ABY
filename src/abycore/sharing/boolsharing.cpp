@@ -772,6 +772,7 @@ inline void BoolSharing::EvaluateCONVGate(uint32_t gateid) {
 #endif
 
 	UsedGate(parentid);
+	free(gate->ingates.inputs.parents);
 }
 
 inline void BoolSharing::ReconstructValue(uint32_t gateid) {
