@@ -29,7 +29,7 @@ void YaoServerSharing::InitServer() {
 	m_bLKeyBuf = (BYTE*) malloc(sizeof(BYTE) * m_nSecParamBytes);
 	m_bTmpBuf = (BYTE*) malloc(sizeof(BYTE) * AES_BYTES);
 
-
+	m_vOutputDestionations = nullptr;
 
 	m_nGarbledTableCtr = 0L;
 	m_nGarbledTableSndCtr = 0L;
