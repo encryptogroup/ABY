@@ -1332,6 +1332,9 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 				UsedGate(input[i + k * GATE_T_BITS]);
 			}
 		}*/
+		for(uint32_t i = 0; i < nparents; i++) {
+			UsedGate(input[i]);
+		}
 
 		free(input);
 	} else if (gate->type == G_SPLIT) {
@@ -1543,8 +1546,6 @@ void BoolSharing::Reset() {
 		m_vMTStartIdx[i] = 0;
 	for (uint32_t i = 0; i < m_vMTIdx.size(); i++)
 		m_vMTIdx[i] = 0;
-	for (uint32_t i = 0; i < m_vANDGates.size(); i++)
-		m_vANDGates.clear();
 	m_vANDGates.clear();
 
 	m_vInputShareGates.clear();
