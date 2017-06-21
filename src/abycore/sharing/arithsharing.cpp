@@ -873,6 +873,7 @@ void ArithSharing<T>::UsedGate(uint32_t gateid) {
 	//If the gate is needed in another subsequent gate, delete it
 	if (!m_pGates[gateid].nused) {
 		free(((T*) m_pGates[gateid].gs.val));
+		m_pGates[gateid].instantiated = false;
 	}
 }
 
