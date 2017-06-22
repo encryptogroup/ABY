@@ -463,8 +463,8 @@ uint32_t ABYCircuit::PutTruthTableGate(vector<uint32_t> in, uint32_t rounds, uin
 	uint32_t tt_len = 1<<(in.size());
 
 	gate->gs.tt.noutputs = out_bits;
-	gate->gs.tt.table = (uint64_t*) malloc(pad_to_multiple(tt_len, sizeof(UGATE_T)) * out_bits);
-	memcpy(gate->gs.tt.table, truth_table, pad_to_multiple(tt_len, sizeof(UGATE_T)) * out_bits);
+	gate->gs.tt.table = (uint64_t*) malloc(bits_in_bytes(pad_to_multiple(tt_len, sizeof(UGATE_T)) * out_bits));
+	memcpy(gate->gs.tt.table, truth_table, bits_in_bytes(pad_to_multiple(tt_len, sizeof(UGATE_T)) * out_bits));
 
 	gate->nrounds = rounds;
 
