@@ -301,6 +301,7 @@ void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 					task->nsndvals = 1<<i;
 					task->numOTs = m_vNOTs[j&0x01][i][k].numgates;
 					task->mskfct = fMaskFct;
+					task->delete_mskfct = true;
 					if ((reverse ^ j)) {
 						//cout << "I assigned sender" << endl;
 						task->pval.sndval.X = m_vPreCompOTX[i][k];
