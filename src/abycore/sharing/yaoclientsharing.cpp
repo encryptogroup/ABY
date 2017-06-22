@@ -599,16 +599,6 @@ void YaoClientSharing::InstantiateGate(GATE* gate) {
 	gate->gs.yval = (BYTE*) calloc(m_nSecParamIters * gate->nvals, sizeof(UGATE_T));
 }
 
-void YaoClientSharing::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused && m_pGates[gateid].type != G_CONV) {
-		free(m_pGates[gateid].gs.yval);
-		m_pGates[gateid].instantiated = false;
-	}
-}
-
 void YaoClientSharing::EvaluateSIMDGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	if (gate->type == G_COMBINE) {

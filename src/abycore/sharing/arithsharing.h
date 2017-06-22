@@ -62,7 +62,9 @@ public:
 	}
 
 	void InstantiateGate(GATE* gate);
-	void UsedGate(uint32_t gateid);
+	// void UsedGate(uint32_t gateid) {
+	// 	UsedGate(gateid);
+	// }
 
 	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
 	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
@@ -91,18 +93,18 @@ public:
 
 	void PrintPerformanceStatistics();
 	//ENDS HERE...
-	/** 
+	/**
 	 Evaluating SIMD Gate.
 	 \param 	gateid 	Identifier of the gate to be evaluated.
 	 */
 	void EvaluateSIMDGate(uint32_t gateid);
 
-	/** 
+	/**
 	 Evaluating Inversion Gate.
 	 \param 	gate 	Object of the gate to be evaluated.
 	 */
 	void EvaluateINVGate(GATE* gate);
-	/** 
+	/**
 	 Evaluating Conversion Gate.
 	 \param 	gate 	Object of the gate to be evaluated.
 	 */
@@ -159,12 +161,12 @@ private:
 	uint32_t m_nConvShareIdx; //the global
 	uint32_t m_nConvShareSndCtr; //counts for each round
 	uint32_t m_nConvShareRcvCtr;
-	/** 
+	/**
 	 Share Values
 	 \param 	gate 	Object of class Gate
 	 */
 	void ShareValues(GATE* gate);
-	/** 
+	/**
 	 Reconstruct Values
 	 \param 	gate 	Object of class Gate
 	 */

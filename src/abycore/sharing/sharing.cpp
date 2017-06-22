@@ -214,3 +214,35 @@ void Sharing::EvaluatePrintValGate(uint32_t gateid, e_circuit circ_type) {
 	free(value);
 	free((char*) m_pGates[gateid].gs.infostr);
 }
+
+// What needs to be deleted depends on the gate's context, not the sharing
+// from which the deletion was initiated. This is why this method is here
+// in the Sharing superclass and not its subclasses.
+void Sharing::UsedGate(uint32_t gateid) {
+	GATE *gate = &m_pGates[gateid];
+	if(!gate->instantiated) { return; }
+	gate->nused--;
+	if(!gate->nused) {
+		e_sharing context = gate->context;
+		e_role role = m_eRole;
+		if(context == S_YAO_REV) {
+			role = (role == SERVER ? CLIENT : SERVER);
+			context = S_YAO;
+		}
+		switch(context) {
+		case S_BOOL:
+		case S_ARITH:
+		case S_SPLUT:
+			free(gate->gs.val);
+			break;
+		case S_YAO:
+			if(role == SERVER) {
+				free(gate->gs.yinput.outKey);
+				free(gate->gs.yinput.pi);
+			} else {
+				free(gate->gs.yval);
+			}
+		}
+		gate->instantiated = false;
+	}
+}

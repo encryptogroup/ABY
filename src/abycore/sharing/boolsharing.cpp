@@ -1271,20 +1271,6 @@ inline void BoolSharing::InstantiateGate(GATE* gate) {
 	gate->instantiated = true;
 }
 
-inline void BoolSharing::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(m_pGates[gateid].gs.val);
-		if(m_eRole == SERVER && m_pGates[gateid].context == S_YAO) {
-			// free additional field of Y2B conversion gates
-			free(m_pGates[gateid].gs.yinput.pi);
-		}
-		m_pGates[gateid].instantiated = false;
-	}
-}
-
 void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t vsize = gate->nvals;
@@ -1538,6 +1524,17 @@ void BoolSharing::Reset() {
 	m_nXORGates = 0;
 
 	m_nNumANDSizes = 0;
+
+	// free any gates that are still instantiated
+	// TODO: This should be done when evaluating the circuit using UsedGate()
+	// however, there seem to be cases where this doesn't work, so this loop
+	// cleans up the rest.
+	for(size_t i = 0; i < m_pCircuit->GetGateHead(); i++) {
+		if(m_pGates[i].instantiated && m_pGates[i].context == S_BOOL) {
+			free(m_pGates[i].gs.val);
+			m_pGates[i].instantiated = false;
+		}
+	}
 
 	for (uint32_t i = 0; i < m_nNumMTs.size(); i++) {
 		m_nNumMTs[i] = 0;

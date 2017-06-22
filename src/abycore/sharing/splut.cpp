@@ -1420,15 +1420,6 @@ inline void SetupLUT::InstantiateGate(GATE* gate) {
 	gate->instantiated = true;
 }
 
-inline void SetupLUT::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(m_pGates[gateid].gs.val);
-	}
-}
-
 void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t vsize = gate->nvals;

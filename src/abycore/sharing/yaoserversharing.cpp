@@ -530,7 +530,8 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 	PrintKey(gate->gs.yinput.outKey);
 	cout << endl;
 #endif
-	UsedGate(gate->ingates.inputs.parents[0]);
+	// not calling UsedGate(gate->ingates.inputs.parents[0]) here:
+	// is called in YaoServerSharing::FinishCircuitLayer()
 }
 
 //TODO: optimize for UINT64_T pointers
@@ -854,6 +855,7 @@ void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
 								m_bTempKeyBuf); //One - key
 					}
 				}
+				UsedGate(input);
 			}
 		}
 	}
@@ -930,17 +932,6 @@ void YaoServerSharing::InstantiateGate(GATE* gate) {
 		exit(0);
 	}
 	gate->instantiated = true;
-}
-
-void YaoServerSharing::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(m_pGates[gateid].gs.yinput.outKey);
-		free(m_pGates[gateid].gs.yinput.pi);
-		m_pGates[gateid].instantiated = false;
-	}
 }
 
 void YaoServerSharing::EvaluateSIMDGate(uint32_t gateid) {
@@ -1086,6 +1077,7 @@ void YaoServerSharing::Reset() {
 	m_vServerOutputGates.clear();
 
 	free(m_vOutputDestionations);
+	m_vOutputDestionations = nullptr;
 	m_nOutputDestionationsCtr = 0;
 
 	m_nANDGates = 0;

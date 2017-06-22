@@ -867,17 +867,6 @@ void ArithSharing<T>::InstantiateGate(GATE* gate) {
 }
 
 template<typename T>
-void ArithSharing<T>::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(((T*) m_pGates[gateid].gs.val));
-		m_pGates[gateid].instantiated = false;
-	}
-}
-
-template<typename T>
 void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t vsize = gate->nvals;

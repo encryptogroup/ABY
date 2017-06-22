@@ -75,7 +75,6 @@ public:
 	}
 
 	virtual void InstantiateGate(GATE* gate) = 0;
-	virtual void UsedGate(uint32_t gateid) = 0;
 
 	virtual void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize) = 0;
 	virtual void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) = 0;

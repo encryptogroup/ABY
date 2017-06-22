@@ -58,7 +58,6 @@ public:
 	void PrepareOnlinePhase();
 
 	void InstantiateGate(GATE* gate);
-	void UsedGate(uint32_t gateid);
 
 	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
 	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
