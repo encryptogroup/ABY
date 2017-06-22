@@ -799,12 +799,6 @@ uint32_t FindBitLenPositionInVec(uint32_t bitlen, non_lin_vec_ctx* list, uint32_
 }
 
 void ABYCircuit::Reset() {
-	// free any gates that are still instantiated
-	for(size_t i = 0; i < GetGateHead(); i++) {
-		if(m_pGates[i].instantiated) {
-			free(m_pGates[i].gs.val);
-		}
-	}
 	memset(m_pGates, 0, sizeof(GATE) * m_nMaxGates);
 	m_nNextFreeGate = 0;
 	m_nMaxVectorSize = 1;

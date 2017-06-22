@@ -137,6 +137,12 @@ public:
 	void UsedGate(uint32_t gateid);
 
 	/**
+	 Method for freeing gate memory depending on its type
+	 \param gate		Pointer to the gat to free
+	 */
+	void FreeGate(GATE* gate);
+
+	/**
 	 Method for assigning the input
 	 \param 	input 		Input
 	 */

@@ -115,9 +115,7 @@ BOOL ABYParty::Init() {
 }
 
 void ABYParty::Cleanup() {
-	if (m_pCircuit)
-		delete m_pCircuit;
-
+	Reset();
 	if (m_pSetup)
 		delete m_pSetup;
 
@@ -125,6 +123,12 @@ void ABYParty::Cleanup() {
 		if(m_vSharings[i]) {
 			delete m_vSharings[i];
 		}
+	}
+
+	// clean circuit after sharings because sharing destructors need
+	// access to the circuit structure.
+	if (m_pCircuit) {
+		delete m_pCircuit;
 	}
 
 	for (uint32_t i = 0; i < m_nHelperThreads; i++) {
@@ -526,6 +530,8 @@ BOOL ABYParty::ABYPartyListen() {
 	return success;
 }
 
+// TODO: are InstantiateGate and UsedGate needed in ABYParty? They don't
+// seem to get used anywhere
 void ABYParty::InstantiateGate(uint32_t gateid) {
 	m_pGates[gateid].gs.val = (UGATE_T*) malloc(sizeof(UGATE_T) * (ceil_divide(m_pGates[gateid].nvals, GATE_T_BITS)));
 }
@@ -544,6 +550,13 @@ void ABYParty::Reset() {
 	m_pSetup->Reset();
 	m_nDepth = 0;
 	m_nMyNumInBits = 0;
+
+	// free any gates that are still instantiated
+	for(size_t i = 0; i < m_pCircuit->GetGateHead(); i++) {
+		if(m_pGates[i].instantiated) {
+			m_vSharings[0]->FreeGate(&m_pGates[i]);
+		}
+	}
 	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
 		m_vSharings[i]->Reset();
 	}

@@ -1525,17 +1525,6 @@ void BoolSharing::Reset() {
 
 	m_nNumANDSizes = 0;
 
-	// free any gates that are still instantiated
-	// TODO: This should be done when evaluating the circuit using UsedGate()
-	// however, there seem to be cases where this doesn't work, so this loop
-	// cleans up the rest.
-	for(size_t i = 0; i < m_pCircuit->GetGateHead(); i++) {
-		if(m_pGates[i].instantiated && m_pGates[i].context == S_BOOL) {
-			free(m_pGates[i].gs.val);
-			m_pGates[i].instantiated = false;
-		}
-	}
-
 	for (uint32_t i = 0; i < m_nNumMTs.size(); i++) {
 		m_nNumMTs[i] = 0;
 	}
