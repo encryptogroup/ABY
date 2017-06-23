@@ -76,6 +76,7 @@ public:
 	BOOL Wait()
 	{
 		if( !m_bRunning ) return TRUE;
+		m_bRunning = FALSE;
 		return WaitForSingleObject(m_hHandle, INFINITE) == WAIT_OBJECT_0;
 	}
 
@@ -99,7 +100,6 @@ protected:
 	{
 		CThread* pThis = (CThread*) p;
 		pThis->ThreadMain();
-		pThis->m_bRunning = FALSE;
 		return 0;
 	}
 
