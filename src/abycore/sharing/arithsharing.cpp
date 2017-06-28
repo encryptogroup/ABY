@@ -1076,7 +1076,7 @@ void ArithSharing<T>::Reset() {
 	m_nOutputShareRcvCtr = 0;
 
 	//TODO if vector multiplication triples are implemented, make size variable
-	for (uint32_t i = 0; i < 1; i++) {
+	for (uint32_t i = 0; i < m_vA.size(); i++) {
 		m_vA[i].delCBitVector();
 		m_vB[i].delCBitVector();
 		m_vS[i].delCBitVector();
