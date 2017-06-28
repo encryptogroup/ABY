@@ -115,10 +115,15 @@ BOOL ABYParty::Init() {
 }
 
 void ABYParty::Cleanup() {
-	Reset();
 	if (m_pSetup)
 		delete m_pSetup;
 
+	// free any gates that are still instantiated
+	for(size_t i = 0; i < m_pCircuit->GetGateHead(); i++) {
+		if(m_pGates[i].instantiated) {
+			m_vSharings[0]->FreeGate(&m_pGates[i]);
+		}
+	}
 	for(uint32_t i = 0; i < S_LAST; i++) {
 		if(m_vSharings[i]) {
 			delete m_vSharings[i];
