@@ -34,7 +34,7 @@ void ArithSharing<T>::Init() {
 	m_nConvShareIdx = 0;
 	m_nConvShareSndCtr = 0;
 	m_nConvShareRcvCtr = 0;
-	
+
 	m_nInputShareSndCtr = 0;
 	m_nOutputShareSndCtr = 0;
 	m_nInputShareRcvCtr = 0;
@@ -77,7 +77,6 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 
 	InitMTs();
 
-	ArithMTMasking<T> *fMaskFct = new ArithMTMasking<T>(1, &(m_vB[0])); //TODO to implement the vector multiplication change first argument
 	if (m_nMTs > 0) {
 		if (m_eMTGenAlg == MT_PAILLIER || m_eMTGenAlg == MT_DGK) {
 			PKMTGenVals* pgentask = (PKMTGenVals*) malloc(sizeof(PKMTGenVals));
@@ -89,12 +88,14 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 			setup->AddPKMTGenTask(pgentask);
 		} else {
 			for (uint32_t i = 0; i < 2; i++) {
+				ArithMTMasking<T> *fMaskFct = new ArithMTMasking<T>(1, &(m_vB[0])); //TODO to implement the vector multiplication change first argument
 				IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 				task->bitlen = m_nTypeBitLen;
 				task->snd_flavor = Snd_C_OT;
 				task->rec_flavor = Rec_OT;
 				task->numOTs = m_nMTs * m_nTypeBitLen;
 				task->mskfct = fMaskFct;
+				task->delete_mskfct = TRUE;
 				if ((m_eRole ^ i) == SERVER) {
 					task->pval.sndval.X0 = &(m_vC[0]);
 					task->pval.sndval.X1 = &(m_vC[0]);
@@ -120,6 +121,7 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 		task->rec_flavor = Rec_OT;
 		task->numOTs = m_nNumCONVs * m_nTypeBitLen;
 		task->mskfct = fXORMaskFct;
+		task->delete_mskfct = TRUE;
 		if ((m_eRole) == SERVER) {
 			m_vConversionMasks[0].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
 			m_vConversionMasks[1].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
@@ -865,16 +867,6 @@ void ArithSharing<T>::InstantiateGate(GATE* gate) {
 }
 
 template<typename T>
-void ArithSharing<T>::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(((T*) m_pGates[gateid].gs.val));
-	}
-}
-
-template<typename T>
 void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t vsize = gate->nvals;
@@ -1084,7 +1076,7 @@ void ArithSharing<T>::Reset() {
 	m_nOutputShareRcvCtr = 0;
 
 	//TODO if vector multiplication triples are implemented, make size variable
-	for (uint32_t i = 0; i < 1; i++) {
+	for (uint32_t i = 0; i < m_vA.size(); i++) {
 		m_vA[i].delCBitVector();
 		m_vB[i].delCBitVector();
 		m_vS[i].delCBitVector();
@@ -1116,4 +1108,3 @@ template class ArithSharing<UINT8_T> ;
 template class ArithSharing<UINT16_T> ;
 template class ArithSharing<UINT32_T> ;
 template class ArithSharing<UINT64_T> ;
-

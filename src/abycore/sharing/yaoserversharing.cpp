@@ -29,7 +29,7 @@ void YaoServerSharing::InitServer() {
 	m_bLKeyBuf = (BYTE*) malloc(sizeof(BYTE) * m_nSecParamBytes);
 	m_bTmpBuf = (BYTE*) malloc(sizeof(BYTE) * AES_BYTES);
 
-
+	m_vOutputDestionations = nullptr;
 
 	m_nGarbledTableCtr = 0L;
 	m_nGarbledTableSndCtr = 0L;
@@ -45,6 +45,18 @@ void YaoServerSharing::InitServer() {
 	fMaskFct = new XORMasking(m_cCrypto->get_seclvl().symbits);
 
 	InitNewLayer();
+}
+
+YaoServerSharing::~YaoServerSharing() {
+		Reset();
+		for(size_t i = 0; i < 2; i++) {
+			free(m_bLMaskBuf[i]);
+			free(m_bRMaskBuf[i]);
+			free(m_bOKeyBuf[i]);
+		}
+		free(m_bLKeyBuf);
+		free(m_bTmpBuf);
+		delete fMaskFct;
 }
 
 //Pre-set values for new layer
@@ -73,7 +85,6 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 
 	//m_vPreSetInputGates = (input_gate_val_t*) calloc(m_nServerInputBits, sizeof(input_gate_val_t));
 
-	m_vGarbledCircuit.Create(0);
 	buf = (BYTE*) malloc(gt_size);
 	m_vGarbledCircuit.AttachBuf(buf, gt_size);
 
@@ -123,6 +134,7 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 	task->rec_flavor = Rec_OT;
 	task->numOTs = m_nClientInputBits + m_nConversionInputBits;
 	task->mskfct = fMaskFct;
+	task->delete_mskfct = FALSE; // is deleted in destructor
 	task->pval.sndval.X0 = &(m_vROTMasks[0]);
 	task->pval.sndval.X1 = &(m_vROTMasks[1]);
 
@@ -290,6 +302,7 @@ void YaoServerSharing::SendServerInputKey(uint32_t gateid) {
 			memcpy(m_vServerKeySndBuf.GetArr() + m_nServerKeyCtr * m_nSecParamBytes, m_vServerInputKeys.GetArr() + m_nPermBitCtr * m_nSecParamBytes, m_nSecParamBytes);
 		}
 	}
+	free(input);
 }
 
 void YaoServerSharing::SendClientInputKey(uint32_t gateid) {
@@ -517,6 +530,8 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 	PrintKey(gate->gs.yinput.outKey);
 	cout << endl;
 #endif
+	// not calling UsedGate(gate->ingates.inputs.parents[0]) here:
+	// is called in YaoServerSharing::FinishCircuitLayer()
 }
 
 //TODO: optimize for UINT64_T pointers
@@ -716,6 +731,7 @@ void YaoServerSharing::EvaluateOutputGate(GATE* gate) {
 #ifdef DEBUGYAOSERVER
 	cout << "Stored output share " << gate->gs.val[0] << endl;
 #endif
+	UsedGate(parentid);
 }
 
 void YaoServerSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
@@ -839,6 +855,7 @@ void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
 								m_bTempKeyBuf); //One - key
 					}
 				}
+				UsedGate(input);
 			}
 		}
 	}
@@ -915,17 +932,6 @@ void YaoServerSharing::InstantiateGate(GATE* gate) {
 		exit(0);
 	}
 	gate->instantiated = true;
-}
-
-void YaoServerSharing::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(m_pGates[gateid].gs.yinput.outKey);
-		free(m_pGates[gateid].gs.yinput.pi);
-		m_pGates[gateid].instantiated = false;
-	}
 }
 
 void YaoServerSharing::EvaluateSIMDGate(uint32_t gateid) {
@@ -1070,8 +1076,8 @@ void YaoServerSharing::Reset() {
 	m_vOutputShareGates.clear();
 	m_vServerOutputGates.clear();
 
-	if (m_nOutputDestionationsCtr > 0)
-		free(m_vOutputDestionations);
+	free(m_vOutputDestionations);
+	m_vOutputDestionations = nullptr;
 	m_nOutputDestionationsCtr = 0;
 
 	m_nANDGates = 0;

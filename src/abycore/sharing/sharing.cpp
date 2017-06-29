@@ -214,3 +214,40 @@ void Sharing::EvaluatePrintValGate(uint32_t gateid, e_circuit circ_type) {
 	free(value);
 	free((char*) m_pGates[gateid].gs.infostr);
 }
+
+// Delete dynamically allocated gate contents depending on gate type
+void Sharing::FreeGate(GATE *gate) {
+	e_sharing context = gate->context;
+	e_role role = m_eRole;
+	if(context == S_YAO_REV) {
+		role = (role == SERVER ? CLIENT : SERVER);
+		context = S_YAO;
+	}
+	switch(context) {
+	case S_BOOL:
+	case S_ARITH:
+	case S_SPLUT:
+		free(gate->gs.val);
+		break;
+	case S_YAO:
+		if(role == SERVER) {
+			if(gate->type = G_IN) { break; } // input gates are freed before
+			free(gate->gs.yinput.outKey);
+			free(gate->gs.yinput.pi);
+		} else {
+			free(gate->gs.yval);
+		}
+		break;
+	}
+	gate->instantiated = false;
+}
+
+// Mark gate as used. If it is no longer needed, free it.
+void Sharing::UsedGate(uint32_t gateid) {
+	GATE *gate = &m_pGates[gateid];
+	if(!gate->instantiated) { return; }
+	gate->nused--;
+	if(!gate->nused && gate->type != G_CONV) {
+		FreeGate(gate);
+	}
+}

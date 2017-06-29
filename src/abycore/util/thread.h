@@ -4,12 +4,12 @@
  \copyright	________________
  */
 
-#ifndef __THREAD_H__BY_SGCHOI  
-#define __THREAD_H__BY_SGCHOI 
+#ifndef __THREAD_H__BY_SGCHOI
+#define __THREAD_H__BY_SGCHOI
 
 #include "typedefs.h"
 
-#ifdef WIN32 
+#ifdef WIN32
 
 #include <process.h>
 
@@ -76,6 +76,7 @@ public:
 	BOOL Wait()
 	{
 		if( !m_bRunning ) return TRUE;
+		m_bRunning = FALSE;
 		return WaitForSingleObject(m_hHandle, INFINITE) == WAIT_OBJECT_0;
 	}
 
@@ -99,7 +100,6 @@ protected:
 	{
 		CThread* pThis = (CThread*) p;
 		pThis->ThreadMain();
-		pThis->m_bRunning = FALSE;
 		return 0;
 	}
 
@@ -108,7 +108,7 @@ protected:
 	HANDLE m_hHandle;
 };
 
-#else // NOT WIN32 
+#else // NOT WIN32
 #include <pthread.h>
 class CThread {
 public:
@@ -128,6 +128,7 @@ public:
 	BOOL Wait() {
 		if (!m_bRunning)
 			return TRUE;
+		m_bRunning = FALSE;
 		return pthread_join(m_pThread, NULL) == 0;
 	}
 
@@ -147,7 +148,6 @@ protected:
 	static void* ThreadMainHandler(void* p) {
 		CThread* pThis = (CThread*) p;
 		pThis->ThreadMain();
-		pThis->m_bRunning = FALSE;
 		return 0;
 	}
 
@@ -253,4 +253,3 @@ public:
 };
 
 #endif //__THREAD_H__BY_SGCHOI
-

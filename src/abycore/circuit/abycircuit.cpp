@@ -19,7 +19,7 @@
 #include "abycircuit.h"
 
 void ABYCircuit::Cleanup() {
-	//TODO
+	Reset();
 	free(m_pGates);
 }
 
@@ -463,8 +463,8 @@ uint32_t ABYCircuit::PutTruthTableGate(vector<uint32_t> in, uint32_t rounds, uin
 	uint32_t tt_len = 1<<(in.size());
 
 	gate->gs.tt.noutputs = out_bits;
-	gate->gs.tt.table = (uint64_t*) malloc(pad_to_multiple(tt_len, sizeof(UGATE_T)) * out_bits);
-	memcpy(gate->gs.tt.table, truth_table, pad_to_multiple(tt_len, sizeof(UGATE_T)) * out_bits);
+	gate->gs.tt.table = (uint64_t*) malloc(bits_in_bytes(pad_to_multiple(tt_len, sizeof(UGATE_T)) * out_bits));
+	memcpy(gate->gs.tt.table, truth_table, bits_in_bytes(pad_to_multiple(tt_len, sizeof(UGATE_T)) * out_bits));
 
 	gate->nrounds = rounds;
 
@@ -799,11 +799,6 @@ uint32_t FindBitLenPositionInVec(uint32_t bitlen, non_lin_vec_ctx* list, uint32_
 }
 
 void ABYCircuit::Reset() {
-	//FIXME: causes segfault in Boolean sharing if only one party gets output, fix!
-	for (uint32_t i = 0; i < m_nNextFreeGate; i++) {
-		if (m_pGates[i].type == G_OUT)
-			free(m_pGates[i].gs.val);
-	}
 	memset(m_pGates, 0, sizeof(GATE) * m_nMaxGates);
 	m_nNextFreeGate = 0;
 	m_nMaxVectorSize = 1;

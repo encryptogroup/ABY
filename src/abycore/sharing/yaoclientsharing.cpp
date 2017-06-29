@@ -35,11 +35,19 @@ void YaoClientSharing::InitClient() {
 
 	fMaskFct = new XORMasking(m_cCrypto->get_seclvl().symbits);
 
-	//TODO free memory after use
 	m_vTmpEncBuf = (uint8_t**) malloc(sizeof(uint8_t*) * KEYS_PER_GATE_IN_TABLE);
 	for(uint32_t i = 0; i < KEYS_PER_GATE_IN_TABLE; i++)
 		m_vTmpEncBuf[i] = (uint8_t*) malloc(sizeof(uint8_t) * AES_BYTES);
 
+}
+
+YaoClientSharing::~YaoClientSharing() {
+		Reset();
+		for(size_t i = 0; i < KEYS_PER_GATE_IN_TABLE; i++) {
+			free(m_vTmpEncBuf[i]);
+		}
+		free(m_vTmpEncBuf);
+		delete fMaskFct;
 }
 
 //Pre-set values for new layer
@@ -68,7 +76,6 @@ void YaoClientSharing::PrepareSetupPhase(ABYSetup* setup) {
 	m_nClientInputBits = m_cBoolCircuit->GetNumInputBitsForParty(CLIENT);
 	m_nConversionInputBits = m_cBoolCircuit->GetNumB2YGates() + m_cBoolCircuit->GetNumA2YGates() + m_cBoolCircuit->GetNumYSwitchGates();
 
-	m_vGarbledCircuit.Create(0); //m_nANDGates * KEYS_PER_GATE_IN_TABLE * m_sSecLvl.symbits);
 	buf = (BYTE*) malloc(gt_size);
 	m_vGarbledCircuit.AttachBuf(buf, gt_size);
 
@@ -93,6 +100,7 @@ void YaoClientSharing::PrepareSetupPhase(ABYSetup* setup) {
 	task->rec_flavor = Rec_OT;
 	task->numOTs = m_nClientInputBits + m_nConversionInputBits;
 	task->mskfct = fMaskFct;
+	task->delete_mskfct = FALSE; // is deleted in destructor
 	task->pval.rcvval.C = &(m_vChoiceBits);
 	task->pval.rcvval.R = &(m_vROTMasks);
 
@@ -589,16 +597,6 @@ void YaoClientSharing::AssignClientInputKeys() {
 void YaoClientSharing::InstantiateGate(GATE* gate) {
 	gate->instantiated = true;
 	gate->gs.yval = (BYTE*) calloc(m_nSecParamIters * gate->nvals, sizeof(UGATE_T));
-}
-
-void YaoClientSharing::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused && m_pGates[gateid].type != G_CONV) {
-		free(m_pGates[gateid].gs.yval);
-		m_pGates[gateid].instantiated = false;
-	}
 }
 
 void YaoClientSharing::EvaluateSIMDGate(uint32_t gateid) {

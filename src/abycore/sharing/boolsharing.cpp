@@ -143,8 +143,6 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 	if((GetPreCompPhaseValue() != ePreCompRead)&&(GetPreCompPhaseValue() != ePreCompRAMRead)) {
 
 #ifdef USE_KK_OT_FOR_MT
-		fMaskFct = new XORMasking(m_vANDs[0].bitlen);
-
 		for (uint32_t j = 0; j < 2; j++) {
 			KK_OTTask* task = (KK_OTTask*) malloc(sizeof(KK_OTTask));
 			task->bitlen = m_vANDs[0].bitlen;
@@ -152,7 +150,8 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 			task->rec_flavor = Rec_OT;
 			task->nsndvals = 4;
 			task->numOTs = ceil_divide(m_nNumMTs[0], 2);
-			task->mskfct = fMaskFct;
+			task->mskfct = new XORMasking(m_vANDs[0].bitlen);
+			task->delete_mskfct = TRUE;
 			if ((m_eRole ^ j) == SERVER) {
 				task->pval.sndval.X = m_vKKS.data();
 			} else {
@@ -168,15 +167,14 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 #else
 		for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 #endif
-			fMaskFct = new XORMasking(m_vANDs[i].bitlen);
-
 			for (uint32_t j = 0; j < 2; j++) {
 				IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 				task->bitlen = m_vANDs[i].bitlen;
 				task->snd_flavor = Snd_R_OT;
 				task->rec_flavor = Rec_OT;
 				task->numOTs = m_nNumMTs[i];
-				task->mskfct = fMaskFct;
+				task->mskfct = new XORMasking(m_vANDs[i].bitlen);
+				task->delete_mskfct = TRUE;
 				if ((m_eRole ^ j) == SERVER) {
 					task->pval.sndval.X0 = &(m_vC[i]);
 					task->pval.sndval.X1 = &(m_vB[i]);
@@ -320,6 +318,7 @@ void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
 
 		fMaskFct = new XORMasking(task->bitlen);
 		task->mskfct = fMaskFct;
+		task->delete_mskfct = TRUE;
 		if (m_eRole == SERVER) {
 			//cout << "I assigned sender" << endl;
 			task->pval.sndval.X = it->second->rot_OT_vals;
@@ -756,6 +755,7 @@ inline void BoolSharing::EvaluateCONVGate(uint32_t gateid) {
 	uint32_t parentid = gate->ingates.inputs.parents[0];
 	if (m_pGates[parentid].context == S_ARITH)
 		cerr << "can't convert from arithmetic representation directly into Boolean" << endl;
+	assert(m_pGates[parentid].context == S_YAO);
 	InstantiateGate(gate);
 
 	memset(gate->gs.val, 0, ceil_divide(gate->nvals, 8));
@@ -773,6 +773,7 @@ inline void BoolSharing::EvaluateCONVGate(uint32_t gateid) {
 #endif
 
 	UsedGate(parentid);
+	free(gate->ingates.inputs.parents);
 }
 
 inline void BoolSharing::ReconstructValue(uint32_t gateid) {
@@ -1270,15 +1271,6 @@ inline void BoolSharing::InstantiateGate(GATE* gate) {
 	gate->instantiated = true;
 }
 
-inline void BoolSharing::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(m_pGates[gateid].gs.val);
-	}
-}
-
 void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t vsize = gate->nvals;
@@ -1326,6 +1318,9 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 				UsedGate(input[i + k * GATE_T_BITS]);
 			}
 		}*/
+		for(uint32_t i = 0; i < nparents; i++) {
+			UsedGate(input[i]);
+		}
 
 		free(input);
 	} else if (gate->type == G_SPLIT) {
@@ -1537,8 +1532,6 @@ void BoolSharing::Reset() {
 		m_vMTStartIdx[i] = 0;
 	for (uint32_t i = 0; i < m_vMTIdx.size(); i++)
 		m_vMTIdx[i] = 0;
-	for (uint32_t i = 0; i < m_vANDGates.size(); i++)
-		m_vANDGates.clear();
 	m_vANDGates.clear();
 
 	m_vInputShareGates.clear();
@@ -1819,4 +1812,3 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 	fclose(fp);
 	return TRUE;
 }
-

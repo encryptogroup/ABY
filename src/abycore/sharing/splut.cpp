@@ -301,6 +301,7 @@ void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 					task->nsndvals = 1<<i;
 					task->numOTs = m_vNOTs[j&0x01][i][k].numgates;
 					task->mskfct = fMaskFct;
+					task->delete_mskfct = true;
 					if ((reverse ^ j)) {
 						//cout << "I assigned sender" << endl;
 						task->pval.sndval.X = m_vPreCompOTX[i][k];
@@ -1420,15 +1421,6 @@ inline void SetupLUT::InstantiateGate(GATE* gate) {
 	gate->instantiated = true;
 }
 
-inline void SetupLUT::UsedGate(uint32_t gateid) {
-	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
-	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(m_pGates[gateid].gs.val);
-	}
-}
-
 void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t vsize = gate->nvals;
@@ -1684,31 +1676,32 @@ void SetupLUT::Reset() {
 	for (uint32_t i = 0; i < m_vPreCompOTX.size(); i++) {
 		for(uint32_t k = 0; k < m_vPreCompOTX[i].size(); k++) {
 			for(uint32_t j = 0; j < (1<<i); j++) {
-				m_vPreCompOTX[i][k][j]->delCBitVector();
+				delete m_vPreCompOTX[i][k][j];
 			}
+			free(m_vPreCompOTX[i][k]);
 			//m_vPreCompOTX[i][k].resize(0);
 			//free(m_vPreCompOTX[i]);
-			m_vPreCompOTMasks[i][k]->delCBitVector();
+			delete m_vPreCompOTMasks[i][k];
 
-			m_vPreCompOTC[i][k]->delCBitVector();
-			m_vPreCompOTR[i][k]->delCBitVector();
+			delete m_vPreCompOTC[i][k];
+			delete m_vPreCompOTR[i][k];
 
 			//TODO: setting to 0 is probably not required. test this and remove if so
 			m_vPreCompMaskIdx[i][k] = 0;
 			m_vPreCompChoiceIdx[i][k] = 0;
 
 			m_nMaskUpdateSndCtr[i][k] = 0;
-			m_vMaskUpdateSndBuf[i][k]->delCBitVector();
+			delete m_vMaskUpdateSndBuf[i][k];
 			m_nMaskUpdateRcvCtr[i][k] = 0;
-			m_vMaskUpdateRcvBuf[i][k]->delCBitVector();
+			delete m_vMaskUpdateRcvBuf[i][k];
 
 			m_nChoiceUpdateSndCtr[i][k] = 0;
-			m_vChoiceUpdateSndBuf[i][k]->delCBitVector();
+			delete m_vChoiceUpdateSndBuf[i][k];
 			m_nChoiceUpdateRcvCtr[i][k] = 0;
-			m_vChoiceUpdateRcvBuf[i][k]->delCBitVector();
+			delete m_vChoiceUpdateRcvBuf[i][k];
 
 			m_nTableRndIdx[i][k] = 0;
-			m_vTableRnd[i][k]->delCBitVector();
+			delete m_vTableRnd[i][k];
 		}
 		m_vPreCompOTX[i].resize(0);
 		m_vPreCompOTMasks[i].resize(0);

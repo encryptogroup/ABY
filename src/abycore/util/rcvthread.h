@@ -42,9 +42,13 @@ public:
 	}
 	;
 	~RcvThread() {
-		this->Kill();
-		delete rcvlock;
+		this->Wait();
+		for(uint32_t i = 0; i < MAX_NUM_COMM_CHANNELS; i++) {
+			flush_queue(i);
+			delete listeners[i].rcv_buf;
+		}
 		free(listeners);
+		delete rcvlock;
 	}
 	;
 
@@ -129,7 +133,6 @@ public:
 #ifdef DEBUG_RECEIVE_THREAD
 					cout << "Receiver thread is being killed" << endl;
 #endif
-					m_bRunning = false;
 					return;//continue;
 				}
 

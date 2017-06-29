@@ -72,7 +72,6 @@ public:
 	void PreComputationPhase();
 
 	inline void InstantiateGate(GATE* gate);
-	inline void UsedGate(uint32_t gateid);
 
 	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
 	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
@@ -188,12 +187,12 @@ private:
 	 */
 	void PrepareSetupPhaseOPLUT(ABYSetup* setup);
 
-	/** 
+	/**
 	 Share Values
 	 \param 	gateid 	GateID
 	 */
 	inline void ShareValues(uint32_t gateid);
-	/** 
+	/**
 	 Reconstruct Values
 	 \param 	gateid 	GateID
 	 */

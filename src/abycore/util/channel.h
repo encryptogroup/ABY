@@ -30,7 +30,6 @@ public:
 		if(m_bRcvAlive) {
 			m_cRcver->remove_listener(m_bChannelID);
 		}
-
 		delete m_eRcved;
 		delete m_eFin;
 	}
@@ -60,8 +59,10 @@ public:
 		assert(m_bRcvAlive);
 		while(m_qRcvedBlocks->empty())
 			m_eRcved->Wait();
-		uint8_t* ret_block = ((rcv_ctx*)m_qRcvedBlocks->front())->buf;
+		rcv_ctx* ret = (rcv_ctx*) m_qRcvedBlocks->front();
+		uint8_t* ret_block = ret->buf;
 		m_qRcvedBlocks->pop();
+		free(ret);
 
 		return ret_block;
 	}
@@ -71,21 +72,23 @@ public:
 		while(m_qRcvedBlocks->empty())
 			m_eRcved->Wait();
 
-
-		uint8_t* ret_block = ((rcv_ctx*) m_qRcvedBlocks->front())->buf;
-		uint64_t rcved_this_call = ((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes;
+		rcv_ctx* ret = (rcv_ctx*) m_qRcvedBlocks->front();
+		uint8_t* ret_block = ret->buf;
+		uint64_t rcved_this_call = ret->rcvbytes;
 		if(rcved_this_call == rcvsize) {
 			m_qRcvedBlocks->pop();
+			free(ret);
 		} else if(rcvsize < rcved_this_call) {
 			//if the block contains too much data, copy only the receive size
-			((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes -= rcvsize;
-			uint8_t* newbuf = (uint8_t*) malloc(((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes);
-			memcpy(newbuf, ((rcv_ctx*) m_qRcvedBlocks->front())->buf+rcvsize, ((rcv_ctx*) m_qRcvedBlocks->front())->rcvbytes);
-			((rcv_ctx*) m_qRcvedBlocks->front())->buf = newbuf;
+			ret->rcvbytes -= rcvsize;
+			uint8_t* newbuf = (uint8_t*) malloc(ret->rcvbytes);
+			memcpy(newbuf, ret->buf+rcvsize, ret->rcvbytes);
+			ret->buf = newbuf;
 			rcved_this_call = rcvsize;
 		} else {
 			//I want to receive more data than are in that block. Perform recursive call (might become troublesome for too many recursion steps)
 			m_qRcvedBlocks->pop();
+			free(ret);
 			uint8_t* new_rcvbuf_start = rcvbuf + rcved_this_call;
 			uint64_t new_rcvsize = rcvsize -rcved_this_call;
 

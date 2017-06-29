@@ -183,6 +183,7 @@ public:
 	GATE* Gates() {
 		return m_pGates;
 	}
+
 	uint32_t PutPrimitiveGate(e_gatetype type, uint32_t inleft, uint32_t inright, uint32_t rounds);
 	uint32_t PutNonLinearVectorGate(e_gatetype type, uint32_t choiceinput, uint32_t vectorinput, uint32_t rounds);
 	uint32_t PutCombinerGate(vector<uint32_t> input);

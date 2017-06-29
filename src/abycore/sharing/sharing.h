@@ -76,93 +76,99 @@ public:
 	      triggered n times. Also the precomputation phase plays a huge role in these methods.
 	*/
 
-	/**	
+	/**
 	 Method for preparing the sharing setup.
 	 \param 	setup 	Object for setting up the share.
 	 */
 	virtual void PrepareSetupPhase(ABYSetup* setup) = 0;
-	/**	
+	/**
 	 Method for performing the sharing setup.
 	 \param 	setup 	Object for setting up the share.
 	 */
 	virtual void PerformSetupPhase(ABYSetup* setup) = 0;
-	/**	
+	/**
 	 Method for finishing the sharing setup.
 	 \param 	setup 	Object for setting up the share.
 	 */
 	virtual void FinishSetupPhase(ABYSetup* setup) = 0;
 
-	/**	
+	/**
 	 Method for evaluating the local operations.
 	 \param 	level 	_______________________
 	 */
 	virtual void EvaluateLocalOperations(uint32_t level) = 0;
-	/**	
+	/**
 	 Method for evaluating the interactive operations.
 	 \param 	level 	_______________________
 	 */
 	virtual void EvaluateInteractiveOperations(uint32_t level) = 0;
 
-	/**	
+	/**
 	 Method for preparing the online phase <Better description please>
 	 */
 	virtual void PrepareOnlinePhase() = 0;
 
-	/**	
+	/**
 	 Method for finishing the circuit layer <Better description please>
 	 */
 	virtual void FinishCircuitLayer(uint32_t level) = 0;
 
-	/**	
+	/**
 	 Method for sending the data.
 	 \param 	sendbuf 	sender buffer
 	 \param 	bytesize	data size
 	 */
 	virtual void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize) = 0;
-	/**	
+	/**
 	 Method for receiving the data.
 	 \param 	rsvbuf 		receiver buffer
 	 \param 	rcvsize		data size
 	 */
 	virtual void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) = 0;
-	/**	
+	/**
 	 Method for Instantiating a gate
 	 \param gate 		Input gate
 	 */
 	virtual void InstantiateGate(GATE* gate) = 0;
-	/**	
+	/**
 	 Method for finding the used gate with the gateid.
 	 \param gateid		Id of the used gate.
 	 */
-	virtual void UsedGate(uint32_t gateid) = 0;
+	void UsedGate(uint32_t gateid);
 
-	/**	
+	/**
+	 Method for freeing gate memory depending on its type
+	 \param gate		Pointer to the gat to free
+	 */
+	void FreeGate(GATE* gate);
+
+	/**
 	 Method for assigning the input
 	 \param 	input 		Input
 	 */
 	virtual uint32_t AssignInput(CBitVector& input) = 0;
-	/**	
-	 Method for getting the output 
+	/**
+	 Method for getting the output
 	 \param 	output 		Output
 	 */
 	virtual uint32_t GetOutput(CBitVector& out) = 0;
-	/**	
+	/**
 	 Method for finding the maximum communication rounds.
 	 */
 	virtual uint32_t GetMaxCommunicationRounds() = 0;
-	/**	
+	/**
 	 Method for finding the number of non-linear operations.
 	 */
 	virtual uint32_t GetNumNonLinearOperations() = 0;
-	/**	
+	/**
 	 Method for knowing the sharing type used.
 	 */
 	virtual const char* sharing_type() = 0;
-	/**	
+	/**
 	 Method for printing the performance statistics.
 	 */
 	virtual void PrintPerformanceStatistics() = 0;
-	/**	
+	/**
 	 Method for _________________________________
 	 */
 	virtual Circuit* GetCircuitBuildRoutine() = 0;
