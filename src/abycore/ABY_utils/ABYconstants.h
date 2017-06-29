@@ -1,8 +1,8 @@
 /**
- \file 		constants.h
+ \file 		ABYconstants.h
  \author	michael.zohner@ec-spride.de
  \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
-			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
+			Copyright (C) 2017 Engineering Cryptographic Protocols Group, TU Darmstadt
 			This program is free software: you can redistribute it and/or modify
 			it under the terms of the GNU Affero General Public License as published
 			by the Free Software Foundation, either version 3 of the License, or
@@ -13,67 +13,56 @@
 			GNU Affero General Public License for more details.
 			You should have received a copy of the GNU Affero General Public License
 			along with this program. If not, see <http://www.gnu.org/licenses/>.
- \brief		File containing all constants used throughout the source
+ \brief		File containing all ABY constants used throughout the source
  */
 
-#ifndef CONSTANTS_H_
-#define CONSTANTS_H_
+#ifndef _ABY_CONSTANTS_H_
+#define _ABY_CONSTANTS_H_
 
-#include "typedefs.h"
+#include "../ENCRYPTO_utils/constants.h"
 
 /* Uncomment production to circumvent output reconstruction in the PrintValue and Assert gates */
 //#define ABY_PRODUCTION
 
-#define AES_KEY_BITS			128
-#define AES_KEY_BYTES			16
-#define AES_BITS				128
-#define AES_BYTES				16
-#define LOG2_AES_BITS			ceil_log2(AES_BITS)
 
-#define SHA1_OUT_BYTES 20
-#define SHA256_OUT_BYTES 32
-#define SHA512_OUT_BYTES 64
+#define BATCH
 
-#define MAX_NUM_COMM_CHANNELS 256
-#define ADMIN_CHANNEL MAX_NUM_COMM_CHANNELS-1
-#define OT_ADMIN_CHANNEL ADMIN_CHANNEL-1
-#define ABY_PARTY_CHANNEL OT_ADMIN_CHANNEL-1
+//#define ABY_OT
+//#define NUMOTBLOCKS 256
+//#define VERIFY_OT
+
+#define ABY_PARTY_CHANNEL MAX_NUM_COMM_CHANNELS-3
 #define ABY_SETUP_CHANNEL ABY_PARTY_CHANNEL-1
-#define DJN_CHANNEL	 32
+#define DJN_CHANNEL	32
 #define DGK_CHANNEL DJN_CHANNEL
-#define OT_BASE_CHANNEL 0
 
-//Controls the number of OTs that are processed in one block. Lower values are better for lower latency networks.
-#define NUMOTBLOCKS 128
-#define BUFFER_OT_KEYS 128
 /**
  \def 	GARBLED_TABLE_WINDOW
  \brief	Window size of Yao's garbled circuits in pipelined execution
  */
 #define GARBLED_TABLE_WINDOW NUMOTBLOCKS * AES_BITS//1 * AES_BITS//1048575 //1048575 //=0xFFFFF for faster modulo operation
 
-
 #define BATCH
-#define ABY_OT
+
 #define FIXED_KEY_AES_HASHING //for OT routines
 #define USE_KK_OT
 //#define USE_PIPELINED_AES_NI
 //#define USE_KK_OT_FOR_MT
 //#define GETCLEARVALUE_DEBUG
 
-/**
- \enum	field_type
- \brief	Enumeration for the field type of asymmetric cryptographic operations
- */
-enum field_type {
-	P_FIELD, ECC_FIELD, FIELD_LAST
-};
+#define MAXGATES 32000000
+#define USE_MULTI_MUX_GATES
 
-static const seclvl ST = { 40, 80, 1024, 160, 163 };
-static const seclvl MT = { 40, 112, 2048, 192, 233 };
-static const seclvl LT = { 40, 128, 3072, 256, 283 };
-static const seclvl XLT = { 40, 192, 7680, 384, 409 };
-static const seclvl XXLT = { 40, 256, 15360, 512, 571 };
+//TODO eventually remove this and prefix all couts, etc with std::
+using namespace std;
+
+/**
+ \enum 	e_role
+ \brief	Defines the role of the party or the source / target for certain operations (e.g., input/output)
+ */
+enum e_role {
+	SERVER, CLIENT, ALL
+};
 
 /**
  \enum	e_circuit_type
@@ -125,7 +114,6 @@ enum e_gatetype {
 	G_COMBINEPOS = 0x84, /**< Enum for COMBINE_AT_POSITION gates that form a new multi-value gate from specific positions of old multi-value gates */
 	G_SUBSET = 0x85, /**< Enum for SUBSET gates that form a new multi-value gate from multiple positions of one multi-value gate */
 	G_STRUCT_COMBINE = 0x86, /**< Enum for STRUCTURIZED COMBINER gates which combine one or multiple input gates based on an increase value*/
-//G_YAO_BUILD 		/**< Enum for  */
 };
 
 /**
@@ -169,6 +157,7 @@ enum e_operation {
 	OP_PERM = 0x83, /**< Enum for PERMUTING the values in a multi-value gate to another multi-value gate */
 	OP_COMBINEPOS = 0x84 /**< Enum for COMBINING the values at specific positions in a multi-value gate */
 };
+
 /**
  \enum 	e_sharing
  \brief	Enumeration which defines the different sharing
@@ -184,40 +173,6 @@ enum e_sharing {
 	S_LAST = 5, /**< Enum for indicating the last enum value. DO NOT PUT ANOTHER ENUM AFTER THIS ONE! !*/
 
 };
-
-
-/**
- \enum 	e_role
- \brief	Defines the role of the party or the source / target for certain operations (e.g., input/output)
- */
-enum e_role {
-	SERVER, CLIENT, ALL
-};
-
-/**
- \enum 	ot_ext_prot
- \brief	Specifies the different underlying OT extension protocols that are available
- */
-enum ot_ext_prot {
-	IKNP, ALSZ, NNOB, KK, PROT_LAST
-};
-
-/**
- \enum 	snd_ot_flavor
- \brief	Different OT flavors for the OT sender
- */
-enum snd_ot_flavor {
-	Snd_OT, Snd_C_OT, Snd_R_OT, Snd_GC_OT, Snd_OT_LAST
-};
-
-/**
- \enum 	rec_ot_flavor
- \brief	Different OT flavors for the OT receiver
- */
-enum rec_ot_flavor {
-	Rec_OT, Rec_R_OT, Rec_OT_LAST
-};
-
 
 /**
 	\def ePreCompPhase
@@ -241,7 +196,6 @@ typedef struct {
 	std::string opname;
 } aby_ops_t;
 
-
 static string get_circuit_type_name(e_circuit c) {
 	switch(c) {
 	case C_BOOLEAN:
@@ -252,7 +206,6 @@ static string get_circuit_type_name(e_circuit c) {
 		return "NN";
 	}
 }
-
 
 static string get_role_name(e_role r) {
 	switch(r) {
@@ -284,7 +237,6 @@ static string get_sharing_name(e_sharing s) {
 	}
 }
 
-
 static string get_gate_type_name(e_gatetype g) {
 	switch (g) {
 	case G_LIN: return "Linear";
@@ -307,6 +259,16 @@ static string get_gate_type_name(e_gatetype g) {
 	default: return "NN";
 	}
 }
+
+///Operation type enum
+typedef enum op_t{
+    ADD, MUL, SUB, DIV, SIN, SQRT, EXP, EXP2, CMP, LN, LOG2, COS, SQR
+}op_t;
+
+// Floating point operation cinfiguration. 
+typedef enum fp_op_setting{
+    ieee, no_status
+}fp_op_setting;
 
 
 static string get_op_name(e_operation op) {
@@ -368,54 +330,11 @@ static string get_op_name(e_operation op) {
 	}
 }
 
-static const char* getSndFlavor(snd_ot_flavor stype) {
-	switch (stype) {
-	case Snd_OT: return "Snd_OT";
-	case Snd_C_OT: return "Snd_C_OT";
-	case Snd_R_OT: return "Snd_R_OT";
-	case Snd_GC_OT: return "Snd_GC_OT";
-	default: return "unknown snd type";
-	}
-}
-
-static const char* getRecFlavor(rec_ot_flavor rtype) {
-	switch (rtype) {
-	case Rec_OT: return "Rec_OT";
-	case Rec_R_OT: return "Rec_R_OT";
-	default: return "unknown rec type";
-	}
-}
-
-static const char* getProt(ot_ext_prot prot) {
-	switch (prot) {
-	case IKNP: return "IKNP";
-	case ALSZ: return "ALSZ";
-	case NNOB: return "NNOB";
-	case KK: return "KK";
-	default: return "unknown protocol";
-	}
-}
-
-static const char* getFieldType(field_type ftype) {
-	switch (ftype) {
-	case P_FIELD: return "P_FIELD";
-	case ECC_FIELD: return "ECC_FIELD";
-	default: return "unknown field";
-	}
-}
 
 /** \var g_TruthTable
  \brief A truth-table for an AND gate
  */
 const uint8_t g_TruthTable[4] = { 0, 0, 0, 1 };		// and
-/** \var m_vFixedKeyAESSeed
- \brief The seed from which the key is generated
- */
-const uint8_t m_vFixedKeyAESSeed[AES_KEY_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
-/** \var m_vSeed
- \brief Static seed for various testing functionalities
- */
-const uint8_t m_vSeed[AES_KEY_BYTES] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
 
 /**\var m_vLUT_GT_IN
  * \brief Lookup-Table for the Greater-than functionality on input bits in No-MT sharing
@@ -537,4 +456,4 @@ static const aby_ops_t m_tAllOps[] = {
 	{OP_SUB, S_SPLUT, "subsplut"}
 };
 
-#endif /* CONSTANTS_H_ */
+#endif /* _ABY_CONSTANTS_H_ */

@@ -21,7 +21,7 @@
 
 #include "../../../abycore/circuit/circuit.h"
 #include "../../../abycore/aby/abyparty.h"
-#include "../../../abycore/util/crypto/crypto.h"
+#include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include <cassert>
 
 #define AES_ROUNDS 10

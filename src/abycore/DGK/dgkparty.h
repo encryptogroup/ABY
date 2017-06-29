@@ -21,11 +21,11 @@
 
 #include <gmp.h>
 #include <vector>
-#include "../util/typedefs.h"
-#include "../util/socket.h"
-#include "../util/dgk.h"
-#include "../util/powmod.h"
-#include "../util/channel.h"
+#include "../ENCRYPTO_utils/typedefs.h"
+#include "../ENCRYPTO_utils/socket.h"
+#include "../ENCRYPTO_utils/crypto/dgk.h"
+#include "../ENCRYPTO_utils/powmod.h"
+#include "../ENCRYPTO_utils/channel.h"
 
 using namespace std;
 

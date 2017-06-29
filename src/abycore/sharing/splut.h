@@ -21,7 +21,7 @@
 
 #include "sharing.h"
 #include <algorithm>
-#include "../util/timer.h"
+#include "../ENCRYPTO_utils/timer.h"
 #include "../circuit/booleancircuits.h"
 
 const uint64_t aes_sbox_multi_seq_perm_out_ttable[16][32] =

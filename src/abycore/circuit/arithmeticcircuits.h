@@ -19,7 +19,7 @@
 #ifndef __ARITHMETICCIRCUITS_H_
 #define __ARITHMETICCIRCUITS_H_
 
-#include "../util/typedefs.h"
+#include "../ENCRYPTO_utils/typedefs.h"
 #include "abycircuit.h"
 #include "circuit.h"
 

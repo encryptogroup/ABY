@@ -14,14 +14,14 @@ SOURCES := $(shell find . -type f -name '*.cpp')
 OBJECTS := $(patsubst %.cpp, %.o, ${SOURCES})
 
 # all source files and corresponding object files in abycore
-SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/util/Miracl/*' -not -path '*/ot/external/*')
+SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/ENCRYPTO_utils/Miracl/*' -not -path '*/ot/external/*')
 OBJECTS_CORE := $(SOURCES_CORE:.cpp=.o)
 
 SOURCES_AES := $(shell find ${AES} -type f -name '*.cpp')
 OBJECTS_AES := $(SOURCES_AES:.cpp=.o)
 
 # directory for the Miracl library
-MIRACL_LIB_DIR=${CORE}/util/miracl_lib
+MIRACL_LIB_DIR=${CORE}/ENCRYPTO_utils/miracl_lib
 OBJECTS_MIRACL=${MIRACL_LIB_DIR}/*.o
 
 # compiler settings
@@ -44,7 +44,7 @@ endif
 #INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
 
 CFLAGS=
-LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib -lssl -lcrypto -lrt
+LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/ENCRYPTO_utils/miracl_lib/miracl.a -L /usr/lib -lssl -lcrypto -lrt
 
 #take the current directory's name as name for the executable in ${BIN}
 EXAMPLE = $(lastword $(subst /, ,${CURDIR}))

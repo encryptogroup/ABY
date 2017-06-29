@@ -24,10 +24,10 @@
 //#include "../circuit/circuit.h"
 #include "../circuit/abycircuit.h"
 #include "../circuit/circuit.h"
-#include "../util/cbitvector.h"
+#include "../ENCRYPTO_utils/cbitvector.h"
 #include "../aby/abysetup.h"
-#include "../util/constants.h"
-#include "../util/crypto/crypto.h"
+#include "../ENCRYPTO_utils/constants.h"
+#include "../ENCRYPTO_utils/crypto/crypto.h"
 #include <assert.h>
 //#define DEBUGSHARING
 

@@ -1,6 +1,6 @@
-[submodule "src/abycore/util/Miracl"]
-	path = src/abycore/util/Miracl
-	url = https://github.com/CertiVox/MIRACL.git
 [submodule "src/abycore/ot/external"]
 	path = src/abycore/ot/external
 	url = git://github.com/encryptogroup/OTExtension.git
+[submodule "src/abycore/ENCRYPTO_utils"]
+	path = src/abycore/ENCRYPTO_utils
+	url = https://github.com/encryptogroup/ENCRYPTO_utils

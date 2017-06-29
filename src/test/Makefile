@@ -22,11 +22,11 @@ OBJECTS_HASHING_CIRC=${SRC}/examples/psi_phasing/common/hashing/*.o
 OBJECTS_LOWMC_CIRC=${SRC}/examples/lowmc/common/lowmccircuit.o
 
 # directory for the Miracl library
-MIRACL_LIB_DIR=${CORE}/util/miracl_lib
+MIRACL_LIB_DIR=${CORE}/ENCRYPTO_utils/miracl_lib
 OBJECTS_MIRACL=${MIRACL_LIB_DIR}/*.o
 
 # all source files and corresponding object files in abycore
-SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/util/Miracl/*' -not -path '*/ot/external/*')
+SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/ENCRYPTO_utils/Miracl/*' -not -path '*/ot/external/*')
 OBJECTS_CORE := $(SOURCES_CORE:.cpp=.o)
 
 # compiler settings
@@ -35,7 +35,7 @@ CC=g++
 BATCH=
 
 CFLAGS=
-LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lrt
+LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/ENCRYPTO_utils/miracl_lib/miracl.a -L /usr/lib  -lssl -lcrypto -lrt
 
 #name fixed to test-aby
 EXAMPLE = test-aby

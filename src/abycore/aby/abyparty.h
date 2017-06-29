@@ -19,30 +19,30 @@
 #ifndef __ABYPARTY_H__
 #define __ABYPARTY_H__
 
-#include "../util/typedefs.h"
-#include "../util/crypto/crypto.h"
+#include "../ENCRYPTO_utils/typedefs.h"
+#include "../ENCRYPTO_utils/crypto/crypto.h"
+#include "../ABY_utils/ABYconstants.h"
 #include "../circuit/abycircuit.h"
-#include "../util/socket.h"
-#include "../util/thread.h"
-#include "../util/cbitvector.h"
+#include "../ENCRYPTO_utils/socket.h"
+#include "../ENCRYPTO_utils/thread.h"
+#include "../ENCRYPTO_utils/cbitvector.h"
 #include "abysetup.h"
 #include "../sharing/sharing.h"
 #include "../sharing/boolsharing.h"
 #include "../sharing/splut.h"
 #include <vector>
-#include "../util/timer.h"
+#include "../ENCRYPTO_utils/timer.h"
 #include "../sharing/yaoclientsharing.h"
 #include "../sharing/yaoserversharing.h"
 #include "../sharing/arithsharing.h"
-#include "../util/sndthread.h"
-#include "../util/rcvthread.h"
+#include "../ENCRYPTO_utils/sndthread.h"
+#include "../ENCRYPTO_utils/rcvthread.h"
 
-#include "../util/yaokey.h"
-#include "../util/timer.h"
-
+#include "../ABY_utils/yaokey.h"
+#include "../ENCRYPTO_utils/timer.h"
 
 #include <limits.h>
-#include "../util/connection.h"
+#include "../ENCRYPTO_utils/connection.h"
 
 //#define ABYDEBUG
 //#define PRINT_OUTPUT
@@ -52,7 +52,7 @@
 //#define DEBUGCOMM
 
 
-using namespace std;
+using namespace std; //TODO eventually remove and prefix couts etc with std::
 
 //Send and receive threads for the standard direction (SERVER plays server, CLIENT plays client)
 //and for the inverse direction (SERVER plays client, CLIENT plays server)

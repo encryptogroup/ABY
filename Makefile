@@ -10,9 +10,9 @@ CC=g++
 #Most aggressive optimizations, asserts are ignored
 #ABY_COMPILER_OPTIONS=-O3 -DNDEBUG
 #Optimizations
-ABY_COMPILER_OPTIONS=-O2 -std=c++11 -march=native
+#ABY_COMPILER_OPTIONS=-O2 -std=c++11 #-march=native
 #DEBUG
-#ABY_COMPILER_OPTIONS=-g3 -ggdb -O0 -std=c++11 -fno-omit-frame-pointer -fsanitize=address #Wall -Wextra -pedantic
+ABY_COMPILER_OPTIONS=-g3 -ggdb -O0 -std=c++11 #-fno-omit-frame-pointer -fsanitize=address #-Wall -Wextra -pedantic
 
 export ABY_COMPILER_OPTIONS
 
@@ -35,23 +35,24 @@ endif
 #Include for Debian, Ubuntu, Mint and the like
 #INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
 
-LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/util/miracl_lib/miracl.a -L /usr/lib -lssl -lcrypto -lrt
-CFLAGS=
+LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/ENCRYPTO_utils/miracl_lib/miracl.a -L /usr/lib -lssl -lcrypto -lrt
+#This is a temporary workaround until we change the communication between ABY and OTExt
+CFLAGS=-DABY_OT -DNUMOTBLOCKS=128
 
 # directory for the Miracl submodule and library
-MIRACL_LIB_DIR=${CORE}/util/miracl_lib
-SOURCES_MIRACL=${CORE}/util/Miracl/*
+MIRACL_LIB_DIR=${CORE}/ENCRYPTO_utils/miracl_lib
+SOURCES_MIRACL=${CORE}/ENCRYPTO_utils/Miracl/*
 OBJECTS_MIRACL=${MIRACL_LIB_DIR}/*.o
 
 OTEXT_DIR=${CORE}/ot
 OTEXT_SUB_DIR=${OTEXT_DIR}/external/ot
-OT_SUBDIR_FILES=${OTEXT_SUB_DIR}/baseOT.h ${OTEXT_SUB_DIR}/iknp-ot-ext-rec.cpp ${OTEXT_SUB_DIR}/iknp-ot-ext-rec.h ${OTEXT_SUB_DIR}/iknp-ot-ext-snd.cpp ${OTEXT_SUB_DIR}/iknp-ot-ext-snd.h ${OTEXT_SUB_DIR}/naor-pinkas.cpp ${OTEXT_SUB_DIR}/naor-pinkas.h ${OTEXT_SUB_DIR}/ot-ext.cpp ${OTEXT_SUB_DIR}/ot-ext.h ${OTEXT_SUB_DIR}/ot-ext-snd.cpp ${OTEXT_SUB_DIR}/ot-ext-snd.h ${OTEXT_SUB_DIR}/ot-ext-rec.cpp ${OTEXT_SUB_DIR}/ot-ext-rec.h ${OTEXT_SUB_DIR}/xormasking.h ${OTEXT_SUB_DIR}/maskingfunction.h ${OTEXT_SUB_DIR}/kk-ot-ext-snd.h ${OTEXT_SUB_DIR}/kk-ot-ext-snd.cpp ${OTEXT_SUB_DIR}/kk-ot-ext-rec.h ${OTEXT_SUB_DIR}/kk-ot-ext-rec.cpp ${OTEXT_SUB_DIR}/kk-ot-ext.h
-OT_FILES=${OTEXT_DIR}/baseOT.h ${OTEXT_DIR}/iknp-ot-ext-rec.cpp ${OTEXT_DIR}/iknp-ot-ext-rec.h ${OTEXT_DIR}/iknp-ot-ext-snd.cpp ${OTEXT_DIR}/iknp-ot-ext-snd.h ${OTEXT_DIR}/naor-pinkas.cpp ${OTEXT_DIR}/naor-pinkas.h ${OTEXT_DIR}/ot-ext.cpp ${OTEXT_DIR}/ot-ext.h ${OTEXT_DIR}/ot-ext-snd.cpp ${OTEXT_DIR}/ot-ext-snd.h ${OTEXT_DIR}/ot-ext-rec.cpp ${OTEXT_DIR}/ot-ext-rec.h ${OTEXT_DIR}/xormasking.h ${OTEXT_DIR}/maskingfunction.h ${OTEXT_DIR}/kk-ot-ext-snd.h ${OTEXT_DIR}/kk-ot-ext-snd.cpp ${OTEXT_DIR}/kk-ot-ext-rec.h ${OTEXT_DIR}/kk-ot-ext-rec.cpp ${OTEXT_DIR}/kk-ot-ext.h
+OT_SUBDIR_FILES=${OTEXT_SUB_DIR}/baseOT.h ${OTEXT_SUB_DIR}/iknp-ot-ext-rec.cpp ${OTEXT_SUB_DIR}/iknp-ot-ext-rec.h ${OTEXT_SUB_DIR}/iknp-ot-ext-snd.cpp ${OTEXT_SUB_DIR}/iknp-ot-ext-snd.h ${OTEXT_SUB_DIR}/naor-pinkas.cpp ${OTEXT_SUB_DIR}/naor-pinkas.h ${OTEXT_SUB_DIR}/ot-ext.cpp ${OTEXT_SUB_DIR}/ot-ext.h ${OTEXT_SUB_DIR}/ot-ext-snd.cpp ${OTEXT_SUB_DIR}/ot-ext-snd.h ${OTEXT_SUB_DIR}/ot-ext-rec.cpp ${OTEXT_SUB_DIR}/ot-ext-rec.h ${OTEXT_SUB_DIR}/xormasking.h ${OTEXT_SUB_DIR}/maskingfunction.h ${OTEXT_SUB_DIR}/kk-ot-ext-snd.h ${OTEXT_SUB_DIR}/kk-ot-ext-snd.cpp ${OTEXT_SUB_DIR}/kk-ot-ext-rec.h ${OTEXT_SUB_DIR}/kk-ot-ext-rec.cpp ${OTEXT_SUB_DIR}/kk-ot-ext.h ${OTEXT_SUB_DIR}/OTconstants.h
+OT_FILES=${OTEXT_DIR}/baseOT.h ${OTEXT_DIR}/iknp-ot-ext-rec.cpp ${OTEXT_DIR}/iknp-ot-ext-rec.h ${OTEXT_DIR}/iknp-ot-ext-snd.cpp ${OTEXT_DIR}/iknp-ot-ext-snd.h ${OTEXT_DIR}/naor-pinkas.cpp ${OTEXT_DIR}/naor-pinkas.h ${OTEXT_DIR}/ot-ext.cpp ${OTEXT_DIR}/ot-ext.h ${OTEXT_DIR}/ot-ext-snd.cpp ${OTEXT_DIR}/ot-ext-snd.h ${OTEXT_DIR}/ot-ext-rec.cpp ${OTEXT_DIR}/ot-ext-rec.h ${OTEXT_DIR}/xormasking.h ${OTEXT_DIR}/maskingfunction.h ${OTEXT_DIR}/kk-ot-ext-snd.h ${OTEXT_DIR}/kk-ot-ext-snd.cpp ${OTEXT_DIR}/kk-ot-ext-rec.h ${OTEXT_DIR}/kk-ot-ext-rec.cpp ${OTEXT_DIR}/kk-ot-ext.h ${OTEXT_DIR}/OTconstants.h
 
 # all source files and corresponding object files in abycore
-SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/util/miracl_lib/*' -not -path '*/ot/external/*')
+SOURCES_CORE := $(shell find ${CORE} -type f -name '*.cpp' -not -path '*/ENCRYPTO_utils/miracl_lib/*' -not -path '*/ot/external/*')
 #OBJECTS_CORE := $(SOURCES_CORE:.cpp=.o)
-OBJECTS_CORE := $(shell find ${CORE} -type f -name '*.o' -not -path '*/util/miracl_lib/*' -not -path '*/ot/external/*')
+OBJECTS_CORE := $(shell find ${CORE} -type f -name '*.o' -not -path '*/ENCRYPTO_utils/miracl_lib/*' -not -path '*/ot/external/*')
 
 
 # objects in example (sub-)folders
@@ -66,13 +67,13 @@ EXAMPLE_SUBDIRS := $(realpath $(wildcard ${SRC}/examples/*/.))
 all: miracl otext core examples ${TEST}
 	@echo "make all done."
 
-# this will create a copy of the files in src/util/Miracl and its sub-directories and put them into src/util/miracl_lib without sub-directories, then compile it
+# this will create a copy of the files in src/ENCRYPTO_utils/Miracl and its sub-directories and put them into src/ENCRYPTO_utils/miracl_lib without sub-directories, then compile it
 miracl:	${MIRACL_LIB_DIR}/miracl.a
 
-# copy Miracl files to a new directory (${CORE}/util/miracl_lib/), call the build script and delete everything except the archive, header and object files.
+# copy Miracl files to a new directory (${CORE}/ENCRYPTO_utils/miracl_lib/), call the build script and delete everything except the archive, header and object files.
 ${MIRACL_LIB_DIR}/miracl.a: ${SOURCES_MIRACL}
-	@find ${CORE}/util/Miracl/ -type f -exec cp '{}' ${CORE}/util/miracl_lib \;
-	@cd ${CORE}/util/miracl_lib/; bash ${MIRACL_MAKE}; find . -type f -not -name '*.a' -not -name '*.h' -not -name '*.o' -not -name '.git*'| xargs rm
+	@find ${CORE}/ENCRYPTO_utils/Miracl/ -type f -exec cp '{}' ${CORE}/ENCRYPTO_utils/miracl_lib \;
+	@cd ${CORE}/ENCRYPTO_utils/miracl_lib/; bash ${MIRACL_MAKE}; find . -type f -not -name '*.a' -not -name '*.h' -not -name '*.o' -not -name '.git*'| xargs rm
 
 # this will create a copy of the files in src/abycore/ot/external/ot/ and put them into src/abycore/ot where they are then used for compiling.
 # it does not override files in the ot dir!

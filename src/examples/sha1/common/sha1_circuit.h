@@ -21,7 +21,7 @@
 
 #include "../../../abycore/circuit/circuit.h"
 #include "../../../abycore/aby/abyparty.h"
-#include "../../../abycore/util/crypto/crypto.h"
+#include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include <cassert>
 
 #define ABY_SHA1_INPUT_BITS 512

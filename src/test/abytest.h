@@ -22,12 +22,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "../abycore/util/typedefs.h"
-#include "../abycore/util/crypto/crypto.h"
+#include "../abycore/ENCRYPTO_utils/typedefs.h"
+#include "../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include "../abycore/aby/abyparty.h"
 #include "../abycore/circuit/circuit.h"
-#include "../abycore/util/timer.h"
-#include "../abycore/util/parse_options.h"
+#include "../abycore/ENCRYPTO_utils/timer.h"
+#include "../abycore/ENCRYPTO_utils/parse_options.h"
 #include "../abycore/sharing/sharing.h"
 #include "../examples/psi_scs/common/sort_compare_shuffle.h"
 #include "../examples/psi_phasing/common/phasing_circuit.h"

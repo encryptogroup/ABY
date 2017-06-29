@@ -19,8 +19,8 @@
  */
 
 //Utility libs
-#include "../../abycore/util/crypto/crypto.h"
-#include "../../abycore/util/parse_options.h"
+#include "../../abycore/ENCRYPTO_utils/crypto/crypto.h"
+#include "../../abycore/ENCRYPTO_utils/parse_options.h"
 //ABY Party class
 #include "../../abycore/aby/abyparty.h"
 

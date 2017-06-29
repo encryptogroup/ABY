@@ -20,9 +20,9 @@
 #define __YAOSHARING_H__
 
 #include "sharing.h"
-#include "../util/yaokey.h"
+#include "../ABY_utils/yaokey.h"
 #include "../circuit/booleancircuits.h"
-#include "../util/constants.h"
+#include "../ENCRYPTO_utils/constants.h"
 
 #define FIXED_KEY_GARBLING
 

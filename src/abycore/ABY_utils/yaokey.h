@@ -19,7 +19,7 @@
 #ifndef __YAOKEY_H_
 #define __YAOKEY_H_
 
-#include "typedefs.h"
+#include "../ENCRYPTO_utils/typedefs.h"
 /* an interface to operations on yaos garbled circuits keys for pre-defined symmetric security sizes */
 
 #define _MSB_UINT64_T 0x80000000000000L

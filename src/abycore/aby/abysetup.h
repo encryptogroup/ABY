@@ -19,8 +19,9 @@
 #ifndef __ABYSETUP_H__
 #define __ABYSETUP_H__
 
-#include "../util/typedefs.h"
-#include "../util/crypto/crypto.h"
+#include "../ENCRYPTO_utils/typedefs.h"
+#include "../ENCRYPTO_utils/crypto/crypto.h"
+#include "../ABY_utils/ABYconstants.h"
 #include "../ot/naor-pinkas.h"
 #include "../ot/ot-ext.h"
 #include "../ot/xormasking.h"
@@ -31,11 +32,11 @@
 #include "../ot/kk-ot-ext-rec.h"
 #include "../DJN/djnparty.h"
 #include "../DGK/dgkparty.h"
-#include "../util/constants.h"
-#include "../util/timer.h"
-#include "../util/channel.h"
-#include "../util/sndthread.h"
-#include "../util/rcvthread.h"
+#include "../ENCRYPTO_utils/constants.h"
+#include "../ENCRYPTO_utils/timer.h"
+#include "../ENCRYPTO_utils/channel.h"
+#include "../ENCRYPTO_utils/sndthread.h"
+#include "../ENCRYPTO_utils/rcvthread.h"
 
 typedef struct {
 	SndThread *snd_std, *snd_inv;
