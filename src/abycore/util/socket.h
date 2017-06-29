@@ -224,17 +224,21 @@ public:
 	uint64_t Receive(void* pBuf, uint64_t nLen, int nFlags = 0) {
 		char* p = (char*) pBuf;
 		uint64_t n = nLen;
-		uint64_t ret = 0;
+#ifdef WIN32
+		int ret = 0;
+#else // POSIX
+		ssize_t ret = 0;
+#endif
 
 		m_nRcvCount += nLen;
 
 
 		while (n > 0) {
-			ret = recv(m_hSock, p, n, 0);
+			ret = recv(m_hSock, p, n, nFlags);
 #ifdef WIN32
 			if( ret <= 0 )
 			{
-				return ret;
+				return nLen - n;
 			}
 #else
 			if (ret < 0) {
@@ -245,22 +249,57 @@ public:
 				} else {
 					cerr << "socket recv error: " << errno << endl;
 					perror("Socket error ");
-					return ret;
+					return nLen - n;
 				}
 			} else if (ret == 0) {
-				return ret;
+				cerr << "socket recv: unexpected shutdown by peer\n";
+				return nLen - n;
 			}
 #endif
 
 			p += ret;
-			n -= ret;
+			n -= static_cast<uint64_t>(ret);
 		}
 		return nLen;
 	}
 
 	int Send(const void* pBuf, uint64_t nLen, int nFlags = 0) {
+		char* p = (char*) pBuf;
+		uint64_t n = nLen;
+#ifdef WIN32
+		int ret = 0;
+#else // POSIX
+		ssize_t ret = 0;
+#endif
 		m_nSndCount += nLen;
-		return send(m_hSock, (char*) pBuf, nLen, nFlags);
+
+		while (n > 0)
+		{
+			ret = send(m_hSock, p, n, nFlags);
+#ifdef WIN32
+			if( ret <= 0 )
+			{
+				return nLen - n;
+			}
+#else
+			if (ret < 0)
+			{
+				if ( errno == EAGAIN) {
+					cerr << "socket send eror: EAGAIN" << endl;
+					SleepMiliSec(200);
+					continue;
+				} else {
+					cerr << "socket send error: " << errno << endl;
+					perror("Socket error ");
+					return nLen - n;
+				}
+			}
+#endif
+
+		    p += ret;
+		    n -= static_cast<uint64_t>(ret);
+		}
+		return nLen;
 	}
 
 private:
