@@ -26,8 +26,7 @@ CC=g++
 
 #BATCH=
 
-#This is a temporary workaround until we change the communication between ABY and OTExt
-CFLAGS=-DABY_OT -DNUMOTBLOCKS=128
+CFLAGS=
 
 LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/ENCRYPTO_utils/miracl_lib/miracl.a -L /usr/lib -lssl -lcrypto -lrt
 
