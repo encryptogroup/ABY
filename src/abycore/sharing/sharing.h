@@ -28,6 +28,7 @@
 #include "../aby/abysetup.h"
 #include "../ENCRYPTO_utils/constants.h"
 #include "../ENCRYPTO_utils/crypto/crypto.h"
+#include "../ENCRYPTO_utils/fileops.h"
 #include <assert.h>
 //#define DEBUGSHARING
 
@@ -210,24 +211,6 @@ public:
 	Method to delete the File which stores the precomputation values.
 	*/
 	void PreCompFileDelete();
-
-	//TODO move to utils
-	/*File Operation Methods*/
-	/**
-		Function to check if the file exists.
-	 	\param filename		Name of the file.
-	*/
-	BOOL FileExists(char *filename);
-	/**
-		Function to check if the file is empty or not.
-		\param filename		Name of the file.
-	*/
-	BOOL FileEmpty(char *filename);
-	/**
-		Function to obtain the size of a given file.
-		\param filename		Name of the file.
-	*/
-	uint64_t FileSize(char *filename);
 
 
 protected:

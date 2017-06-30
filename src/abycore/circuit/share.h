@@ -99,7 +99,7 @@ public:
 		return val;
 	}
 
-	virtual uint8_t* get_clear_value() = 0;
+	virtual uint8_t* get_clear_value_ptr() = 0;
 	virtual void get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals) = 0;
 	virtual void get_clear_value_vec(uint64_t** vec, uint32_t *bitlen, uint32_t *nvals) = 0;
 
@@ -136,8 +136,7 @@ public:
 	//TDOO: create new method called get share that provides access to a shared output.
 	yao_fields* get_internal_yao_keys();
 
-
-	uint8_t* get_clear_value();
+	uint8_t* get_clear_value_ptr();
 	void get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals);
 	void get_clear_value_vec(uint64_t** vec, uint32_t *bitlen, uint32_t *nvals);
 
@@ -174,7 +173,7 @@ public:
 	}
 	;				// : share() {};
 
-	uint8_t* get_clear_value();
+	uint8_t* get_clear_value_ptr();
 	void get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t* nvals);
 	void get_clear_value_vec(uint64_t** vec, uint32_t* bitlen, uint32_t* nvals);
 

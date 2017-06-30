@@ -63,7 +63,7 @@ int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t n
 
 	party->ExecCircuit();
 
-	output = s_ciphertext->get_clear_value();
+	output = s_ciphertext->get_clear_value_ptr();
 
 	CBitVector out;
 	out.AttachBuf(output, (uint64_t) ceil_divide(param->blocksize, 8) * nvals);

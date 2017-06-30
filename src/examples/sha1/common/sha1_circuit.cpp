@@ -58,7 +58,7 @@ int32_t test_sha1_circuit(e_role role, char* address, uint16_t port, seclvl secl
 
 	party->ExecCircuit();
 
-	output = s_hash_out->get_clear_value();
+	output = s_hash_out->get_clear_value_ptr();
 
 	CBitVector out;
 	out.AttachBuf(output, (uint64_t) ABY_SHA1_OUTPUT_BITS * nvals);

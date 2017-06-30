@@ -59,7 +59,7 @@ void share::set_wire_id(uint32_t pos_id, uint32_t wireid) {
 
 /* =========================== Methods for the Boolean share class =========================== */
 
-uint8_t* boolshare::get_clear_value() {
+uint8_t* boolshare::get_clear_value_ptr() {
 	uint8_t* out;
 	UGATE_T* gatevals;
 	uint32_t nvals = m_ccirc->GetNumVals(m_ngateids[0]);
@@ -163,7 +163,7 @@ yao_fields* boolshare::get_internal_yao_keys() {
 
 /* =========================== Methods for the Arithmetic share class =========================== */
 
-uint8_t* arithshare::get_clear_value() {
+uint8_t* arithshare::get_clear_value_ptr() {
 	UGATE_T* gate_val;
 	uint32_t nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
 	uint8_t* out = (uint8_t*) malloc(nvals * sizeof(uint32_t));

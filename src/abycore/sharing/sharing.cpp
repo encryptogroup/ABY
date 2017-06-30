@@ -40,7 +40,6 @@ ePreCompPhase Sharing::GetPreCompPhaseValue() {
 	return m_ePhaseValue;
 }
 void Sharing::PreCompFileDelete() {
-
 	char filename[21];
 	uint64_t truncation_size;
 	if(m_eRole == SERVER) {
@@ -63,35 +62,6 @@ void Sharing::PreCompFileDelete() {
 	}
 }
 
-/**File operations method.*/
-BOOL Sharing::FileExists(char *filename) {
-
-	if( access( filename, F_OK ) != -1 ) {
-	    return TRUE;
-	} else {
-	    return FALSE;
-	}
-}
-
-BOOL Sharing::FileEmpty(char *filename) {
-
-	FILE *fp = fopen(filename, "rb");
-	fseek(fp, 0L, SEEK_END);
-	//return (!feof(fp))? false:true;
-	return (ftell(fp)==0)? TRUE:FALSE;
-}
-
-uint64_t Sharing::FileSize(char *filename) {
-
-	FILE *fp = fopen(filename, "rb");
-	uint64_t file_size;
-	fseek(fp, 0L, SEEK_END);
-	file_size = ftell(fp);
-	fclose(fp);
-	return file_size;
-}
-
-//TODO switch on gate and perform SIMD gate routine
 
 
 /*

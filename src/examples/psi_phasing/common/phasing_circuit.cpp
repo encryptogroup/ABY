@@ -133,7 +133,7 @@ int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl s
 
 	//Only the client obtains the outputs and performs the checks
 	if(role == CLIENT) {
-		uint8_t* output = shr_out->get_clear_value();
+		uint8_t* output = shr_out->get_clear_value_ptr();
 
 		//cout << "Result: " << (hex) << endl;
 		for(uint32_t i = 0; i < nbins; i++) {

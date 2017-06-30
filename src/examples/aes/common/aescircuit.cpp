@@ -80,11 +80,11 @@ int32_t test_aes_circuit(e_role role, char* address, uint16_t port, seclvl seclv
 
 		party->ExecCircuit();
 
-		output = s_ciphertext_yao->get_clear_value();
+		output = s_ciphertext_yao->get_clear_value_ptr();
 		out.SetBytes(output, 0L, (uint64_t) AES_BYTES * nyao_circs);
 
 		if(nyao_rev_circs > 0) {
-			output = s_ciphertext_yao_rev->get_clear_value();
+			output = s_ciphertext_yao_rev->get_clear_value_ptr();
 			out.SetBytes(output, (uint64_t) AES_BYTES * nyao_circs, (uint64_t) AES_BYTES * nyao_rev_circs);
 		}
 
@@ -103,7 +103,7 @@ int32_t test_aes_circuit(e_role role, char* address, uint16_t port, seclvl seclv
 
 		party->ExecCircuit();
 
-		output = s_ciphertext->get_clear_value();
+		output = s_ciphertext->get_clear_value_ptr();
 
 		out.SetBytes(output, 0L, (uint64_t) AES_BYTES * nvals);
 	}

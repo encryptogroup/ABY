@@ -309,6 +309,3 @@ int compute_maxbin(uint32_t balls_int, uint32_t bins_int) {
 	return maxbin;
 }
 
-
-
-

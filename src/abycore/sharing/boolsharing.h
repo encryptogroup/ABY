@@ -22,6 +22,7 @@
 #include "sharing.h"
 #include <algorithm>
 #include "../circuit/booleancircuits.h"
+#include "../ENCRYPTO_utils/fileops.h"
 
 //#define DEBUGBOOL
 //#define BENCHBOOLTIME

@@ -3171,6 +3171,7 @@ share * BooleanCircuit::PutFPGate(share * in, op_t op, fp_op_setting s){
            break;
         case SQR:
                 o = s==no_status ? "nostatus_sqr" : "ieee_sqr";
+           break;
         case SQRT:
                 o = "ieee_sqrt";
            break;
