@@ -6,24 +6,24 @@ typedef enum conv_t{
 
 class ConvType{
 public:
-    virtual conv_t getType(){}
+    virtual conv_t getType() = 0;
 };
 
 class FPType: public ConvType{
 public:
 	FPType(){};
- 	conv_t getType(){return ENUM_FP_TYPE;}
- 	virtual uint32_t getBase(){}
- 	virtual uint32_t getNumOfDigits(){}
- 	virtual uint32_t getExpBits(){}
-   	virtual uint32_t getExpBias(){}
+	conv_t getType(){return ENUM_FP_TYPE;}
+	virtual uint32_t getBase() = 0;
+	virtual uint32_t getNumOfDigits() = 0;
+	virtual uint32_t getExpBits() = 0;
+	virtual uint32_t getExpBias() = 0;
 };
 
 class UINTType: public ConvType{
 public:
 	UINTType(){};
  	conv_t getType(){return ENUM_UINT_TYPE;}
- 	virtual uint32_t getNumOfDigits(){};
+	virtual uint32_t getNumOfDigits() = 0;
 };
 
 class FP32: public FPType{
