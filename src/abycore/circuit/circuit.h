@@ -370,32 +370,32 @@ public:
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
 	}
-	;
+
 	template<class T> uint32_t PutINGate(T val, e_role role) {
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
 	}
-	;
+
 	template<class T> uint32_t PutSharedINGate(T val) {
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
 	}
-	;
+
 	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val) {
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
 	}
-	;
+
 	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val, e_role role) {
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
 	}
-	;
+
 	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val) {
 		cout << "IN gate not implemented in super-class, stopping!" << endl;
 		return -1;
 	}
-	;
+
 	virtual share* PutOUTGate(share* parent, e_role dst) =0;
 
 	virtual share* PutSharedOUTGate(share* parent) =0;
