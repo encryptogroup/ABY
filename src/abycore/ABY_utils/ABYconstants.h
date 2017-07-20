@@ -45,7 +45,7 @@
 #define BATCH
 
 #define FIXED_KEY_AES_HASHING //for OT routines
-#define USE_KK_OT
+//#define USE_KK_OT
 //#define USE_PIPELINED_AES_NI
 //#define USE_KK_OT_FOR_MT
 //#define GETCLEARVALUE_DEBUG
