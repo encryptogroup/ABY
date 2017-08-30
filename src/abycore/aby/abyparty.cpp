@@ -43,6 +43,8 @@ ABYParty::ABYParty(e_role pid, char* addr, uint16_t port, seclvl seclvl, uint32_
 
 	//
 	m_cCrypt = new crypto(seclvl.symbits);
+	//private member lock defined in abyparty.h for passing to establish connection
+	glock = new CLock();
 	//m_aSeed = (uint8_t*) malloc(sizeof(uint8_t) * m_cCrypt->get_hash_bytes());
 
 	//Are doubled to have both parties play both roles
@@ -154,6 +156,8 @@ void ABYParty::Cleanup() {
 		delete m_vSockets[i];
 	}
 	delete m_cCrypt;
+	if (glock)
+		delete glock;
 }
 
 CBitVector ABYParty::ExecCircuit() {
@@ -492,11 +496,11 @@ BOOL ABYParty::EstablishConnection() {
 		success = ABYPartyConnect();
 
 	}
-	m_tComm->snd_std = new SndThread(m_vSockets[0]);
-	m_tComm->rcv_std = new RcvThread(m_vSockets[0]);
+	m_tComm->snd_std = new SndThread(m_vSockets[0], glock);
+	m_tComm->rcv_std = new RcvThread(m_vSockets[0], glock);
 
-	m_tComm->snd_inv = new SndThread(m_vSockets[1]);
-	m_tComm->rcv_inv = new RcvThread(m_vSockets[1]);
+	m_tComm->snd_inv = new SndThread(m_vSockets[1], glock);
+	m_tComm->rcv_inv = new RcvThread(m_vSockets[1], glock);
 
 	m_tComm->snd_std->Start();
 	m_tComm->snd_inv->Start();

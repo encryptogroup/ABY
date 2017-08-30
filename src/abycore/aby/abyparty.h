@@ -133,6 +133,7 @@ private:
 	vector<Sharing*> m_vSharings;
 
 	crypto* m_cCrypt;
+	CLock *glock;
 
 	enum EPartyJobType {
 		e_Party_Comm, e_Party_Stop, e_Party_Undefined
