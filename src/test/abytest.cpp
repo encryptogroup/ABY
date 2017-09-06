@@ -41,40 +41,40 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	run_tests(role, (char*) address.c_str(), port, seclvl, bitlen, nvals, nthreads, mt_alg, test_op, num_test_runs, verbose);
+	//run_tests(role, (char*) address.c_str(), port, seclvl, bitlen, nvals, nthreads, mt_alg, test_op, num_test_runs, verbose);
 
 	//Test the AES circuit
-	cout << "Testing AES circuit in Boolean sharing" << endl;
-	test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_BOOL);
-	cout << "Testing AES circuit in Yao sharing" << endl;
-	test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_YAO);
-	cout << "Testing AES circuit in Setup-LUT sharing" << endl;
-	test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_SPLUT);
+	//cout << "Testing AES circuit in Boolean sharing" << endl;
+	//test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_BOOL);
+	//cout << "Testing AES circuit in Yao sharing" << endl;
+	//test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_YAO);
+	//cout << "Testing AES circuit in Setup-LUT sharing" << endl;
+	//test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_SPLUT);
 
-	//Test the SHA1 circuit TODO: Constant gates are limited to nvals < 64. Fix!
-	cout << "Testing SHA1 circuit in Boolean sharing" << endl;
-	test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, 63, nthreads, mt_alg, S_BOOL);
-	cout << "Testing SHA1 circuit in Yao sharing" << endl;
-	test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, 63, nthreads, mt_alg, S_YAO);
-	//cout << "Testing SHA1 circuit in Setup-LUT sharing" << endl;
-	//test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_SPLUT);
+	////Test the SHA1 circuit TODO: Constant gates are limited to nvals < 64. Fix!
+	//cout << "Testing SHA1 circuit in Boolean sharing" << endl;
+	//test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, 63, nthreads, mt_alg, S_BOOL);
+	//cout << "Testing SHA1 circuit in Yao sharing" << endl;
+	//test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, 63, nthreads, mt_alg, S_YAO);
+	////cout << "Testing SHA1 circuit in Setup-LUT sharing" << endl;
+	////test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_SPLUT);
 
 	//Test the Sort-Compare-Shuffle PSI circuit
 	cout << "Testing SCS PSI circuit in Boolean sharing" << endl;
 	test_psi_scs_circuit(role, (char*) address.c_str(), port, seclvl, nelements, bitlen,	nthreads, mt_alg, 0, true);
-	cout << "Testing SCS PSI circuit in Yao sharing" << endl;
-	test_psi_scs_circuit(role, (char*) address.c_str(), port, seclvl, nelements, bitlen,	nthreads, mt_alg, 1, true);
+	//cout << "Testing SCS PSI circuit in Yao sharing" << endl;
+	//test_psi_scs_circuit(role, (char*) address.c_str(), port, seclvl, nelements, bitlen,	nthreads, mt_alg, 1, true);
 	//cout << "Testing SCS PSI circuit in Setup-LUT sharing" << endl;
 	//test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_SPLUT);
 
 
 	//Test the Phasing PSI circuit
-	cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
-	test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL, 1, 0, 3);
-	cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
-	test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_YAO, 1, 0, 3);
-	cout << "Testing PSI Phasing circuit in Setup-LUT sharing" << endl;
-	test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_SPLUT, 1, 0, 3);
+	//cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
+	//test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_BOOL, 1, 0, 3);
+	//cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
+	//test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_YAO, 1, 0, 3);
+	//cout << "Testing PSI Phasing circuit in Setup-LUT sharing" << endl;
+	//test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_SPLUT, 1, 0, 3);
 
 
 	//test_lowmc_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL, (LowMCParams*) &stp);
