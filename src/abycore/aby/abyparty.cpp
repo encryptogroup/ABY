@@ -142,6 +142,11 @@ void ABYParty::Cleanup() {
 		delete m_vThreads[i];
 	}
 
+	//wait for the threads to complete their tasks before deleting them
+	m_tComm->snd_std->Wait();
+	m_tComm->snd_inv->Wait();
+	m_tComm->rcv_std->Wait();
+	m_tComm->rcv_inv->Wait();
 	delete m_tComm->snd_std;
 	delete m_tComm->snd_inv;
 	delete m_tComm->rcv_std;
