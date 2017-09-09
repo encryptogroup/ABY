@@ -1,6 +1,7 @@
 #Definition of the interrupt handler routine. Invoked when Ctrl+c/z is encountered.
 exitfn () {
     trap SIGINT              
+	echo 'killing client'
     kill $CLIENT_PID
     exit                    
 }
