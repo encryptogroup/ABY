@@ -44,13 +44,6 @@
 #include <limits.h>
 #include "../ENCRYPTO_utils/connection.h"
 
-//#define ABYDEBUG
-//#define PRINT_OUTPUT
-//#define DEBUGABYPARTY
-//#define BENCHONLINEPHASE
-//#define PRINT_PERFORMANCE_STATS
-//#define DEBUGCOMM
-
 
 using namespace std; //TODO eventually remove and prefix couts etc with std::
 

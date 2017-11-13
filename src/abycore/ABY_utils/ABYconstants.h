@@ -25,6 +25,14 @@
 //#define ABY_PRODUCTION
 
 
+//#define ABYDEBUG
+//#define PRINT_OUTPUT
+//#define DEBUGABYPARTY
+//#define BENCHONLINEPHASE
+//#define PRINT_PERFORMANCE_STATS
+//#define DEBUGCOMM
+
+
 #define BATCH
 
 //#define ABY_OT
