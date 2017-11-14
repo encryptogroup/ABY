@@ -47,9 +47,6 @@
 
 using namespace std; //TODO eventually remove and prefix couts etc with std::
 
-//Send and receive threads for the standard direction (SERVER plays server, CLIENT plays client)
-//and for the inverse direction (SERVER plays client, CLIENT plays server)
-
 
 class ABYParty {
 public:

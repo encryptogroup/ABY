@@ -21,17 +21,17 @@
 
 #include "../ENCRYPTO_utils/constants.h"
 
-/* Uncomment production to circumvent output reconstruction in the PrintValue and Assert gates */
-//#define ABY_PRODUCTION
-
+// Set to 1 for production. 1 will circumvent output reconstruction in the PrintValue and Assert gates, 0 prints these intermediate values.
+#define ABY_PRODUCTION 0
 
 //#define ABYDEBUG
 //#define PRINT_OUTPUT
 //#define DEBUGABYPARTY
-//#define BENCHONLINEPHASE
-//#define PRINT_PERFORMANCE_STATS
 //#define DEBUGCOMM
 
+#define PRINT_PERFORMANCE_STATS 0 //prints overall runtime statistics and gate counts
+#define PRINT_COMMUNICATION_STATS 0 //prints communication statistics
+#define BENCHONLINEPHASE 0 //show very detailed runtime statistic on each sharing for online phase, typically for troubleshooting
 
 #define BATCH
 
@@ -39,8 +39,8 @@
 //#define NUMOTBLOCKS 256
 //#define VERIFY_OT
 
-#define ABY_PARTY_CHANNEL MAX_NUM_COMM_CHANNELS-3
-#define ABY_SETUP_CHANNEL ABY_PARTY_CHANNEL-1
+#define ABY_PARTY_CHANNEL (MAX_NUM_COMM_CHANNELS-3)
+#define ABY_SETUP_CHANNEL (ABY_PARTY_CHANNEL-1)
 #define DJN_CHANNEL	32
 #define DGK_CHANNEL DJN_CHANNEL
 

@@ -274,7 +274,7 @@ share* Circuit::EnsureOutputGate(share* in) {
 }
 
 share* Circuit::PutPrintValueGate(share* in, string helpstr) {
-#ifdef ABY_PRODUCTION
+#if ABY_PRODUCTION
 	cerr << "Production mode enabled - PutPrintValue Gate is omitted" << endl;
 
 	return in;
@@ -317,7 +317,7 @@ share* Circuit::PutAssertGate(share* in, uint8_t assert_val, uint32_t bitlen) {
 
 
 share* Circuit::PutSIMDAssertGate(share* in, uint32_t nvals, uint64_t* assert_val, uint32_t bitlen) {
-#ifdef ABY_PRODUCTION
+#if ABY_PRODUCTION
 	cerr << "Production mode enabled - Assert Gate is omitted" << endl;
 
 	return in;

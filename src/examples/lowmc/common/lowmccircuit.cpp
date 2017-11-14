@@ -113,7 +113,7 @@ share* BuildLowMCCircuit(share* val, share* key, BooleanCircuit* circ, LowMCPara
 
 	destroy_code(m_tGrayCode);
 
-#ifdef PRINT_PERFORMANCE_STATS
+#if PRINT_PERFORMANCE_STATS
 	cout << "Total Number of Boolean Gates: " << circ->GetNumGates() << endl;
 #endif
 

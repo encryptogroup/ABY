@@ -234,8 +234,12 @@ CBitVector ABYParty::ExecCircuit() {
 #endif
 
 
-#ifdef PRINT_PERFORMANCE_STATS
+#if PRINT_PERFORMANCE_STATS
 	PrintPerformanceStatistics();
+#endif
+
+#if PRINT_COMMUNICATION_STATS
+	PrintCommunication();
 #endif
 	return result;
 }
@@ -284,7 +288,7 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
 }
 
 BOOL ABYParty::EvaluateCircuit() {
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 	timespec tstart, tend;
 	uint32_t num_sharings = m_vSharings.size();
 	double interaction = 0;
@@ -317,11 +321,11 @@ BOOL ABYParty::EvaluateCircuit() {
 #ifdef DEBUGABYPARTY
 			cout << "Evaluating local operations of sharing " << i << " on depth " << depth << endl;
 #endif
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 			clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 			m_vSharings[i]->EvaluateLocalOperations(depth);
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 			clock_gettime(CLOCK_MONOTONIC, &tend);
 			localops[i] += getMillies(tstart, tend);
 			clock_gettime(CLOCK_MONOTONIC, &tstart);
@@ -330,7 +334,7 @@ BOOL ABYParty::EvaluateCircuit() {
 			cout << "Evaluating interactive operations of sharing " << i << endl;
 #endif
 			m_vSharings[i]->EvaluateInteractiveOperations(depth);
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 			clock_gettime(CLOCK_MONOTONIC, &tend);
 			interactiveops[i] += getMillies(tstart, tend);
 #endif
@@ -338,24 +342,24 @@ BOOL ABYParty::EvaluateCircuit() {
 #ifdef DEBUGABYPARTY
 		cout << "Finished with evaluating operations on depth = " << depth << ", continuing with interactions" << endl;
 #endif
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 		clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 		PerformInteraction();
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 		clock_gettime(CLOCK_MONOTONIC, &tend);
 		interaction += getMillies(tstart, tend);
 #endif
-#ifdef DEBUGABYPARTY
+#if DEBUGABYPARTY
 		cout << "Done performing interaction, having sharings wrap up this circuit layer" << endl;
 #endif
 		for (uint32_t i = 0; i < m_vSharings.size(); i++) {
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 			clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 			//cout << "Finishing circuit layer for sharing "<< i << endl;
 			m_vSharings[i]->FinishCircuitLayer(depth);
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 			clock_gettime(CLOCK_MONOTONIC, &tend);
 			fincirclayer[i] += getMillies(tstart, tend);
 #endif
@@ -367,14 +371,14 @@ BOOL ABYParty::EvaluateCircuit() {
 	m_tPartyChan->synchronize_end();
 	delete m_tPartyChan;
 
-#ifdef BENCHONLINEPHASE
+#if BENCHONLINEPHASE
 	cout << "Online time is distributed as follows: " << endl;
 	cout << "Bool: local gates: " << localops[S_BOOL] << ", interactive gates: " << interactiveops[S_BOOL] << ", layer finish: " << fincirclayer[S_BOOL] << endl;
 	cout << "Yao: local gates: " << localops[S_YAO] << ", interactive gates: " << interactiveops[S_YAO] << ", layer finish: " << fincirclayer[S_YAO] << endl;
 	cout << "Yao Rev: local gates: " << localops[S_YAO_REV] << ", interactive gates: " << interactiveops[S_YAO_REV] << ", layer finish: " << fincirclayer[S_YAO_REV] << endl;
 	cout << "Arith: local gates: " << localops[S_ARITH] << ", interactive gates: " << interactiveops[S_ARITH] << ", layer finish: " << fincirclayer[S_ARITH] << endl;
 	cout << "SPLUT: local gates: " << localops[S_SPLUT] << ", interactive gates: " << interactiveops[S_SPLUT] << ", layer finish: " << fincirclayer[S_SPLUT] << endl;
-	cout << "Communication: " << interaction << endl;
+	cout << "Communication: " << interaction << endl << endl;
 #endif
 	return true;
 }
@@ -472,7 +476,7 @@ BOOL ABYParty::ThreadReceiveValues() {
 
 
 void ABYParty::PrintPerformanceStatistics() {
-	cout << "Complexities: " << endl;
+	std::cout << "Complexities: " << endl;
 	m_vSharings[S_BOOL]->PrintPerformanceStatistics();
 	m_vSharings[S_YAO]->PrintPerformanceStatistics();
 	m_vSharings[S_YAO_REV]->PrintPerformanceStatistics();
@@ -480,7 +484,7 @@ void ABYParty::PrintPerformanceStatistics() {
 	m_vSharings[S_SPLUT]->PrintPerformanceStatistics();
 	cout << "Total number of gates: " << m_pCircuit->GetGateHead() << endl;
 	PrintTimings();
-	PrintCommunication();
+	std::cout << std::endl;
 }
 
 //=========================================================
