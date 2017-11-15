@@ -64,12 +64,12 @@ static const aby_ops_t m_tBenchOps[] = {
 	{ OP_B2Y, S_BOOL, "b2y" },
 	{ OP_A2Y, S_ARITH, "a2y" },
 	{ OP_ADD, S_YAO_REV, "addyaoipp" },
-	{ OP_MUL, S_YAO_REV, "mulyaoipp" }
+	{ OP_MUL, S_YAO_REV, "mulyaoipp" },
 
-//	{ OP_ADD, S_SPLUT, "addsplut"},
-//	{ OP_CMP, S_SPLUT, "cmpsplut"},
-//	{ OP_EQ, S_SPLUT, "eqsplut"},
-//	{ OP_SBOX, S_SPLUT, "sboxlut" }
+	{ OP_ADD, S_SPLUT, "addsplut"},
+	{ OP_CMP, S_SPLUT, "cmpsplut"},
+	{ OP_EQ, S_SPLUT, "eqsplut"},
+	{ OP_SBOX, S_SPLUT, "sboxlut" }
 };
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* bitlen, uint32_t* secparam,
@@ -77,7 +77,6 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* 
 		uint32_t* threads, bool* no_verify, bool* detailed) {
 
 	uint32_t int_role = 0, int_port = 0;
-	bool useffc = false;
 	bool oplist = false;
 	bool success = false;
 
@@ -133,16 +132,13 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 		bool no_verify,	bool detailed) {
 	uint64_t *avec, *bvec, *cvec, *verifyvec, typebitmask = 0;
 	uint32_t tmpbitlen, tmpnvals;
-	share *shra, *shrb, *shrres, *shrout, *shrsel, *shr_out_a, *shr_out_b;
+	share *shra, *shrb, *shrres, *shrout, *shrsel;
 	//Shares for Yao IPP
 	share *shray, *shrayr, *shrby, *shrbyr, *shrresy, *shrresyr, *shrouty, *shroutyr;
 	vector<Sharing*>& sharings = party->GetSharings();
 	Circuit *bc, *yc, *ac, *ycr;
 	double op_time, o_time, s_time, o_comm, s_comm;
 	uint32_t non_linears, depth, ynvals, yrnvals;
-
-	uint8_t *buf_shrd_out_a, *buf_shrd_out_b;
-	yao_fields *yao_shrd_out_a, *yao_shrd_out_b;
 
 	avec = (uint64_t*) malloc(nvals * sizeof(uint64_t));
 	bvec = (uint64_t*) malloc(nvals * sizeof(uint64_t));
@@ -228,7 +224,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 
 					if(yrnvals > 0) {
 						shrayr = ycr->PutSIMDINGate(yrnvals, avec+ynvals, bitlen, CLIENT);
-						shrbyr = ycr->PutSIMDINGate(yrnvals,  bvec+ynvals, bitlen, SERVER);
+						shrbyr = ycr->PutSIMDINGate(yrnvals, bvec+ynvals, bitlen, SERVER);
 						shrayr->set_max_bitlength(bitlen);
 						shrbyr->set_max_bitlength(bitlen);
 					}
@@ -474,9 +470,8 @@ bool run_bench(e_role role, char* address, uint16_t port, seclvl seclvl, int32_t
 		uint32_t nruns, e_mt_gen_alg mt_alg, uint32_t nthreads, bool numbers_only, bool no_verify, bool detailed) {
 
 	uint32_t nops, nbitlens;
-	uint64_t seed = 0xAAAAAAAAAAAAAAAA;
-
-	UGATE_T val;
+	//uint64_t seed = 0xAAAAAAAAAAAAAAAA;
+	uint64_t seed = time(NULL);
 
 	aby_ops_t* op;
 
@@ -485,7 +480,7 @@ bool run_bench(e_role role, char* address, uint16_t port, seclvl seclvl, int32_t
 
 	if (operation > -1) {
 		op = new aby_ops_t;
-		assert(operation < sizeof(m_tBenchOps) / sizeof(aby_ops_t));
+		assert(operation < (int) (sizeof(m_tBenchOps) / sizeof(aby_ops_t)));
 		op->op = m_tBenchOps[operation].op;
 		op->opname = m_tBenchOps[operation].opname;
 		op->sharing = m_tBenchOps[operation].sharing;
