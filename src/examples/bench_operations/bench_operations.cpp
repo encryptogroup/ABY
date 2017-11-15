@@ -25,17 +25,55 @@
 
 static const uint32_t m_vBitLens[] = {8, 16, 32, 64};
 
-static const aby_ops_t m_tBenchOps[] = { { OP_XOR, S_BOOL, "xorbool" }, { OP_AND, S_BOOL, "andbool" }, { OP_ADD, S_BOOL, "addsobool" }, { OP_ADD, S_BOOL, "adddobool" },
-		{ OP_ADD, S_BOOL, "adddovecbool" }, { OP_MUL, S_BOOL, "mulsobool" }, { OP_MUL, S_BOOL, "muldobool" }, { OP_MUL, S_BOOL, "mulsovecbool" }, { OP_MUL, S_BOOL, "muldovecbool" },
-		{ OP_CMP, S_BOOL, "cmpsobool" }, { OP_CMP, S_BOOL, "cmpdobool" }, { OP_EQ, S_BOOL, "eqbool" }, { OP_MUX, S_BOOL, "muxbool" },{ OP_MUX, S_BOOL, "muxvecbool" },
-		{ OP_SBOX, S_BOOL, "sboxsobool" }, { OP_SBOX, S_BOOL, "sboxdobool" }, { OP_SBOX, S_BOOL, "sboxdovecbool" },
-		 {OP_XOR, S_YAO, "xoryao" }, { OP_AND, S_YAO, "andyao" }, { OP_ADD, S_YAO, "addyao" }, { OP_MUL, S_YAO, "mulyao" }, { OP_CMP, S_YAO, "cmpyao" },
-		{ OP_EQ, S_YAO, "eqyao" }, { OP_MUX, S_YAO, "muxyao" },  { OP_SBOX, S_YAO, "sboxsoyao" },{ OP_ADD, S_ARITH, "addarith" }, { OP_MUL, S_ARITH, "mularith" }, { OP_Y2B, S_YAO, "y2b" }, { OP_B2A, S_BOOL, "b2a" },
-		{ OP_B2Y, S_BOOL, "b2y" }, { OP_A2Y, S_ARITH, "a2y" }, { OP_ADD, S_YAO_REV, "addyaoipp" }, { OP_MUL, S_YAO_REV, "mulyaoipp" },
-		{ OP_ADD, S_SPLUT, "addsplut"}, { OP_CMP, S_SPLUT, "cmpsplut"}, { OP_EQ, S_SPLUT, "eqsplut"},	{ OP_SBOX, S_SPLUT, "sboxlut" }};
+static const aby_ops_t m_tBenchOps[] = {
+	{ OP_XOR, S_BOOL, "xorbool" },
+	{ OP_AND, S_BOOL, "andbool" },
+	{ OP_ADD, S_BOOL, "addsobool" },
+	{ OP_ADD, S_BOOL, "adddobool" },
+
+	{ OP_ADD, S_BOOL, "adddovecbool" },
+	{ OP_MUL, S_BOOL, "mulsobool" },
+	{ OP_MUL, S_BOOL, "muldobool" },
+	{ OP_MUL, S_BOOL, "mulsovecbool" },
+	{ OP_MUL, S_BOOL, "muldovecbool" },
+
+	{ OP_CMP, S_BOOL, "cmpsobool" },
+	{ OP_CMP, S_BOOL, "cmpdobool" },
+	{ OP_EQ, S_BOOL, "eqbool" },
+	{ OP_MUX, S_BOOL, "muxbool" },
+	{ OP_MUX, S_BOOL, "muxvecbool" },
+
+	{ OP_SBOX, S_BOOL, "sboxsobool" },
+	{ OP_SBOX, S_BOOL, "sboxdobool" },
+	{ OP_SBOX, S_BOOL, "sboxdovecbool" },
+
+	{ OP_XOR, S_YAO, "xoryao" },
+	{ OP_AND, S_YAO, "andyao" },
+	{ OP_ADD, S_YAO, "addyao" },
+	{ OP_MUL, S_YAO, "mulyao" },
+	{ OP_CMP, S_YAO, "cmpyao" },
+
+	{ OP_EQ, S_YAO, "eqyao" },
+	{ OP_MUX, S_YAO, "muxyao" },
+	{ OP_SBOX, S_YAO, "sboxsoyao" },
+	{ OP_ADD, S_ARITH, "addarith" },
+	{ OP_MUL, S_ARITH, "mularith" },
+	{ OP_Y2B, S_YAO, "y2b" },
+	{ OP_B2A, S_BOOL, "b2a" },
+
+	{ OP_B2Y, S_BOOL, "b2y" },
+	{ OP_A2Y, S_ARITH, "a2y" },
+	{ OP_ADD, S_YAO_REV, "addyaoipp" },
+	{ OP_MUL, S_YAO_REV, "mulyaoipp" }
+
+//	{ OP_ADD, S_SPLUT, "addsplut"},
+//	{ OP_CMP, S_SPLUT, "cmpsplut"},
+//	{ OP_EQ, S_SPLUT, "eqsplut"},
+//	{ OP_SBOX, S_SPLUT, "sboxlut" }
+};
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* bitlen, uint32_t* secparam,
-		string* address, uint16_t* port, int32_t* operation, bool* verbose, uint32_t* nops, uint32_t* nruns,
+		string* address, uint16_t* port, int32_t* operation, bool* numbers_only, uint32_t* nops, uint32_t* nruns,
 		uint32_t* threads, bool* no_verify, bool* detailed) {
 
 	uint32_t int_role = 0, int_port = 0;
@@ -51,7 +89,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* 
 			{ (void*) &int_port, T_NUM, "p", "Port, default: 7766",	false, false },
 			{ (void*) operation, T_NUM, "o", "Test operation with id (leave out for all operations; for list of IDs use -l), default: all", false, false },
 			{ (void*) nruns, T_NUM, "i", "Number of iterations of tests, default: 1",	false, false },
-			{ (void*) verbose, T_FLAG, "v", "Verbose (silent benchmarks, only timings), default: off",	false, false },
+			{ (void*) numbers_only, T_FLAG, "v", "Omit detailed description, print numbers only (default: false)",	false, false },
 			{ (void*) &oplist, T_FLAG, "l", "List the IDs of operations",	false, false },
 			{ (void*) no_verify, T_FLAG, "t", "No output verification (default: false)",	false, false },
 			{ (void*) detailed, T_FLAG, "d", "Give detailed online/setup time and communication (default: false)",	false, false },
@@ -90,13 +128,11 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* 
 
 
 
-
 int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, uint32_t* bitlens,
-		uint32_t nbitlens, uint32_t nvals, uint32_t nruns, e_role role, uint32_t symsecbits, bool verbose,
+		uint32_t nbitlens, uint32_t nvals, uint32_t nruns, e_role role, uint32_t symsecbits, bool numbers_only,
 		bool no_verify,	bool detailed) {
 	uint64_t *avec, *bvec, *cvec, *verifyvec, typebitmask = 0;
 	uint32_t tmpbitlen, tmpnvals;
-	uint8_t *sa, *sb;
 	share *shra, *shrb, *shrres, *shrout, *shrsel, *shr_out_a, *shr_out_b;
 	//Shares for Yao IPP
 	share *shray, *shrayr, *shrby, *shrbyr, *shrresy, *shrresyr, *shrouty, *shroutyr;
@@ -128,28 +164,33 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 		buf_pos_odd[i] = 2*i+1;
 	}
 
-	if (!verbose) {
+	if (!numbers_only) {
+
 		cout << "Base OTs:\t";
 		cout << party->GetTiming(P_BASE_OT) << endl;
-	}
 
-	if (!verbose) {
 		cout << "Op\t";
-		for(uint32_t b = 0; b < nbitlens; b++) {
-			cout << bitlens[b] << "-bit \t";
+		if (!detailed) {
+			for (uint32_t b = 0; b < nbitlens; b++) {
+				cout << bitlens[b] << "-bit \t";
+			}
+			cout << endl;
 		}
-
-		cout << endl;
-		if(detailed) {
+		else {
 			cout << "Setup Time [ms] / Online Time [ms] / Setup Comm [Byte] / Online Comm [Byte] / Non-Linear Ops" << endl;
 		}
 		cout << "-----------------------------------------------" << endl;
 	}
 
 	for (uint32_t i = 0; i < nops; i++) {
-		if (!verbose) {
+		if (!numbers_only) {
 			cout << bench_ops[i].opname << "\t";
 		}
+
+		if(detailed){
+			cout << endl;
+		}
+
 		for (uint32_t b = 0; b < nbitlens; b++) {
 			uint32_t bitlen = bitlens[b];
 			op_time = 0;
@@ -160,9 +201,6 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 			non_linears = 0;
 
 			typebitmask = 0;
-
-			sa = (uint8_t*) malloc(max(nvals, bitlen));
-			sb = (uint8_t*) malloc(max(nvals, bitlen));
 
 			if(PadToMultiple(bitlen, 8) != bitlen) {
 				typebitmask = (1<<bitlen)-1;
@@ -382,9 +420,13 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 				depth += sharings[bench_ops[i].sharing]->GetMaxCommunicationRounds();
 
 				if(detailed) {
-					cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetSentData(P_SETUP)+party->GetReceivedData(P_SETUP)
-							<< "\t" << party->GetSentData(P_ONLINE)+party->GetReceivedData(P_ONLINE) << "\t" << sharings[bench_ops[i].sharing]->GetNumNonLinearOperations()
-							<< "\t" << sharings[bench_ops[i].sharing]->GetMaxCommunicationRounds() << endl;
+					cout << bitlen <<"\t"
+						<< party->GetTiming(P_SETUP) << "\t"
+						<< party->GetTiming(P_ONLINE) << "\t"
+						<< party->GetSentData(P_SETUP)+party->GetReceivedData(P_SETUP) << "\t"
+						<< party->GetSentData(P_ONLINE)+party->GetReceivedData(P_ONLINE) << "\t"
+						<< sharings[bench_ops[i].sharing]->GetNumNonLinearOperations() << "\t"
+						<< sharings[bench_ops[i].sharing]->GetMaxCommunicationRounds() << endl;
 				}
 
 				party->Reset();
@@ -407,8 +449,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 					//cout << "Verification succeeded" << endl;
 				}
 			}
-			free(sa);
-			free(sb);
+
 			if(!detailed) {
 				cout << op_time/nruns << "\t";
 			}
@@ -430,7 +471,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 
 
 bool run_bench(e_role role, char* address, uint16_t port, seclvl seclvl, int32_t operation, int32_t bitlen, uint32_t nvals,
-		uint32_t nruns, e_mt_gen_alg mt_alg, uint32_t nthreads, bool verbose, bool no_verify, bool detailed) {
+		uint32_t nruns, e_mt_gen_alg mt_alg, uint32_t nthreads, bool numbers_only, bool no_verify, bool detailed) {
 
 	uint32_t nops, nbitlens;
 	uint64_t seed = 0xAAAAAAAAAAAAAAAA;
@@ -471,7 +512,7 @@ bool run_bench(e_role role, char* address, uint16_t port, seclvl seclvl, int32_t
 
 	srand(seed);
 
-	bench_operations(op, nops, party, bitlens, nbitlens, nvals, nruns, role, seclvl.symbits, verbose, no_verify, detailed);
+	bench_operations(op, nops, party, bitlens, nbitlens, nvals, nruns, role, seclvl.symbits, numbers_only, no_verify, detailed);
 
 	delete party;
 
@@ -486,17 +527,17 @@ int main(int argc, char** argv) {
 	uint16_t port = 7766;
 	string address = "127.0.0.1";
 	int32_t operation = -1, bitlen = -1;
-	bool verbose = false;
+	bool numbers_only = false;
 	bool no_verify = false;
 	bool detailed = false;
 	uint32_t nthreads = 1;
 	e_mt_gen_alg mt_alg = MT_OT;
 
-	read_test_options(&argc, &argv, &role, &bitlen, &secparam, &address, &port, &operation, &verbose, &nvals, &nruns, &nthreads, &no_verify, &detailed);
+	read_test_options(&argc, &argv, &role, &bitlen, &secparam, &address, &port, &operation, &numbers_only, &nvals, &nruns, &nthreads, &no_verify, &detailed);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	run_bench(role, (char*) address.c_str(), port, seclvl, operation, bitlen, nvals, nruns, mt_alg, nthreads, verbose, no_verify, detailed);
+	run_bench(role, (char*) address.c_str(), port, seclvl, operation, bitlen, nvals, nruns, mt_alg, nthreads, numbers_only, no_verify, detailed);
 
 	return 0;
 }
