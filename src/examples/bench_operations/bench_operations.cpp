@@ -23,7 +23,7 @@
 //ABY Party class
 #include "../../abycore/aby/abyparty.h"
 
-static const uint32_t m_vBitLens[] = {8, 16, 32, 64};
+static const uint32_t m_vBitLens[] = {1, 8, 16, 32, 64};
 
 static const aby_ops_t m_tBenchOps[] = {
 	{ OP_XOR, S_BOOL, "xorbool" },
@@ -354,10 +354,11 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 						verifyvec[j] = (avec[j] + bvec[j]) & typebitmask;
 					break;
 				case OP_SBOX:
-					shrsel = new boolshare(8, circ);
-					for(uint32_t j = 0; j < 8; j++) {
-						shrsel->set_wire_id(j, shra->get_wire_id(j));
-					}
+					if (bitlen >= 8) {
+						shrsel = new boolshare(8, circ);
+						for (uint32_t j = 0; j < 8; j++) {
+							shrsel->set_wire_id(j, shra->get_wire_id(j));
+						}
 
 					if(bench_ops[i].opname.compare("sboxsobool") == 0) {
 						shrres = new boolshare(AESSBox_Forward_BP_Size_Optimized(shrsel->get_wires(), (BooleanCircuit*) circ), circ);
@@ -366,9 +367,16 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 					} else {
 						shrres = new boolshare(PutAESSBoxGate(shrsel->get_wires(), (BooleanCircuit*) circ, false), circ);
 					}
-
-					for (uint32_t j = 0; j < nvals; j++)
-						verifyvec[j] = (uint64_t) plaintext_aes_sbox[avec[j] & 0xFF]; //(avec[j] + bvec[j]) & typebitmask;
+						for (uint32_t j = 0; j < nvals; j++)
+							verifyvec[j] = (uint64_t) plaintext_aes_sbox[avec[j] & 0xFF]; //(avec[j] + bvec[j]) & typebitmask;
+					}
+					else{
+						cout << "AES only works with bitlen >= 8!\t";
+						shrres = shra;
+						for (uint32_t j = 0; j < nvals; j++){
+							verifyvec[j] = avec[j];
+						}
+					}
 					break;
 				default:
 					shrres = circ->PutADDGate(shra, shrb);
