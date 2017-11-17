@@ -309,16 +309,16 @@ BOOL ABYParty::EvaluateCircuit() {
 	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
 		maxdepth = max(maxdepth, m_vSharings[i]->GetMaxCommunicationRounds());
 	}
-#ifdef DEBUGABYPARTY
+#if DEBUGABYPARTY
 	cout << "Starting online evaluation with maxdepth = " << maxdepth << endl;
 #endif
 	//Evaluate Circuit layerwise;
 	for (uint32_t depth = 0; depth < maxdepth; depth++, m_nDepth++) {
-#ifdef DEBUGABYPARTY
+#if DEBUGABYPARTY
 		cout << "Starting evaluation on depth " << depth << endl << flush;
 #endif
 		for (uint32_t i = 0; i < m_vSharings.size(); i++) {
-#ifdef DEBUGABYPARTY
+#if DEBUGABYPARTY
 			cout << "Evaluating local operations of sharing " << i << " on depth " << depth << endl;
 #endif
 #if BENCHONLINEPHASE
@@ -330,7 +330,7 @@ BOOL ABYParty::EvaluateCircuit() {
 			localops[i] += getMillies(tstart, tend);
 			clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
-#ifdef DEBUGABYPARTY
+#if DEBUGABYPARTY
 			cout << "Evaluating interactive operations of sharing " << i << endl;
 #endif
 			m_vSharings[i]->EvaluateInteractiveOperations(depth);
@@ -339,7 +339,7 @@ BOOL ABYParty::EvaluateCircuit() {
 			interactiveops[i] += getMillies(tstart, tend);
 #endif
 		}
-#ifdef DEBUGABYPARTY
+#if DEBUGABYPARTY
 		cout << "Finished with evaluating operations on depth = " << depth << ", continuing with interactions" << endl;
 #endif
 #if BENCHONLINEPHASE
@@ -365,7 +365,7 @@ BOOL ABYParty::EvaluateCircuit() {
 #endif
 		}
 	}
-#ifdef DEBUGABYPARTY
+#if DEBUGABYPARTY
 		cout << "Done with online phase; synchronizing "<< endl;
 #endif
 	m_tPartyChan->synchronize_end();
