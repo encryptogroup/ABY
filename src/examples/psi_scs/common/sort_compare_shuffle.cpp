@@ -53,7 +53,7 @@ int32_t test_psi_scs_circuit(e_role role, char* address, uint16_t port, seclvl s
 	//vector<uint32_t> sel_bits(nswapgates);
 
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads,
-			mt_alg, 40000000);
+			mt_alg, 4000000);
 
 	vector<Sharing*>& sharings = party->GetSharings();
 
