@@ -159,19 +159,6 @@ share* ArithmeticCircuit::PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen) {
 }
 
 
-template<class T> uint32_t ArithmeticCircuit::PutINGate(T val, e_role role) {
-	uint32_t gateid = PutINGate(role);
-	if (role == m_eMyRole) {
-		GATE* gate = m_pGates + gateid;
-		gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
-
-		*gate->gs.ishare.inval = (UGATE_T) val;
-		gate->instantiated = true;
-	}
-
-	return gateid;
-}
-
 template<class T> uint32_t ArithmeticCircuit::PutSharedINGate(T val) {
 	uint32_t gateid = PutSharedINGate();
 	GATE* gate = m_pGates + gateid;

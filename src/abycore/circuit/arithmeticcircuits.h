@@ -45,7 +45,18 @@ public:
 	uint32_t PutSUBGate(uint32_t left, uint32_t right);
 
 	uint32_t PutINGate(e_role src);
-	template<class T> uint32_t PutINGate(T val, e_role role);
+	template<class T> uint32_t PutINGate(T val, e_role role){
+		uint32_t gateid = PutINGate(role);
+		if (role == m_eMyRole) {
+			GATE* gate = m_pGates + gateid;
+			gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
+
+			*gate->gs.ishare.inval = (UGATE_T) val;
+			gate->instantiated = true;
+		}
+		return gateid;
+	}
+
 	uint32_t PutSIMDINGate(uint32_t nvals, e_role src);
 	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val, e_role role);
 
