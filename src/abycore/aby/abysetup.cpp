@@ -101,7 +101,37 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 	m_tComm = comm;
 
 	m_tSetupChan = new channel(ABY_SETUP_CHANNEL, m_tComm->rcv_std, m_tComm->snd_std);
-	if(m_eRole == SERVER) {
+
+#if BENCH_HARDWARE
+	uint8_t dummyrcv = 0;
+	timespec start, end;
+	uint32_t benchrounds = 64;
+	uint64_t tmparraysize = 1024*1024*8; // 8 MiB block
+	BYTE * benchtmp = new BYTE[tmparraysize];
+#endif
+
+	if (m_eRole == SERVER) {
+
+#if BENCH_HARDWARE
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		for (uint32_t round = 0; round < benchrounds; round++) {
+			m_tSetupChan->send(&dummyrcv, (uint64_t) 1);
+			m_tSetupChan->blocking_receive(&dummyrcv, (uint64_t) 1);
+		}
+		clock_gettime(CLOCK_MONOTONIC, &end);
+		cout << "RTT: " << getMillies(start, end) / benchrounds << " ms" << endl;
+
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		for (uint32_t round = 0; round < benchrounds; round++) {
+			m_tSetupChan->send(benchtmp, (uint64_t) tmparraysize);
+			m_tSetupChan->blocking_receive(benchtmp, (uint64_t) tmparraysize);
+		}
+
+		clock_gettime(CLOCK_MONOTONIC, &end);
+		cout << "Throughput: " << (tmparraysize >> 20) * benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << endl;
+		delete benchtmp;
+#endif
+
 		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
 
@@ -109,13 +139,33 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
 		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
 #endif
-	} else {
+	} else { // CLIENT
+
+#if BENCH_HARDWARE
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		for (uint32_t round = 0; round < benchrounds; round++) {
+			m_tSetupChan->blocking_receive(&dummyrcv, (uint64_t) 1);
+			m_tSetupChan->send(&dummyrcv, (uint64_t) 1);
+		}
+		clock_gettime(CLOCK_MONOTONIC, &end);
+		cout << "RTT: " << getMillies(start, end) / benchrounds << " ms" << endl;
+
+		clock_gettime(CLOCK_MONOTONIC, &start);
+		for (uint32_t round = 0; round < benchrounds; round++) {
+			m_tSetupChan->blocking_receive(benchtmp, (uint64_t) tmparraysize);
+			m_tSetupChan->send(benchtmp, (uint64_t) tmparraysize);
+		}
+
+		clock_gettime(CLOCK_MONOTONIC, &end);
+		cout << "Throughput: " << (tmparraysize>>20)*benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << endl;
+				delete benchtmp;
+#endif
 		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
-		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt,  m_tComm->rcv_inv, m_tComm->snd_inv);
+		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
 
 #ifdef USE_KK_OT
 		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
-		kk_ot_sender = new KKOTExtSnd(m_cCrypt,  m_tComm->rcv_inv, m_tComm->snd_inv);
+		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
 #endif
 	}
 	//Start Naor-Pinkas base OTs

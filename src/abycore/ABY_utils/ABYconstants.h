@@ -33,10 +33,11 @@
 #define PRINT_COMMUNICATION_STATS 0 //prints communication statistics
 #define BENCHONLINEPHASE 0 //show very detailed runtime statistic on each sharing for online phase, typically for troubleshooting
 
+#define BENCH_HARDWARE 0 // measure RTT, connection bandwidth and AES
+
 #define BATCH
 
 //#define ABY_OT
-//#define NUMOTBLOCKS 256
 //#define VERIFY_OT
 
 #define ABY_PARTY_CHANNEL (MAX_NUM_COMM_CHANNELS-3)
@@ -59,7 +60,6 @@
 //#define GETCLEARVALUE_DEBUG
 //#define DEBUGABYPARTY
 
-#define MAXGATES 32000000
 #define USE_MULTI_MUX_GATES
 
 //TODO eventually remove this and prefix all couts, etc with std::
