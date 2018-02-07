@@ -105,8 +105,8 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 #if BENCH_HARDWARE
 	uint8_t dummyrcv = 0;
 	timespec start, end;
-	uint32_t benchrounds = 64;
-	uint64_t tmparraysize = 1024*1024*8; // 8 MiB block
+	uint32_t benchrounds = 16;
+	uint64_t tmparraysize = 1024*1024*4; // 4 MiB block
 	BYTE * benchtmp = new BYTE[tmparraysize];
 #endif
 
@@ -128,7 +128,7 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		}
 
 		clock_gettime(CLOCK_MONOTONIC, &end);
-		cout << "Throughput: " << (tmparraysize >> 20) * benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << endl;
+		cout << "Throughput: " << 2 * (tmparraysize >> 20) * benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << endl;
 		delete benchtmp;
 #endif
 
