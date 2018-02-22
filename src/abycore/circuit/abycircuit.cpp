@@ -28,6 +28,7 @@ ABYCircuit::ABYCircuit(uint32_t maxgates) {
 	m_pGates = (GATE*) calloc(maxgates, sizeof(GATE));
 	m_nNextFreeGate = 0;
 	m_nMaxVectorSize = 1;
+	m_nMaxDepth = 0;
 }
 
 inline void ABYCircuit::InitGate(GATE* gate, e_gatetype type) {
@@ -35,7 +36,7 @@ inline void ABYCircuit::InitGate(GATE* gate, e_gatetype type) {
 	cout << "Putting new gate with type " << type << endl;
 #endif
 	if(m_nNextFreeGate >= m_nMaxGates) {
-		cout << "I have more gates than available" << endl;
+		cerr << "I have more gates than available: " << m_nNextFreeGate << endl;
 	}
 	assert(m_nNextFreeGate < m_nMaxGates);
 
@@ -49,6 +50,7 @@ inline void ABYCircuit::InitGate(GATE* gate, e_gatetype type, uint32_t ina) {
 
 	assert(ina < m_nNextFreeGate);
 	gate->depth = ComputeDepth(m_pGates[ina]);
+	m_nMaxDepth = max(m_nMaxDepth, gate->depth);
 	gate->ingates.ningates = 1;
 	gate->ingates.inputs.parent = ina;
 	gate->context = m_pGates[ina].context;
@@ -66,6 +68,7 @@ inline void ABYCircuit::InitGate(GATE* gate, e_gatetype type, uint32_t ina, uint
 
 	}
 	gate->depth = max(ComputeDepth(m_pGates[ina]), ComputeDepth(m_pGates[inb]));
+	m_nMaxDepth = max(m_nMaxDepth, gate->depth);
 	gate->ingates.ningates = 2;
 	gate->ingates.inputs.twin.left = ina;
 	gate->ingates.inputs.twin.right = inb;
@@ -107,6 +110,7 @@ inline void ABYCircuit::InitGate(GATE* gate, e_gatetype type, vector<uint32_t>& 
 
 		MarkGateAsUsed(inputs[i]);
 	}
+	m_nMaxDepth = max(m_nMaxDepth, gate->depth);
 }
 
 //Add a gate to m_pGates, increase the gateptr, used for G_LIN or G_NON_LIN
@@ -802,4 +806,5 @@ void ABYCircuit::Reset() {
 	memset(m_pGates, 0, sizeof(GATE) * m_nMaxGates);
 	m_nNextFreeGate = 0;
 	m_nMaxVectorSize = 1;
+	m_nMaxDepth = 0;
 }

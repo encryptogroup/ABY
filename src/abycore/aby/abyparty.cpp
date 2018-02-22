@@ -508,7 +508,7 @@ void ABYParty::PrintPerformanceStatistics() {
 	m_vSharings[S_YAO_REV]->PrintPerformanceStatistics();
 	m_vSharings[S_ARITH]->PrintPerformanceStatistics();
 	m_vSharings[S_SPLUT]->PrintPerformanceStatistics();
-	cout << "Total number of gates: " << m_pCircuit->GetGateHead() << endl;
+	cout << "Total number of gates: " << m_pCircuit->GetGateHead() << " Total depth: " << m_pCircuit->GetTotalDepth() << endl;
 	PrintTimings();
 	std::cout << std::endl;
 }

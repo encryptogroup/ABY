@@ -222,7 +222,11 @@ public:
 	uint32_t GetGateHead() {
 		return m_nNextFreeGate;
 	}
-	;
+
+	uint32_t GetTotalDepth() {
+		return m_nMaxDepth + 1;
+	}
+
 	uint32_t GetMaxVectorSize() {
 		return m_nMaxVectorSize;
 	}
@@ -250,6 +254,7 @@ private:
 	uint32_t m_nNextFreeGate;	// points to the current first unused gate
 	uint32_t m_nMaxVectorSize; 	// The maximum vector size in bits, required for correctly instantiating the 0 and 1 gates
 	uint32_t m_nMaxGates; 		// Maximal number of gates that is allowed
+	uint32_t m_nMaxDepth;	// maximum depth encountered in the circuit
 };
 
 #endif /* __ABYCIRCUIT_H_ */
