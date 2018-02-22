@@ -41,7 +41,6 @@ ABYParty::ABYParty(e_role pid, char* addr, uint16_t port, seclvl seclvl, uint32_
 
 	m_eMTGenAlg = mg_algo;
 
-	//
 	m_cCrypt = new crypto(seclvl.symbits);
 
 #if BENCH_HARDWARE

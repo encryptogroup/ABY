@@ -36,16 +36,13 @@ struct non_lin_on_layers {
 class Circuit {
 
 public:
-	/** Constructor of the class. */
 	Circuit(ABYCircuit* aby, e_sharing context, e_role myrole, uint32_t bitlen, e_circuit circ) :
 			m_cCircuit(aby), m_eContext(context), m_eMyRole(myrole), m_nShareBitLen(bitlen), m_eCirctype(circ) {
 		Init();
 	}
-	;
-	/** Destructor of the class. */
+
 	virtual ~Circuit() {
 	}
-	;
 
 	/**
 	 	 Method performs the initialization of member objects of the \link Circuit \endlink class. It is called from
@@ -68,7 +65,6 @@ public:
 	uint32_t GetShareBitLen() {
 		return m_nShareBitLen;
 	}
-	;
 
 	/**
 		It is a getter method which will return the value of Maximum Depth.
@@ -76,7 +72,6 @@ public:
 	uint32_t GetMaxDepth() {
 		return m_nMaxDepth;
 	}
-	;
 	/**
 		It is a getter method which returns the Local queue based on the inputed level.
 		\param lvl Required level of local queue.
@@ -89,7 +84,6 @@ public:
 		else
 			return EMPTYQUEUE;
 	}
-	;
 
 	/**
 		It is a getter method which returns the Interactive queue based on the inputed level.
@@ -102,7 +96,20 @@ public:
 		else
 			return EMPTYQUEUE;
 	}
-	;
+
+	/*
+	 * print the number of interactive operations for each layer
+	 */
+	void PrintInteractiveQueues(){
+		vector<string> sharingnames {"GMW", "Yao", "Arith", "Yao_Rev", "SPLUT"};
+
+		std::cout << "Interactive Queue Sizes " << sharingnames[this->m_eContext] << std::endl;
+
+		for(uint32_t l = 0; l < GetNumInteractiveLayers(); ++l){
+			std::cout << GetInteractiveQueueOnLvl(l).size() << "\t";
+		}
+		std::cout << std::endl;
+	}
 
 	/**
 		It is a getter method which returns the number of levels/layers in the Local queue.
@@ -128,7 +135,6 @@ public:
 	uint32_t GetNumInputBitsForParty(e_role party) {
 		return m_vInputBits[party];
 	}
-	;
 	/**
 		It is a getter method which returns the number of Output bits provided for the given party
 		\param	party Party role based on which the number of Output bits are returned.
@@ -137,7 +143,7 @@ public:
 	uint32_t GetNumOutputBitsForParty(e_role party) {
 		return m_vOutputBits[party];
 	}
-	;
+
 	/**
 		It is a getter method which returns the Input Gates provided for the given party
 		\param	party Party role based on which the Input gates are returned.
@@ -146,7 +152,7 @@ public:
 	deque<uint32_t> GetInputGatesForParty(e_role party) {
 		return m_vInputGates[party];
 	}
-	;
+
 	/**
 		It is a getter method which returns the Output Gates provided for the given party
 		\param	party Party role based on which the Output gates are returned.
@@ -155,7 +161,7 @@ public:
 	deque<uint32_t> GetOutputGatesForParty(e_role party) {
 		return m_vOutputGates[party];
 	}
-	;
+
 
 	/*non_lin_on_layers* GetNonLinGatesOnLayers() {
 		return &m_vNonLinOnLayer;
@@ -164,11 +170,11 @@ public:
 	e_sharing GetContext() {
 		return m_eContext;
 	}
-	;
+
 	uint32_t GetNumGates() {
 		return m_nGates;
 	}
-	;
+
 
 	gate_specific GetGateSpecificOutput(uint32_t gateid);
 	UGATE_T* GetOutputGateValue(uint32_t gateid);
@@ -178,7 +184,6 @@ public:
 		assert(gateid < m_cCircuit->GetGateHead());
 		return m_pGates[gateid].nvals;
 	}
-	;
 
 	/* Common gate-building routines */
 	virtual share* PutCONSGate(UGATE_T val, uint32_t bitlen) = 0;
@@ -405,27 +410,26 @@ public:
 	e_circuit GetCircuitType() {
 		return m_eCirctype;
 	}
-	;
 
 	int GetNumCombGates() {
 		return ncombgates;
-	};
+	}
 
 	int GetNumStructCombGates() {
 		return nstructcombgates;
-	};
+	}
 
 	int GetNumPermGates() {
 		return npermgates;
-	};
+	}
 
 	int GetNumSubsetGates() {
 		return nsubsetgates;
-	};
+	}
 
 	int GetNumSplitGates() {
 		return nsplitgates;
-	};
+	}
 
 	e_role GetRole() {
 		return m_eMyRole;
@@ -445,7 +449,6 @@ protected:
 	void ResizeNonLinOnLayer(uint32_t new_max_depth);
 
 	share* EnsureOutputGate(share* in);
-
 
 	ABYCircuit* m_cCircuit; /** ABYCircuit Object  */
 	GATE* m_pGates;			/** Gates vector which stores the */
@@ -467,7 +470,6 @@ protected:
 	uint32_t nsubsetgates;
 	uint32_t nsplitgates;
 	uint32_t nstructcombgates;
-
 
 	uint32_t m_nMULs;					//number of AND gates in the circuit
 	uint32_t m_nCONVGates;				//number of Boolean to arithmetic conversion gates
