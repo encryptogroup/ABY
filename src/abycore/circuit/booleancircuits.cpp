@@ -2932,15 +2932,15 @@ share* BooleanCircuit::PutUint2DoubleGate(share* input){
     return PutConvTypeGate(input, &from, &to);
 }
 
-share*  BooleanCircuit::PutConvTypeGate(share * value, ConvType* from, ConvType* to){
-    return new boolshare(PutConvTypeGate(value->get_wires(),from,to), this);
+share*  BooleanCircuit::PutConvTypeGate(share * value, ConvType* from, ConvType* to, uint32_t nvals){
+    return new boolshare(PutConvTypeGate(value->get_wires(),from,to, nvals), this);
 }
 
-vector<uint32_t>  BooleanCircuit::PutConvTypeGate(vector<uint32_t> wires, ConvType* from, ConvType* to){
+vector<uint32_t>  BooleanCircuit::PutConvTypeGate(vector<uint32_t> wires, ConvType* from, ConvType* to, uint32_t nvals){
     uint32_t out;
     switch(to->getType()){
         case ENUM_FP_TYPE:
-            return PutUint2FpGate(wires, (UINTType*)from , (FPType*)to);
+            return PutUint2FpGate(wires, (UINTType*)from , (FPType*)to, nvals);
         case ENUM_UINT_TYPE:
             return PutFp2UintGate(wires, (FPType*)from , (UINTType*)to);
         default: 
@@ -2949,7 +2949,8 @@ vector<uint32_t>  BooleanCircuit::PutConvTypeGate(vector<uint32_t> wires, ConvTy
     }
 }
 
-vector<uint32_t>  BooleanCircuit::PutUint2FpGate(vector<uint32_t> wires, UINTType* from, FPType* to){
+
+vector<uint32_t>  BooleanCircuit::PutUint2FpGate(vector<uint32_t> wires, UINTType* from, FPType* to, uint32_t nvals){
 
 #ifdef UINT2FP_DEBUG
     PutPrintValueGate(new boolshare(wires, this), "INPUT");
@@ -2958,20 +2959,19 @@ vector<uint32_t>  BooleanCircuit::PutUint2FpGate(vector<uint32_t> wires, UINTTyp
     //constants
     uint64_t zero = 0, one = 1;
     uint32_t one_bit_len = 1;
-    share* zero_gate = PutCONSGate(zero, one_bit_len);
-    share* one_gate = PutCONSGate(one, one_bit_len);
-        
-    //pad to the length of fraction
+    share* zero_gate = PutSIMDCONSGate(nvals, zero, one_bit_len);
+    share* one_gate = PutSIMDCONSGate(nvals, one, one_bit_len);
+    //pad to the length of fraction or remove the most significant bits
     wires.resize(to->getNumOfDigits(), zero_gate->get_wires()[0]);
     share * s_in = new boolshare(wires, this);
-   
+
     //check if input is zero
     share* eq_zero = PutEQGate(zero_gate, s_in);
 
     //calculate prefix or
     vector<uint32_t> prefix_or = PutPreOrGate(wires);
     share * s_prefix_or = new boolshare(prefix_or, this);
-    
+
 #ifdef UINT2FP_DEBUG
     PutPrintValueGate(s_prefix_or, "PREFIX OR");
 #endif
@@ -2982,58 +2982,56 @@ vector<uint32_t>  BooleanCircuit::PutUint2FpGate(vector<uint32_t> wires, UINTTyp
 
     value->set_max_bitlength(to->getNumOfDigits()+1);
     vector<uint32_t> tmp_inv_out = value->get_wires();
+    
     vector<uint32_t> power_of_2;
     power_of_2.insert(power_of_2.begin(), tmp_inv_out.begin(), tmp_inv_out.end());
     power_of_2.push_back(one_gate->get_wires()[0]);
     share * p2 = new boolshare(power_of_2,this);
 
-    value = PutHammingWeightGate(p2);
+    value = PutHammingWeightGate(p2, nvals);
 
-    value = new boolshare(PutBarrelRightShifterGate(s_in->get_wires(), value->get_wires()), this);
+    value = new boolshare(PutBarrelLeftShifterGate(s_in->get_wires(), value->get_wires(), nvals), this);
     vector<uint32_t> tmp_fract = value->get_wires();
     tmp_fract.resize(to->getNumOfDigits());
+    
     value = new boolshare(tmp_fract ,this);
     
     vector<uint32_t> value_v = value->get_wires(); 
 
 #ifdef UINT2FP_DEBUG
-    PutPrintValueGate(PutCombinerGate(new boolshare(value_v, this)), "VALUE");
+    PutPrintValueGate(value, "VALUE");
 #endif
 
     std::reverse(value_v.begin(), value_v.end());
+    
     value_v.resize(to->getNumOfDigits(), zero_gate->get_wires()[0]);
 
 #ifdef UINT2FP_DEBUG
-    PutPrintValueGate(PutCombinerGate(new boolshare(value_v, this)), "RESIZED");
+    //PutPrintValueGate(new boolshare(value_v, this), "RESIZED");
     cout << "fraction vector size: " << value_v.size() << endl;
 #endif
 
     //Calculate number of 1-bits in Prefix OR output
-    share* pre_or_for_exp = PutHammingWeightGate(s_prefix_or);
+    share* pre_or_for_exp = PutHammingWeightGate(s_prefix_or, nvals);
 
 #ifdef UINT2FP_DEBUG
     cout << "HW out size: " << pre_or_for_exp->get_wires().size() << endl;
     PutPrintValueGate(pre_or_for_exp, "pre or for exp");
 #endif
 
-    share * exp = PutCONSGate((uint64_t)(to->getExpBias()-1), to->getExpBits());
+    share * exp = PutSIMDCONSGate(nvals, (uint64_t)(to->getExpBias()-1), to->getExpBits());
 
 #ifdef UINT2FP_DEBUG
     PutPrintValueGate(exp, "exp initialized with bias");
+    cout << "bias bit length: " << exp->get_wires().size() << endl;
 #endif
 
     exp = PutADDGate(exp, pre_or_for_exp);
-
-    share * bias = PutCONSGate((uint64_t)to->getExpBias(), to->getExpBits());
-
-#ifdef UINT2FP_DEBUG
-    PutPrintValueGate(bias, "BIAS");
-    cout << "bias bit length: " << bias->get_wires().size() << endl;
-#endif
-
+    
     vector<uint32_t> tmp_exp = exp->get_wires();
-    exp = PutXORGate(exp, PutMUXGate(zero_gate,exp,eq_zero));
-
+    //exp = PutXORGate(exp, PutMUXGate(zero_gate,exp,eq_zero));
+    exp = PutMUXGate(exp, zero_gate, eq_zero);
+    
     tmp_exp.resize(to->getExpBits(), zero_gate->get_wires()[0]);
     
     vector<uint32_t> v_out(1);
@@ -3056,7 +3054,7 @@ vector<uint32_t>  BooleanCircuit::PutUint2FpGate(vector<uint32_t> wires, UINTTyp
 
 #ifdef UINT2FP_DEBUG
     cout << "Num of gates, end:" << GetNumGates() << endl;    
-    PutPrintValueGate(PutCombinerGate(new boolshare(v_out ,this)), "RESULT");
+    //PutPrintValueGate(new boolshare(v_out, this), "RESULT");
 #endif
 
     return v_out;
@@ -3099,11 +3097,12 @@ vector<uint32_t> BooleanCircuit::PutPreOrGate(vector<uint32_t> wires){
     return out;
 }
 
-share * BooleanCircuit::PutBarrelRightShifterGate(share * input, share * n){
-    return new boolshare(PutBarrelRightShifterGate(input->get_wires(), n->get_wires()), this);
+share * BooleanCircuit::PutBarrelLeftShifterGate(share * input, share * n){
+    return new boolshare(PutBarrelLeftShifterGate(input->get_wires(), n->get_wires()), this);
 }
 
-vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(vector<uint32_t> wires, vector<uint32_t> n){
+vector<uint32_t> BooleanCircuit::PutBarrelLeftShifterGate(vector<uint32_t> wires, 
+        vector<uint32_t> n, uint32_t nvals){
     uint n_size = (uint)(log(wires.size())/log(2));
     uint step = pow(2, (double)n_size);
     auto out_size = step*2;
@@ -3112,7 +3111,7 @@ vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(vector<uint32_t> wire
     vector<uint32_t> last;
     
     uint64_t zero = 0;
-    share* zero_gate = PutCONSGate(zero, 1);
+    share* zero_gate = PutSIMDCONSGate(nvals, zero, 1);
     
     n.resize(n_size, zero_gate->get_wires()[0]);
     wires.resize(out_size, zero_gate->get_wires()[0]);
@@ -3136,11 +3135,11 @@ vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(vector<uint32_t> wire
     return res;
 }
 
-share * BooleanCircuit::PutBarrelLeftShifterGate(share * input, share * n){
-    return new boolshare(PutBarrelLeftShifterGate(input->get_wires(), n->get_wires()), this);
+share * BooleanCircuit::PutBarrelRightShifterGate(share * input, share * n){
+    return new boolshare(PutBarrelRightShifterGate(input->get_wires(), n->get_wires()), this);
 }
 
-vector<uint32_t> BooleanCircuit::PutBarrelLeftShifterGate(vector<uint32_t> wires, vector<uint32_t> n){
+vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(vector<uint32_t> wires, vector<uint32_t> n){
     std::reverse(wires.begin(), wires.end());
     vector<uint32_t> res = PutBarrelRightShifterGate(wires, n);
     std::reverse(wires.begin(), wires.end());
@@ -3148,7 +3147,7 @@ vector<uint32_t> BooleanCircuit::PutBarrelLeftShifterGate(vector<uint32_t> wires
 }
 
 
-share * BooleanCircuit::PutFPGate(share * in, op_t op, fp_op_setting s){
+share * BooleanCircuit::PutFPGate(share * in, op_t op, uint32_t nvals, fp_op_setting s){
     const char * o;
     switch(op){
         case COS:
@@ -3181,10 +3180,10 @@ share * BooleanCircuit::PutFPGate(share * in, op_t op, fp_op_setting s){
     }
     return new boolshare(PutFPGate(o, in->get_wires(),
         (uint8_t)in->get_bitlength(),
-        in->get_nvals_on_wire(in->get_wires()[0])), this);
+        nvals), this);
 }
 
-share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, fp_op_setting s){
+share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint32_t nvals, fp_op_setting s){
     const char * o;
     switch(op){
         case ADD:
@@ -3208,5 +3207,5 @@ share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, fp_op_set
     }
     return new boolshare(PutFPGate(o, in_a->get_wires(),
                    in_b->get_wires(), (uint8_t)in_a->get_bitlength(),
-                   in_a->get_nvals_on_wire(in_a->get_wires()[0])), this);
+                   nvals), this);
 }

@@ -453,7 +453,7 @@ public:
          * @param to type to which value will be converted
          * @return converted value
          */
-        share* PutConvTypeGate(share* value, ConvType* from, ConvType* to);
+        share* PutConvTypeGate(share* value, ConvType* from, ConvType* to, uint32_t nvals = 1);
         
         /**
          * Converts a number "value" from the type "from" to the type "to" 
@@ -462,7 +462,7 @@ public:
          * @param to type to which value will be converted
          * @return wires of the converted value
          */
-        vector<uint32_t> PutConvTypeGate(vector<uint32_t> wires, ConvType* from, ConvType* to);
+        vector<uint32_t> PutConvTypeGate(vector<uint32_t> wires, ConvType* from, ConvType* to, uint32_t nvals = 1);
         
         /**
          * Converts unsigned integer to floating point number
@@ -471,7 +471,7 @@ public:
          * @param to type to which value will be converted
          * @return wires of the converted value
          */
-        vector<uint32_t> PutUint2FpGate(vector<uint32_t> wires, UINTType* from, FPType* to);
+        vector<uint32_t> PutUint2FpGate(vector<uint32_t> wires, UINTType* from, FPType* to, uint32_t nvals = 1);
         
         /**
          * Converts floating point to unsigned integer number
@@ -497,6 +497,20 @@ public:
         vector<uint32_t> PutPreOrGate(vector<uint32_t> wires);
         
         /**
+         * Uses MUXs to shift bits of the value to the left.
+         * @param input input value
+         * @param n number of bits to shift
+         * @return shifted value
+         */
+        share * PutBarrelLeftShifterGate(share * input, share * n);
+        /**
+         * Uses MUXs to shift bits of the value to the left.
+         * @param wires input value
+         * @param n number of bits to shift
+         * @return shifted value
+         */
+        vector<uint32_t> PutBarrelLeftShifterGate(vector<uint32_t> wires, vector<uint32_t> n, uint32_t nvals = 1);
+        /**
          * Uses MUXs to shift bits of the value to the right.
          * @param input input value
          * @param n number of bits to shift
@@ -510,20 +524,6 @@ public:
          * @return shifted value
          */
         vector<uint32_t> PutBarrelRightShifterGate(vector<uint32_t> wires, vector<uint32_t> n);
-        /**
-         * Uses MUXs to shift bits of the value to the left.
-         * @param input input value
-         * @param n number of bits to shift
-         * @return shifted value
-         */
-        share * PutBarrelLeftShifterGate(share * input, share * n);
-        /**
-         * Uses MUXs to shift bits of the value to the left.
-         * @param wires input value
-         * @param n number of bits to shift
-         * @return shifted value
-         */
-        vector<uint32_t> PutBarrelLeftShifterGate(vector<uint32_t> wires, vector<uint32_t> n);
         
         /**
          * Put floating point gate with one input
@@ -532,7 +532,7 @@ public:
          * @param s setting for operation
          * @return result of the operation
          */
-        share * PutFPGate(share * in, op_t op, fp_op_setting s = no_status);
+        share * PutFPGate(share * in, op_t op, uint32_t nvals = 1, fp_op_setting s = no_status);
         
         /**
          * Put floating point gate with two inputs
@@ -542,7 +542,7 @@ public:
          * @param s setting for operation
          * @return result of the operation
          */
-        share * PutFPGate(share * in_a, share * in_b, op_t op, fp_op_setting s = no_status);
+        share * PutFPGate(share * in_a, share * in_b, op_t op, uint32_t nvals = 1, fp_op_setting s = no_status);
 
 private:
 	void UpdateInteractiveQueue(uint32_t);
