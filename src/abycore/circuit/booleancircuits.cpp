@@ -3142,7 +3142,8 @@ share * BooleanCircuit::PutBarrelRightShifterGate(share * input, share * n){
 vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(vector<uint32_t> wires, vector<uint32_t> n){
     std::reverse(wires.begin(), wires.end());
     vector<uint32_t> res = PutBarrelLeftShifterGate(wires, n);
-    std::reverse(wires.begin(), wires.end());
+    std::reverse(res.begin(), res.end());
+    res.erase(res.begin(), res.begin() + wires.size());
     return res;
 }
 
