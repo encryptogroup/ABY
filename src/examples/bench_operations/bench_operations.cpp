@@ -187,6 +187,8 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 			cout << endl;
 		}
 
+		Circuit* circ = sharings[bench_ops[i].sharing]->GetCircuitBuildRoutine();
+
 		for (uint32_t b = 0; b < nbitlens; b++) {
 			uint32_t bitlen = bitlens[b];
 			op_time = 0;
@@ -206,7 +208,6 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 
 
 			for (uint32_t r = 0; r < nruns; r++) {
-				Circuit* circ = sharings[bench_ops[i].sharing]->GetCircuitBuildRoutine();
 
 				for (uint32_t j = 0; j < nvals; j++) {
 					avec[j] = (((uint64_t) rand()<<(sizeof(uint32_t)*8)) + rand()) & typebitmask;
@@ -452,7 +453,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 					}
 					//cout << "Verification succeeded" << endl;
 				}
-			}
+			} // nruns
 
 			if(!detailed) {
 				cout << op_time/nruns << "\t";
