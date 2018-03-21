@@ -201,7 +201,8 @@ void Sharing::FreeGate(GATE *gate) {
 		break;
 	case S_YAO:
 		if(role == SERVER) {
-			if(gate->type = G_IN) { break; } // input gates are freed before
+			// input gates are freed before
+			if(gate->type == G_IN || gate->type == G_CONV) { break; }
 			free(gate->gs.yinput.outKey);
 			free(gate->gs.yinput.pi);
 		} else {
