@@ -494,7 +494,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 	{ (void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false },
 	{ (void*) test_op, T_NUM, "t", "Single test (leave out for all operations), default: off", false, false },
 	{ (void*) verbose, T_FLAG, "v", "Do not print computation results, default: off", false, false },
-	{ (void*) randomseed, T_FLAG, "r", "Use random seed (likely breaks verification when not on localhost), default: off", false, false },
+	{ (void*) randomseed, T_FLAG, "R", "Use random seed (likely breaks verification when not on localhost), default: off", false, false },
 	{ (void*) num_test_runs, T_NUM, "i", "Number of test runs for operation tests, default: 5", false, false },
 	{ (void*) &int_mtalg, T_NUM, "m", "Arithmetic MT gen algo [0: OT, 1: Paillier, 2: DGK], default: 0", false, false }
 	};
