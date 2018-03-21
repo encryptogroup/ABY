@@ -16,8 +16,6 @@ ABY_COMPILER_OPTIONS=-O2 -std=c++11 #-march=native
 
 export ABY_COMPILER_OPTIONS
 
-BATCH=
-
 ARCHITECTURE = $(shell uname -m)
 ifeq (${ARCHITECTURE},x86_64)
 MIRACL_MAKE:=linux64_cpp
@@ -29,15 +27,7 @@ GNU_LIB_PATH:=i386
 ARCH_LIB_PATH:=32
 endif
 
-#Include for Arch, Manjaro and the like
-#INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib${ARCH_LIB_PATH}/glib-2.0/include
-
-#Include for Debian, Ubuntu, Mint and the like
-#INCLUDE=-I.. -I/usr/include/glib-2.0/ -I/usr/lib/${GNU_LIB_PATH}-linux-gnu/glib-2.0/include
-
 LIBRARIES=-lgmp -lgmpxx -lpthread ${CORE}/ENCRYPTO_utils/miracl_lib/miracl.a -L /usr/lib -lssl -lcrypto -lrt
-#This is a temporary workaround until we change the communication between ABY and OTExt
-CFLAGS=
 
 # directory for the Miracl submodule and library
 MIRACL_LIB_DIR=${CORE}/ENCRYPTO_utils/miracl_lib
@@ -84,10 +74,10 @@ otext: miracl
 core: miracl otext ${OBJECTS_CORE}
 
 %.o:%.cpp %.h
-	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
+	${CC} $< ${ABY_COMPILER_OPTIONS} -c -o $@
 
 %.o:%.cpp
-	${CC} $< ${ABY_COMPILER_OPTIONS} -c ${INCLUDE} ${CFLAGS} ${BATCH} -o $@
+	${CC} $< ${ABY_COMPILER_OPTIONS} -c -o $@
 
 # check that core is built, then call test makefile
 ${TEST}: miracl otext core examples
