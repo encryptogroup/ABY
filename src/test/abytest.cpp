@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 	double epsilon = 1.2;
-	uint32_t num_test_runs = 5;
+	uint32_t num_test_runs = 2;
 
 	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op, &num_test_runs, &mt_alg, &verbose, &randomseed);
 
@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
 //	cout << "Testing AES circuit in Setup-LUT sharing" << endl;
 //	test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_SPLUT);
 
+
 	//Test the SHA1 circuit TODO: Constant gates are limited to nvals < 64. Fix!
 	cout << "Testing SHA1 circuit in Boolean sharing" << endl;
 	test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, 63, nthreads, mt_alg, S_BOOL);
@@ -59,6 +60,7 @@ int main(int argc, char** argv) {
 	test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, 63, nthreads, mt_alg, S_YAO);
 	//cout << "Testing SHA1 circuit in Setup-LUT sharing" << endl;
 	//test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_SPLUT);
+
 
 	//Test the Sort-Compare-Shuffle PSI circuit
 	cout << "Testing SCS PSI circuit in Boolean sharing" << endl;
@@ -82,7 +84,7 @@ int main(int argc, char** argv) {
 
 	//test_min_eucliden_dist_circuit(role, (char*) address.c_str(), seclvl, nvals, 6, nthreads, mt_alg, S_ARITH, S_YAO);
 
-	cout << "All tests successfully passed" << endl;
+	cout << "All tests successfully passed." << endl;
 
 	return 0;
 }
@@ -115,7 +117,7 @@ bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_
 		srand(time(NULL));
 	} else {
 		//uses fixed seed, so two distinct machines will end up with the same randomness, so tests can be verified.
-		uint64_t seed = 0xC0FFEEAADEADBEEF;
+		uint64_t seed = 0xC0FFEE23DEADBEEF;
 		srand(seed);
 	}
 
