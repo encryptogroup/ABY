@@ -71,8 +71,6 @@ int32_t test_psi_scs_circuit(e_role role, char* address, uint16_t port, seclvl s
 	shr_client_set = (share**) malloc(sizeof(share*) * neles);
 	shr_out = (share**) malloc(sizeof(share*) * neles);
 
-	srand(time(0));//(unsigned)time(0));
-
 	//sample random client and server inputs
 	uint32_t rndval;
 	for (uint32_t i = 0; i < neles; i++) {
