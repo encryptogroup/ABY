@@ -108,12 +108,6 @@ UGATE_T* Circuit::GetOutputGateValue(uint32_t gateid) {
 	return m_pGates[gateid].gs.val;
 }
 
-template<class T> void Circuit::GetOutputGateValue(uint32_t gateid, T& val) {
-	assert(sizeof(T) * 8 > m_pGates[gateid].nvals * m_nShareBitLen);
-
-	val = m_pGates[gateid].gs.val;
-}
-
 /* Converts a Yao share to an Arithmetic share. The boolsharing circuit needs to be from type S_BOOL! */
 share* Circuit::PutY2AGate(share* ina, Circuit* boolsharingcircuit) {
 	assert(boolsharingcircuit->GetContext() == S_BOOL);

@@ -91,9 +91,11 @@ public:
 #endif
 
 		assert(sizeof(T) * 8 >= m_ngateids.size());
-		T val = 0;
+		T val = 0, tmpval = 0;
+
 		for (uint32_t i = 0; i < m_ngateids.size(); i++) {
-			val += (*m_ccirc->GetOutputGateValue(m_ngateids[i]) << i);
+			m_ccirc->GetOutputGateValueT(m_ngateids[i], tmpval);
+			val += (tmpval << i);
 		}
 
 		return val;

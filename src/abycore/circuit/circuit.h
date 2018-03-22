@@ -179,7 +179,11 @@ public:
 	gate_specific GetGateSpecificOutput(uint32_t gateid);
 	UGATE_T* GetOutputGateValue(uint32_t gateid);
 	uint32_t GetOutputGateValue(uint32_t gateid, UGATE_T*& outval);
-	template<class T> void GetOutputGateValue(uint32_t gateid, T& val);
+	template<class T> void GetOutputGateValueT(uint32_t gateid, T& val) {
+		assert(sizeof(T) * 8 >= m_pGates[gateid].nvals * m_nShareBitLen);
+		val = *((T*) m_pGates[gateid].gs.val);
+	}
+
 	uint32_t GetNumVals(uint32_t gateid) {
 		assert(gateid < m_cCircuit->GetGateHead());
 		return m_pGates[gateid].nvals;
