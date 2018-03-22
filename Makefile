@@ -10,7 +10,7 @@ CC=g++
 #Most aggressive optimizations, asserts are ignored
 #ABY_COMPILER_OPTIONS=-O3 -DNDEBUG
 #Optimizations
-ABY_COMPILER_OPTIONS=-O2 -std=c++14 #-march=native
+ABY_COMPILER_OPTIONS=-O2 -std=c++14 -march=native
 #DEBUG
 #ABY_COMPILER_OPTIONS=-g3 -ggdb -O0 -std=c++11 #-fno-omit-frame-pointer -fsanitize=address #-Wall -Wextra -pedantic
 
