@@ -437,7 +437,7 @@ void YaoClientSharing::EvaluateConversionGate(uint32_t gateid) {
 #ifdef DEBUGYAOCLIENT
 			cout << "value of conversion gate: " << val[0] << endl;
 #endif
-		} else if(parent->context == S_YAO || S_YAO_REV) {
+		} else if(parent->context == S_YAO || parent->context == S_YAO_REV) {
 			for(uint32_t i = 0; i < parent->nvals; i++) {
 				m_vROTSndBuf.SetBits(parent->gs.yinput.pi+i, (int) m_nClientSndOTCtr+i, 1);
 				//cout << "Client conv share = " << (uint32_t) parent->gs.yinput.pi[i] << endl;
