@@ -125,6 +125,8 @@ bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_
 	test_vector_ops(test_ops, party, bitlen, nvals, num_test_runs, nops, role, verbose);
 
 	delete party;
+	if (test_ops != m_tAllOps)
+		delete test_ops;
 
 	return true;
 }
@@ -275,7 +277,7 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 
 	avec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
 	bvec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
-	cvec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
+	cvec = nullptr;
 
 	verifyvec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
 
@@ -457,6 +459,8 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 			party->ExecCircuit();
 
 			//cout << "Size of output: " << shrout->size() << endl;
+
+			// this allocates buffer put into cvec with calloc
 			shrout->get_clear_value_vec(&cvec, &tmpbitlen, &tmpnvals);
 			assert(tmpnvals == nvals);
 			party->Reset();
@@ -467,15 +471,15 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 					verifyvec[j] << endl;
 				assert(verifyvec[j] == cvec[j]);
 			}
+			free(cvec);
 		}
 	}
 
-	/*free(avec);
-	free(bvec);
-	free(cvec);
-	free(verifyvec);
 	free(sa);
-	free(sb);*/
+	free(sb);
+	free(avec);
+	free(bvec);
+	free(verifyvec);
 
 	return 1;
 

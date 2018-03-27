@@ -18,6 +18,7 @@
 #ifndef __ARITHMTMASKING_H_
 #define __ARITHMTMASKING_H_
 
+#include <vector>
 #include "maskingfunction.h"
 
 //#define DEBUGARITHMTMASKING
@@ -35,8 +36,8 @@ public:
 		aesexpand = m_nOTByteLen > AES_BYTES;
 
 		if (aesexpand) {
-			m_bBuf = (BYTE*) malloc(sizeof(BYTE) * AES_BYTES);
-			m_bCtrBuf = (BYTE*) malloc(sizeof(BYTE) * AES_BYTES);
+			m_bBuf.resize(AES_BYTES, 0);
+			m_bCtrBuf.resize(AES_BYTES, 0);  // zero-initialize
 			rndbuf.CreateBytes(PadToMultiple(m_nOTByteLen, AES_BYTES));
 		}
 
@@ -44,9 +45,9 @@ public:
 	;
 
 	~ArithMTMasking() {
-		free(m_bBuf);
-		free(m_bCtrBuf);
-		rndbuf.delCBitVector();
+		if (aesexpand) {
+			rndbuf.delCBitVector();
+		}
 	}
 	;
 
@@ -187,14 +188,13 @@ public:
 				memcpy(outptr, sbp, m_nOTByteLen);
 			}
 		} else {
-			memset(m_bCtrBuf, 0, AES_BYTES);
-			uint32_t* counter = (uint32_t*) m_bCtrBuf;
+			uint32_t* counter = reinterpret_cast<uint32_t*>(m_bCtrBuf.data());
 			for (uint32_t i = 0, rem; i < processedOTs; i++, sbp += AES_KEY_BYTES) {
 				//Generate sufficient random bits
 				crypt->init_aes_key(&tkey, sbp);
 				for (counter[0] = 0; counter[0] < ceil_divide(m_nOTByteLen, AES_BYTES); counter[0]++) {
-					crypt->encrypt(&tkey, m_bBuf, m_bCtrBuf, AES_BYTES);
-					rndbuf.SetBytes(m_bBuf, counter[0] * AES_BYTES, AES_BYTES);
+					crypt->encrypt(&tkey, m_bBuf.data(), m_bCtrBuf.data(), AES_BYTES);
+					rndbuf.SetBytes(m_bBuf.data(), counter[0] * AES_BYTES, AES_BYTES);
 				}
 				//Copy random bits into output vector
 				out->SetBytes(rndbuf.GetArr(), (offset + i) * m_nOTByteLen, m_nOTByteLen);
@@ -208,8 +208,8 @@ private:
 	uint32_t m_nOTByteLen;
 	uint32_t m_nMTBitLen;
 	uint64_t m_nBitMask;
-	BYTE* m_bBuf;
-	BYTE* m_bCtrBuf;
+	std::vector<BYTE> m_bBuf;
+	std::vector<BYTE> m_bCtrBuf;
 	AES_KEY_CTX tkey;
 	BOOL aesexpand;
 	CBitVector rndbuf;
