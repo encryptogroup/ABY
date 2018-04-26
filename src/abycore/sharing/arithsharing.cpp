@@ -291,8 +291,11 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 			InstantiateGate(gate);
 			if (value > 0 && m_eRole == CLIENT)
 				value = 0;
-			for (uint32_t i = 0; i < gate->nvals; i++)
-				gate->gs.val[i] = value;
+
+			T* val = reinterpret_cast<T*>(gate->gs.val);
+			for (uint32_t i = 0; i < gate->nvals; i++) {
+				val[i] = (T) value;
+			}
 		} else if (gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(localops[i]);
 		} else if (gate->type == G_SHARED_IN) {
@@ -943,7 +946,7 @@ void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 		//TODO: Optimize
 		for (uint32_t i = 0; i < vsize; i++) {
 			uint32_t idparent = combinepos[i];
-			gate->gs.aval[i] = ((T*) m_pGates[idparent].gs.aval)[arraypos];
+			((T*)gate->gs.aval)[i] = ((T*) m_pGates[idparent].gs.aval)[arraypos];
 			UsedGate(idparent);
 		}
 		free(combinepos);
@@ -958,7 +961,7 @@ void ArithSharing<T>::EvaluateSIMDGate(uint32_t gateid) {
 		InstantiateGate(gate);
 
 		for (uint32_t i = 0; i < vsize; i++) {
-			gate->gs.aval[i] = ((T*) m_pGates[idparent].gs.aval)[positions[i]];
+			((T*)gate->gs.aval)[i] = ((T*) m_pGates[idparent].gs.aval)[positions[i]];
 		}
 		UsedGate(idparent);
 		if(del_pos)
