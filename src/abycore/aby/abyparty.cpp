@@ -25,9 +25,7 @@ using namespace std;
 
 #ifdef _DEBUG
 #include <cassert>
-using namespace std;
 #endif
-
 
 ABYParty::ABYParty(e_role pid, char* addr, uint16_t port, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo, uint32_t maxgates) {
 	StartWatch("Initialization", P_INIT);
@@ -425,7 +423,9 @@ BOOL ABYParty::ThreadSendValues() {
 			snd_buf_size_total += sndbytes[j][i];
 			//m_tPartyChan->send(sendbuf[j][i], sndbytes[j][i]);
 #ifdef DEBUGCOMM
-				cout << "(" << m_nDepth << ") Sending " << sndbytes[j][i] << " bytes on socket " << m_eRole << " for sharing " << j << endl;
+			cout_mutex.lock();
+			cout << "(" << m_nDepth << ") Sending " << sndbytes[j][i] << " bytes on socket " << m_eRole << " for sharing " << j << endl;
+			cout_mutex.unlock();
 #endif
 		}
 		//sendbuf[j].clear();
@@ -445,7 +445,6 @@ BOOL ABYParty::ThreadSendValues() {
 		//m_vSockets[2]->Send(snd_buf_total, snd_buf_size_total);
 		m_tPartyChan->send(snd_buf_total, snd_buf_size_total);
 	}
-
 	free(snd_buf_total);
 
 	return true;
@@ -464,7 +463,9 @@ BOOL ABYParty::ThreadReceiveValues() {
 			rcvbytestotal += rcvbytes[j][i];
 			//	m_tPartyChan->blocking_receive(sendbuf[j][i], sndbytes[j][i]);
 #ifdef DEBUGCOMM
+			cout_mutex.lock();
 			cout << "(" << m_nDepth << ") Receiving " << rcvbytes[j][i] << " bytes on socket " << (m_eRole^1) << " for sharing " << j << endl;
+			cout_mutex.unlock();
 #endif
 		}
 	}
