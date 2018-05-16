@@ -19,9 +19,9 @@
 #include "dgkparty.h"
 
 #define CHECKMT 0
-#define DEBUG 0
+#define DGK_DEBUG 0
 #define NETDEBUG 0
-#define WINDOWSIZE 50000 //maximum size of a network packet in Byte
+#define WINDOWSIZE 65536 //maximum size of a network packet in Byte
 
 /**
  * initializes a DGK_Party with the asymmetric security parameter and the sharelength and exchanges public keys.
@@ -36,9 +36,6 @@ DGKParty::DGKParty(UINT DGKbits, UINT sharelen, channel* chan, UINT readkey) {
 #if DEBUG
 	cout << "Created party with " << DGKbits << " key bits and" << sharelen << " bit shares" << endl;
 #endif
-
-	gmp_randinit_default(m_randstate);
-	gmp_randseed_ui(m_randstate, rand());
 
 	if (readkey) {
 		readKey();
@@ -60,12 +57,9 @@ DGKParty::DGKParty(UINT DGKbits, UINT sharelen, UINT readkey) {
 	m_nDGKbits = DGKbits;
 	m_nBuflen = DGKbits / 8 + 1; //size of one ciphertext to send via network. DGK uses n bits == n/8 bytes
 
-#if DEBUG
+#if DGK_DEBUG
 	cout << "Created party with " << DGKbits << " key bits and" << sharelen << " bit shares" << endl;
 #endif
-
-	gmp_randinit_default(m_randstate);
-	gmp_randseed_ui(m_randstate, rand());
 
 	if (readkey) {
 		readKey();
@@ -75,11 +69,11 @@ DGKParty::DGKParty(UINT DGKbits, UINT sharelen, UINT readkey) {
 }
 
 void DGKParty::readKey() {
-#if DEBUG
+#if DGK_DEBUG
 	cout << "KeyGen" << endl;
 #endif
 	dgk_readkey(m_nDGKbits, m_nShareLength, &m_localpub, &m_prv);
-#if DEBUG
+#if DGK_DEBUG
 	cout << "key read." << endl;
 #endif
 }
@@ -95,13 +89,12 @@ void DGKParty::generateKey() {
 }
 
 /**
- * deletes party and frees keys and randstate
+ * deletes party and frees keys
  */
 DGKParty::~DGKParty() {
-#if DEBUG
+#if DGK_DEBUG
 	cout << "Deleting DGKParty..." << endl;
 #endif
-	gmp_randclear(m_randstate);
 	dgk_freeprvkey(m_prv);
 	dgk_freepubkey(m_localpub);
 	dgk_freepubkey(m_remotepub);
@@ -120,7 +113,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	UINT shareBytes = m_nShareLength / 8;
 	UINT offset = 0;
 
-#if DEBUG
+#if DGK_DEBUG
 	cout << "dgkbits: " << m_nDGKbits << " sharelen: " << m_nShareLength << endl;
 #endif
 
@@ -153,9 +146,9 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		mpz_import(x, 1, 1, shareBytes, 0, 0, bA + i * shareBytes);
 		mpz_import(y, 1, 1, shareBytes, 0, 0, bB + i * shareBytes);
 
-		dgk_encrypt_crt(r, m_localpub, m_prv, x, m_randstate);
+		dgk_encrypt_crt(r, m_localpub, m_prv, x);
 		mpz_export(abuf + i * m_nBuflen, NULL, -1, 1, 1, 0, r);
-		dgk_encrypt_crt(z, m_localpub, m_prv, y, m_randstate);
+		dgk_encrypt_crt(z, m_localpub, m_prv, y);
 		mpz_export(bbuf + i * m_nBuflen, NULL, -1, 1, 1, 0, z);
 
 	}
@@ -195,9 +188,9 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		dbpowmod(c1[j], x, b1[j], y, a1[j], m_remotepub->n);
 
 		// pick random r for masking
-		mpz_urandomb(x, m_randstate, 2 * m_nShareLength + 1);
+		aby_prng(x, 2 * m_nShareLength + 1);
 
-		dgk_encrypt_fb(y, m_remotepub, x, m_randstate);
+		dgk_encrypt_fb(y, m_remotepub, x);
 
 		// "add" encrypted r and add to buffer
 		mpz_mul(z, c1[j], y);

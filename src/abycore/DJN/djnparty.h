@@ -51,7 +51,6 @@ private:
 	// Crypto and GMP PRNG
 	djn_pubkey_t *m_localpub, *m_remotepub;
 	djn_prvkey_t *m_prv;
-	gmp_randstate_t m_randstate;
 
 	void benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
 			mpz_t y, mpz_t z);
