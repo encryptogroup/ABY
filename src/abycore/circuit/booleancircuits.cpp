@@ -3134,6 +3134,7 @@ vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(vector<uint32_t> wire
 }
 
 
+//TODO pass nvals from input gate
 share * BooleanCircuit::PutFPGate(share * in, op_t op, uint32_t nvals, fp_op_setting s){
     const char * o;
     switch(op){

@@ -443,6 +443,9 @@ void YaoClientSharing::EvaluateConversionGate(uint32_t gateid) {
 				//cout << "Client conv share = " << (uint32_t) parent->gs.yinput.pi[i] << endl;
 			}
 		}
+		else{
+			std::cerr << "Error: unkown parent context: " << parent->context << std::endl;
+		}
 		m_nClientSndOTCtr += gate->nvals;
 		m_vClientSendCorrectionGates.push_back(gateid);
 	}

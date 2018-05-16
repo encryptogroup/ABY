@@ -489,6 +489,7 @@ uint32_t ABYCircuit::PutTruthTableGate(vector<uint32_t> in, uint32_t rounds, uin
 	return m_nNextFreeGate++;
 }
 
+//TODO change gs.infostr to string
 uint32_t ABYCircuit::PutPrintValGate(vector<uint32_t> in, string infostr) {
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, G_PRINT_VAL, in);
