@@ -190,7 +190,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		}
 
 		// pick random r for masking
-		aby_prng(x, mpz_sizeinbase(m_remotepub->n, 2) + 16);
+		aby_prng(x, mpz_sizeinbase(m_remotepub->n, 2) + 128);
 		mpz_mod(x, x, m_remotepub->n);
 
 		djn_encrypt_fb(y, m_remotepub, x);
@@ -373,7 +373,7 @@ void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UIN
 	}
 
 // pick random r for masking
-	aby_prng(x, mpz_sizeinbase(m_remotepub->n, 2) + 16);
+	aby_prng(x, mpz_sizeinbase(m_remotepub->n, 2) + 128);
 	mpz_mod(x, x, m_remotepub->n);
 	djn_encrypt_fb(y, m_remotepub, x);
 
