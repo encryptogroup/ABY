@@ -73,7 +73,7 @@ There are several compiler flags that can be set within `Makefile` for the ABY c
 
 
 #### Developer Guide and Documentation
-We provide an extensive [developer guide](https://www.encrypto.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_ENCRYPTO/code/ABY/devguide.pdf) with many examples and explanations of how to use ABY.
+We provide an extensive [developer guide](https://www.informatik.tu-darmstadt.de/media/encrypto/encrypto_code/abydevguide.pdf) with many examples and explanations of how to use ABY.
 
 Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY/docs/index.html) for further information and comments on the code.
 
