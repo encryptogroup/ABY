@@ -73,7 +73,7 @@ There are several compiler flags that can be set within `Makefile` for the ABY c
 
 
 #### Developer Guide and Documentation
-We provide an extensive [developer guide](https://www.encrypto.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_ENCRYPTO/code/ABY/devguide.pdf) with many examples and explanations of how to use ABY.
+We provide an extensive [developer guide](https://www.informatik.tu-darmstadt.de/media/encrypto/encrypto_code/abydevguide.pdf) with many examples and explanations of how to use ABY.
 
 Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY/docs/index.html) for further information and comments on the code.
 
@@ -98,7 +98,7 @@ Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.
   * By default applications are tested locally (via sockets on `localhost`). You can run them on two different machines by specifying IP addresses and ports as parameters.
   * **Example:** The Millionaire's problem requires to specify the role of the executing party. All other parameters will use default values if they are not set. You execute it locally with: `./millionaire_prob.exe -r 0` and `./millionaire_prob.exe -r 1`, each in a separate terminal.
   * You should get some debug output for you to verify the correctness of the computation.
-  * Performance statistics can be turned on by uncommenting `//#define PRINT_PERFORMANCE_STATS` in `src/abycore/aby/abyparty.h` in [line 46](https://github.com/encryptogroup/ABY/blob/public/src/abycore/aby/abyparty.h#L46).
+  * Performance statistics can be turned on setting `#define PRINT_PERFORMANCE_STATS 1` in `src/abycore/ABY_utils/ABYconstants.h` in [line 32](https://github.com/encryptogroup/ABY/blob/public/src/abycore/ABY_utils/ABYconstants.h#L32).
 
 #### Creating and Building your own ABY Application
   * Create a copy of the folder `millionaire_prob` inside the `examples/` directory and give it a meaningful name, e.g. `my_application`:

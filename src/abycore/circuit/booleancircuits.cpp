@@ -618,25 +618,21 @@ share* BooleanCircuit::PutSharedOUTGate(share* parent) {
 
 share* BooleanCircuit::PutCONSGate(UGATE_T val, uint32_t bitlen) {
 	share* shr = new boolshare(bitlen, this);
-	UGATE_T tmpval;
 	for (uint32_t i = 0; i < bitlen; i++) {
-		(val>>i) & 0x01 ? tmpval = ~0: tmpval = 0;
-		tmpval = tmpval % (1<<1);
-		shr->set_wire_id(i, PutConstantGate(tmpval, 1));
+		if ((val >> i) & 0x01) {
+			shr->set_wire_id(i, PutConstantGate(1, 1));
+		} else {
+			shr->set_wire_id(i, PutConstantGate(0, 1));
+		}
 	}
 	return shr;
 }
 
 share* BooleanCircuit::PutCONSGate(uint8_t* val, uint32_t bitlen) {
 	share* shr = new boolshare(bitlen, this);
-	uint32_t bytelen = ceil_divide(bitlen, 8);
-	uint32_t valbytelen = ceil_divide(1, 8);
-	uint8_t* tmpval = (uint8_t*) malloc(valbytelen);
-
 	for (uint32_t i = 0; i < bitlen; i++) {
 		shr->set_wire_id(i, PutConstantGate(val[i] & 0x01, 1));
 	}
-	free(tmpval);
 	return shr;
 }
 
@@ -650,32 +646,22 @@ share* BooleanCircuit::PutCONSGate(uint32_t* val, uint32_t bitlen) {
 
 share* BooleanCircuit::PutSIMDCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen) {
 	share* shr = new boolshare(bitlen, this);
-	uint32_t ugate_iters = ceil_divide(nvals, sizeof(UGATE_T) * 8);
-	UGATE_T *tmparray = (UGATE_T*) calloc(ugate_iters, sizeof(UGATE_T));
-	UGATE_T tmpval;
-	uint32_t j;
 	for (uint32_t i = 0; i < bitlen; i++) {
-		(val>>i) & 0x01 ? tmpval = ~(0L): tmpval = 0L;
-		for(j = 0; j < ugate_iters-1; j++) {
-			tmparray[j] = tmpval;
+		if ((val >> i) & 0x01) {
+			shr->set_wire_id(i, PutConstantGate(~0L, nvals));
 		}
-		tmparray[j] = tmpval & (((1L)<<(nvals%64))-1L);
-		shr->set_wire_id(i, PutConstantGate(tmpval, nvals));
+		else {
+			shr->set_wire_id(i, PutConstantGate(0L, nvals));
+		}
 	}
-	free(tmparray);
 	return shr;
 }
 
 share* BooleanCircuit::PutSIMDCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) {
 	share* shr = new boolshare(bitlen, this);
-	uint32_t bytelen = ceil_divide(bitlen, 8);
-	uint32_t valbytelen = ceil_divide(nvals, 8);
-	uint8_t* tmpval = (uint8_t*) malloc(valbytelen);
-
 	for (uint32_t i = 0; i < bitlen; i++) {
 		shr->set_wire_id(i, PutConstantGate(val[i] & 0x01, nvals));
 	}
-	free(tmpval);
 	return shr;
 }
 
@@ -3148,6 +3134,7 @@ vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(vector<uint32_t> wire
 }
 
 
+//TODO pass nvals from input gate
 share * BooleanCircuit::PutFPGate(share * in, op_t op, uint32_t nvals, fp_op_setting s){
     const char * o;
     switch(op){
