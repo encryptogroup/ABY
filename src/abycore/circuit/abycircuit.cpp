@@ -125,7 +125,7 @@ uint32_t ABYCircuit::PutPrimitiveGate(e_gatetype type, uint32_t inleft, uint32_t
 
 #ifdef DEBUG_CIRCUIT_CONSTRUCTION
 	cout << "New primitive gate with id: " << m_nNextFreeGate << ", left in = " << inleft << ", right in = " << inright << ", nvals = " << gate->nvals <<
-	", depth = " << gate->depth << ", sharingsize = " << gate->sharebitlen << ", nrounds = " << gate->nrounds << ", and mindepth = " << mindepth << endl;
+	", depth = " << gate->depth << ", sharingsize = " << gate->sharebitlen << ", nrounds = " << gate->nrounds << endl;
 #endif
 
 	return m_nNextFreeGate++;

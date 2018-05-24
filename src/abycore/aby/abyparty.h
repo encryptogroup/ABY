@@ -44,6 +44,9 @@
 #include <limits.h>
 #include "../ENCRYPTO_utils/connection.h"
 
+#ifdef DEBUGCOMM
+#include <mutex>
+#endif
 
 using namespace std; //TODO eventually remove and prefix couts etc with std::
 
@@ -132,6 +135,9 @@ private:
 	comm_ctx* m_tComm;
 
 	channel* m_tPartyChan;
+#if DEBUGCOMM
+	std::mutex cout_mutex;
+#endif
 
 	class CPartyWorkerThread: public CThread {
 	public:
