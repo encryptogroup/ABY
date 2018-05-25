@@ -2114,6 +2114,29 @@ vector<uint32_t> BooleanCircuit::PutELM0Gate(vector<uint32_t> val, uint32_t b) {
 	return out;
 }
 
+share* BooleanCircuit::PutMaxGate(const vector<share*>& a) {
+	vector<vector<uint32_t>> max(a.size());
+	std::transform(a.cbegin(), a.cend(), max.begin(),
+			[](share* s){return s->get_wires();});
+	return new boolshare(PutMaxGate(max), this);
+}
+
+share* BooleanCircuit::PutMaxGate(share** a, uint32_t size) {
+	vector<share*> v(a, a+size);
+	return PutMaxGate(v);
+}
+
+vector<uint32_t> BooleanCircuit::PutMaxGate(vector<vector<uint32_t>> ws) {
+	function<vector<uint32_t> (const vector<uint32_t>&, const vector<uint32_t>&)> op
+		= [this](auto a, auto b) {
+				uint32_t cmp = (m_eContext == S_YAO) ?
+					PutSizeOptimizedGTGate(a, b) :
+					PutDepthOptimizedGTGate(a, b);
+				return PutMUXGate(a, b, cmp);
+			};
+	return binary_accumulate(ws, op);
+}
+
 share* BooleanCircuit::PutMinGate(share** a, uint32_t nvals) {
 	vector<vector<uint32_t> > min(nvals);
 	uint32_t i;
