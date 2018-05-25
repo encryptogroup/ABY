@@ -21,6 +21,7 @@
 #define CIRCUIT_H_
 
 #include "abycircuit.h"
+#include <functional>
 
 #include <cassert>
 #include <deque>
@@ -37,6 +38,29 @@ struct non_lin_on_layers {
 	uint32_t min_depth;
 	uint32_t max_depth;
 };
+
+/*
+ * Accumulates all objects of vector using binary operation op in a balanced
+ * binary tree structure.
+ */
+template <typename T>
+T binary_accumulate(std::vector<T> vals,
+    std::function<T (const T&, const T&)>& op) {
+	for(size_t j, n{vals.size()}; n > 1; n = j) {
+		j = 0;
+		for(size_t i{0}; i < n; ++j) {
+			if (i + 1 >= n) { // only i+1 == n possible
+				vals[j] = vals[i];
+				++i;
+			} else {
+				vals[j] = op(vals[i], vals[i + 1]);
+				i += 2;
+			}
+		}
+	}
+
+	return vals[0];
+}
 
 /** Circuit class */
 class Circuit {
