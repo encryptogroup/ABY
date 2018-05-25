@@ -89,7 +89,7 @@ Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.
   * The **Minimum Euclidean Distance** for finding the closest match between one d-dimensional element and a database of n d-dimensional elements.
   * The [**Arithmetic Inner Product**](https://en.wikipedia.org/wiki/Dot_product#Algebraic_definition) that multiplies N values component-wise and then adds all multiplication results (modulo 16 Bit in this case).
   * Secure Hash Function Evaluation [**SHA1**](https://en.wikipedia.org/wiki/SHA1), where both parties concatenate their 256-bit inputs to a 512-bit message which is collaboratively hashed using SHA1.
-  * The LowMC block cipher family [**LowMC**] (http://eprint.iacr.org/2016/687), which is a block cipher familiy with a low number of AND gates and a low AND depth. In the example, one party inputs the key and the other party inputs a message to collaboratively encrypt.
+  * The LowMC block cipher family [**LowMC**](http://eprint.iacr.org/2016/687), which is a block cipher familiy with a low number of AND gates and a low AND depth. In the example, one party inputs the key and the other party inputs a message to collaboratively encrypt.
   * Further example applications will be added soon.
 
 #### Running Applications
