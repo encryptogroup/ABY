@@ -1017,9 +1017,12 @@ void BooleanCircuit::UpdateLocalQueue(uint32_t gateid) {
 	m_nGates++;
 }
 
+share* BooleanCircuit::PutLeftShifterGate(share* in, uint32_t pos) {
+	return new boolshare(PutLeftShifterGate(in->get_wires(), pos, in->get_nvals()), this);
+}
 
 //shift val by pos positions to the left and fill with zeros
-vector<uint32_t> BooleanCircuit::LShift(vector<uint32_t> val, uint32_t pos, uint32_t nvals) {
+vector<uint32_t> BooleanCircuit::PutLeftShifterGate(vector<uint32_t> val, uint32_t pos, uint32_t nvals) {
 	vector<uint32_t> out(val.size());
 	uint32_t i, zerogate = PutConstantGate(0, nvals);
 	for (i = 0; i < pos && i < val.size(); i++) {
