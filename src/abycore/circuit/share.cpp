@@ -57,6 +57,24 @@ void share::set_wire_id(uint32_t pos_id, uint32_t wireid) {
 	m_ngateids[pos_id] = wireid;
 }
 
+/*
+ * Returns nvals of this share
+ * Asserts that all nvals of all wires are the same, so only use this method if
+ * you are certain of this condition.
+ */
+uint32_t share::get_nvals() {
+	uint32_t nvals{0}, n;
+	for (auto i : m_ngateids) {
+		n = m_ccirc->GetNumVals(i);
+		if (nvals) {
+			assert(nvals == n); // check that nvals on all wires are the same
+		} else {
+			nvals = n; // set nvals to that of first wire
+		}
+	}
+  return nvals;
+}
+
 /* =========================== Methods for the Boolean share class =========================== */
 
 uint8_t* boolshare::get_clear_value_ptr() {
