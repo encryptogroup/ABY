@@ -339,6 +339,10 @@ public:
 	std::vector<uint32_t> PutINVGate(std::vector<uint32_t> parentid);
 	share* PutINVGate(share* parent);
 
+	share* PutMaxGate(const std::vector<share*>& a);
+	share* PutMaxGate(share** a, uint32_t nvals);
+	std::vector<uint32_t> PutMaxGate(const std::vector<std::vector<uint32_t>>& a);
+
 	share* PutMinGate(share** a, uint32_t nvals);
 	std::vector<uint32_t> PutMinGate(std::vector<std::vector<uint32_t> > a);
 
