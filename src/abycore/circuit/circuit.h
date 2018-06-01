@@ -422,7 +422,7 @@ public:
 	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals_out, bool copy_posids = true);
 	uint32_t PutPermutationGate(vector<uint32_t> input, uint32_t* positions);
 	vector<uint32_t> PutSplitterGate(uint32_t input);
-
+	vector<uint32_t> PutSplitterGate(uint32_t input, const vector<uint32_t>& new_nvals);
 
 	//Templates may not be virtual, hence use dummy functions
 	template<class T> uint32_t PutINGate(T val) {
