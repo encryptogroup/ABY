@@ -90,6 +90,13 @@ struct tt_gate {
 	uint32_t noutputs;
 };
 
+/* Need backup of initial constant value for non-linear gates with constant, as
+ * gs.val is set to 0 on CLIENT side. */
+struct const_gate{
+	UGATE_T* val; // same address as gs.val
+	UGATE_T constval; // backup of initial constval
+};
+
 union gate_specific {
 	//fields of the combiner gate
 	uint32_t* cinput;
@@ -115,6 +122,8 @@ union gate_specific {
 	subset_gate sub_pos;
 	//constant value of a gate
 	UGATE_T constval;
+	//struct of CONST gate with initial value backup
+	const_gate constant;
 	//specific field for the conversion type
 	uint32_t pos;
 	//callback routine that handles the evaluation. Functionality is defined by the developer
