@@ -47,6 +47,16 @@ share* ArithmeticCircuit::PutMULGate(share* ina, share* inb) {
 }
 
 uint32_t ArithmeticCircuit::PutMULGate(uint32_t inleft, uint32_t inright) {
+	// check if one of the inputs is a const gate and then use a MULCONST gate
+	// instead.
+	if (m_pGates[inleft].type == G_CONSTANT || m_pGates[inright].type == G_CONSTANT) {
+#ifdef DEBUGARITH
+		std::cout << "MUL(" << inleft << ", " << inright <<
+			"): Constant factor present, putting a MULCONST gate instead." << std::endl;
+#endif
+		return PutMULCONSTGate(inleft, inright);
+	}
+
 	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_NON_LIN, inleft, inright, m_nRoundsAND);
 	UpdateInteractiveQueue(gateid);
 
@@ -54,6 +64,25 @@ uint32_t ArithmeticCircuit::PutMULGate(uint32_t inleft, uint32_t inright) {
 		//TODO implement for NON_LIN_VEC
 		m_nMULs += m_pGates[gateid].nvals;
 	}
+	return gateid;
+}
+
+share* ArithmeticCircuit::PutMULCONSTGate(share* ina, share* inb) {
+	share* shr = new arithshare(this);
+	shr->set_wire_id(0, PutMULCONSTGate(ina->get_wire_id(0), inb->get_wire_id(0)));
+	return shr;
+}
+
+uint32_t ArithmeticCircuit::PutMULCONSTGate(uint32_t inleft, uint32_t inright) {
+	// One of the gates needs to be a constant gate
+	assert (m_pGates[inleft].type == G_CONSTANT || m_pGates[inright].type == G_CONSTANT);
+	if (m_pGates[inleft].type == G_CONSTANT && m_pGates[inright].type == G_CONSTANT) {
+		std::cerr << "MULCONST(" << inleft << "," << inright <<
+			"): Both sides are constants, consider just multiplying their values before adding them as CONST gates.\n";
+	}
+
+	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_NON_LIN_CONST, inleft, inright, m_nRoundsXOR);
+	UpdateLocalQueue(gateid);
 	return gateid;
 }
 

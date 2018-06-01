@@ -16,6 +16,7 @@
  \brief		Arithmetic Sharing class implementation
  */
 
+#include <algorithm>
 #include "arithsharing.h"
 
 template<typename T>
@@ -287,16 +288,13 @@ void ArithSharing<T>::EvaluateLocalOperations(uint32_t depth) {
 			std::cout << " which is an INV gate" << std::endl;
 #endif
 			EvaluateINVGate(gate);
+		} else if (gate->type == G_NON_LIN_CONST) {
+#ifdef DEBUGARITH
+			std::cout << " which is a MULCONST gate" << std::endl;
+#endif
+			EvaluateMULCONSTGate(gate);
 		} else if (gate->type == G_CONSTANT) {
-			UGATE_T value = gate->gs.constval;
-			InstantiateGate(gate);
-			if (value > 0 && m_eRole == CLIENT)
-				value = 0;
-
-			T* val = reinterpret_cast<T*>(gate->gs.val);
-			for (uint32_t i = 0; i < gate->nvals; i++) {
-				val[i] = (T) value;
-			}
+			EvaluateConstantGate(gate);
 		} else if (gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(localops[i]);
 		} else if (gate->type == G_SHARED_IN) {
@@ -376,6 +374,19 @@ void ArithSharing<T>::EvaluateInteractiveOperations(uint32_t depth) {
 }
 
 template<typename T>
+void ArithSharing<T>::EvaluateConstantGate(GATE* gate) {
+	UGATE_T value = gate->gs.constval;
+	InstantiateGate(gate); // overwrites gs.constval by calloc of gs.aval
+	gate->gs.constant.constval = value; // backup constant behind gs.aval
+	if (m_eRole == CLIENT) value = 0;
+
+	T* aval = reinterpret_cast<T*>(gate->gs.aval);
+	for (uint32_t i = 0; i < gate->nvals; i++) {
+		aval[i] = (T) value;
+	}
+}
+
+template<typename T>
 void ArithSharing<T>::EvaluateADDGate(GATE* gate) {
 	uint32_t nvals = gate->nvals;
 	uint32_t idleft = gate->ingates.inputs.twin.left;
@@ -386,6 +397,32 @@ void ArithSharing<T>::EvaluateADDGate(GATE* gate) {
 		((T*) gate->gs.aval)[i] = ((T*) m_pGates[idleft].gs.aval)[i] + ((T*) m_pGates[idright].gs.aval)[i];
 #ifdef DEBUGARITH
 		std::cout << "Result ADD (" << i << "): "<< ((T*)gate->gs.aval)[i] << " = " << ((T*) m_pGates[idleft].gs.aval)[i] << " + " << ((T*)m_pGates[idright].gs.aval)[i] << std::endl;
+#endif
+	}
+
+	UsedGate(idleft);
+	UsedGate(idright);
+}
+
+template<typename T>
+void ArithSharing<T>::EvaluateMULCONSTGate(GATE* gate) {
+	const uint32_t nvals = gate->nvals;
+	const uint32_t idleft = gate->ingates.inputs.twin.left;
+	const uint32_t idright = gate->ingates.inputs.twin.right;
+	InstantiateGate(gate);
+	// Find first constant. Doesn't matter if 2nd is also a constant, which would be
+	// a weird circuit anyways...
+	GATE* gate_const = &(m_pGates[idleft]);
+	GATE* gate_var = &(m_pGates[idright]);
+	if (!(gate_const->type == G_CONSTANT)) std::swap(gate_const, gate_var);
+	assert (gate_const->type == G_CONSTANT && "At least one of the inputs in a MULCONST gate must be a constant.");
+	// Current implementation of evaluation of CONST gates writes 0s to gs.aval
+	// array on CLIENT side, so we need to take constant from constant struct
+	const T constval = static_cast<T>(gate_const->gs.constant.constval);
+	for (uint32_t i = 0; i < nvals; ++i) {
+		((T*) gate->gs.aval)[i] = ((T*) gate_var->gs.aval)[i] * constval;
+#ifdef DEBUGARITH
+		std::cout << "Result MULCONST (" << i << "): "<< ((T*)gate->gs.aval)[i] << " = " << ((T*) gate_var->gs.aval)[i] << " * " << constval << std::endl;
 #endif
 	}
 
