@@ -1,5 +1,5 @@
 /**
- \file 		arithmeticcircuits.h
+ \file		arithmeticcircuits.h
  \author	michael.zohner@ec-spride.de
  \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
 			Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
@@ -41,6 +41,7 @@ public:
 	void Reset();
 
 	uint32_t PutMULGate(uint32_t left, uint32_t right);
+	uint32_t PutMULCONSTGate(uint32_t left, uint32_t right);
 	uint32_t PutADDGate(uint32_t left, uint32_t right);
 	uint32_t PutSUBGate(uint32_t left, uint32_t right);
 
@@ -219,6 +220,9 @@ public:
 		return new arithshare(this);
 	}
 	share* PutMULGate(share* ina, share* inb);
+
+	/* Multiplication with a constant - offline & free */
+	share* PutMULCONSTGate(share* ina, share* inb);
 
 	share* PutGTGate(share* ina, share* inb) {
 		cerr << "GT not implemented in arithmetic sharing" << endl;

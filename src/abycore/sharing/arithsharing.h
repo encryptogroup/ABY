@@ -188,6 +188,11 @@ private:
 	 */
 	void EvaluateMTs();
 	/**
+	 * Write constant value, or 0 for CLIENT, to gs.aval nvals times and backup
+	 * initial constant.
+	 */
+	void EvaluateConstantGate(GATE* gate);
+	/**
 	 Method for evaluating Add Gate using the gate object.
 	 \param 	gate 	Gate Object.
 	 */
@@ -198,6 +203,10 @@ private:
 	 */
 	void EvaluateSUBGate(GATE* gate);
 
+	/**
+	 * Evaluate multiplication with a constant - offline like addition
+	 */
+	void EvaluateMULCONSTGate(GATE* gate);
 	/**
 	 Method for evaluating Multiplication Gate
 	 */
