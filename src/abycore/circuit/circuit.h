@@ -402,8 +402,8 @@ public:
 	uint32_t PutCombineAtPosGate(std::vector<uint32_t> input, uint32_t pos);
 	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals_out, bool copy_posids = true);
 	uint32_t PutPermutationGate(std::vector<uint32_t> input, uint32_t* positions);
-        std::vector<uint32_t> PutSplitterGate(uint32_t input);
-
+	std::vector<uint32_t> PutSplitterGate(uint32_t input);
+	std::vector<uint32_t> PutSplitterGate(uint32_t input, const std::vector<uint32_t>& new_nvals);
 
 	//Templates may not be virtual, hence use dummy functions
 	template<class T> uint32_t PutINGate(T val) {

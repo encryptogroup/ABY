@@ -148,6 +148,14 @@ std::vector<uint32_t> Circuit::PutSplitterGate(uint32_t input) {
 	return gateid;
 }
 
+std::vector<uint32_t> Circuit::PutSplitterGate(uint32_t input, const std::vector<uint32_t>& new_nvals) {
+	std::vector<uint32_t> gateid = m_cCircuit->PutSplitterGate(input, new_nvals);
+	for (uint32_t i = 0; i < gateid.size(); i++) {
+		UpdateLocalQueue(gateid[i]);
+	}
+	return gateid;
+}
+
 uint32_t Circuit::PutRepeaterGate(uint32_t input, uint32_t nvals) {
 	uint32_t gateid = m_cCircuit->PutRepeaterGate(input, nvals);
 	UpdateLocalQueue(gateid);
