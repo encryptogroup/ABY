@@ -343,7 +343,7 @@ public:
 
 	share* PutMaxGate(const vector<share*>& a);
 	share* PutMaxGate(share** a, uint32_t nvals);
-	vector<uint32_t> PutMaxGate(vector<vector<uint32_t> > a);
+	vector<uint32_t> PutMaxGate(const vector<vector<uint32_t>>& a);
 
 	share* PutMinGate(share** a, uint32_t nvals);
 	vector<uint32_t> PutMinGate(vector<vector<uint32_t> > a);

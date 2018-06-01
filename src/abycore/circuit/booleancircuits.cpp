@@ -2129,7 +2129,7 @@ share* BooleanCircuit::PutMaxGate(share** a, uint32_t size) {
 	return PutMaxGate(v);
 }
 
-vector<uint32_t> BooleanCircuit::PutMaxGate(vector<vector<uint32_t>> ws) {
+vector<uint32_t> BooleanCircuit::PutMaxGate(const vector<vector<uint32_t>>& ws) {
 	function<vector<uint32_t> (const vector<uint32_t>&, const vector<uint32_t>&)> op
 		= [this](auto a, auto b) {
 				uint32_t cmp = (m_eContext == S_YAO) ?
@@ -2137,7 +2137,7 @@ vector<uint32_t> BooleanCircuit::PutMaxGate(vector<vector<uint32_t>> ws) {
 					PutDepthOptimizedGTGate(a, b);
 				return PutMUXGate(a, b, cmp);
 			};
-	return binary_accumulate(ws, op);
+	return accumulate(ws, op, m_eContext);
 }
 
 share* BooleanCircuit::PutMinGate(share** a, uint32_t nvals) {

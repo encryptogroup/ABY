@@ -56,6 +56,32 @@ T binary_accumulate(vector<T> vals,
   return vals[0];
 }
 
+/*
+ * Accumulates all objects of vector using binary operation op serially by
+ * left-fold
+ */
+template <typename T>
+T lfold_accumulate(const vector<T>& vals,
+    std::function<T (const T&, const T&)>& op) {
+  T acc(vals.at(0));
+  for(size_t i{1}; i < vals.size(); ++i) {
+    acc = op(acc, vals[i]);
+  }
+
+  return acc;
+}
+
+/*
+ * Accumulates all objects of vector using binary operation op and choosing best
+ * accumulator by context (Yao or GMW)
+ */
+template <typename T>
+T accumulate(const vector<T>& vals,
+    std::function<T (const T&, const T&)>& op, e_sharing ctx) {
+  return (ctx == S_YAO) ?
+    lfold_accumulate<T>(vals, op) : binary_accumulate(vals, op);
+}
+
 /** Circuit class */
 class Circuit {
 
