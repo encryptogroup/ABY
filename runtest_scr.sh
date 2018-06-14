@@ -8,7 +8,7 @@ exitfn () {
 
 trap "exitfn" INT            # Set up SIGINT trap to call function.
 
-./bin/test-aby.exe -r 0 -R &
+./bin/abytest -r 0 -R &
 CLIENT_PID=$!
-./bin/test-aby.exe -r 1 -R
+./bin/abytest -r 1 -R
 

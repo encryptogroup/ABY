@@ -1,0 +1,3 @@
+
+add_executable(euclidean_distance_test euclidean_distance_test.cpp common/euclidean_dist.cpp)
+target_link_libraries(euclidean_distance_test ABY::aby ENCRYPTO_utils::encrypto_utils)
