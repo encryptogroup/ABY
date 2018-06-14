@@ -49,7 +49,8 @@
  \def 	GARBLED_TABLE_WINDOW
  \brief	Window size of Yao's garbled circuits in pipelined execution
  */
-#define GARBLED_TABLE_WINDOW NUMOTBLOCKS * AES_BITS//1 * AES_BITS//1048575 //1048575 //=0xFFFFF for faster modulo operation
+#define GARBLED_TABLE_WINDOW 1024 * AES_BITS//1 * AES_BITS//1048575 //1048575 //=0xFFFFF for faster modulo operation
+//                           ^^^^ = NUMOTBLOCKS
 
 #define BATCH
 
