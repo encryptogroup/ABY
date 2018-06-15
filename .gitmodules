@@ -1,6 +1,8 @@
-[submodule "src/abycore/ot/external"]
-	path = src/abycore/ot/external
-	url = git://github.com/encryptogroup/OTExtension.git
-[submodule "src/abycore/ENCRYPTO_utils"]
-	path = src/abycore/ENCRYPTO_utils
-	url = https://github.com/encryptogroup/ENCRYPTO_utils
+[submodule "extern/ENCRYPTO_utils"]
+	path = extern/ENCRYPTO_utils
+	url = ../ENCRYPTO_utils.git
+	branch = feature-cmake
+[submodule "extern/OTExtension"]
+	path = extern/OTExtension
+	url = ../OTExtension.git
+	branch = feature-cmake
