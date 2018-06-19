@@ -70,12 +70,12 @@ int main(int argc, char** argv) {
 		//test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_SPLUT);
 
 		//Test the Phasing PSI circuit
-		cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
-		test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen, epsilon, nthreads, mt_alg,
-				S_BOOL, 1, 0, 3);
-		cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
-		test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen, epsilon, nthreads, mt_alg,
-				S_YAO, 1, 0, 3);
+		// cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
+		// test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen, epsilon, nthreads, mt_alg,
+		// 		S_BOOL, 1, 0, 3);
+		// cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
+		// test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen, epsilon, nthreads, mt_alg,
+		// 		S_YAO, 1, 0, 3);
 		//	cout << "Testing PSI Phasing circuit in Setup-LUT sharing" << endl;
 		//	test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_SPLUT, 1, 0, 3);
 
