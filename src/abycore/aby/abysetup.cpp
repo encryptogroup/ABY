@@ -132,12 +132,16 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		delete benchtmp;
 #endif
 
-		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
-		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
+		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std,
+				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
+		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv,
+				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
 
 #ifdef USE_KK_OT
-		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
-		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
+		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std,
+				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
+		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv,
+				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
 #endif
 	} else { // CLIENT
 
@@ -160,12 +164,16 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		cout << "Throughput: " << 2 * (tmparraysize>>20)*benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << endl;
 				delete benchtmp;
 #endif
-		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
-		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
+		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std,
+				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
+		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv,
+				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
 
 #ifdef USE_KK_OT
-		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std);
-		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv);
+		kk_ot_receiver = new KKOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std,
+				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
+		kk_ot_sender = new KKOTExtSnd(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv,
+				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
 #endif
 	}
 	//Start Naor-Pinkas base OTs
