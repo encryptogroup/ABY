@@ -501,14 +501,16 @@ void ArithSharing<T>::FinishCircuitLayer(uint32_t depth) {
 #ifdef DEBUGARITH
 	if(m_nInputShareRcvCtr > 0) {
 		cout << "Received "<< m_nInputShareRcvCtr << " input shares: ";
-		for(uint32_t i = 0; i < m_nInputShareRcvCtr; i++)
-		cout << m_vInputShareRcvBuf.template Get<T>(i) << endl;
+		for(uint32_t i = 0; i < m_nInputShareRcvCtr; i++){
+			cout << m_vInputShareRcvBuf.template Get<T>(i) << endl;
+		}
 		//m_vInputShareRcvBuf.Print(0, m_nInputShareRcvCtr);
 	}
 	if(m_nOutputShareRcvCtr > 0) {
 		cout << "Received " << m_nOutputShareRcvCtr << " output shares: ";
-		for(uint32_t i = 0; i < m_nOutputShareRcvCtr; i++)
-		cout << m_vOutputShareRcvBuf.template Get<T>(i) << endl;
+		for(uint32_t i = 0; i < m_nOutputShareRcvCtr; i++){
+			cout << m_vOutputShareRcvBuf.template Get<T>(i) << endl;
+		}
 		//m_vOutputShareRcvBuf.Print(0, m_nOutputShareRcvCtr);
 	}
 #endif
@@ -796,13 +798,15 @@ void ArithSharing<T>::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sn
 #ifdef DEBUGARITH
 	if(m_nInputShareSndCtr > 0) {
 		cout << "Sending " << m_nInputShareSndCtr << " Input shares : ";
-		for(uint32_t i = 0; i < m_nInputShareSndCtr; i++)
-		cout << m_vInputShareSndBuf.template Get<T>(i) << endl;
+		for(uint32_t i = 0; i < m_nInputShareSndCtr; i++) {
+			cout << m_vInputShareSndBuf.template Get<T>(i) << endl;
+		}
 	}
 	if(m_nOutputShareSndCtr > 0) {
 		cout << "Sending " << m_nOutputShareSndCtr << " Output shares : ";
-		for(uint32_t i = 0; i < m_nOutputShareSndCtr; i++)
-		cout << m_vOutputShareSndBuf.template Get<T>(i) << endl;
+		for(uint32_t i = 0; i < m_nOutputShareSndCtr; i++){
+			cout << m_vOutputShareSndBuf.template Get<T>(i) << endl;
+		}
 		//m_vOutputShareSndBuf.Print(0, m_nOutputShareSndCtr);
 	}
 
