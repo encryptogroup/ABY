@@ -128,8 +128,8 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 			task->pval.sndval.X0 = &(m_vConversionMasks[0]);
 			task->pval.sndval.X1 = &(m_vConversionMasks[1]);
 		} else {
-			m_vConversionMasks[0].Create((int) m_nNumCONVs * m_nTypeBitLen, m_cCrypto); //the choice bits of the receiver
-			m_vConversionMasks[1].Create((int) m_nNumCONVs * m_nTypeBitLen * m_nTypeBitLen); //the resulting masks
+			m_vConversionMasks[0].Create(m_nNumCONVs * m_nTypeBitLen, m_cCrypto); //the choice bits of the receiver
+			m_vConversionMasks[1].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen); //the resulting masks
 			task->pval.rcvval.C = &(m_vConversionMasks[0]);
 			task->pval.rcvval.R = &(m_vConversionMasks[1]);
 		}
@@ -703,7 +703,7 @@ void ArithSharing<T>::AssignClientConversionShares() {
 	uint32_t maxvectorsize = m_pCircuit->GetMaxVectorSize();
 	tmpsum = (T*) malloc(sizeof(T) * maxvectorsize);
 	//Take the masks from the pre-computed OTs down from the received string
-	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx*m_nTypeBitLen; i < m_vCONVGates.size(); i++, m_nConvShareIdx++) {
+	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx * m_nTypeBitLen; i < m_vCONVGates.size(); i++) {
 		gate = m_vCONVGates[i];
 		parentids = gate->ingates.inputs.parents;
 		nparents = gate->ingates.ningates;
@@ -737,6 +737,7 @@ void ArithSharing<T>::AssignClientConversionShares() {
 #ifdef DEBUGARITH
 			cout << endl;
 #endif
+		m_nConvShareIdx += gate->nvals;
 		free(parentids);
 	}
 	free(tmpsum);
