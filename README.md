@@ -69,7 +69,7 @@ Please **don't** download the .zip file, since it doesn't include submodules. Al
 * `make cleanmore` - same as `make clean` plus ABY core object files
 * `make cleanall` - same as `make cleanmore` plus Miracl and OT extension library objects
 
-There are several compiler flags that can be set within `Makefile` for the ABY core and `Example_Makefile` for the ABY examples. There are severeal predefined optiones, that can be commented out as needed.
+There are several compiler flags that can be set within `Makefile` for the ABY core and `Example_Makefile` for the ABY examples. There are several predefined options, that can be commented out as needed.
 
 
 #### Developer Guide and Documentation
