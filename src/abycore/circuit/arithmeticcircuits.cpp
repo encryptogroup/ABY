@@ -193,7 +193,7 @@ share* ArithmeticCircuit::PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen) {
 template<class T> uint32_t ArithmeticCircuit::PutSharedINGate(T val) {
 	uint32_t gateid = PutSharedINGate();
 	GATE* gate = m_pGates + gateid;
-	gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
+	gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 
 	*gate->gs.val = (UGATE_T) val;
 	gate->instantiated = true;
@@ -205,7 +205,7 @@ template<class T> uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t nvals, T va
 	uint32_t gateid = PutSIMDINGate(nvals, role);
 	if (role == m_eMyRole) {
 		GATE* gate = m_pGates + gateid;
-		gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
+		gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 
 		*gate->gs.ishare.inval = (UGATE_T) val;
 		gate->instantiated = true;
@@ -217,7 +217,7 @@ template<class T> uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t nvals, T va
 template<class T> uint32_t ArithmeticCircuit::PutSharedSIMDINGate(uint32_t nvals, T val) {
 	uint32_t gateid = PutSharedSIMDINGate(nvals);
 	GATE* gate = m_pGates + gateid;
-	gate->gs.val = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
+	gate->gs.val = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 
 	*gate->gs.val = (UGATE_T) val;
 	gate->instantiated = true;
