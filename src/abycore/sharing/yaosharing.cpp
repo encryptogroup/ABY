@@ -18,6 +18,9 @@
 
 #include "yaosharing.h"
 
+using std::cout;
+using std::endl;
+
 void YaoSharing::Init() {
 	/* init the class for correctly sized Yao key operations*/
 	InitYaoKey(&m_pKeyOps, m_cCrypto->get_seclvl().symbits);

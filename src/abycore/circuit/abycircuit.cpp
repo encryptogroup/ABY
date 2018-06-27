@@ -18,6 +18,11 @@
 
 #include "abycircuit.h"
 
+#include <string>
+#include <iostream>
+#include <vector>
+
+using namespace std;
 void ABYCircuit::Cleanup() {
 	Reset();
 	free(m_pGates);

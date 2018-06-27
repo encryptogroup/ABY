@@ -63,9 +63,6 @@
 
 #define USE_MULTI_MUX_GATES
 
-//TODO eventually remove this and prefix all couts, etc with std::
-using namespace std;
-
 /**
  \enum 	e_role
  \brief	Defines the role of the party or the source / target for certain operations (e.g., input/output)
@@ -206,7 +203,7 @@ typedef struct {
 	std::string opname;
 } aby_ops_t;
 
-static string get_circuit_type_name(e_circuit c) {
+static std::string get_circuit_type_name(e_circuit c) {
 	switch(c) {
 	case C_BOOLEAN:
 		return "BOOLEAN";
@@ -217,7 +214,7 @@ static string get_circuit_type_name(e_circuit c) {
 	}
 }
 
-static string get_role_name(e_role r) {
+static std::string get_role_name(e_role r) {
 	switch(r) {
 	case SERVER:
 		return "SERVER";
@@ -230,7 +227,7 @@ static string get_role_name(e_role r) {
 	}
 }
 
-static string get_sharing_name(e_sharing s) {
+static std::string get_sharing_name(e_sharing s) {
 	switch (s) {
 	case S_BOOL:
 		return "Bool";
@@ -247,7 +244,7 @@ static string get_sharing_name(e_sharing s) {
 	}
 }
 
-static string get_gate_type_name(e_gatetype g) {
+static std::string get_gate_type_name(e_gatetype g) {
 	switch (g) {
 	case G_LIN: return "Linear";
 	case G_NON_LIN: return "Non-Linear";
@@ -281,7 +278,7 @@ typedef enum fp_op_setting{
 }fp_op_setting;
 
 
-static string get_op_name(e_operation op) {
+static std::string get_op_name(e_operation op) {
 	switch (op) {
 	case OP_XOR:
 		return "XOR";

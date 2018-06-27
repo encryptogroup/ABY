@@ -166,12 +166,12 @@ private:
 	BOOL ThreadRunDGKMTGen(uint32_t threadid);
 
 	// IKNP OTTask values
-	vector<vector<IKNP_OTTask*> > m_vIKNPOTTasks;
+	std::vector<std::vector<IKNP_OTTask*> > m_vIKNPOTTasks;
 
 	// KK OTTask values
-	vector<vector<KK_OTTask*> > m_vKKOTTasks;
+	std::vector<std::vector<KK_OTTask*> > m_vKKOTTasks;
 
-	vector<PKMTGenVals*> m_vPKMTGenTasks;
+	std::vector<PKMTGenVals*> m_vPKMTGenTasks;
 	DJNParty* m_cPaillierMTGen;
 	DGKParty** m_cDGKMTGen;
 

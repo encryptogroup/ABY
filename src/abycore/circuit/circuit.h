@@ -22,6 +22,11 @@
 
 #include "abycircuit.h"
 
+#include <deque>
+#include <iostream>
+#include <string>
+#include <vector>
+
 class share;
 class boolshare;
 class arithshare;
@@ -77,7 +82,7 @@ public:
 		\param lvl Required level of local queue.
 		\return Local queue on the required level
 	*/
-	deque<uint32_t> GetLocalQueueOnLvl(uint32_t lvl) {
+        std::deque<uint32_t> GetLocalQueueOnLvl(uint32_t lvl) {
 
 		if (lvl < m_vLocalQueueOnLvl.size())
 			return m_vLocalQueueOnLvl[lvl];
@@ -90,18 +95,19 @@ public:
 		\param lvl Required level of interactive queue.
 		\return Interactive queue on the required level
 	*/
-	deque<uint32_t> GetInteractiveQueueOnLvl(uint32_t lvl) {
-		if (lvl < m_vInteractiveQueueOnLvl.size())
+        std::deque<uint32_t> GetInteractiveQueueOnLvl(uint32_t lvl) {
+		if (lvl < m_vInteractiveQueueOnLvl.size()) {
 			return m_vInteractiveQueueOnLvl[lvl];
-		else
+                } else { 
 			return EMPTYQUEUE;
+                }
 	}
 
 	/*
 	 * print the number of interactive operations for each layer
 	 */
 	void PrintInteractiveQueues(){
-		vector<string> sharingnames {"GMW", "Yao", "Arith", "Yao_Rev", "SPLUT"};
+          std::vector<std::string> sharingnames {"GMW", "Yao", "Arith", "Yao_Rev", "SPLUT"};
 
 		std::cout << "Interactive Queue Sizes " << sharingnames[this->m_eContext] << std::endl;
 
@@ -149,7 +155,7 @@ public:
 		\param	party Party role based on which the Input gates are returned.
 		\return Input gates for the provided party
 	*/
-	deque<uint32_t> GetInputGatesForParty(e_role party) {
+	std::deque<uint32_t> GetInputGatesForParty(e_role party) {
 		return m_vInputGates[party];
 	}
 
@@ -158,7 +164,7 @@ public:
 		\param	party Party role based on which the Output gates are returned.
 		\return Output gates for the provided party
 	*/
-	deque<uint32_t> GetOutputGatesForParty(e_role party) {
+        std::deque<uint32_t> GetOutputGatesForParty(e_role party) {
 		return m_vOutputGates[party];
 	}
 
@@ -282,7 +288,7 @@ public:
 	virtual share* PutTruthTableMultiOutputGate(share* in, uint32_t out_bits, uint64_t* ttable) = 0;
 
 
-	share* PutPrintValueGate(share* in, string helpstr);
+	share* PutPrintValueGate(share* in, std::string helpstr);
 	//TODO: AssertGate and SIMDAssertGate need interfaces for all types as INGate and SIMDINGates
 	share* PutAssertGate(share* in, uint64_t* assert_val, uint32_t bitlen);
 	share* PutAssertGate(share* in, uint32_t* assert_val, uint32_t bitlen);
@@ -367,41 +373,41 @@ public:
 
 
 	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals);
-	uint32_t PutCombinerGate(vector<uint32_t> input);
-	uint32_t PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos);
+	uint32_t PutCombinerGate(std::vector<uint32_t> input);
+	uint32_t PutCombineAtPosGate(std::vector<uint32_t> input, uint32_t pos);
 	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals_out, bool copy_posids = true);
-	uint32_t PutPermutationGate(vector<uint32_t> input, uint32_t* positions);
-	vector<uint32_t> PutSplitterGate(uint32_t input);
+	uint32_t PutPermutationGate(std::vector<uint32_t> input, uint32_t* positions);
+        std::vector<uint32_t> PutSplitterGate(uint32_t input);
 
 
 	//Templates may not be virtual, hence use dummy functions
 	template<class T> uint32_t PutINGate(T val) {
-		cout << "IN gate not implemented in super-class, stopping!" << endl;
+                std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
 	template<class T> uint32_t PutINGate(T val, e_role role) {
-		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
 	template<class T> uint32_t PutSharedINGate(T val) {
-		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
 	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val) {
-		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
 	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val, e_role role) {
-		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
 	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val) {
-		cout << "IN gate not implemented in super-class, stopping!" << endl;
+		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
@@ -462,12 +468,12 @@ protected:
 	e_circuit m_eCirctype;
 	uint32_t m_nMaxDepth;
 
-	vector<deque<uint32_t> > m_vLocalQueueOnLvl; //for locally evaluatable gates, first dimension is the level of the gates, second dimension presents the queue on which the gateids are put
-	vector<deque<uint32_t> > m_vInteractiveQueueOnLvl; //for gates that need interaction, first dimension is the level of the gates, second dimension presents the queue on which the gateids are put
-	vector<deque<uint32_t> > m_vInputGates;				//input gates for the parties
-	vector<deque<uint32_t> > m_vOutputGates;				//input gates for the parties
-	vector<uint32_t> m_vInputBits;				//number of input bits for the parties
-	vector<uint32_t> m_vOutputBits;				//number of output bits for the parties
+	std::vector<std::deque<uint32_t> > m_vLocalQueueOnLvl; //for locally evaluatable gates, first dimension is the level of the gates, second dimension presents the queue on which the gateids are put
+	std::vector<std::deque<uint32_t> > m_vInteractiveQueueOnLvl; //for gates that need interaction, first dimension is the level of the gates, second dimension presents the queue on which the gateids are put
+	std::vector<std::deque<uint32_t> > m_vInputGates;				//input gates for the parties
+	std::vector<std::deque<uint32_t> > m_vOutputGates;				//input gates for the parties
+	std::vector<uint32_t> m_vInputBits;				//number of input bits for the parties
+	std::vector<uint32_t> m_vOutputBits;				//number of output bits for the parties
 
 	uint32_t ncombgates;
 	uint32_t npermgates;
@@ -481,17 +487,17 @@ protected:
 	uint32_t m_nGates;
 	uint32_t m_nRoundsAND;
 	uint32_t m_nRoundsXOR;
-	vector<uint32_t> m_nRoundsIN;
-	vector<uint32_t> m_nRoundsOUT;
+	std::vector<uint32_t> m_nRoundsIN;
+	std::vector<uint32_t> m_nRoundsOUT;
 
-	const deque<uint32_t> EMPTYQUEUE;
+	const std::deque<uint32_t> EMPTYQUEUE;
 
 	//non_lin_on_layers m_vNonLinOnLayer;
 };
 
 
 share* create_new_share(uint32_t size, Circuit* circ);
-share* create_new_share(vector<uint32_t> vals, Circuit* circ);
+share* create_new_share(std::vector<uint32_t> vals, Circuit* circ);
 
 #include "share.h"
 

@@ -17,7 +17,7 @@
  */
 
 #include "booleancircuits.h"
-
+using namespace std;
 void BooleanCircuit::Init() {
 	m_nShareBitLen = 1;
 	m_nNumANDSizes = 1;

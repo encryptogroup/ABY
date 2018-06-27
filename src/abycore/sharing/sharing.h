@@ -119,13 +119,13 @@ public:
 	 \param 	sendbuf 	sender buffer
 	 \param 	bytesize	data size
 	 */
-	virtual void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize) = 0;
+	virtual void GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize) = 0;
 	/**
 	 Method for receiving the data.
 	 \param 	rsvbuf 		receiver buffer
 	 \param 	rcvsize		data size
 	 */
-	virtual void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) = 0;
+	virtual void GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes) = 0;
 	/**
 	 Method for Instantiating a gate
 	 \param gate 		Input gate

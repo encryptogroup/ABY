@@ -18,6 +18,8 @@
 */
 #include "circuit.h"
 
+using namespace std;
+
 void Circuit::Init() {
 
 	m_pGates = m_cCircuit->Gates();
@@ -41,7 +43,6 @@ void Circuit::Init() {
 	//m_vNonLinOnLayer.min_depth = 0;
 	//m_vNonLinOnLayer.num_on_layer = (uint32_t*) calloc(m_vNonLinOnLayer.max_depth, sizeof(uint32_t));
 }
-;
 
 void Circuit::Cleanup() {
 	//TODO implement
@@ -54,7 +55,6 @@ void Circuit::Cleanup() {
 	//m_vInputBits.clear();
 	//m_vOutputBits.clear();
 }
-;
 
 void Circuit::Reset() {
 	m_nMaxDepth = 0;

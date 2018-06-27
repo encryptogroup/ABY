@@ -18,6 +18,8 @@
 
 #include "dgkparty.h"
 
+using namespace std;
+
 #define CHECKMT 0
 #define DGK_DEBUG 0
 #define NETDEBUG 0

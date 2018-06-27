@@ -27,8 +27,6 @@
 #include "../ENCRYPTO_utils/powmod.h"
 #include "../ENCRYPTO_utils/channel.h"
 
-using namespace std;
-
 class DJNParty {
 public:
 	DJNParty(UINT DJNbits, UINT sharelen);

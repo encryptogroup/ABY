@@ -17,6 +17,8 @@
  */
 #include "sharing.h"
 
+using namespace std;
+
 void Sharing::EvaluateCallbackGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	void (*callback)(GATE*, void*) = gate->gs.cbgate.callback;

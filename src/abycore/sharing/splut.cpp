@@ -17,6 +17,7 @@
  */
 #include "splut.h"
 
+using namespace std;
 void SetupLUT::Init() {
 
 	uint32_t otNs = 9;
