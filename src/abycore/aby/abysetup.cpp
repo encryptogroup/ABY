@@ -129,7 +129,7 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 
 		clock_gettime(CLOCK_MONOTONIC, &end);
 		cout << "Throughput: " << 2 * (tmparraysize >> 20) * benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << endl;
-		delete benchtmp;
+		delete[] benchtmp;
 #endif
 
 		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std,
