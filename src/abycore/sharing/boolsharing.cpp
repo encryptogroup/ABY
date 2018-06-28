@@ -17,6 +17,8 @@
  */
 #include "boolsharing.h"
 
+using namespace std;
+
 void BoolSharing::Init() {
 
 	m_nTotalNumMTs = 0;

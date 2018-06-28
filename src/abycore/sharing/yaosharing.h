@@ -76,8 +76,8 @@ public:
 
 	virtual void InstantiateGate(GATE* gate) = 0;
 
-	virtual void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize) = 0;
-	virtual void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) = 0;
+	virtual void GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize) = 0;
+	virtual void GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes) = 0;
 
 	virtual uint32_t AssignInput(CBitVector& input) = 0;
 	virtual uint32_t GetOutput(CBitVector& out) = 0;
@@ -112,9 +112,9 @@ protected:
 	uint32_t m_nXORGates; /**< XOR Gates_____________*/
 
 	XORMasking *fMaskFct; /**< Mask ____________*/
-	vector<GATE*> m_vANDGates; /**< Vector of AND Gates. */
+	std::vector<GATE*> m_vANDGates; /**< Vector of AND Gates. */
 
-	vector<GATE*> m_vOutputShareGates; /**< Vector of output share gates. */
+	std::vector<GATE*> m_vOutputShareGates; /**< Vector of output share gates. */
 
 	uint32_t m_nInputShareSndSize; /**< Input share send size. */
 	uint32_t m_nOutputShareSndSize; /**< Output share send size. */

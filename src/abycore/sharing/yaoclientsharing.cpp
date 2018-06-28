@@ -16,7 +16,7 @@
  \brief		Yao Client Sharing class implementation.
  */
 #include "yaoclientsharing.h"
-
+using namespace std;
 void YaoClientSharing::InitClient() {
 
 	m_nChoiceBitCtr = 0;

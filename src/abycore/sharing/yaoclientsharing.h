@@ -54,8 +54,8 @@ public:
 
 	void InstantiateGate(GATE* gate);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
-	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
+	void GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize);
+	void GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes);
 
 	uint32_t AssignInput(CBitVector& input);
 	uint32_t GetOutput(CBitVector& out);
@@ -82,17 +82,17 @@ private:
 	uint64_t m_nClientOUTBitCtr; /**< Client Output Bit Counter.*/
 
 	CBitVector m_vServerKeyRcvBuf; /**< Server Key Receiver Buffer*/
-	vector<CBitVector> m_vClientKeyRcvBuf; /**< Client Key Receiver Buffer*/
+	std::vector<CBitVector> m_vClientKeyRcvBuf; /**< Client Key Receiver Buffer*/
 
 	uint32_t m_nGarbledCircuitRcvCtr;/**< Garbled Circuit Receiver Counter*/
 
 	CBitVector m_vOutputShareRcvBuf;/**< Output Share Receiver Buffer.*/
 	CBitVector m_vOutputShareSndBuf;/**< Output Share Sender Buffer*/
 
-	vector<uint32_t> m_vClientSendCorrectionGates; /**< Client send correction gates.*/
-	vector<uint32_t> m_vClientRcvInputKeyGates; /**< Client receives input key gates.*/
+	std::vector<uint32_t> m_vClientSendCorrectionGates; /**< Client send correction gates.*/
+	std::vector<uint32_t> m_vClientRcvInputKeyGates; /**< Client receives input key gates.*/
 
-	vector<uint32_t> m_vServerInputGates; /**< Server Input gates.*/
+	std::vector<uint32_t> m_vServerInputGates; /**< Server Input gates.*/
 
 	CBitVector m_vROTSndBuf;/**< __________________*/
 	uint32_t m_vROTCtr;/**< __________________*/

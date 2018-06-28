@@ -18,6 +18,7 @@
 
 #include "arithmeticcircuits.h"
 
+using namespace std;
 void ArithmeticCircuit::Init() {
 	m_nMULs = 0;
 	m_nCONVGates = 0;

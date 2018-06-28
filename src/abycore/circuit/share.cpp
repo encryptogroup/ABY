@@ -20,6 +20,7 @@
 
 #include "share.h"
 
+using namespace std;
 
 /* =========================== Methods for the share class =========================== */
 

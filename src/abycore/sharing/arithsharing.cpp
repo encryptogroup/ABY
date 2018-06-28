@@ -18,6 +18,8 @@
 
 #include "arithsharing.h"
 
+using namespace std;
+
 template<typename T>
 void ArithSharing<T>::Init() {
 	m_nMTs = 0;

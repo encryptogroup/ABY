@@ -85,8 +85,8 @@ public:
 
 	inline void InstantiateGate(GATE* gate);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
-	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
+	void GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize);
+	void GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes);
 
 	void EvaluateSIMDGate(uint32_t gateid);
 
@@ -127,10 +127,10 @@ private:
 	uint64_t m_nTotalTTs;
 
 	XORMasking *fMaskFct;
-	vector<vector<uint32_t> > m_vTTGates;
+	std::vector<std::vector<uint32_t> > m_vTTGates;
 
-	vector<uint32_t> m_vInputShareGates;
-	vector<uint32_t> m_vOutputShareGates;
+	std::vector<uint32_t> m_vInputShareGates;
+	std::vector<uint32_t> m_vOutputShareGates;
 
 	uint32_t m_nInputShareSndSize;
 	uint32_t m_nOutputShareSndSize;
@@ -142,47 +142,47 @@ private:
 
 	//non_lin_vec_ctx* m_vANDs;
 	//first dimension is for server / client, second dimension is for ins, third dimension is for outs
-	vector<vector<vector<tt_lens_ctx> > > m_vNOTs;
+	std::vector<std::vector<std::vector<tt_lens_ctx> > > m_vNOTs;
 
-	vector<vector<uint32_t> > m_vOutBitMapping;
+	std::vector<std::vector<uint32_t> > m_vOutBitMapping;
 
 
 	CBitVector m_vInputShareSndBuf;
 	CBitVector m_vOutputShareSndBuf;
 
 	//information on updated choice bits from the OT
-	vector<vector<CBitVector*> > m_vChoiceUpdateSndBuf;
-	vector<vector<uint32_t> > m_nChoiceUpdateSndCtr;
-	vector<vector<CBitVector*> > m_vChoiceUpdateRcvBuf;
-	vector<vector<uint32_t> > m_nChoiceUpdateRcvCtr;
+	std::vector<std::vector<CBitVector*> > m_vChoiceUpdateSndBuf;
+	std::vector<std::vector<uint32_t> > m_nChoiceUpdateSndCtr;
+	std::vector<std::vector<CBitVector*> > m_vChoiceUpdateRcvBuf;
+	std::vector<std::vector<uint32_t> > m_nChoiceUpdateRcvCtr;
 
 	//information on updated masks from the OT
-	vector<vector<CBitVector*> > m_vMaskUpdateSndBuf;
-	vector<vector<uint32_t> > m_nMaskUpdateSndCtr;
-	vector<vector<CBitVector*> > m_vMaskUpdateRcvBuf;
-	vector<vector<uint32_t> > m_nMaskUpdateRcvCtr;
+	std::vector<std::vector<CBitVector*> > m_vMaskUpdateSndBuf;
+	std::vector<std::vector<uint32_t> > m_nMaskUpdateSndCtr;
+	std::vector<std::vector<CBitVector*> > m_vMaskUpdateRcvBuf;
+	std::vector<std::vector<uint32_t> > m_nMaskUpdateRcvCtr;
 
 
-	vector<uint8_t*> m_vSndBufStash;
-	vector<uint64_t> m_vSndBytesStash;
+	std::vector<uint8_t*> m_vSndBufStash;
+	std::vector<uint64_t> m_vSndBytesStash;
 
 	CBitVector m_vInputShareRcvBuf;
 	CBitVector m_vOutputShareRcvBuf;
 
 	BooleanCircuit* m_cBoolCircuit;
 
-	vector<vector<CBitVector**> > m_vPreCompOTX;
+	std::vector<std::vector<CBitVector**> > m_vPreCompOTX;
 
-	vector<vector<CBitVector*> > m_vPreCompOTMasks;
-	vector<vector<uint32_t> > m_vPreCompMaskIdx;
+	std::vector<std::vector<CBitVector*> > m_vPreCompOTMasks;
+	std::vector<std::vector<uint32_t> > m_vPreCompMaskIdx;
 
-	vector<vector<CBitVector*> > m_vPreCompOTC;
-	vector<vector<uint32_t> >m_vPreCompChoiceIdx;
-	vector<vector<CBitVector*> > m_vPreCompOTR;
+	std::vector<std::vector<CBitVector*> > m_vPreCompOTC;
+	std::vector<std::vector<uint32_t> >m_vPreCompChoiceIdx;
+	std::vector<std::vector<CBitVector*> > m_vPreCompOTR;
 
 
-	vector<vector<CBitVector*> > m_vTableRnd;
-	vector<vector<uint32_t> > m_nTableRndIdx;
+	std::vector<std::vector<CBitVector*> > m_vTableRnd;
+	std::vector<std::vector<uint32_t> > m_nTableRndIdx;
 
 	double t_snd, t_rcv;
 

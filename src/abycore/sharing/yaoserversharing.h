@@ -59,8 +59,8 @@ public:
 
 	void InstantiateGate(GATE* gate);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
-	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
+	void GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize);
+	void GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes);
 
 	uint32_t AssignInput(CBitVector& input);
 	uint32_t GetOutput(CBitVector& out);
@@ -77,14 +77,14 @@ private:
 	//Permutation bits for the servers input keys
 	CBitVector m_vPermBits; /**< _____________*/
 	//Random values from output of ot extension
-	vector<CBitVector> m_vROTMasks; /**< Masks_______________*/
+	std::vector<CBitVector> m_vROTMasks; /**< Masks_______________*/
 	uint32_t m_nClientInputKexIdx; /**< Client __________*/
 	uint32_t m_nClientInputKeyCtr; /**< Client __________*/
 
 	uint64_t m_nGarbledTableSndCtr;
 
 	CBitVector m_vServerKeySndBuf; /**< Server Key Sender Buffer*/
-	vector<CBitVector> m_vClientKeySndBuf; /**< Client Key Sender Buffer*/
+	std::vector<CBitVector> m_vClientKeySndBuf; /**< Client Key Sender Buffer*/
 	CBitVector m_vClientROTRcvBuf; /**< Client ______________*/
 
 	//vector<CBitVector> m_vClientConversionKeySndBuf;
@@ -93,7 +93,7 @@ private:
 	CBitVector m_vOutputShareSndBuf; /**< Output Share Sender Buffer.*/
 	CBitVector m_vOutputShareRcvBuf; /**< Output Share Receiver Buffer.*/
 
-	vector<GATE*> m_vServerOutputGates; /**< Server Output Gates*/
+	std::vector<GATE*> m_vServerOutputGates; /**< Server Output Gates*/
 
 	uint32_t m_nOutputShareRcvCtr; /**< Output Share Receiver Counter*/
 
@@ -110,7 +110,7 @@ private:
 	uint8_t* m_bTmpBuf;
 	//CBitVector
 
-	vector<uint32_t> m_vClientInputGate; /**< _____________*/
+	std::vector<uint32_t> m_vClientInputGate; /**< _____________*/
 	deque<input_gate_val_t> m_vPreSetInputGates;/**< _____________*/
 	deque<a2y_gate_pos_t> m_vPreSetA2YPositions;/**< _____________*/
 	e_role* m_vOutputDestionations; /** <  _____________*/

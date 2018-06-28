@@ -18,6 +18,8 @@
 
 #include "djnparty.h"
 
+using namespace std;
+
 #define CHECKMT 0
 #define DJN_DEBUG 0
 #define NETDEBUG 0
