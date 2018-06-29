@@ -17,9 +17,9 @@
  */
 
 #include "yaosharing.h"
+#include <iostream>
+#include <iomanip>
 
-using std::cout;
-using std::endl;
 
 void YaoSharing::Init() {
 	/* init the class for correctly sized Yao key operations*/
@@ -81,9 +81,9 @@ BOOL YaoSharing::EncryptWire(BYTE* c, BYTE* p, uint32_t id)
 
 
 #ifdef DEBUGYAO
-	cout << endl << " encrypting : ";
+	std::cout << std::endl << " encrypting : ";
 	PrintKey(p);
-	cout << " to : ";
+	std::cout << " to : ";
 	PrintKey(c);
 #endif
 
@@ -92,11 +92,11 @@ BOOL YaoSharing::EncryptWire(BYTE* c, BYTE* p, uint32_t id)
 
 void YaoSharing::PrintKey(BYTE* key) {
 	for (uint32_t i = 0; i < m_nSecParamBytes; i++) {
-		cout << setw(2) << setfill('0') << (hex) << (uint32_t) key[i];
+		std::cout << std::setw(2) << std::setfill('0') << (std::hex) << (uint32_t) key[i];
 	}
-	cout << (dec);
+	std::cout << (std::dec);
 }
 
 void YaoSharing::PrintPerformanceStatistics() {
-	cout <<  get_sharing_name(m_eContext) << ": ANDs: " << m_nANDGates << " ; Depth: " << GetMaxCommunicationRounds() << endl;
+	std::cout <<  get_sharing_name(m_eContext) << ": ANDs: " << m_nANDGates << " ; Depth: " << GetMaxCommunicationRounds() << std::endl;
 }

@@ -28,7 +28,7 @@
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
         uint32_t* pointbitlen, uint32_t* threshbitlen,  uint32_t* secparam,
-        string* address, uint16_t* port, int32_t* test_op, uint32_t * n ,
+        std::string* address, uint16_t* port, int32_t* test_op, uint32_t * n ,
         bool * only_yao) {
 
 	uint32_t int_role = 0, int_port = 0;
@@ -49,7 +49,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 
 	if (!parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
-		cout << "Exiting" << endl;
+		std::cout << "Exiting" << std::endl;
 		exit(0);
 	}
 
@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
 	e_role role;
 	uint32_t pointbitlen = 32, thresbitlen=64, secparam = 128, nthreads = 1;
 	uint16_t port = 7766;
-	string address = "127.0.0.1";
+	std::string address = "127.0.0.1";
 	int32_t test_op = -1;
         uint32_t n = 1000;
 	e_mt_gen_alg mt_alg = MT_OT;

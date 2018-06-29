@@ -16,13 +16,15 @@
  \brief		Implementation of Minimum Euclidean Distance Circuit
  */
 #include "min-euclidean-dist-circuit.h"
+#include <iostream>
+#include <vector>
 
 int32_t test_min_eucliden_dist_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t dbsize,
 		uint32_t dim, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing, ePreCompPhase pre_comp_value) {
 	uint32_t bitlen = 8, i, j, temp, tempsum, maxbitlen=32;
 	uint64_t output;
 	ABYParty* party = new ABYParty(role, address, port, seclvl, maxbitlen, nthreads, mt_alg);
-	vector<Sharing*>& sharings = party->GetSharings();
+	std::vector<Sharing*>& sharings = party->GetSharings();
 
 	/**
 		Setting the precomputation value being passed as the precomputation mode of operation.
@@ -102,12 +104,12 @@ int32_t test_min_eucliden_dist_circuit(e_role role, char* address, uint16_t port
 		CBitVector out;
 		//out.AttachBuf(output, (uint64_t) AES_BYTES * nvals);
 
-		cout << "Testing min Euclidean distance in " << get_sharing_name(dstsharing) << " and " <<
-			get_sharing_name(minsharing) << " sharing: " << endl;
+		std::cout << "Testing min Euclidean distance in " << get_sharing_name(dstsharing) << " and " <<
+			get_sharing_name(minsharing) << " sharing: " << std::endl;
 
-		cout << "Circuit result = " << output << endl;
+		std::cout << "Circuit result = " << output << std::endl;
 		verify = verify_min_euclidean_dist(serverdb, clientquery, dbsize, dim);
-		cout << "Verification result = " << verify << endl;
+		std::cout << "Verification result = " << verify << std::endl;
 	}
 	//PrintTimings();
 
@@ -129,7 +131,7 @@ int32_t test_min_eucliden_dist_circuit(e_role role, char* address, uint16_t port
 
 //Build_
 share* build_min_euclidean_dist_circuit(share*** S, share** C, uint32_t n, uint32_t d, share** Ssqr, share* Csqr,
-		Circuit* distcirc, BooleanCircuit* mincirc, vector<Sharing*>& sharings, e_sharing minsharing) {
+		Circuit* distcirc, BooleanCircuit* mincirc, std::vector<Sharing*>& sharings, e_sharing minsharing) {
 	share **distance, *temp, *mindist;
 	uint32_t i, j;
 

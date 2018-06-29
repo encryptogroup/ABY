@@ -38,7 +38,7 @@ int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl s
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads,
 			mt_alg, 4000000);
 
-	vector<Sharing*>& sharings = party->GetSharings();
+	std::vector<Sharing*>& sharings = party->GetSharings();
 
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[sharing]->GetCircuitBuildRoutine();
 	assert(circ->GetCircuitType() == C_BOOLEAN);
@@ -63,7 +63,7 @@ int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl s
 	//sample fixed server and client sets (is faster than random sets for larger sets)
 	set_fixed_elements(server_neles, client_neles, bitlen, srv_set, cli_set);
 	/*for(uint32_t i = 0; i < neles; i++) {
-		cout << i << ": " << srv_set[i] << " , " << cli_set[i] << endl;
+		std::cout << i << ": " << srv_set[i] << " , " << cli_set[i] << std::endl;
 	}*/
 
 	//map the random elements to a set of bins using simple hashing or to a cuckoo table
@@ -74,7 +74,7 @@ int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl s
 
 #ifndef BATCH
 	if(role == SERVER) {
-		cout << "Time for simple hashing: " << getMillies(t_start, t_end) << endl;
+		std::cout << "Time for simple hashing: " << getMillies(t_start, t_end) << std::endl;
 	}
 #endif
 
@@ -84,12 +84,12 @@ int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl s
 
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
 
-	//cout << "Computing the intersection between " << server_neles << " and " << client_neles << " elements with " << nbins <<
-	//		" bins, " << nhashfuns << " hash functions, a stash of size " << maxstashsize << ", and maxbin = " << maxbinsize << endl;
+	//std::cout << "Computing the intersection between " << server_neles << " and " << client_neles << " elements with " << nbins <<
+	//		" bins, " << nhashfuns << " hash functions, a stash of size " << maxstashsize << ", and maxbin = " << maxbinsize << std::endl;
 
 #ifndef BATCH
 	if(role == CLIENT) {
-		cout << "Time for cuckoo hashing: " << getMillies(t_start, t_end) << endl;
+		std::cout << "Time for cuckoo hashing: " << getMillies(t_start, t_end) << std::endl;
 	}
 #endif
 
@@ -135,31 +135,31 @@ int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl s
 	if(role == CLIENT) {
 		uint8_t* output = shr_out->get_clear_value_ptr();
 
-		//cout << "Result: " << (hex) << endl;
+		//std::cout << "Result: " << (hex) << std::endl;
 		for(uint32_t i = 0; i < nbins; i++) {
 			if(output[i] != 0) {
 				memcpy((uint8_t*) (circ_intersect+circ_inter_ctr), (uint8_t*) (cli_set+inv_perm[i]), sizeof(uint32_t));
-				//cout << "Bin " << i << " holds an intersecting element: " << (hex) <<
-					//circ_intersect[circ_inter_ctr] << (dec) << " (" << inv_perm[i] << ")" << endl;
+				//std::cout << "Bin " << i << " holds an intersecting element: " << (hex) <<
+					//circ_intersect[circ_inter_ctr] << (dec) << " (" << inv_perm[i] << ")" << std::endl;
 				circ_inter_ctr++;
 			}
-			//cout << setw(2) << setfill('0') << (uint32_t) output[i];
+			//std::cout << setw(2) << setfill('0') << (uint32_t) output[i];
 		}
 
 		uint32_t outstash= shr_stash_out->get_clear_value<uint32_t>();
 		for(uint32_t i = 0; i < maxstashsize; i++) {
 			if(((outstash>>i) & 0x01) != 0) {
 				memcpy((uint8_t*) (circ_intersect+circ_inter_ctr), (uint8_t*) (cli_set+stashperm[i]), sizeof(uint32_t));
-				//cout << "stash pos " << i << " holds an intersecting element: " << (hex) <<
-				//	circ_intersect[circ_inter_ctr] << (dec) << " (" << inv_perm[i] << ")" << endl;
+				//std::cout << "stash pos " << i << " holds an intersecting element: " << (hex) <<
+				//	circ_intersect[circ_inter_ctr] << (dec) << " (" << inv_perm[i] << ")" << std::endl;
 				circ_inter_ctr++;
 			}
-			//cout << setw(2) << setfill('0') << (uint32_t) output[i];
+			//std::cout << setw(2) << setfill('0') << (uint32_t) output[i];
 		}
 
-		/*cout << "Server and client input for bitlen = " << bitlen << ": " << endl;
+		/*std::cout << "Server and client input for bitlen = " << bitlen << ": " << std::endl;
 		for(uint32_t i = 0; i < neles; i++) {
-			cout << (hex) << setw(2) << setfill('0') << srv_set[i] << ", " << setw(2) << setfill('0') << cli_set[i] << (dec) << endl;
+			std::cout << (hex) << setw(2) << setfill('0') << srv_set[i] << ", " << setw(2) << setfill('0') << cli_set[i] << (dec) << std::endl;
 		}*/
 		std::sort(srv_set, srv_set+server_neles);
 		std::sort(cli_set, cli_set+client_neles);
@@ -168,21 +168,21 @@ int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl s
 		std::set_intersection (srv_set, srv_set + server_neles, cli_set, cli_set + client_neles, ver_intersect);
 		for(ver_inter_ctr = 0; ver_intersect[ver_inter_ctr] > 0; ver_inter_ctr++) {
 			//if(ver_temp[i] > 0)
-				//cout << ver_inter_ctr << (hex) << ": " << ver_intersect[ver_inter_ctr] <<(dec)<< endl;
+				//std::cout << ver_inter_ctr << (hex) << ": " << ver_intersect[ver_inter_ctr] <<(dec)<< std::endl;
 		}
 
 		std::sort(ver_intersect, ver_intersect+ver_inter_ctr);
 		std::sort(circ_intersect, circ_intersect+circ_inter_ctr);
 #ifndef BATCH
-		cout << "Number of intersections: " << ver_inter_ctr << " (ver), " << circ_inter_ctr <<
-				" (circ), with a stash of size " << maxstashsize << endl;
+		std::cout << "Number of intersections: " << ver_inter_ctr << " (ver), " << circ_inter_ctr <<
+				" (circ), with a stash of size " << maxstashsize << std::endl;
 #endif
 
 		/*for(uint32_t i = 0; i < ver_inter_ctr; i++) {
-			cout << "Verification " << i << ": " << (hex) << ver_intersect[i] << (dec) << endl;
+			std::cout << "Verification " << i << ": " << (hex) << ver_intersect[i] << (dec) << std::endl;
 		}
 		for(uint32_t i = 0; i < circ_inter_ctr; i++) {
-			cout << "Circuit " << i << ": " << (hex) << circ_intersect[i] << (dec) << endl;
+			std::cout << "Circuit " << i << ": " << (hex) << circ_intersect[i] << (dec) << std::endl;
 		}*/
 		assert(circ_inter_ctr == ver_inter_ctr);
 		for(uint32_t i = 0; i < circ_inter_ctr; i++) {
@@ -191,8 +191,8 @@ int32_t test_phasing_circuit(e_role role, char* address, uint16_t port, seclvl s
 	}
 
 #ifdef BATCH
-	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL)+party->GetTiming(P_BASE_OT)  <<
-			"\t" << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) <<endl;
+	std::cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL)+party->GetTiming(P_BASE_OT)  <<
+			"\t" << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) <<std::endl;
 #endif
 
 	tmpset.delCBitVector();
@@ -279,7 +279,7 @@ share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint3
 	share* out = new boolshare(maxstashsize, circ);
 	share *eq, *eqa, *eqb;
 	uint32_t xoreq, *posa, *posb, tmpneles;
-	vector<uint32_t> odd_stash;
+	std::vector<uint32_t> odd_stash;
 
 	uint32_t* ids = (uint32_t*) malloc(sizeof(uint32_t) * neles);
 	for(uint32_t i = 0; i < neles; i++) {
@@ -334,12 +334,12 @@ void ServerHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen,
 	*hash_table = (uint8_t*) malloc(outbytelen * nbins * *maxbinsize);
 	pad_elements(tmphashtable, outbytelen, nbins, nelesinbin, *maxbinsize, *hash_table, server_dummy);
 
-	/*cout << "Server bins: " << endl;
+	/*std::cout << "Server bins: " << std::endl;
 	for(uint32_t i = 0, ctr=0; i < nbins; i++) {
-		cout << "Bin " << i << ": ";
+		std::cout << "Bin " << i << ": ";
 		for(uint32_t j = 0; j < *maxbinsize; j++, ctr++)
-			cout << ((uint32_t*)*hash_table)[ctr] << ", ";
-		cout << endl;
+			std::cout << ((uint32_t*)*hash_table)[ctr] << ", ";
+		std::cout << std::endl;
 	}*/
 
 	crypt->free_prf_state(&prf_state);
@@ -364,9 +364,9 @@ void ClientHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen,
 	*hash_table = cuckoo_hashing(elements, neles, nbins, elebitlen, outbitlen, nelesinbin,
 			perm, ntasks, stash, maxstashsize, stashperm, nhashfuns, &prf_state);
 
-	/*cout << "Client bins: " << endl;
+	/*std::cout << "Client bins: " << std::endl;
 	for(uint32_t i = 0; i < nbins; i++) {
-		cout << "Bin " << i << ": " << ((uint32_t*)*hash_table)[i] << endl;
+		std::cout << "Bin " << i << ": " << ((uint32_t*)*hash_table)[i] << std::endl;
 	}*/
 
 	for(uint32_t i = 0, ctr = 0; i < nbins; i++) {
@@ -386,17 +386,17 @@ void pad_elements(uint8_t* hash_table, uint32_t elebytelen, uint32_t nbins, uint
 	uint8_t* htptr = hash_table;
 	uint8_t* phtptr = padded_hash_table;
 
-	/*cout << "Input hash table: " << endl;
+	/*std::cout << "Input hash table: " << std::endl;
 	for(uint32_t i = 0, ctr=0; i < nbins; i++) {
-		cout << i << ": ";
+		std::cout << i << ": ";
 		for(uint32_t k = 0; k < nelesinbin[i]; k++) {
-			cout << k << " ";
+			std::cout << k << " ";
 			for(uint32_t j = 0; j < elebytelen; j++, ctr++) {
-				cout << (hex) << setw(2) << setfill('0') << (uint32_t) hash_table[ctr];
+				std::cout << (hex) << setw(2) << setfill('0') << (uint32_t) hash_table[ctr];
 			}
-			cout << "; ";
+			std::cout << "; ";
 		}
-		cout << (dec) << endl;
+		std::cout << (dec) << std::endl;
 	}*/
 
 	for(uint32_t i = 0; i < nbins; i++) {
@@ -412,17 +412,17 @@ void pad_elements(uint8_t* hash_table, uint32_t elebytelen, uint32_t nbins, uint
 	}
 
 
-	/*cout << "Padded hash table: " << endl;
+	/*std::cout << "Padded hash table: " << std::endl;
 	for(uint32_t i = 0; i < nbins; i++) {
-		cout << i << ": ";
+		std::cout << i << ": ";
 		for(uint32_t k = 0; k < maxbinsize; k++) {
-			cout << k << " ";
+			std::cout << k << " ";
 			for(uint32_t j = 0; j < elebytelen; j++) {
-				cout << (hex) << setw(2) << setfill('0') << (uint32_t) padded_hash_table[(i * maxbinsize + k) * elebytelen + j];
+				std::cout << (hex) << setw(2) << setfill('0') << (uint32_t) padded_hash_table[(i * maxbinsize + k) * elebytelen + j];
 			}
-			cout << "; ";
+			std::cout << "; ";
 		}
-		cout << (dec) << endl;
+		std::cout << (dec) << std::endl;
 	}*/
 }
 

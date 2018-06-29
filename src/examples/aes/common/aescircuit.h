@@ -135,14 +135,14 @@ static uint32_t* pos_odd;
 void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t* out, crypto* crypt);
 int32_t test_aes_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose = false, bool use_vec_ands=false);
 share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ, bool use_vec_ands=false);
-vector<uint32_t> AddAESRoundKey(vector<uint32_t>& val, vector<uint32_t> key, uint32_t keyaddr, BooleanCircuit* circ);
-vector<uint32_t> Mul2(vector<uint32_t>& element, BooleanCircuit* circ);
-vector<vector<uint32_t> > PutAESMixColumnGate(vector<vector<uint32_t> >& rows, BooleanCircuit* circ);
-vector<uint32_t> PutAESSBoxGate(vector<uint32_t> input, BooleanCircuit* circ, bool use_vec_ands);
-vector<uint32_t> AESSBox_Forward_BP_Depth_Optimized(vector<uint32_t> input, BooleanCircuit* circ);
-vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(vector<uint32_t> input, BooleanCircuit* circ);
-vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(vector<uint32_t> input, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
-vector<uint32_t> AESSBox_Forward_SPLUT(vector<uint32_t> input, BooleanCircuit* circ);
-vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
+std::vector<uint32_t> AddAESRoundKey(std::vector<uint32_t>& val, std::vector<uint32_t> key, uint32_t keyaddr, BooleanCircuit* circ);
+std::vector<uint32_t> Mul2(std::vector<uint32_t>& element, BooleanCircuit* circ);
+std::vector<std::vector<uint32_t> > PutAESMixColumnGate(std::vector<std::vector<uint32_t> >& rows, BooleanCircuit* circ);
+std::vector<uint32_t> PutAESSBoxGate(std::vector<uint32_t> input, BooleanCircuit* circ, bool use_vec_ands);
+std::vector<uint32_t> AESSBox_Forward_BP_Depth_Optimized(std::vector<uint32_t> input, BooleanCircuit* circ);
+std::vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(std::vector<uint32_t> input, BooleanCircuit* circ);
+std::vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(std::vector<uint32_t> input, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
+std::vector<uint32_t> AESSBox_Forward_SPLUT(std::vector<uint32_t> input, BooleanCircuit* circ);
+std::vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
 
 #endif /* __AESCIRCUIT_H_ */

@@ -25,7 +25,7 @@ ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg
 	m_eMTGenAlg = mtalgo;
 
 	if (!Init()) {
-		cerr << "Error in ABYSetup init" << endl;
+		std::cerr << "Error in ABYSetup init" << std::endl;
 		exit(0);
 	}
 }
@@ -51,12 +51,12 @@ BOOL ABYSetup::Init() {
 	//the bit length of the DJN and DGK party is irrelevant here, since it is set for each MT Gen task independently
 	if (m_eMTGenAlg == MT_PAILLIER) {
 #ifndef BATCH
-		cout << "Creating new DJNPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << endl;
+		std::cout << "Creating new DJNPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << std::endl;
 #endif
 		m_cPaillierMTGen = new DJNParty(m_cCrypt->get_seclvl().ifcbits, sizeof(UINT16_T) * 8);
 	} else if (m_eMTGenAlg == MT_DGK) {
 #ifndef BATCH
-		cout << "Creating new DGKPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << endl;
+		std::cout << "Creating new DGKPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << std::endl;
 #endif
 #ifdef BENCH_PRECOMP
 		m_cDGKMTGen = (DGKParty**) malloc(sizeof(DGKParty*));
@@ -119,7 +119,7 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 			m_tSetupChan->blocking_receive(&dummyrcv, (uint64_t) 1);
 		}
 		clock_gettime(CLOCK_MONOTONIC, &end);
-		cout << "RTT: " << getMillies(start, end) / benchrounds << " ms" << endl;
+		std::cout << "RTT: " << getMillies(start, end) / benchrounds << " ms" << std::endl;
 
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		for (uint32_t round = 0; round < benchrounds; round++) {
@@ -128,7 +128,7 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		}
 
 		clock_gettime(CLOCK_MONOTONIC, &end);
-		cout << "Throughput: " << 2 * (tmparraysize >> 20) * benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << endl;
+		std::cout << "Throughput: " << 2 * (tmparraysize >> 20) * benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << std::endl;
 		delete[] benchtmp;
 #endif
 
@@ -152,7 +152,7 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 			m_tSetupChan->send(&dummyrcv, (uint64_t) 1);
 		}
 		clock_gettime(CLOCK_MONOTONIC, &end);
-		cout << "RTT: " << getMillies(start, end) / benchrounds << " ms" << endl;
+		std::cout << "RTT: " << getMillies(start, end) / benchrounds << " ms" << std::endl;
 
 		clock_gettime(CLOCK_MONOTONIC, &start);
 		for (uint32_t round = 0; round < benchrounds; round++) {
@@ -161,7 +161,7 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		}
 
 		clock_gettime(CLOCK_MONOTONIC, &end);
-		cout << "Throughput: " << 2 * (tmparraysize>>20)*benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << endl;
+		std::cout << "Throughput: " << 2 * (tmparraysize>>20)*benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << std::endl;
 				delete benchtmp;
 #endif
 		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std,
@@ -262,14 +262,14 @@ BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
 		X[1] = (task->pval.sndval.X1);
 
 #ifndef BATCH
-		cout << "Starting OT sender routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
+		std::cout << "Starting OT sender routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << std::endl;
 #endif
 		success &= iknp_ot_sender->send(numOTs, task->bitlen, nsndvals, X, task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP
-		cout << "OT sender results for bitlen = " << task->bitlen << ": " << endl;
-		cout << "X0: ";
+		std::cout << "OT sender results for bitlen = " << task->bitlen << ": " << std::endl;
+		std::cout << "X0: ";
 		task->pval.sndval.X0->PrintHex();
-		cout << "X1: ";
+		std::cout << "X1: ";
 		task->pval.sndval.X1->PrintHex();
 #endif
 		if(task->delete_mskfct)	{
@@ -295,14 +295,14 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 		uint32_t numOTs = task->numOTs;
 
 #ifndef BATCH
-		cout << "Starting OT receiver routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
+		std::cout << "Starting OT receiver routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << std::endl;
 #endif
 		success = iknp_ot_receiver->receive(numOTs, task->bitlen, nsndvals, (task->pval.rcvval.C), (task->pval.rcvval.R), task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP
-		cout << "OT receiver results for bitlen = " << task->bitlen << ": " << endl;
-		cout << "C: ";
+		std::cout << "OT receiver results for bitlen = " << task->bitlen << ": " << std::endl;
+		std::cout << "C: ";
 		task->pval.rcvval.C->PrintBinary();
-		cout << "R: ";
+		std::cout << "R: ";
 		task->pval.rcvval.R->PrintHex();
 #endif
 		if(task->delete_mskfct)	{
@@ -327,20 +327,20 @@ BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
 		uint32_t numOTs = task->numOTs;
 		CBitVector** X = task->pval.sndval.X;
 
-		/*cout << "Address of X = " << (uint64_t) X << endl;
+		/*std::cout << "Address of X = " << (uint64_t) X << std::endl;
 		for(uint32_t j = 0; j < task->nsndvals; j++) {
-			cout << (uint64_t) X[j] << endl;
+			std::cout << (uint64_t) X[j] << std::endl;
 		}*/
 
 
 #ifndef BATCH
-		cout << "Starting 1oo" << task->nsndvals << " KK OT sender routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
+		std::cout << "Starting 1oo" << task->nsndvals << " KK OT sender routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << std::endl;
 #endif
 		success &= kk_ot_sender->send(numOTs, task->bitlen, task->nsndvals, X, task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP
-		cout << "OT sender results for bitlen = " << task->bitlen << ": " << endl;
+		std::cout << "OT sender results for bitlen = " << task->bitlen << ": " << std::endl;
 		for(uint32_t j = 0; j < task->nsndvals; j++) {
-			cout << "X" << j << ": ";
+			std::cout << "X" << j << ": ";
 			X[j]->PrintHex();
 		}
 #endif
@@ -366,14 +366,14 @@ BOOL ABYSetup::ThreadRunKKRcv(uint32_t exec) {
 		uint32_t numOTs = task->numOTs;
 
 #ifndef BATCH
-		cout << "Starting 1oo" << task->nsndvals << " KK OT receiver routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << endl;
+		std::cout << "Starting 1oo" << task->nsndvals << " KK OT receiver routine for " << numOTs << " OTs on " << task->bitlen << " bit strings " << std::endl;
 #endif
 		success = kk_ot_receiver->receive(numOTs, task->bitlen, task->nsndvals, (task->pval.rcvval.C), (task->pval.rcvval.R), task->snd_flavor, task->rec_flavor, m_nNumOTThreads, task->mskfct);
 #ifdef DEBUGSETUP
-		cout << "OT receiver results for bitlen = " << task->bitlen << ": " << endl;
-		cout << "C: ";
+		std::cout << "OT receiver results for bitlen = " << task->bitlen << ": " << std::endl;
+		std::cout << "C: ";
 		task->pval.rcvval.C->PrintBinary();
-		cout << "R: ";
+		std::cout << "R: ";
 		task->pval.rcvval.R->PrintHex();
 #endif
 		if(task->delete_mskfct)	{
@@ -580,7 +580,7 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 		case e_Transmit:
 		case e_Undefined:
 		default:
-			cerr << "Error: Undefined / unimplemented OT Job!" << endl;
+			std::cerr << "Error: Undefined / unimplemented OT Job!" << std::endl;
 		}
 		m_pCallback->ThreadNotifyTaskDone(bSuccess);
 	}

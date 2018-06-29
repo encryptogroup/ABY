@@ -21,8 +21,11 @@
 
 #include "sharing.h"
 #include <algorithm>
+#include <map>
+#include <vector>
 #include "../circuit/booleancircuits.h"
 #include "../ENCRYPTO_utils/fileops.h"
+#include "../ENCRYPTO_utils/cbitvector.h"
 
 //#define DEBUGBOOL
 //#define BENCHBOOLTIME
@@ -74,7 +77,7 @@ public:
 
 	inline void InstantiateGate(GATE* gate);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize);
+	void GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize);
 	void GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes);
 
 	void EvaluateSIMDGate(uint32_t gateid);

@@ -224,7 +224,7 @@ private:
 		EJobType m_eJob;
 	};
 
-	vector<CWorkerThread*> m_vThreads;
+	std::vector<CWorkerThread*> m_vThreads;
 	CEvent m_evt;
 	CLock m_lock;
 

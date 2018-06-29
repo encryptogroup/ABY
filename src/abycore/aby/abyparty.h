@@ -120,7 +120,7 @@ private:
 	// Input values
 	CBitVector m_vInputBits;
 
-	vector<Sharing*> m_vSharings;
+	std::vector<Sharing*> m_vSharings;
 
 	crypto* m_cCrypt;
 	CLock *glock;

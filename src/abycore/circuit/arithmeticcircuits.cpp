@@ -17,8 +17,9 @@
  */
 
 #include "arithmeticcircuits.h"
+#include <cstring>
 
-using namespace std;
+
 void ArithmeticCircuit::Init() {
 	m_nMULs = 0;
 	m_nCONVGates = 0;
@@ -30,7 +31,7 @@ void ArithmeticCircuit::Init() {
 		m_nRoundsOUT.resize(3, 1);
 	} else { //m_tContext == S_YAO
 		//unknown
-		cerr << "Sharing type not implemented with arithmetic circuits" << endl;
+		std::cerr << "Sharing type not implemented with arithmetic circuits" << std::endl;
 		exit(0);
 	}
 }
@@ -101,7 +102,7 @@ uint32_t ArithmeticCircuit::PutINGate(e_role src) {
 		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	default:
-		cerr << "Role not recognized" << endl;
+		std::cerr << "Role not recognized" << std::endl;
 		break;
 	}
 
@@ -133,7 +134,7 @@ uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t ninvals, e_role src) {
 		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	default:
-		cerr << "Role not recognized" << endl;
+		std::cerr << "Role not recognized" << std::endl;
 		break;
 	}
 
@@ -149,12 +150,12 @@ uint32_t ArithmeticCircuit::PutSharedSIMDINGate(uint32_t ninvals) {
 
 
 share* ArithmeticCircuit::PutDummyINGate(uint32_t bitlen) {
-	vector<uint32_t> wires(1);
+	std::vector<uint32_t> wires(1);
 	wires[0] = PutINGate((e_role) !m_eMyRole);
 	return new arithshare(wires, this);
 }
 share* ArithmeticCircuit::PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen) {
-	vector<uint32_t> wires(1);
+	std::vector<uint32_t> wires(1);
 	wires[0] = PutSIMDINGate(nvals, (e_role) !m_eMyRole);
 	return new arithshare(wires, this);
 }
@@ -272,7 +273,7 @@ uint32_t ArithmeticCircuit::PutOUTGate(uint32_t parentid, e_role dst) {
 		m_vOutputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	default:
-		cerr << "Role not recognized" << endl;
+		std::cerr << "Role not recognized" << std::endl;
 		break;
 	}
 
@@ -288,8 +289,8 @@ share* ArithmeticCircuit::PutOUTGate(share* parent, e_role dst) {
 	return shr;
 }
 
-vector<uint32_t> ArithmeticCircuit::PutSharedOUTGate(vector<uint32_t> parentids) {
-	vector<uint32_t> out = m_cCircuit->PutSharedOUTGate(parentids);
+std::vector<uint32_t> ArithmeticCircuit::PutSharedOUTGate(std::vector<uint32_t> parentids) {
+	std::vector<uint32_t> out = m_cCircuit->PutSharedOUTGate(parentids);
 	for(uint32_t i = 0; i < out.size(); i++) {
 		UpdateLocalQueue(out[i]);
 	}
@@ -308,7 +309,7 @@ uint32_t ArithmeticCircuit::PutINVGate(uint32_t parentid) {
 	return gateid;
 }
 
-uint32_t ArithmeticCircuit::PutCONVGate(vector<uint32_t> parentids) {
+uint32_t ArithmeticCircuit::PutCONVGate(std::vector<uint32_t> parentids) {
 	uint32_t gateid = m_cCircuit->PutCONVGate(parentids, 2, S_ARITH, m_nShareBitLen);
 	UpdateInteractiveQueue(gateid);
 	m_nCONVGates += m_pGates[gateid].nvals;
@@ -318,20 +319,20 @@ uint32_t ArithmeticCircuit::PutCONVGate(vector<uint32_t> parentids) {
 //TODO: use bitlen in PutConstantGate
 share* ArithmeticCircuit::PutCONSGate(UGATE_T val, uint32_t bitlen) {
 	assert(bitlen <= m_nShareBitLen);
-	vector<uint32_t> gateid(1);
+	std::vector<uint32_t> gateid(1);
 	gateid[0] = PutConstantGate(val, 1);
 	return new arithshare(gateid, this);
 }
 
 share* ArithmeticCircuit::PutSIMDCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen) {
 	assert(bitlen <= m_nShareBitLen);
-	vector<uint32_t> gateid(1);
+	std::vector<uint32_t> gateid(1);
 	gateid[0] = PutConstantGate(val, nvals);
 	return new arithshare(gateid, this);
 }
 
 share* ArithmeticCircuit::PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals) {
-	vector<uint32_t> gateid(1);
+	std::vector<uint32_t> gateid(1);
 	gateid[0] = m_cCircuit->PutCallbackGate(in->get_wires(), rounds, callback, infos, nvals);
 	if(rounds > 0) {
 		UpdateInteractiveQueue(gateid[0]);
@@ -342,38 +343,38 @@ share* ArithmeticCircuit::PutCallbackGate(share* in, uint32_t rounds, void (*cal
 }
 
 share* ArithmeticCircuit::PutTruthTableGate(share* in, uint64_t* ttable) {
-	cerr << "PutTruthTableGate not implemented in ArithmeticCircuit!!" << endl;
+	std::cerr << "PutTruthTableGate not implemented in ArithmeticCircuit!!" << std::endl;
 	return NULL;
 }
 
 share* ArithmeticCircuit::PutTruthTableMultiOutputGate(share* in, uint32_t out_bits, uint64_t* ttable) {
-	cerr << "PutTruthTableMultiOutputGate not implemented in ArithmeticCircuit!!" << endl;
+	std::cerr << "PutTruthTableMultiOutputGate not implemented in ArithmeticCircuit!!" << std::endl;
 	return NULL;
 }
 
 
 share* ArithmeticCircuit::PutCONSGate(uint8_t* val, uint32_t bitlen) {
 	//TODO
-	cerr << "Not implemented yet!" << endl;
+	std::cerr << "Not implemented yet!" << std::endl;
 	return NULL; //new arithshare(0, this);
 }
 
 share* ArithmeticCircuit::PutSIMDCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) {
 	//TODO
-	cerr << "Not implemented yet!" << endl;
+	std::cerr << "Not implemented yet!" << std::endl;
 	return NULL; //new arithshare(0, this);
 }
 
 
 share* ArithmeticCircuit::PutCONSGate(uint32_t* val, uint32_t bitlen) {
 	//TODO
-	cerr << "Not implemented yet!" << endl;
+	std::cerr << "Not implemented yet!" << std::endl;
 	return NULL; //new arithshare(0, this);
 }
 
 share* ArithmeticCircuit::PutSIMDCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) {
 	//TODO
-	cerr << "Not implemented yet!" << endl;
+	std::cerr << "Not implemented yet!" << std::endl;
 	return NULL; //new arithshare(0, this);
 }
 
@@ -384,7 +385,7 @@ uint32_t ArithmeticCircuit::PutConstantGate(UGATE_T val, uint32_t nvals) {
 	return gateid;
 }
 
-uint32_t ArithmeticCircuit::PutB2AGate(vector<uint32_t> ina) {
+uint32_t ArithmeticCircuit::PutB2AGate(std::vector<uint32_t> ina) {
 	return PutCONVGate(ina);
 }
 

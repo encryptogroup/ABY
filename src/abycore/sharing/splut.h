@@ -21,6 +21,8 @@
 
 #include "sharing.h"
 #include <algorithm>
+#include <vector>
+#include "../ENCRYPTO_utils/cbitvector.h"
 #include "../ENCRYPTO_utils/timer.h"
 #include "../circuit/booleancircuits.h"
 

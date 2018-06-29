@@ -21,7 +21,6 @@
 #include <math.h>
 #include "../ENCRYPTO_utils/typedefs.h"
 #include "../ABY_utils/ABYconstants.h"
-#include <iostream>
 #include <string>
 #include <vector>
 #include <fstream>
