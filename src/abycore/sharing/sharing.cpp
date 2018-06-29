@@ -16,8 +16,8 @@
  \brief		Sharing class implementation.
  */
 #include "sharing.h"
-
-using namespace std;
+#include <iostream>
+#include <iomanip>
 
 void Sharing::EvaluateCallbackGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
@@ -59,7 +59,7 @@ void Sharing::PreCompFileDelete() {
 		else {
 			truncation_size = FileSize(filename) - m_nFilePos;
 			if(truncate(filename, truncation_size))
-                        cout << "Error occured in truncate" << endl;
+                        std::cout << "Error occured in truncate" << std::endl;
 		}
 	}
 }
@@ -108,7 +108,7 @@ UGATE_T* Sharing::ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t
 			}
 			break;
 		default:
-			cerr << "Gate type in printer gate not recognized. Stopping" << endl;
+			std::cerr << "Gate type in printer gate not recognized. Stopping" << std::endl;
 			exit(0);
 	}
 
@@ -130,8 +130,8 @@ void Sharing::EvaluateAssertGate(uint32_t gateid, e_circuit circ_type) {
 	//check gate value against reference
 	for(uint32_t i = 0; i < ugate_len; i++) {
 		if(m_pGates[gateid].gs.assertval[i] != value[i]) {
-			cout << "Data in Assert gate is not matching for nval = " << i << ": Circuit " << value[i] <<
-					" vs. Reference " << m_pGates[gateid].gs.assertval[i] << endl;
+			std::cout << "Data in Assert gate is not matching for nval = " << i << ": Circuit " << value[i] <<
+					" vs. Reference " << m_pGates[gateid].gs.assertval[i] << std::endl;
 		}
 		assert(m_pGates[gateid].gs.assertval[i] == value[i]);
 	}
@@ -156,29 +156,29 @@ void Sharing::EvaluatePrintValGate(uint32_t gateid, e_circuit circ_type) {
 	//print the resulting value depending on its bitlength and nvals
 	if(bitlen <= 64) {//for bitlen <= 64 print numbers
 		if(nvals == 1) { //for non-SIMD wires a different format is used
-			cout << m_pGates[gateid].gs.infostr << ": " << value[0] << endl;
+			std::cout << m_pGates[gateid].gs.infostr << ": " << value[0] << std::endl;
 		} else {
-			cout << m_pGates[gateid].gs.infostr << ": ";
+			std::cout << m_pGates[gateid].gs.infostr << ": ";
 			for(uint32_t i = 0; i < nvals; i++) {
-				cout << "[" << i << "]: " << value[i] << "; ";//endl;
+				std::cout << "[" << i << "]: " << value[i] << "; ";//std::endl;
 			}
-			cout << endl;
+			std::cout << std::endl;
 		}
 	} else {// for bitlen > 64 print hex values
 		if(nvals == 1) { //for non-SIMD wires a different format is used
-			cout << m_pGates[gateid].gs.infostr << ": ";
+			std::cout << m_pGates[gateid].gs.infostr << ": ";
 			for(uint32_t i = 0; i < ceil_divide(bitlen, 8); i++) {
-				cout << setw(2) << setfill('0') << (hex) << (uint32_t) ((uint8_t*) value)[i] << (dec);
+				std::cout << std::setw(2) << std::setfill('0') << (std::hex) << (uint32_t) ((uint8_t*) value)[i] << (std::dec);
 			}
-			cout << endl;
+			std::cout << std::endl;
 		} else {
-			cout << m_pGates[gateid].gs.infostr << ": " << endl;
+			std::cout << m_pGates[gateid].gs.infostr << ": " << std::endl;
 			for(uint32_t i = 0; i < nvals; i++) {
-				cout << "[" << i << "]: ";
+				std::cout << "[" << i << "]: ";
 				for(uint32_t j = 0; j < ceil_divide(bitlen, 8); j++) {
-					cout << (hex) << (uint32_t) ((uint8_t*) value)[i * ceil_divide(bitlen, 8) + j] << (dec);
+					std::cout << (std::hex) << (uint32_t) ((uint8_t*) value)[i * ceil_divide(bitlen, 8) + j] << (std::dec);
 				}
-				cout << endl;
+				std::cout << std::endl;
 			}
 		}
 	}

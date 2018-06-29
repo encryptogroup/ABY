@@ -18,10 +18,6 @@
 
 #include "yaoserversharing.h"
 
-using std::vector;
-using std::cout;
-using std::endl;
-
 void YaoServerSharing::InitServer() {
 
 	//Allocate memory that is needed when generating the garbled tables
@@ -96,9 +92,9 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 	m_vR.SetBit(symbits - 1, 1);
 
 #ifdef DEBUGYAOSERVER
-	cout << "Secret key generated: ";
+	std::cout << "Secret key generated: ";
 	PrintKey(m_vR.GetArr());
-	cout << endl;
+	std::cout << std::endl;
 #endif
 
 	m_vROTMasks.resize(2);
@@ -110,9 +106,9 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 	//CreateRandomWireKeys(m_vConversionInputKeys, m_nConversionInputBits);
 
 #ifdef DEBUGYAOSERVER
-	cout << "Server input keys: ";
+	std::cout << "Server input keys: ";
 	m_vServerInputKeys.PrintHex();
-	cout << "Client input keys: ";
+	std::cout << "Client input keys: ";
 	m_vClientInputKeys.PrintHex();
 #endif
 
@@ -130,7 +126,7 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 			sizeof(e_role) * (m_cBoolCircuit->GetOutputGatesForParty(CLIENT).size()
 					+ m_cBoolCircuit->GetOutputGatesForParty(SERVER).size()));
 	m_nOutputDestionationsCtr = 0;
-	//deque<uint32_t> out = m_cBoolCircuit->GetOutputGatesForParty(CLIENT);
+	//std::deque<uint32_t> out = m_cBoolCircuit->GetOutputGatesForParty(CLIENT);
 
 	IKNP_OTTask* task = (IKNP_OTTask*) malloc(sizeof(IKNP_OTTask));
 	task->bitlen = symbits;
@@ -165,7 +161,7 @@ void YaoServerSharing::FinishSetupPhase(ABYSetup* setup) {
 
 	//Reset input gates since they were instantiated before
 	//TODO: Change execution
-	deque<uint32_t> insrvgates = m_cBoolCircuit->GetInputGatesForParty(SERVER);
+	std::deque<uint32_t> insrvgates = m_cBoolCircuit->GetInputGatesForParty(SERVER);
 	for (uint32_t i = 0; i < insrvgates.size(); i++) {
 		m_pGates[insrvgates[i]].gs.ishare.src = SERVER;
 	}
@@ -182,7 +178,7 @@ void YaoServerSharing::FinishSetupPhase(ABYSetup* setup) {
 	}
 	m_vPreSetA2YPositions.clear();
 
-	deque<uint32_t> incligates = m_cBoolCircuit->GetInputGatesForParty(CLIENT);
+	std::deque<uint32_t> incligates = m_cBoolCircuit->GetInputGatesForParty(CLIENT);
 	for (uint32_t i = 0; i < incligates.size(); i++) {
 		m_pGates[incligates[i]].gs.ishare.src = CLIENT;
 	}
@@ -190,15 +186,15 @@ void YaoServerSharing::FinishSetupPhase(ABYSetup* setup) {
 
 
 #ifdef DEBUGYAOSERVER
-	cout << "Resulting X0 from OT: ";
+	std::cout << "Resulting X0 from OT: ";
 	m_vROTMasks[0].PrintHex();
-	cout << "Resulting X1 from OT: ";
+	std::cout << "Resulting X1 from OT: ";
 	m_vROTMasks[1].PrintHex();
 #endif
 }
 void YaoServerSharing::EvaluateLocalOperations(uint32_t depth) {
 	//only evalute the PRINT_VAL operation for debugging, all other work was pre-computed
-	deque<uint32_t> localqueue = m_cBoolCircuit->GetLocalQueueOnLvl(depth);
+	std::deque<uint32_t> localqueue = m_cBoolCircuit->GetLocalQueueOnLvl(depth);
 	GATE* gate;
 	for (uint32_t i = 0; i < localqueue.size(); i++) {
 		gate = m_pGates + localqueue[i];
@@ -213,14 +209,14 @@ void YaoServerSharing::EvaluateLocalOperations(uint32_t depth) {
 }
 
 void YaoServerSharing::EvaluateInteractiveOperations(uint32_t depth) {
-	deque<uint32_t> interactivequeue = m_cBoolCircuit->GetInteractiveQueueOnLvl(depth);
+	std::deque<uint32_t> interactivequeue = m_cBoolCircuit->GetInteractiveQueueOnLvl(depth);
 	GATE *gate, *parent;
 	e_role dst;
 
 	for (uint32_t i = 0; i < interactivequeue.size(); i++) {
 		gate = m_pGates + interactivequeue[i];
 #ifdef DEBUGYAOSERVER
-		cout << "Evaluating gate with id = " << interactivequeue[i] << ", and type = "<< get_gate_type_name(gate->type) << ", and depth = " << gate->depth << endl;
+		std::cout << "Evaluating gate with id = " << interactivequeue[i] << ", and type = "<< get_gate_type_name(gate->type) << ", and depth = " << gate->depth << std::endl;
 #endif
 		switch (gate->type) {
 		case G_IN:
@@ -251,7 +247,7 @@ void YaoServerSharing::EvaluateInteractiveOperations(uint32_t depth) {
 			EvaluateCallbackGate(interactivequeue[i]);
 			break;
 		default:
-			cerr << "Interactive Operation not recognized: " << (uint32_t) gate->type << " (" << get_gate_type_name(gate->type) << "), stopping execution" << endl;
+			std::cerr << "Interactive Operation not recognized: " << (uint32_t) gate->type << " (" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
 			exit(0);
 		}
 
@@ -266,7 +262,7 @@ void YaoServerSharing::SendConversionValues(uint32_t gateid) {
 	uint32_t id = pos >> 1;
 
 #ifdef DEBUGYAOSERVER
-	cout << "Evaluating A2Y with gateid = " << gateid << ", parent = " <<
+	std::cout << "Evaluating A2Y with gateid = " << gateid << ", parent = " <<
 			gate->ingates.inputs.parents[0] << ", pos = " << pos;
 #endif
 	assert(parent->instantiated);
@@ -280,13 +276,13 @@ void YaoServerSharing::SendConversionValues(uint32_t gateid) {
 					((id+i*parent->sharebitlen) % GATE_T_BITS)) & 0x01) << (i% GATE_T_BITS);
 		}
 #ifdef DEBUGYAOSERVER
-		cout << " (server share) with value " << (uint32_t) gate->gs.ishare.inval[0] << " (" << id / GATE_T_BITS << ", " << (id%GATE_T_BITS) <<
-		", " << parent->gs.aval[0] <<") " << gate->ingates.inputs.parents[0] << ", " << (uint64_t) parent->gs.aval << endl;
+		std::cout << " (server share) with value " << (uint32_t) gate->gs.ishare.inval[0] << " (" << id / GATE_T_BITS << ", " << (id%GATE_T_BITS) <<
+		", " << parent->gs.aval[0] <<") " << gate->ingates.inputs.parents[0] << ", " << (uint64_t) parent->gs.aval << std::endl;
 #endif
 		SendServerInputKey(gateid);
 	} else { //Convert client's share
 #ifdef DEBUGYAOSERVER
-	cout << " (client share) " << endl;
+	std::cout << " (client share) " << std::endl;
 #endif
 		m_nClientInBitCtr += gate->nvals;
 		m_vClientInputGate.push_back(gateid);
@@ -330,9 +326,9 @@ void YaoServerSharing::CreateAndSendGarbledCircuit(ABYSetup* setup) {
 		return;
 
 	for (uint32_t i = 0; i < maxdepth; i++) {
-		deque<uint32_t> localqueue = m_cBoolCircuit->GetLocalQueueOnLvl(i);
+		std::deque<uint32_t> localqueue = m_cBoolCircuit->GetLocalQueueOnLvl(i);
 		PrecomputeGC(localqueue, setup);
-		deque<uint32_t> interactivequeue = m_cBoolCircuit->GetInteractiveQueueOnLvl(i);
+		std::deque<uint32_t> interactivequeue = m_cBoolCircuit->GetInteractiveQueueOnLvl(i);
 		PrecomputeGC(interactivequeue, setup);
 	}
 	//Store the shares of the clients output gates
@@ -348,20 +344,20 @@ void YaoServerSharing::CreateAndSendGarbledCircuit(ABYSetup* setup) {
 		setup->AddSendTask(m_vOutputShareSndBuf.GetArr(), ceil_divide(m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT), 8));
 	}
 #ifdef DEBUGYAOSERVER
-	cout << "Sending Garbled Circuit: ";
+	std::cout << "Sending Garbled Circuit: ";
 	m_vGarbledCircuit.PrintHex();
-	cout << "Sending my output shares: ";
+	std::cout << "Sending my output shares: ";
 	m_vOutputShareSndBuf.Print(0, m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT));
 #endif
 
 }
 
-void YaoServerSharing::PrecomputeGC(deque<uint32_t>& queue, ABYSetup* setup) {
+void YaoServerSharing::PrecomputeGC(std::deque<uint32_t>& queue, ABYSetup* setup) {
 	for (uint32_t i = 0; i < queue.size(); i++) {
 		GATE* gate = m_pGates + queue[i];
 #ifdef DEBUGYAOSERVER
-		cout << "Evaluating gate with id = " << queue[i] << ", and type = "<< get_gate_type_name(gate->type) << "(" << gate->type << "), depth = " << gate->depth
-		<< ", nvals = " << gate->nvals << ", sharebitlen = " << gate->sharebitlen << endl;
+		std::cout << "Evaluating gate with id = " << queue[i] << ", and type = "<< get_gate_type_name(gate->type) << "(" << gate->type << "), depth = " << gate->depth
+		<< ", nvals = " << gate->nvals << ", sharebitlen = " << gate->sharebitlen << std::endl;
 #endif
 		assert(gate->nvals > 0 && gate->sharebitlen == 1);
 
@@ -373,15 +369,15 @@ void YaoServerSharing::PrecomputeGC(deque<uint32_t>& queue, ABYSetup* setup) {
 			EvaluateInputGate(queue[i]);
 		} else if (gate->type == G_OUT) {
 #ifdef DEBUGYAOSERVER
-			cout << "Obtained output gate with key = ";
+			std::cout << "Obtained output gate with key = ";
 			uint32_t parentid = gate->ingates.inputs.parent;
 			PrintKey(m_pGates[parentid].gs.yinput.outKey);
-			cout << " and pi = " << (uint32_t) m_pGates[parentid].gs.yinput.pi[0] << endl;
+			std::cout << " and pi = " << (uint32_t) m_pGates[parentid].gs.yinput.pi[0] << std::endl;
 #endif
 			EvaluateOutputGate(gate);
 		} else if (gate->type == G_CONV) {
 #ifdef DEBUGYAOSERVER
-			cout << "Ealuating conversion gate" << endl;
+			std::cout << "Ealuating conversion gate" << std::endl;
 #endif
 			EvaluateConversionGate(queue[i]);
 		} else if (gate->type == G_CONSTANT) {
@@ -393,9 +389,9 @@ void YaoServerSharing::PrecomputeGC(deque<uint32_t>& queue, ABYSetup* setup) {
 				gate->gs.yinput.pi[i] = (constval>>i) & 0x01;
 			}
 #ifdef DEBUGYAOSERVER
-			cout << "Assigned key to constant gate " << queue[i] << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") : ";
+			std::cout << "Assigned key to constant gate " << queue[i] << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") : ";
 			PrintKey(gate->gs.yinput.outKey);
-			cout << endl;
+			std::cout << std::endl;
 #endif
 		} else if (IsSIMDGate(gate->type)) {
 			EvaluateSIMDGate(queue[i]);
@@ -410,7 +406,7 @@ void YaoServerSharing::PrecomputeGC(deque<uint32_t>& queue, ABYSetup* setup) {
 			memcpy(gate->gs.yinput.pi, parent->gs.yinput.pi, gate->nvals);
 			UsedGate(gate->ingates.inputs.parent);
 			// TODO this currently copies both keys and bits and getclearvalue will probably fail.
-			//cerr << "SharedOutGate is not properly tested for Yao!" << endl;
+			//std::cerr << "SharedOutGate is not properly tested for Yao!" << std::endl;
 		} else if(gate->type == G_SHARED_IN) {
 			//Do nothing
 		} else if(gate->type == G_PRINT_VAL) {
@@ -418,7 +414,7 @@ void YaoServerSharing::PrecomputeGC(deque<uint32_t>& queue, ABYSetup* setup) {
 		} else if(gate->type == G_ASSERT) {
 			//Do nothing since inputs are not known yet and hence no debugging can occur
 		} else {
-			cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << endl;
+			std::cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << std::endl;
 			exit(0);
 		}
 	}
@@ -464,9 +460,9 @@ void YaoServerSharing::EvaluateInputGate(uint32_t gateid) {
 		m_vClientInputGate.push_back(gateid);
 	}
 #ifdef DEBUGYAOSERVER
-	cout << "Assigned key to input gate " << gateid << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") : ";
+	std::cout << "Assigned key to input gate " << gateid << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") : ";
 	PrintKey(gate->gs.yinput.outKey);
-	cout << endl;
+	std::cout << std::endl;
 #endif
 }
 
@@ -489,7 +485,7 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 		m_nClientInBitCtr += gate->nvals;
 		m_vClientInputGate.push_back(gateid);
 	} else if(parent->context == S_YAO || parent->context == S_YAO_REV) {//TODO: merge with S_BOOL routine
-		//cout << "Performing transform roles protocol!" << endl;
+		//std::cout << "Performing transform roles protocol!" << std::endl;
 		memcpy(gate->gs.yinput.outKey, m_vClientInputKeys.GetArr() + m_nClientInBitCtr * m_nSecParamBytes, m_nSecParamBytes * gate->nvals);
 		for (uint32_t i = 0; i < gate->nvals; i++) {
 			gate->gs.yinput.pi[i] = m_vPermBits.GetBit(m_nPermBitCtr);
@@ -499,10 +495,10 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 		m_nClientInBitCtr += gate->nvals;
 		m_vClientInputGate.push_back(gateid);
 
-		//cout << "done" << endl;
+		//std::cout << "done" << std::endl;
 	} else if (parent->context == S_ARITH) {
 #ifdef DEBUGYAOSERVER
-		cout << "Evaluating arithmetic conversion gate with gateid = " << gateid << " and pos = " << pos;
+		std::cout << "Evaluating arithmetic conversion gate with gateid = " << gateid << " and pos = " << pos;
 #endif
 		//Convert server's share
 		a2y_gate_pos_t a2ygate;
@@ -511,7 +507,7 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 		m_vPreSetA2YPositions.push_back(a2ygate);
 		if((pos & 0x01) == 0) {
 #ifdef DEBUGYAOSERVER
-			cout << " converting server share" << endl;
+			std::cout << " converting server share" << std::endl;
 #endif
 			memcpy(gate->gs.yinput.outKey, m_vServerInputKeys.GetArr() + m_nPermBitCtr * m_nSecParamBytes, m_nSecParamBytes * gate->nvals);
 			for (uint32_t i = 0; i < gate->nvals; i++) {
@@ -520,7 +516,7 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 			}
 		} else { //Convert client's share
 #ifdef DEBUGYAOSERVER
-		cout << " converting client share" << endl;
+		std::cout << " converting client share" << std::endl;
 #endif
 			memcpy(gate->gs.yinput.outKey, m_vClientInputKeys.GetArr() + m_nClientInBitCtr * m_nSecParamBytes, m_nSecParamBytes * gate->nvals);
 			memset(gate->gs.yinput.pi, 0, gate->nvals);
@@ -530,9 +526,9 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 		}
 	}
 #ifdef DEBUGYAOSERVER
-	cout << "Assigned key to conversion gate " << gateid << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") : ";
+	std::cout << "Assigned key to conversion gate " << gateid << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") : ";
 	PrintKey(gate->gs.yinput.outKey);
-	cout << endl;
+	std::cout << std::endl;
 #endif
 	// not calling UsedGate(gate->ingates.inputs.parents[0]) here:
 	// is called in YaoServerSharing::FinishCircuitLayer()
@@ -565,11 +561,11 @@ void YaoServerSharing::EvaluateXORGate(GATE* gate) {
 
 #ifdef DEBUGYAOSERVER
 	PrintKey(gate->gs.yinput.outKey);
-	cout << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") = ";
+	std::cout << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") = ";
 	PrintKey((m_pGates + idleft)->gs.yinput.outKey);
-	cout << " (" << (uint32_t) (m_pGates + idleft)->gs.yinput.pi[0] << ")(" << idleft << ") ^ ";
+	std::cout << " (" << (uint32_t) (m_pGates + idleft)->gs.yinput.pi[0] << ")(" << idleft << ") ^ ";
 	PrintKey((m_pGates + idright)->gs.yinput.outKey);
-	cout << " (" << (uint32_t) (m_pGates + idright)->gs.yinput.pi[0] << ")(" << idright << ")" << endl;
+	std::cout << " (" << (uint32_t) (m_pGates + idright)->gs.yinput.pi[0] << ")(" << idright << ")" << std::endl;
 #endif
 
 	assert((m_pGates + idleft)->gs.yinput.pi[0] < 2 && (m_pGates + idright)->gs.yinput.pi[0] < 2);
@@ -666,7 +662,7 @@ void YaoServerSharing::CreateGarbledTable(GATE* ggate, uint32_t pos, GATE* gleft
 
 	//Compute the resulting key for the output wire
 	if(rpbit) {
-		//cout << "Server Xoring right_table" << endl;
+		//std::cout << "Server Xoring right_table" << std::endl;
 		m_pKeyOps->XOR(outwire_key, outwire_key, table + m_nSecParamBytes);
 		m_pKeyOps->XOR(outwire_key, outwire_key, m_bLKeyBuf);
 	}
@@ -680,34 +676,34 @@ void YaoServerSharing::CreateGarbledTable(GATE* ggate, uint32_t pos, GATE* gleft
 	}
 
 #ifdef DEBUGYAOSERVER
-		cout << " encr : ";
+		std::cout << " encr : ";
 		PrintKey(lkey);
-		cout << " (" << (uint32_t) gleft->gs.yinput.pi[pos] << ") and : ";
+		std::cout << " (" << (uint32_t) gleft->gs.yinput.pi[pos] << ") and : ";
 		PrintKey(rkey);
-		cout << " (" << (uint32_t) gright->gs.yinput.pi[pos] << ") to : ";
+		std::cout << " (" << (uint32_t) gright->gs.yinput.pi[pos] << ") to : ";
 		PrintKey(outwire_key);
-		cout << " (" << (uint32_t) ggate->gs.yinput.pi[pos] << ")" << endl;
-		cout << "A_0: ";
+		std::cout << " (" << (uint32_t) ggate->gs.yinput.pi[pos] << ")" << std::endl;
+		std::cout << "A_0: ";
 		PrintKey(m_bLMaskBuf[0]);
-		cout << "; A_1: ";
+		std::cout << "; A_1: ";
 		PrintKey(m_bLMaskBuf[1]);
-		cout << endl << "B_0: ";
+		std::cout << std::endl << "B_0: ";
 		PrintKey(m_bRMaskBuf[0]);
-		cout << "; B_1: ";
+		std::cout << "; B_1: ";
 		PrintKey(m_bRMaskBuf[1]);
 
-		cout << endl << "Table A: ";
+		std::cout << std::endl << "Table A: ";
 		PrintKey(table);
-		cout << "; Table B: ";
+		std::cout << "; Table B: ";
 		PrintKey(table+m_nSecParamBytes);
-		cout << endl;
+		std::cout << std::endl;
 
 #endif
 }
 
 //Collect the permutation bits on the clients output gates and prepare them to be sent off
 void YaoServerSharing::CollectClientOutputShares() {
-	deque<uint32_t> out = m_cBoolCircuit->GetOutputGatesForParty(CLIENT);
+	std::deque<uint32_t> out = m_cBoolCircuit->GetOutputGatesForParty(CLIENT);
 	while (out.size() > 0) {
 		for (uint32_t j = 0; j < m_pGates[out.front()].nvals; j++, m_nOutputShareSndSize++) {
 			m_vOutputShareSndBuf.SetBit(m_nOutputShareSndSize, !!((m_pGates[out.front()].gs.val[j / GATE_T_BITS]) & ((UGATE_T) 1 << (j % GATE_T_BITS))));
@@ -720,10 +716,10 @@ void YaoServerSharing::EvaluateOutputGate(GATE* gate) {
 	uint32_t parentid = gate->ingates.inputs.parent;
 
 	//push the output back since it will be deleted but is needed in the online phase
-	//cout << "Before " << endl;
+	//std::cout << "Before " << std::endl;
 	m_vOutputDestionations[m_nOutputDestionationsCtr++] = gate->gs.oshare.dst;
 
-	//cout << "After" << endl;
+	//std::cout << "After" << std::endl;
 	//InstantiateGate(gate);
 
 	gate->gs.val = (UGATE_T*) calloc(ceil_divide(gate->nvals, GATE_T_BITS), sizeof(UGATE_T));
@@ -733,17 +729,17 @@ void YaoServerSharing::EvaluateOutputGate(GATE* gate) {
 	}
 
 #ifdef DEBUGYAOSERVER
-	cout << "Stored output share " << gate->gs.val[0] << endl;
+	std::cout << "Stored output share " << gate->gs.val[0] << std::endl;
 #endif
 	UsedGate(parentid);
 }
 
-void YaoServerSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
+void YaoServerSharing::GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& sndbytes) {
 	//Input keys of server
 	if (m_nServerKeyCtr > 0) {
 #ifdef DEBUGYAOSERVER
-		cout << "want to send servers input keys which are of size " << m_nServerKeyCtr * m_nSecParamBytes << " bytes" << endl;
-		cout << "Server input keys = ";
+		std::cout << "want to send servers input keys which are of size " << m_nServerKeyCtr * m_nSecParamBytes << " bytes" << std::endl;
+		std::cout << "Server input keys = ";
 		m_vServerKeySndBuf.PrintHex();
 #endif
 		sendbuf.push_back(m_vServerKeySndBuf.GetArr());
@@ -752,10 +748,10 @@ void YaoServerSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& s
 	//Input keys of client
 	if (m_nClientInputKeyCtr > 0) {
 #ifdef DEBUGYAOSERVER
-		cout << "want to send client input keys which are of size 2 * " << m_nClientInputKeyCtr * m_nSecParamBytes << " bytes" << endl;
-		cout << "Client input keys[0] = ";
+		std::cout << "want to send client input keys which are of size 2 * " << m_nClientInputKeyCtr * m_nSecParamBytes << " bytes" << std::endl;
+		std::cout << "Client input keys[0] = ";
 		m_vClientKeySndBuf[0].PrintHex();
-		cout << "Client input keys[1] = ";
+		std::cout << "Client input keys[1] = ";
 		m_vClientKeySndBuf[1].PrintHex();
 #endif
 		sendbuf.push_back(m_vClientKeySndBuf[0].GetArr());
@@ -782,21 +778,21 @@ void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
 						m_pKeyOps->XOR(m_vClientKeySndBuf[1].GetArr() + linbitctr * m_nSecParamBytes, m_vROTMasks[1].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes,
 								m_vClientInputKeys.GetArr() + m_nClientInputKexIdx * m_nSecParamBytes); //Zero - key
 #ifdef DEBUGYAOSERVER
-										cout << "T0: ";
+										std::cout << "T0: ";
 										PrintKey(m_vClientKeySndBuf[0].GetArr() + linbitctr * m_nSecParamBytes);
-										cout << " = ";
+										std::cout << " = ";
 										PrintKey(m_vROTMasks[0].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes);
-										cout << " ^ ";
+										std::cout << " ^ ";
 										PrintKey(m_bTempKeyBuf);
-										cout << endl;
-										cout << "T1: ";
+										std::cout << std::endl;
+										std::cout << "T1: ";
 										PrintKey(m_vClientKeySndBuf[1].GetArr() + linbitctr * m_nSecParamBytes);
-										cout << " = ";
+										std::cout << " = ";
 										PrintKey(m_vROTMasks[1].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes);
-										cout << " ^ ";
+										std::cout << " ^ ";
 										PrintKey(m_vClientInputKeys.GetArr() + m_nClientInputKexIdx * m_nSecParamBytes);
 
-										cout << endl;
+										std::cout << std::endl;
 #endif
 					} else {
 						//masks remain the same
@@ -805,20 +801,20 @@ void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
 						m_pKeyOps->XOR(m_vClientKeySndBuf[1].GetArr() + linbitctr * m_nSecParamBytes, m_vROTMasks[1].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes,
 								m_bTempKeyBuf); //One - key
 #ifdef DEBUGYAOSERVER
-								cout << "T0: ";
+								std::cout << "T0: ";
 								PrintKey(m_vClientKeySndBuf[0].GetArr() + linbitctr * m_nSecParamBytes);
-								cout << " = ";
+								std::cout << " = ";
 								PrintKey(m_vROTMasks[0].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes);
-								cout << " ^ ";
+								std::cout << " ^ ";
 								PrintKey(m_vClientInputKeys.GetArr() + m_nClientInputKexIdx * m_nSecParamBytes);
-								cout << endl;
-								cout << "T1: ";
+								std::cout << std::endl;
+								std::cout << "T1: ";
 								PrintKey(m_vClientKeySndBuf[1].GetArr() + linbitctr * m_nSecParamBytes);
-								cout << " = ";
+								std::cout << " = ";
 								PrintKey(m_vROTMasks[1].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes);
-								cout << " ^ ";
+								std::cout << " ^ ";
 								PrintKey(m_bTempKeyBuf);
-								cout << endl;
+								std::cout << std::endl;
 #endif
 					}
 				}
@@ -832,19 +828,19 @@ void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
 						uint32_t val = (m_pGates[input].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01;
 						permval = val ^ m_pGates[gateid].gs.yinput.pi[k];
 					} else  if (m_pGates[input].context == S_YAO || m_pGates[input].context == S_YAO_REV) {//switch roles gate
-						//cout << "copying keys from input " << input << " at position " << k << endl;
+						//std::cout << "copying keys from input " << input << " at position " << k << std::endl;
 						assert(m_pGates[input].instantiated);
 						uint32_t val = m_pGates[input].gs.yval[((k+1) * m_nSecParamBytes)-1] & 0x01; //get client permutation bit
-						//cout << "Server conv share = " << val << endl;
+						//std::cout << "Server conv share = " << val << std::endl;
 						permval = val ^ m_pGates[gateid].gs.yinput.pi[k];
-						//cout << "done copying keys" << endl;
+						//std::cout << "done copying keys" << std::endl;
 					}
 #ifdef DEBUGYAOSERVER
-					cout << "Processing keys for gate " << gateid << ", perm-bit = " << (uint32_t) m_pGates[gateid].gs.yinput.pi[k] <<
-					", client-cor: " << (uint32_t) m_vClientROTRcvBuf.GetBitNoMask(linbitctr) << endl;
+					std::cout << "Processing keys for gate " << gateid << ", perm-bit = " << (uint32_t) m_pGates[gateid].gs.yinput.pi[k] <<
+					", client-cor: " << (uint32_t) m_vClientROTRcvBuf.GetBitNoMask(linbitctr) << std::endl;
 
 					PrintKey(m_vClientInputKeys.GetArr() + m_nClientInputKexIdx * m_nSecParamBytes);
-					cout << endl;
+					std::cout << std::endl;
 #endif
 					if ((m_vClientROTRcvBuf.GetBitNoMask(linbitctr) ^ permval) == 1) {
 						m_pKeyOps->XOR(m_vClientKeySndBuf[0].GetArr() + linbitctr * m_nSecParamBytes, m_vROTMasks[0].GetArr() + m_nClientInputKexIdx * m_nSecParamBytes,
@@ -876,11 +872,11 @@ void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
 }
 ;
 
-void YaoServerSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) {
+void YaoServerSharing::GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes) {
 	//receive bit from random-OT
 	if (m_nClientInBitCtr > 0) {
 #ifdef DEBUGYAOSERVER
-		cout << "want to receive clients OT-bits which are of size " << m_nClientInBitCtr << " bits" << endl;
+		std::cout << "want to receive clients OT-bits which are of size " << m_nClientInBitCtr << " bits" << std::endl;
 #endif
 		m_vClientROTRcvBuf.Create(m_nClientInBitCtr);
 		rcvbuf.push_back(m_vClientROTRcvBuf.GetArr());
@@ -889,7 +885,7 @@ void YaoServerSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_
 
 	if (m_nOutputShareRcvCtr > 0) {
 #ifdef DEBUGYAOSERVER
-		cout << "want to receive server output bits which are of size " << m_nOutputShareRcvCtr << " bits" << endl;
+		std::cout << "want to receive server output bits which are of size " << m_nOutputShareRcvCtr << " bits" << std::endl;
 #endif
 		m_vOutputShareRcvBuf.Create(m_nOutputShareRcvCtr);
 		rcvbuf.push_back(m_vOutputShareRcvBuf.GetArr());
@@ -902,7 +898,7 @@ void YaoServerSharing::AssignOutputShares() {
 	for (uint32_t i = 0, offset = 0; i < m_vServerOutputGates.size(); i++) {
 		gate = m_vServerOutputGates[i];
 #ifdef DEBUGYAOSERVER
-		cout << "Server Output: " << (uint32_t) (m_vOutputShareRcvBuf.GetBit(offset) ^ gate->gs.val[0] ) << " = "<< (uint32_t) m_vOutputShareRcvBuf.GetBit(offset) << " ^ " << (uint32_t) gate->gs.val[0] << endl;
+		std::cout << "Server Output: " << (uint32_t) (m_vOutputShareRcvBuf.GetBit(offset) ^ gate->gs.val[0] ) << " = "<< (uint32_t) m_vOutputShareRcvBuf.GetBit(offset) << " ^ " << (uint32_t) gate->gs.val[0] << std::endl;
 #endif
 		//InstantiateGate(gate);
 		for (uint32_t j = 0; j < gate->nvals; j++, offset++) {
@@ -921,9 +917,9 @@ void YaoServerSharing::CreateRandomWireKeys(CBitVector& vec, uint32_t numkeys) {
 		vec.ANDByte((i + 1) * m_nSecParamBytes - 1, 0xFE);
 	}
 #ifdef DEBUGYAOSERVER
-	cout << "Created wire keys: with num = " << numkeys << endl;
+	std::cout << "Created wire keys: with num = " << numkeys << std::endl;
 	vec.PrintHex();
-	cout << "m_vR = " <<endl;
+	std::cout << "m_vR = " <<std::endl;
 	m_vR.PrintHex();
 #endif
 }
@@ -932,7 +928,7 @@ void YaoServerSharing::InstantiateGate(GATE* gate) {
 	gate->gs.yinput.outKey = (BYTE*) malloc(sizeof(UGATE_T) * m_nSecParamIters * gate->nvals);
 	gate->gs.yinput.pi = (BYTE*) malloc(sizeof(BYTE) * gate->nvals);
 	if (gate->gs.yinput.outKey == NULL) {
-		cerr << "Memory allocation not successful at Yao gate instantiation" << endl;
+		std::cerr << "Memory allocation not successful at Yao gate instantiation" << std::endl;
 		exit(0);
 	}
 	gate->instantiated = true;
@@ -1007,7 +1003,7 @@ void YaoServerSharing::EvaluateSIMDGate(uint32_t gateid) {
 }
 
 uint32_t YaoServerSharing::AssignInput(CBitVector& inputvals) {
-	deque<uint32_t> myingates = m_cBoolCircuit->GetInputGatesForParty(m_eRole);
+	std::deque<uint32_t> myingates = m_cBoolCircuit->GetInputGatesForParty(m_eRole);
 	inputvals.Create(m_cBoolCircuit->GetNumInputBitsForParty(m_eRole), m_cCrypto);
 
 	GATE* gate;
@@ -1022,7 +1018,7 @@ uint32_t YaoServerSharing::AssignInput(CBitVector& inputvals) {
 			UGATE_T* inval = (UGATE_T*) calloc(lim, sizeof(UGATE_T));
 
 			for (uint32_t j = 0; j < lim; j++, bitstocopy -= GATE_T_BITS) {
-				len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+				len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 				inval[j] = inputvals.Get<UGATE_T>(inbitstart, len);
 				inbitstart += len;
 			}
@@ -1033,7 +1029,7 @@ uint32_t YaoServerSharing::AssignInput(CBitVector& inputvals) {
 }
 
 uint32_t YaoServerSharing::GetOutput(CBitVector& out) {
-	deque<uint32_t> myoutgates = m_cBoolCircuit->GetOutputGatesForParty(m_eRole);
+	std::deque<uint32_t> myoutgates = m_cBoolCircuit->GetOutputGatesForParty(m_eRole);
 	uint32_t outbits = m_cBoolCircuit->GetNumOutputBitsForParty(m_eRole);
 	out.Create(outbits);
 

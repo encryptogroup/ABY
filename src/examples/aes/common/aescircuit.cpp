@@ -22,7 +22,7 @@ int32_t test_aes_circuit(e_role role, char* address, uint16_t port, seclvl seclv
 	uint32_t bitlen = 32;
 	uint32_t aes_key_bits;
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg, 4000000);
-	vector<Sharing*>& sharings = party->GetSharings();
+	std::vector<Sharing*>& sharings = party->GetSharings();
 
 	crypto* crypt = new crypto(seclvl.symbits, (uint8_t*) const_seed);
 	CBitVector input, key, verify;
@@ -111,32 +111,32 @@ int32_t test_aes_circuit(e_role role, char* address, uint16_t port, seclvl seclv
 	verify_AES_encryption(input.GetArr(), key.GetArr(), nvals, verify.GetArr(), crypt);
 
 #ifndef BATCH
-	cout << "Testing AES encryption in " << get_sharing_name(sharing) << " sharing: " << endl;
+	std::cout << "Testing AES encryption in " << get_sharing_name(sharing) << " sharing: " << std::endl;
 #endif
 	for (uint32_t i = 0; i < nvals; i++) {
 #ifndef BATCH
 		if(!verbose) {
-			cout << "(" << i << ") Input:\t";
+			std::cout << "(" << i << ") Input:\t";
 			input.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
-			cout << "(" << i << ") Key:\t";
+			std::cout << "(" << i << ") Key:\t";
 			key.PrintHex(0, AES_KEY_BYTES);
-			cout << "(" << i << ") Circ:\t";
+			std::cout << "(" << i << ") Circ:\t";
 			out.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
-			cout << "(" << i << ") Verify:\t";
+			std::cout << "(" << i << ") Verify:\t";
 			verify.PrintHex(i * AES_BYTES, (i + 1) * AES_BYTES);
 		}
 #endif
 		assert(verify.IsEqual(out, i*AES_BITS, (i+1)*AES_BITS));
 	}
 #ifndef BATCH
-	cout << "all tests succeeded" << endl;
+	std::cout << "all tests succeeded" << std::endl;
 #else
-	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_GARBLE) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) <<
+	std::cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_GARBLE) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) <<
 			"\t" << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) << "\t";
 	if(sharing == S_YAO_REV) {
-		cout << sharings[S_YAO]->GetNumNonLinearOperations() +sharings[S_YAO_REV]->GetNumNonLinearOperations() << "\t" << sharings[S_YAO]->GetMaxCommunicationRounds()<< endl;
+		std::cout << sharings[S_YAO]->GetNumNonLinearOperations() +sharings[S_YAO_REV]->GetNumNonLinearOperations() << "\t" << sharings[S_YAO]->GetMaxCommunicationRounds()<< std::endl;
 	} else  {
-		cout << sharings[sharing]->GetNumNonLinearOperations()	<< "\t" << sharings[sharing]->GetMaxCommunicationRounds()<< endl;
+		std::cout << sharings[sharing]->GetNumNonLinearOperations()	<< "\t" << sharings[sharing]->GetMaxCommunicationRounds()<< std::endl;
 	}
 #endif
 	delete crypt;
@@ -152,9 +152,9 @@ int32_t test_aes_circuit(e_role role, char* address, uint16_t port, seclvl seclv
 
 share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ, bool use_vec_ands) {
 	uint32_t round, byte, i, j, k;
-	vector<vector<vector<uint32_t> > > state(AES_STATE_COLS); //the state is treated as a matrix
-	vector<vector<vector<uint32_t> > > state_temp(AES_STATE_COLS); //the state is treated as a matrix
-	vector<uint32_t> out(128);
+	std::vector<std::vector<std::vector<uint32_t> > > state(AES_STATE_COLS); //the state is treated as a matrix
+	std::vector<std::vector<std::vector<uint32_t> > > state_temp(AES_STATE_COLS); //the state is treated as a matrix
+	std::vector<uint32_t> out(128);
 
 
 	for (i = 0; i < AES_STATE_COLS; i++) {
@@ -202,8 +202,8 @@ share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ, bool use_ve
 	return new boolshare(out, circ);
 }
 
-vector<uint32_t> AddAESRoundKey(vector<uint32_t>& val, vector<uint32_t> key, uint32_t keyaddr, BooleanCircuit* circ) {
-	vector<uint32_t> out(8);
+std::vector<uint32_t> AddAESRoundKey(std::vector<uint32_t>& val, std::vector<uint32_t> key, uint32_t keyaddr, BooleanCircuit* circ) {
+	std::vector<uint32_t> out(8);
 	for (uint32_t i = 0; i < 8; i++) {
 		out[i] = circ->PutXORGate(val[i], key[keyaddr + i]);
 	}
@@ -211,8 +211,8 @@ vector<uint32_t> AddAESRoundKey(vector<uint32_t>& val, vector<uint32_t> key, uin
 }
 
 //Pretty straight - forward, shift by 1 to the left and if input_msb is 1, then XOR with 0x1b
-vector<uint32_t> Mul2(vector<uint32_t>& element, BooleanCircuit* circ) {
-	vector<uint32_t> out(8);
+std::vector<uint32_t> Mul2(std::vector<uint32_t>& element, BooleanCircuit* circ) {
+	std::vector<uint32_t> out(8);
 	out[0] = element[7];
 	out[1] = circ->PutXORGate(element[0], element[7]);
 	out[2] = element[1];
@@ -224,13 +224,13 @@ vector<uint32_t> Mul2(vector<uint32_t>& element, BooleanCircuit* circ) {
 	return out;
 }
 
-vector<vector<uint32_t> > PutAESMixColumnGate(vector<vector<uint32_t> >& rows, BooleanCircuit* circ) {
+std::vector<std::vector<uint32_t> > PutAESMixColumnGate(std::vector<std::vector<uint32_t> >& rows, BooleanCircuit* circ) {
 	UINT i, j, temp;
-	vector<vector<uint32_t> > out(4);
-	vector<vector<uint32_t> > temp_mul2(4);
+	std::vector<std::vector<uint32_t> > out(4);
+	std::vector<std::vector<uint32_t> > temp_mul2(4);
 
 	if (rows.size() != 4) {
-		cout << "There have to be exactly four rows!" << endl;
+		std::cout << "There have to be exactly four rows!" << std::endl;
 	}
 	for (j = 0; j < 4; j++) {
 		out[j].resize(8);
@@ -250,7 +250,7 @@ vector<vector<uint32_t> > PutAESMixColumnGate(vector<vector<uint32_t> >& rows, B
 }
 
 
-vector<uint32_t> PutAESSBoxGate(vector<uint32_t> input, BooleanCircuit* circ, bool use_vec_ands) {
+std::vector<uint32_t> PutAESSBoxGate(std::vector<uint32_t> input, BooleanCircuit* circ, bool use_vec_ands) {
 	if(circ->GetContext() == S_SPLUT) {
 		return AESSBox_Forward_SPLUT(input, circ);
 	} else if(circ->GetContext() == S_YAO || circ->GetContext() == S_YAO_REV) {
@@ -261,18 +261,18 @@ vector<uint32_t> PutAESSBoxGate(vector<uint32_t> input, BooleanCircuit* circ, bo
 		else
 			return AESSBox_Forward_BP_Depth_Optimized(input, circ);
 	} else {
-		cerr << "Sharing type not supported!" << endl;
+		std::cerr << "Sharing type not supported!" << std::endl;
 		exit(0);
 	}
 }
 
 //The Boyar-Peralta depth optimized SBox circuit (34 AND gates, Depth 4)
-vector<uint32_t> AESSBox_Forward_BP_Depth_Optimized(vector<uint32_t> input, BooleanCircuit* circ) {
-	vector<uint32_t> gates(141);
+std::vector<uint32_t> AESSBox_Forward_BP_Depth_Optimized(std::vector<uint32_t> input, BooleanCircuit* circ) {
+	std::vector<uint32_t> gates(141);
 
 	//constant 1
 	gates[140] = 0;
-	vector<uint32_t> out(8);
+	std::vector<uint32_t> out(8);
 	for (uint32_t i = 0; i < 8; i++) {
 		gates[i] = input[i];
 	}
@@ -296,13 +296,13 @@ vector<uint32_t> AESSBox_Forward_BP_Depth_Optimized(vector<uint32_t> input, Bool
 }
 
 //The Boyar-Peralta size optimized SBox circuit (32 AND gates, Depth 6)
-vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(vector<uint32_t> input, BooleanCircuit* circ) {
-	vector<uint32_t> x(8);
-	vector<uint32_t> y(22);
-	vector<uint32_t> t(68);
-	vector<uint32_t> s(8);
-	vector<uint32_t> z(18);
-	vector<uint32_t> out(8);
+std::vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(std::vector<uint32_t> input, BooleanCircuit* circ) {
+	std::vector<uint32_t> x(8);
+	std::vector<uint32_t> y(22);
+	std::vector<uint32_t> t(68);
+	std::vector<uint32_t> s(8);
+	std::vector<uint32_t> z(18);
+	std::vector<uint32_t> out(8);
 
 	for(uint32_t i = 0; i < x.size(); i++) {
 		x[i] = input[7-i];
@@ -477,13 +477,13 @@ vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(vector<uint32_t> input, Boole
 
 
 //The Boyar-Peralta depth optimized SBox circuit (34 AND gates, Depth 4) with vector-MTs
-vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(vector<uint32_t> input, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd) {
-	vector<uint32_t> U(8);
-	vector<uint32_t> T(28);
-	vector<uint32_t> M(64);
-	vector<uint32_t> L(30);
-	vector<uint32_t> S(8);
-	vector<uint32_t> out(8);
+std::vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(std::vector<uint32_t> input, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd) {
+	std::vector<uint32_t> U(8);
+	std::vector<uint32_t> T(28);
+	std::vector<uint32_t> M(64);
+	std::vector<uint32_t> L(30);
+	std::vector<uint32_t> S(8);
+	std::vector<uint32_t> out(8);
 
 	for(uint32_t i = 0; i < U.size(); i++) {
 		U[i] = input[7-i];
@@ -546,7 +546,7 @@ vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(vector<uint32_t> input, Boo
 	M[24] = circ->PutXORGate(M[22], M[23]);
 
 	//Vec-AND opti block
-	vector<uint32_t> tmp = Two_In_AND_Vec_Gate(M[20], M[22], M[23], circ, buf_pos_even, buf_pos_odd);
+	std::vector<uint32_t> tmp = Two_In_AND_Vec_Gate(M[20], M[22], M[23], circ, buf_pos_even, buf_pos_odd);
 	M[25] = tmp[0];//circ->PutANDGate(M[20], M[22]);
 	M[31] = tmp[1];//circ->PutANDGate(M[20], M[23]);
 
@@ -664,11 +664,11 @@ vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(vector<uint32_t> input, Boo
 }
 
 //computes out[0]=s*a and out[1]=s*b using vector-AND gates
-vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, BooleanCircuit* circ,
+std::vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, BooleanCircuit* circ,
 		uint32_t* buf_pos_even, uint32_t* buf_pos_odd) {
 	uint32_t ngates = 2;
-	vector<uint32_t> out(ngates);
-	vector<uint32_t> in(ngates);
+	std::vector<uint32_t> out(ngates);
+	std::vector<uint32_t> in(ngates);
 	in[0] = a;
 	in[1] = b;
 	uint32_t vec_in = circ->PutStructurizedCombinerGate(in, 0, 1, ngates*circ->GetNumVals(a));
@@ -680,8 +680,8 @@ vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, Boolean
 	return out;
 }
 
-vector<uint32_t> AESSBox_Forward_SPLUT(vector<uint32_t> input, BooleanCircuit* circ) {
-	vector<uint32_t> out(8);
+std::vector<uint32_t> AESSBox_Forward_SPLUT(std::vector<uint32_t> input, BooleanCircuit* circ) {
+	std::vector<uint32_t> out(8);
 
 	//out = circ->PutTruthTableMultiOutputGate(input, 8, (uint64_t*) aes_sbox_multi_out_ttable);
 	out = circ->PutTruthTableMultiOutputGate(input, 8, (uint64_t*) aes_sbox_multi_seq_out_ttable);

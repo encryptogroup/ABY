@@ -22,6 +22,7 @@
 
 #include "abycircuit.h"
 
+#include <cassert>
 #include <deque>
 #include <iostream>
 #include <string>

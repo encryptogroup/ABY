@@ -24,7 +24,6 @@
 #include <assert.h>
 #include "circuit.h"
 #include <map>
-#include <fstream>
 #include <algorithm>
 #include "../ABY_utils/convtypes.h"
 #include "../ENCRYPTO_utils/parse_options.h"
@@ -285,7 +284,7 @@ public:
 
 
 	share* PutANDVecGate(share* ina, share* inb);
-	vector<uint32_t> PutMUXGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t s, BOOL vecand = true);
+	std::vector<uint32_t> PutMUXGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t s, BOOL vecand = true);
 
 	share* PutVecANDMUXGate(share* a, share* b, share* s);
 	std::vector<uint32_t> PutVecANDMUXGate(std::vector<uint32_t> a, std::vector<uint32_t> b, std::vector<uint32_t> s);
@@ -332,7 +331,7 @@ public:
 	share* PutA2YGate(share* ina);
 
 	share* PutB2AGate(share*) {
-		cerr << "B2A not available for Boolean circuits, please use Arithmetic circuits instead" << endl;
+		std::cerr << "B2A not available for Boolean circuits, please use Arithmetic circuits instead" << std::endl;
 		return new boolshare(0, this);
 	}
 

@@ -17,8 +17,8 @@
  \brief		Circuit class implementation.
 */
 #include "circuit.h"
+#include <cstring>
 
-using namespace std;
 
 void Circuit::Init() {
 
@@ -124,13 +124,13 @@ share* Circuit::PutA2BGate(share* ina, Circuit* yaosharingcircuit) {
 
 
 
-uint32_t Circuit::PutCombinerGate(vector<uint32_t> input) {
+uint32_t Circuit::PutCombinerGate(std::vector<uint32_t> input) {
 	uint32_t gateid = m_cCircuit->PutCombinerGate(input);
 	UpdateLocalQueue(gateid);
 	return gateid;
 }
 
-uint32_t Circuit::PutCombineAtPosGate(vector<uint32_t> input, uint32_t pos) {
+uint32_t Circuit::PutCombineAtPosGate(std::vector<uint32_t> input, uint32_t pos) {
 	uint32_t gateid = m_cCircuit->PutCombineAtPosGate(input, pos);
 	UpdateLocalQueue(gateid);
 	return gateid;
@@ -141,8 +141,8 @@ uint32_t Circuit::PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals
 	UpdateLocalQueue(gateid);
 	return gateid;
 }
-vector<uint32_t> Circuit::PutSplitterGate(uint32_t input) {
-	vector<uint32_t> gateid = m_cCircuit->PutSplitterGate(input);
+std::vector<uint32_t> Circuit::PutSplitterGate(uint32_t input) {
+	std::vector<uint32_t> gateid = m_cCircuit->PutSplitterGate(input);
 	for (uint32_t i = 0; i < gateid.size(); i++)
 		UpdateLocalQueue(gateid[i]);
 	return gateid;
@@ -153,7 +153,7 @@ uint32_t Circuit::PutRepeaterGate(uint32_t input, uint32_t nvals) {
 	UpdateLocalQueue(gateid);
 	return gateid;
 }
-uint32_t Circuit::PutPermutationGate(vector<uint32_t> input, uint32_t* positions) {
+uint32_t Circuit::PutPermutationGate(std::vector<uint32_t> input, uint32_t* positions) {
 	uint32_t gateid = m_cCircuit->PutPermutationGate(input, positions);
 	UpdateLocalQueue(gateid);
 	return gateid;
@@ -163,7 +163,7 @@ uint32_t Circuit::PutPermutationGate(vector<uint32_t> input, uint32_t* positions
 
 share* Circuit::PutSubsetGate(share* input, uint32_t* posids, uint32_t nvals_out, bool copy_posids) {
 	//share* out = new boolshare(input->size(), this);
-	vector<uint32_t> tmp(input->get_bitlength());
+	std::vector<uint32_t> tmp(input->get_bitlength());
 	for(uint32_t i = 0; i < input->get_bitlength(); i++) {
 		//out->set_wire(i, PutSubsetGate(input->get_wire(i), posids, nvals));
 		tmp[i] = m_cCircuit->PutSubsetGate(input->get_wire_id(i), posids, nvals_out, copy_posids);
@@ -200,9 +200,9 @@ share* Circuit::PutCombinerGate(share* input) {
 
 share* Circuit::PutCombinerGate(share* ina, share* inb) {
 	assert(ina->get_circuit_type() == inb->get_circuit_type());
-	vector<uint32_t> wires(ina->get_bitlength() + inb->get_bitlength());
-//	cout << "Size on left = " << ina->get_bitlength() << " (" << m_pGates[ina->get_wire_id(0)].nvals << ") on right = " << inb->get_bitlength()
-//			<< " ("<< m_pGates[inb->get_wire_id(0)].nvals << ")" << endl;
+	std::vector<uint32_t> wires(ina->get_bitlength() + inb->get_bitlength());
+//	std::cout << "Size on left = " << ina->get_bitlength() << " (" << m_pGates[ina->get_wire_id(0)].nvals << ") on right = " << inb->get_bitlength()
+//			<< " ("<< m_pGates[inb->get_wire_id(0)].nvals << ")" << std::endl;
 
 	for(uint32_t i = 0; i < ina->get_bitlength(); i++) {
 		wires[i] = ina->get_wire_id(i);
@@ -267,9 +267,9 @@ share* Circuit::EnsureOutputGate(share* in) {
 	return outgates;
 }
 
-share* Circuit::PutPrintValueGate(share* in, string helpstr) {
+share* Circuit::PutPrintValueGate(share* in, std::string helpstr) {
 #if ABY_PRODUCTION
-	cerr << "Production mode enabled - PutPrintValue Gate is omitted" << endl;
+	std::cerr << "Production mode enabled - PutPrintValue Gate is omitted" << std::endl;
 
 	return in;
 #else
@@ -312,7 +312,7 @@ share* Circuit::PutAssertGate(share* in, uint8_t assert_val, uint32_t bitlen) {
 
 share* Circuit::PutSIMDAssertGate(share* in, uint32_t nvals, uint64_t* assert_val, uint32_t bitlen) {
 #if ABY_PRODUCTION
-	cerr << "Production mode enabled - Assert Gate is omitted" << endl;
+	std::cerr << "Production mode enabled - Assert Gate is omitted" << std::endl;
 
 	return in;
 #else
@@ -375,19 +375,19 @@ share* create_new_share(uint32_t size, Circuit* circ) {
 	case C_ARITHMETIC:
 		return new arithshare(circ);
 	default:
-		cerr << "Circuit type not recognized" << endl;
+		std::cerr << "Circuit type not recognized" << std::endl;
 		return new boolshare(size, circ);
 	}
 }
 
-share* create_new_share(vector<uint32_t> vals, Circuit* circ) {
+share* create_new_share(std::vector<uint32_t> vals, Circuit* circ) {
 	switch (circ->GetCircuitType()) {
 	case C_BOOLEAN:
 		return new boolshare(vals, circ);
 	case C_ARITHMETIC:
 		return new arithshare(vals, circ);
 	default:
-		cerr << "Circuit type not recognized" << endl;
+		std::cerr << "Circuit type not recognized" << std::endl;
 		return new boolshare(vals, circ);
 	}
 }

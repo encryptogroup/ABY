@@ -21,6 +21,8 @@
 
 #include "sharing.h"
 #include <algorithm>
+#include <deque>
+#include <vector>
 #include "yaosharing.h"
 
 
@@ -87,7 +89,7 @@ private:
 	std::vector<CBitVector> m_vClientKeySndBuf; /**< Client Key Sender Buffer*/
 	CBitVector m_vClientROTRcvBuf; /**< Client ______________*/
 
-	//vector<CBitVector> m_vClientConversionKeySndBuf;
+	//std::vector<CBitVector> m_vClientConversionKeySndBuf;
 	//CBitVector			m_vClientCOnversionROTRcvBuf;
 
 	CBitVector m_vOutputShareSndBuf; /**< Output Share Sender Buffer.*/
@@ -111,13 +113,13 @@ private:
 	//CBitVector
 
 	std::vector<uint32_t> m_vClientInputGate; /**< _____________*/
-	deque<input_gate_val_t> m_vPreSetInputGates;/**< _____________*/
-	deque<a2y_gate_pos_t> m_vPreSetA2YPositions;/**< _____________*/
+	std::deque<input_gate_val_t> m_vPreSetInputGates;/**< _____________*/
+	std::deque<a2y_gate_pos_t> m_vPreSetA2YPositions;/**< _____________*/
 	e_role* m_vOutputDestionations; /** <  _____________*/
 	uint32_t m_nOutputDestionationsCtr;
 
 
-	//deque<uint32_t> 			m_vClientInputGate;
+	//std::deque<uint32_t> 			m_vClientInputGate;
 
 	/**Initialising the server. */
 	void InitServer();
@@ -188,7 +190,7 @@ private:
 	 \param queue 	Dequeue Object.
 	 \param setup	Is needed to perform pipelined sending of the circuit
 	 */
-	void PrecomputeGC(deque<uint32_t>& queue, ABYSetup* setup);
+	void PrecomputeGC(std::deque<uint32_t>& queue, ABYSetup* setup);
 
 	//void EvaluateClientOutputGate(GATE* gate);
 	void CollectClientOutputShares();

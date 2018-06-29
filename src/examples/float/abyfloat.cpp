@@ -18,10 +18,12 @@
 #include "../../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include "../../abycore/ENCRYPTO_utils/parse_options.h"
 #include "../../abycore/aby/abyparty.h"
+#include <iomanip>
+#include <iostream>
 
 void read_test_options(int32_t* argcp, char*** argvp, e_role* role,
-	uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, string* address,
-	uint16_t* port, int32_t* test_op, uint32_t* test_bit, string* circuit, double* fpa, double* fpb) {
+	uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
+	uint16_t* port, int32_t* test_op, uint32_t* test_bit, std::string* circuit, double* fpa, double* fpb) {
 
 	uint32_t int_role = 0, int_port = 0, int_testbit = 0;
 
@@ -43,7 +45,7 @@ void read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 	if (!parse_options(argcp, argvp, options,
 		sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
-	cout << "Exiting" << endl;
+	std::cout << "Exiting" << std::endl;
 	exit(0);
 	}
 
@@ -66,7 +68,7 @@ void test_verilog_add64_SIMD(e_role role, char* address, uint16_t port, seclvl s
 
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
 
-	vector<Sharing*>& sharings = party->GetSharings();
+	std::vector<Sharing*>& sharings = party->GetSharings();
 
 	BooleanCircuit* circ = (BooleanCircuit*) sharings[sharing]->GetCircuitBuildRoutine();
 
@@ -114,8 +116,8 @@ void test_verilog_add64_SIMD(e_role role, char* address, uint16_t port, seclvl s
 		// dereference output value as double without casting the content
 		double val = *((double*) &out_vals[i]);
 
-		cout << "RES: " << val << " = " << *(double*) &avals[i] << " + " << *(double*) &bvals[i] << " | nv: " << out_nvals
-		<< " bitlen: " << out_bitlen << endl;
+		std::cout << "RES: " << val << " = " << *(double*) &avals[i] << " + " << *(double*) &bvals[i] << " | nv: " << out_nvals
+		<< " bitlen: " << out_bitlen << std::endl;
 	}
 }
 
@@ -126,8 +128,8 @@ int main(int argc, char** argv) {
 	uint32_t bitlen = 1, nvals = 4, secparam = 128, nthreads = 1;
 
 	uint16_t port = 7766;
-	string address = "127.0.0.1";
-	string circuit = "none.aby";
+	std::string address = "127.0.0.1";
+	std::string circuit = "none.aby";
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 	uint32_t test_bit = 0;
@@ -136,8 +138,8 @@ int main(int argc, char** argv) {
 	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address,
 		&port, &test_op, &test_bit, &circuit, &fpa, &fpb);
 
-	cout << fixed << setprecision(3);
-	cout << "double input values: " << fpa << " ; " << fpb << endl;
+	std::cout << std::fixed << std::setprecision(3);
+	std::cout << "double input values: " << fpa << " ; " << fpb << std::endl;
 
 	seclvl seclvl = get_sec_lvl(secparam);
 

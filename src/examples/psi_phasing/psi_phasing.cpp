@@ -25,7 +25,7 @@
 #include "common/phasing_circuit.h"
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
-		uint32_t* bitlen, uint32_t* neles, uint32_t* secparam, string* address,
+		uint32_t* bitlen, uint32_t* neles, uint32_t* secparam, std::string* address,
 		uint16_t* port, int32_t* test_op, double* epsilon, e_sharing* sharing, uint32_t* nthreads,
 		uint32_t* n_partner_eles, int* stash, uint32_t* maxbin, uint32_t* nhashfuns) {
 
@@ -51,7 +51,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 	if (!parse_options(argcp, argvp, options,
 			sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
-		cout << "Exiting" << endl;
+		std::cout << "Exiting" << std::endl;
 		exit(0);
 	}
 
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 	e_role role;
 	uint32_t bitlen = 32, neles = 31, secparam = 128, nthreads = 1, partner_neles=0, server_neles, client_neles;
 	uint16_t port = 7766;
-	string address = "127.0.0.1";
+	std::string address = "127.0.0.1";
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 	double epsilon = 1.2;
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
 
 
 #ifndef BATCH
-	cout << "PSI circuit successfully executed" << endl;
+	std::cout << "PSI circuit successfully executed" << std::endl;
 #endif
 
 	return 0;

@@ -33,7 +33,7 @@ int32_t test_euclid_dist_circuit(e_role role, char* address, uint16_t port, secl
 	/**
 		Step 2: Get to know all the sharings available in the program.
 	*/
-	vector<Sharing*>& sharings = party->GetSharings();
+	std::vector<Sharing*>& sharings = party->GetSharings();
 
 	/**
 		Step 3: Create the circuit object on the basis of the sharing type
@@ -109,8 +109,8 @@ int32_t test_euclid_dist_circuit(e_role role, char* address, uint16_t port, secl
 	uint32_t output;
 	output = s_out->get_clear_value<uint32_t>();
 
-	cout << "Testing Euclidean Distance in " << get_sharing_name(sharing)
-			<< " sharing: " << endl;
+	std::cout << "Testing Euclidean Distance in " << get_sharing_name(sharing)
+			<< " sharing: " << std::endl;
 
 	printf("\n x1: %d, y1: %d \n x2: %d, y2: %d\n", x1, y1, x2, y2);
 	printf(" Circuit result: %lf ", sqrt(output));

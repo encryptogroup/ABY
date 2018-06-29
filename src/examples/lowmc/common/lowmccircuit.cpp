@@ -37,7 +37,7 @@ int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t n
 	else
 		party = new ABYParty(role, address, port, crypt->get_seclvl(), bitlen, nthreads, mt_alg);
 
-	vector<Sharing*>& sharings = party->GetSharings();
+	std::vector<Sharing*>& sharings = party->GetSharings();
 
 	CBitVector input, key;
 	input.Create(param->blocksize * nvals, crypt);
@@ -68,7 +68,7 @@ int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t n
 	CBitVector out;
 	out.AttachBuf(output, (uint64_t) ceil_divide(param->blocksize, 8) * nvals);
 
-	cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) << endl;
+	std::cout << party->GetTiming(P_SETUP) << "\t" << party->GetTiming(P_ONLINE) << "\t" << party->GetTiming(P_TOTAL) << std::endl;
 
 	return 1;
 }
@@ -80,7 +80,7 @@ share* BuildLowMCCircuit(share* val, share* key, BooleanCircuit* circ, LowMCPara
 	uint32_t statesize = param->blocksize;
 	uint32_t nrounds = param->nrounds;
 
-	vector<uint32_t> state(statesize);
+	std::vector<uint32_t> state(statesize);
 	m_vRandomBits.Create(2 * statesize * statesize * nrounds + nrounds * statesize, crypt);
 	m_nZeroGate = zerogate;
 
@@ -114,21 +114,21 @@ share* BuildLowMCCircuit(share* val, share* key, BooleanCircuit* circ, LowMCPara
 	destroy_code(m_tGrayCode);
 
 #if PRINT_PERFORMANCE_STATS
-	cout << "Total Number of Boolean Gates: " << circ->GetNumGates() << endl;
+	std::cout << "Total Number of Boolean Gates: " << circ->GetNumGates() << std::endl;
 #endif
 
 	return new boolshare(state, circ);
 }
 
-void LowMCAddRoundKey(vector<uint32_t>& val, vector<uint32_t> key, uint32_t lowmcstatesize, uint32_t round, BooleanCircuit* circ) {
+void LowMCAddRoundKey(std::vector<uint32_t>& val, std::vector<uint32_t> key, uint32_t lowmcstatesize, uint32_t round, BooleanCircuit* circ) {
 	for (uint32_t i = 0; i < lowmcstatesize; i++) {
 		val[i] = circ->PutXORGate(val[i], key[i+(1+round) * lowmcstatesize]);
 	}
 }
 
 //Multiply the state using a linear matrix
-void LowMCMultiplyState(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
-	vector<uint32_t> tmpstate(lowmcstatesize);
+void LowMCMultiplyState(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
+	std::vector<uint32_t> tmpstate(lowmcstatesize);
 	for (uint32_t i = 0; i < lowmcstatesize; i++) {
 		tmpstate[i] = 0;
 		for (uint32_t j = 0; j < lowmcstatesize; j++, m_nRndCtr++) {
@@ -140,7 +140,7 @@ void LowMCMultiplyState(vector<uint32_t>& state, uint32_t lowmcstatesize, Boolea
 }
 
 //XOR constants on the state
-void LowMCXORConstants(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
+void LowMCXORConstants(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
 	for (uint32_t i = 0; i < lowmcstatesize; i++, m_nRndCtr++) {
 		if (m_vRandomBits.GetBit(m_nRndCtr)) {
 			state[i] = circ->PutINVGate(state[i]);
@@ -150,7 +150,7 @@ void LowMCXORConstants(vector<uint32_t>& state, uint32_t lowmcstatesize, Boolean
 }
 
 //Multiply the key with a 192x192 matrix and XOR the result on the state.
-void LowMCXORMultipliedKey(vector<uint32_t>& state, vector<uint32_t> key, uint32_t lowmcstatesize, uint32_t round, BooleanCircuit* circ) {
+void LowMCXORMultipliedKey(std::vector<uint32_t>& state, std::vector<uint32_t> key, uint32_t lowmcstatesize, uint32_t round, BooleanCircuit* circ) {
 	uint32_t tmp;
 	/*for(uint32_t i = 0; i < MPCC_STATE_SIZE; i++) {
 	 tmp = 0;
@@ -169,7 +169,7 @@ void LowMCXORMultipliedKey(vector<uint32_t>& state, vector<uint32_t> key, uint32
 }
 
 //Put a layer of 3-bit LowMC SBoxes
-void LowMCPutSBoxLayer(vector<uint32_t>& input, uint32_t nsboxes, BooleanCircuit* circ) {
+void LowMCPutSBoxLayer(std::vector<uint32_t>& input, uint32_t nsboxes, BooleanCircuit* circ) {
 	for (uint32_t i = 0; i < nsboxes * 3; i += 3) {
 		LowMCPutSBox(input[i], input[i + 1], input[i + 2], circ);
 	}
@@ -195,7 +195,7 @@ void LowMCPutSBox(uint32_t& o1, uint32_t& o2, uint32_t& o3, BooleanCircuit* circ
 	o3 = circ->PutXORGate(circ->PutINVGate(circ->PutANDGate(ni2, ni1)), i3);
 }
 
-void FourRussiansMatrixMult(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
+void FourRussiansMatrixMult(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
 	//round to nearest square for optimal window size
 	uint32_t wsize = floor_log2(lowmcstatesize) - 2;
 
@@ -206,9 +206,9 @@ void FourRussiansMatrixMult(vector<uint32_t>& state, uint32_t lowmcstatesize, Bo
 
 	lut[0] = m_nZeroGate;	//circ->PutConstantGate(0, 1);
 
-	vector<uint32_t> tmpstate(ceil_divide(lowmcstatesize, wsize) * wsize, lut[0]);
+	std::vector<uint32_t> tmpstate(ceil_divide(lowmcstatesize, wsize) * wsize, lut[0]);
 	//pad the state to a multiple of the window size and fill with zeros
-	vector<uint32_t> state_pad(ceil_divide(lowmcstatesize, wsize) * wsize, lut[0]);
+	std::vector<uint32_t> state_pad(ceil_divide(lowmcstatesize, wsize) * wsize, lut[0]);
 	for (i = 0; i < lowmcstatesize; i++)
 		state_pad[i] = state[i];
 
@@ -229,8 +229,8 @@ void FourRussiansMatrixMult(vector<uint32_t>& state, uint32_t lowmcstatesize, Bo
 	free(lut);
 }
 
-void LowMCMultiplyStateCallback(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
-	vector<uint32_t> tmpstate(lowmcstatesize);
+void LowMCMultiplyStateCallback(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ) {
+	std::vector<uint32_t> tmpstate(lowmcstatesize);
 	UGATE_T*** fourrussiansmat;
 
 	circ->PutCallbackGate(state, 0, &CallbackBuild4RMatrixAndMultiply, (void*) fourrussiansmat, 1);
@@ -249,7 +249,7 @@ void LowMCMultiplyStateCallback(vector<uint32_t>& state, uint32_t lowmcstatesize
 }
 
 void CallbackMultiplication(GATE* gate, void* matinfos) {
-	cout << "Performing multiplication" << endl;
+	std::cout << "Performing multiplication" << std::endl;
 	for(uint32_t i = 0; i < gate->ingates.ningates; i++) {
 
 	}
@@ -260,7 +260,7 @@ void CallbackMultiplication(GATE* gate, void* matinfos) {
 void CallbackBuild4RMatrixAndMultiply(GATE* gate, void* mat) {
 	//for(uint32_t i = 0; i < )
 	//TODO
-	cout << "Building 4 Russians matrix" << endl;
+	std::cout << "Building 4 Russians matrix" << std::endl;
 }
 
 void CallbackMultiplyAndDestroy4RMatrix(GATE* gate, void* matrix) {
