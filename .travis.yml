@@ -5,6 +5,11 @@ dist: trusty
 before_install:
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
   - sudo apt-get update -qq
+  - mkdir $HOME/prefix
+  - export PATH="$HOME/prefix/bin:$PATH"
+  - wget https://cmake.org/files/v3.11/cmake-3.11.4-Linux-x86_64.sh
+  - chmod +x cmake-3.11.4-Linux-x86_64.sh
+  - ./cmake-3.11.4-Linux-x86_64.sh --prefix=$HOME/prefix --exclude-subdir --skip-license
 
 install:
   - sudo apt-get install -qq g++-8
@@ -17,8 +22,12 @@ addons:
     - libssl-dev
 
 script:
-  - make all
-  - make runtest
+  - mkdir build_debug
+  - cd build_debug
+  - cmake .. -DCMAKE_BUILD_TYPE=Debug -DABY_BUILD_EXE=On
+  - make
+  - ./bin/abytest -r 0 -R &
+  - ./bin/abytest -r 1
 
 notifications:
   - email: false
