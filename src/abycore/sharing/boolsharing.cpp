@@ -71,8 +71,8 @@ void BoolSharing::InitNewLayer() {
 	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
 		it->second = 0;
 		//if(it->second > 0) {
-		//	sendbuf.push_back(m_vOP_LUT_RecSelOpeningBuf[it->first]->GetArr());
-		//	sndbytes.push_back(ceil_divide(it->second, 8));
+		//	sendbuf.emplace_back(m_vOP_LUT_RecSelOpeningBuf[it->first]->GetArr());
+		//	sndbytes.emplace_back(ceil_divide(it->second, 8));
 		//}
 	}
 }
@@ -646,17 +646,17 @@ void BoolSharing::EvaluateInteractiveOperations(uint32_t depth) {
 			if (gate->gs.ishare.src == m_eRole) {
 				ShareValues(interactiveops[i]);
 			} else {
-				m_vInputShareGates.push_back(interactiveops[i]);
+				m_vInputShareGates.emplace_back(interactiveops[i]);
 				m_nInputShareRcvSize += gate->nvals;
 			}
 			break;
 		case G_OUT:
 			if (gate->gs.oshare.dst == m_eRole) {
-				m_vOutputShareGates.push_back(interactiveops[i]);
+				m_vOutputShareGates.emplace_back(interactiveops[i]);
 				m_nOutputShareRcvSize += gate->nvals;
 			} else if (gate->gs.oshare.dst == ALL) {
 				ReconstructValue(interactiveops[i]);
-				m_vOutputShareGates.push_back(interactiveops[i]);
+				m_vOutputShareGates.emplace_back(interactiveops[i]);
 				m_nOutputShareRcvSize += gate->nvals;
 			} else {
 				ReconstructValue(interactiveops[i]);
@@ -809,7 +809,7 @@ inline void BoolSharing::SelectiveOpen(uint32_t gateid) {
 		cout << "opening " << idleft << " = " << m_pGates[idleft].gs.val[i] << " , and " << idright << " = " << m_pGates[idright].gs.val[i] << endl;
 #endif
 	}
-	m_vANDGates[0].push_back(gateid);
+	m_vANDGates[0].emplace_back(gateid);
 
 	UsedGate(idleft);
 	UsedGate(idright);
@@ -849,7 +849,7 @@ inline void BoolSharing::SelectiveOpenVec(uint32_t gateid) {
 	//m_vMTIdx[pos]++;
 	m_vMTIdx[pos]+=nandvals;
 
-	m_vANDGates[pos].push_back(gateid);
+	m_vANDGates[pos].emplace_back(gateid);
 
 	UsedGate(idchoice);
 	UsedGate(idvector);
@@ -888,7 +888,7 @@ inline void BoolSharing::SelectiveOpenOPLUT(uint32_t gateid) {
 	}
 	m_vOP_LUT_SelOpeningBitCtr[op_lut_id] += (nparents * nvals);
 
-	m_vOPLUTGates[op_lut_id].push_back(gateid);
+	m_vOPLUTGates[op_lut_id].emplace_back(gateid);
 #ifdef DEBUGBOOL
 	m_vOP_LUT_SndSelOpeningBuf[op_lut_id]->PrintHex();
 #endif
@@ -1183,24 +1183,24 @@ void BoolSharing::AssignOutputShares() {
 void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
 	//Input shares
 	if (m_nInputShareSndSize > 0) {
-		sendbuf.push_back(m_vInputShareSndBuf.GetArr());
-		sndbytes.push_back(ceil_divide(m_nInputShareSndSize, 8));
+		sendbuf.emplace_back(m_vInputShareSndBuf.GetArr());
+		sndbytes.emplace_back(ceil_divide(m_nInputShareSndSize, 8));
 	}
 
 	//Output shares
 	if (m_nOutputShareSndSize > 0) {
-		sendbuf.push_back(m_vOutputShareSndBuf.GetArr());
-		sndbytes.push_back(ceil_divide(m_nOutputShareSndSize, 8));
+		sendbuf.emplace_back(m_vOutputShareSndBuf.GetArr());
+		sndbytes.emplace_back(ceil_divide(m_nOutputShareSndSize, 8));
 	}
 
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 		uint32_t mtbytelen = ceil_divide((m_vMTIdx[i] - m_vMTStartIdx[i]), 8);
 		//Selective openings
 		if (mtbytelen > 0) {
-			sendbuf.push_back(m_vD_snd[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8));
-			sndbytes.push_back(mtbytelen);
-			sendbuf.push_back(m_vE_snd[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8) * m_vANDs[i].bitlen);
-			sndbytes.push_back(mtbytelen * m_vANDs[i].bitlen);
+			sendbuf.emplace_back(m_vD_snd[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8));
+			sndbytes.emplace_back(mtbytelen);
+			sendbuf.emplace_back(m_vE_snd[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8) * m_vANDs[i].bitlen);
+			sndbytes.emplace_back(mtbytelen * m_vANDs[i].bitlen);
 		}
 #ifdef DEBUGBOOL
 		if(mtbytelen > 0) {
@@ -1212,8 +1212,8 @@ void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbyt
 	//OP-LUT selective openings
 	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
 		if(it->second > 0) {
-			sendbuf.push_back(m_vOP_LUT_SndSelOpeningBuf[it->first]->GetArr());
-			sndbytes.push_back(ceil_divide(it->second, 8));
+			sendbuf.emplace_back(m_vOP_LUT_SndSelOpeningBuf[it->first]->GetArr());
+			sndbytes.emplace_back(ceil_divide(it->second, 8));
 		}
 	}
 
@@ -1235,8 +1235,8 @@ void BoolSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& r
 		if (m_vInputShareRcvBuf.GetSize() < ceil_divide(m_nInputShareRcvSize, 8)) {
 			m_vInputShareRcvBuf.ResizeinBytes(ceil_divide(m_nInputShareRcvSize, 8));
 		}
-		rcvbuf.push_back(m_vInputShareRcvBuf.GetArr());
-		rcvbytes.push_back(ceil_divide(m_nInputShareRcvSize, 8));
+		rcvbuf.emplace_back(m_vInputShareRcvBuf.GetArr());
+		rcvbytes.emplace_back(ceil_divide(m_nInputShareRcvSize, 8));
 	}
 
 	//Output shares
@@ -1244,26 +1244,26 @@ void BoolSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& r
 		if (m_vOutputShareRcvBuf.GetSize() < ceil_divide(m_nOutputShareRcvSize, 8)) {
 			m_vOutputShareRcvBuf.ResizeinBytes(ceil_divide(m_nOutputShareRcvSize, 8));
 		}
-		rcvbuf.push_back(m_vOutputShareRcvBuf.GetArr());
-		rcvbytes.push_back(ceil_divide(m_nOutputShareRcvSize, 8));
+		rcvbuf.emplace_back(m_vOutputShareRcvBuf.GetArr());
+		rcvbytes.emplace_back(ceil_divide(m_nOutputShareRcvSize, 8));
 	}
 
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 		uint32_t mtbytelen = ceil_divide((m_vMTIdx[i] - m_vMTStartIdx[i]), 8);
 		if (mtbytelen > 0) {
 			//Selective openings
-			rcvbuf.push_back(m_vD_rcv[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8));
-			rcvbytes.push_back(mtbytelen);
-			rcvbuf.push_back(m_vE_rcv[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8) * m_vANDs[i].bitlen);
-			rcvbytes.push_back(mtbytelen * m_vANDs[i].bitlen);
+			rcvbuf.emplace_back(m_vD_rcv[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8));
+			rcvbytes.emplace_back(mtbytelen);
+			rcvbuf.emplace_back(m_vE_rcv[i].GetArr() + ceil_divide(m_vMTStartIdx[i], 8) * m_vANDs[i].bitlen);
+			rcvbytes.emplace_back(mtbytelen * m_vANDs[i].bitlen);
 		}
 	}
 
 	//OP-LUT selective openings
 	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
 		if(it->second > 0) {
-			rcvbuf.push_back(m_vOP_LUT_RecSelOpeningBuf[it->first]->GetArr());
-			rcvbytes.push_back(ceil_divide(it->second, 8));
+			rcvbuf.emplace_back(m_vOP_LUT_RecSelOpeningBuf[it->first]->GetArr());
+			rcvbytes.emplace_back(ceil_divide(it->second, 8));
 		}
 	}
 }

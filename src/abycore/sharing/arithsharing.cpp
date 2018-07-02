@@ -341,7 +341,7 @@ void ArithSharing<T>::EvaluateInteractiveOperations(uint32_t depth) {
 #ifdef DEBUGARITH
 				cout << " which is the other parties input gate" << endl;
 #endif
-				m_vInputShareGates.push_back(gate);
+				m_vInputShareGates.emplace_back(gate);
 				m_nInputShareRcvCtr += gate->nvals;
 			}
 		} else if (gate->type == G_OUT) {
@@ -349,14 +349,14 @@ void ArithSharing<T>::EvaluateInteractiveOperations(uint32_t depth) {
 #ifdef DEBUGARITH
 				cout << " which is my output gate" << endl;
 #endif
-				m_vOutputShareGates.push_back(gate);
+				m_vOutputShareGates.emplace_back(gate);
 				m_nOutputShareRcvCtr += gate->nvals;
 			} else if (gate->gs.oshare.dst == ALL) {
 #ifdef DEBUGARITH
 				cout << " which is an output gate for both of us" << endl;
 #endif
 				ReconstructValue(gate);
-				m_vOutputShareGates.push_back(gate);
+				m_vOutputShareGates.emplace_back(gate);
 				m_nOutputShareRcvCtr += gate->nvals;
 			} else {
 #ifdef DEBUGARITH
@@ -441,7 +441,7 @@ void ArithSharing<T>::EvaluateCONVGate(GATE* gate) {
 	cout << "Evaluating conv gate which has " << gate->nvals << " values, current number of conv gates: " << m_vCONVGates.size() << endl;
 #endif
 
-	m_vCONVGates.push_back(gate);
+	m_vCONVGates.emplace_back(gate);
 	if (m_eRole == SERVER) {
 		m_nConvShareRcvCtr += gate->nvals;
 	} else {
@@ -492,7 +492,7 @@ void ArithSharing<T>::SelectiveOpen(GATE* gate) {
 		e = MOD_SUB(y, b, m_nTypeBitMask); //b > y ? m_nTypeBitMask - (b - 1) + y : y - b;
 		m_vE_snd[0].template Set<T>(e, m_vMTIdx[0]);
 	}
-	m_vMULGates.push_back(gate);
+	m_vMULGates.emplace_back(gate);
 
 	UsedGate(idleft);
 	UsedGate(idright);
@@ -767,34 +767,34 @@ template<typename T>
 void ArithSharing<T>::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
 	//Input shares
 	if (m_nInputShareSndCtr > 0) {
-		sendbuf.push_back(m_vInputShareSndBuf.GetArr());
-		sndbytes.push_back(m_nInputShareSndCtr * sizeof(T));
+		sendbuf.emplace_back(m_vInputShareSndBuf.GetArr());
+		sndbytes.emplace_back(m_nInputShareSndCtr * sizeof(T));
 	}
 
 	//Output shares
 	if (m_nOutputShareSndCtr > 0) {
-		sendbuf.push_back(m_vOutputShareSndBuf.GetArr());
-		sndbytes.push_back(m_nOutputShareSndCtr * sizeof(T));
+		sendbuf.emplace_back(m_vOutputShareSndBuf.GetArr());
+		sndbytes.emplace_back(m_nOutputShareSndCtr * sizeof(T));
 	}
 
 	//Conversion shares
 	if (m_nConvShareSndCtr > 0) {
-		sendbuf.push_back(m_vConvShareSndBuf.GetArr());
+		sendbuf.emplace_back(m_vConvShareSndBuf.GetArr());
 		//the client sends shares of his choice bits, the server the masks
 		if (m_eRole == SERVER) {
-			sndbytes.push_back(2 * m_nConvShareSndCtr * sizeof(T) * m_nTypeBitLen);
+			sndbytes.emplace_back(2 * m_nConvShareSndCtr * sizeof(T) * m_nTypeBitLen);
 		} else {
-			sndbytes.push_back(ceil_divide(m_nConvShareSndCtr * m_nTypeBitLen, 8));
+			sndbytes.emplace_back(ceil_divide(m_nConvShareSndCtr * m_nTypeBitLen, 8));
 		}
 	}
 
 	uint32_t mtbytelen = (m_vMTIdx[0] - m_vMTStartIdx[0]) * sizeof(T);
 	//Selective openings
 	if (mtbytelen > 0) {
-		sendbuf.push_back(m_vD_snd[0].GetArr() + m_vMTStartIdx[0] * sizeof(T));
-		sndbytes.push_back(mtbytelen);
-		sendbuf.push_back(m_vE_snd[0].GetArr() + m_vMTStartIdx[0] * sizeof(T));
-		sndbytes.push_back(mtbytelen);
+		sendbuf.emplace_back(m_vD_snd[0].GetArr() + m_vMTStartIdx[0] * sizeof(T));
+		sndbytes.emplace_back(mtbytelen);
+		sendbuf.emplace_back(m_vE_snd[0].GetArr() + m_vMTStartIdx[0] * sizeof(T));
+		sndbytes.emplace_back(mtbytelen);
 	}
 
 #ifdef DEBUGARITH
@@ -829,16 +829,16 @@ void ArithSharing<T>::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t
 	if (m_nInputShareRcvCtr > 0) {
 		if (m_vInputShareRcvBuf.GetSize() < m_nInputShareRcvCtr * sizeof(T))
 			m_vInputShareRcvBuf.ResizeinBytes(m_nInputShareRcvCtr * sizeof(T));
-		rcvbuf.push_back(m_vInputShareRcvBuf.GetArr());
-		rcvbytes.push_back(m_nInputShareRcvCtr * sizeof(T));
+		rcvbuf.emplace_back(m_vInputShareRcvBuf.GetArr());
+		rcvbytes.emplace_back(m_nInputShareRcvCtr * sizeof(T));
 	}
 
 	//Output shares
 	if (m_nOutputShareRcvCtr > 0) {
 		if (m_vOutputShareRcvBuf.GetSize() < m_nOutputShareRcvCtr * sizeof(T))
 			m_vOutputShareRcvBuf.ResizeinBytes(m_nOutputShareRcvCtr * sizeof(T));
-		rcvbuf.push_back(m_vOutputShareRcvBuf.GetArr());
-		rcvbytes.push_back(m_nOutputShareRcvCtr * sizeof(T));
+		rcvbuf.emplace_back(m_vOutputShareRcvBuf.GetArr());
+		rcvbytes.emplace_back(m_nOutputShareRcvCtr * sizeof(T));
 	}
 
 	//conversion shares
@@ -846,21 +846,21 @@ void ArithSharing<T>::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t
 		//cout << "Receiving conversion gate values " << endl;
 		if (m_vConvShareRcvBuf.GetSize() < m_nConvShareRcvCtr * sizeof(T) * m_nTypeBitLen)
 			m_vConvShareRcvBuf.ResizeinBytes(m_nConvShareRcvCtr * sizeof(T) * m_nTypeBitLen);
-		rcvbuf.push_back(m_vConvShareRcvBuf.GetArr());
+		rcvbuf.emplace_back(m_vConvShareRcvBuf.GetArr());
 		if (m_eRole == SERVER) {
-			rcvbytes.push_back(ceil_divide(m_nConvShareRcvCtr * m_nTypeBitLen, 8));
+			rcvbytes.emplace_back(ceil_divide(m_nConvShareRcvCtr * m_nTypeBitLen, 8));
 		} else {
-			rcvbytes.push_back(2 * m_nConvShareRcvCtr * sizeof(T) * m_nTypeBitLen);
+			rcvbytes.emplace_back(2 * m_nConvShareRcvCtr * sizeof(T) * m_nTypeBitLen);
 		}
 	}
 
 	uint32_t mtbytelen = (m_vMTIdx[0] - m_vMTStartIdx[0]) * sizeof(T);
 	//Selective openings
 	if (mtbytelen > 0) {
-		rcvbuf.push_back(m_vD_rcv[0].GetArr() + m_vMTStartIdx[0] * sizeof(T));
-		rcvbytes.push_back(mtbytelen);
-		rcvbuf.push_back(m_vE_rcv[0].GetArr() + m_vMTStartIdx[0] * sizeof(T));
-		rcvbytes.push_back(mtbytelen);
+		rcvbuf.emplace_back(m_vD_rcv[0].GetArr() + m_vMTStartIdx[0] * sizeof(T));
+		rcvbytes.emplace_back(mtbytelen);
+		rcvbuf.emplace_back(m_vE_rcv[0].GetArr() + m_vMTStartIdx[0] * sizeof(T));
+		rcvbytes.emplace_back(mtbytelen);
 	}
 
 #ifdef DEBUGARITH

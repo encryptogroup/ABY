@@ -487,17 +487,17 @@ void SetupLUT::EvaluateInteractiveOperations(uint32_t depth) {
 			if (gate->gs.ishare.src == m_eRole) {
 				ShareValues(interactiveops[i]);
 			} else {
-				m_vInputShareGates.push_back(interactiveops[i]);
+				m_vInputShareGates.emplace_back(interactiveops[i]);
 				m_nInputShareRcvSize += gate->nvals;
 			}
 			break;
 		case G_OUT:
 			if (gate->gs.oshare.dst == m_eRole) {
-				m_vOutputShareGates.push_back(interactiveops[i]);
+				m_vOutputShareGates.emplace_back(interactiveops[i]);
 				m_nOutputShareRcvSize += gate->nvals;
 			} else if (gate->gs.oshare.dst == ALL) {
 				ReconstructValue(interactiveops[i]);
-				m_vOutputShareGates.push_back(interactiveops[i]);
+				m_vOutputShareGates.emplace_back(interactiveops[i]);
 				m_nOutputShareRcvSize += gate->nvals;
 			} else {
 				ReconstructValue(interactiveops[i]);
@@ -536,7 +536,7 @@ inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 		//Before this, the sender increases the number of updated choice bits that will be received in this stage
 		m_nChoiceUpdateRcvCtr[nparents][outbit_id]+=(nvals*nparents);
 		//push back gate; assign random values later
-		m_vTTGates[nparents].push_back(gateid);
+		m_vTTGates[nparents].emplace_back(gateid);
 	} else {
 #ifdef DEBUG_SPLUT
 		cout << "evaluating TT gate as receiver, choice snd ctr = " << m_nChoiceUpdateSndCtr[nparents][outbit_id] << endl;
@@ -577,7 +577,7 @@ inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 		m_vChoiceUpdateSndBuf[nparents]->Print(m_nChoiceUpdateSndCtr[nparents]-(nvals*nparents), m_nChoiceUpdateSndCtr[nparents]);
 #endif
 		//push back the gate for later use
-		m_vTTGates[nparents].push_back(gateid);
+		m_vTTGates[nparents].emplace_back(gateid);
 		//also indicate that the updated masks that the sender sends in the next step need to be received
 		m_nMaskUpdateRcvCtr[nparents][outbit_id] += (nvals * table_len * gate->gs.tt.noutputs);
 	}
@@ -1260,8 +1260,8 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 #ifdef DEBUG_SPLUT
 			cout << "pushing stash with " << m_vSndBytesStash[i] << " byte size" << endl;
 #endif
-			sendbuf.push_back(m_vSndBufStash[i]);
-			sndbytes.push_back(m_vSndBytesStash[i]);
+			sendbuf.emplace_back(m_vSndBufStash[i]);
+			sndbytes.emplace_back(m_vSndBytesStash[i]);
 		}
 		for(uint32_t i = 0; i < m_nMaskUpdateSndCtr.size(); i++) {
 			for(uint32_t j = 0; j < m_nMaskUpdateSndCtr[i].size(); j++) {
@@ -1270,8 +1270,8 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 					cerr << "sending masks of " << ceil_divide(m_nMaskUpdateSndCtr[i][j], 8) << " byte size " << endl;
 #endif
 					//exit(0);
-					sendbuf.push_back(m_vMaskUpdateSndBuf[i][j]->GetArr());
-					sndbytes.push_back(ceil_divide(m_nMaskUpdateSndCtr[i][j], 8));
+					sendbuf.emplace_back(m_vMaskUpdateSndBuf[i][j]->GetArr());
+					sndbytes.emplace_back(ceil_divide(m_nMaskUpdateSndCtr[i][j], 8));
 					//	m_vPreCompMaskIdx[i] += m_nChoiceUpdateSndCtr[i];
 					m_nMaskUpdateSndCtr[i][j] = 0;
 					//m_vMaskUpdateSndBuf[i]->Reset();
@@ -1284,8 +1284,8 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 #ifdef DEBUG_SPLUT
 			cout << "sending input of size " << ceil_divide(m_nInputShareSndSize, 8) << " bytes" << endl;
 #endif
-			sendbuf.push_back(m_vInputShareSndBuf.GetArr());
-			sndbytes.push_back(ceil_divide(m_nInputShareSndSize, 8));
+			sendbuf.emplace_back(m_vInputShareSndBuf.GetArr());
+			sndbytes.emplace_back(ceil_divide(m_nInputShareSndSize, 8));
 		}
 
 		//Output shares
@@ -1293,8 +1293,8 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 #ifdef DEBUG_SPLUT
 			cout << "sending output of size " << ceil_divide(m_nOutputShareSndSize, 8) << " bytes" << endl;
 #endif
-			sendbuf.push_back(m_vOutputShareSndBuf.GetArr());
-			sndbytes.push_back(ceil_divide(m_nOutputShareSndSize, 8));
+			sendbuf.emplace_back(m_vOutputShareSndBuf.GetArr());
+			sndbytes.emplace_back(ceil_divide(m_nOutputShareSndSize, 8));
 		}
 
 		for(uint32_t i = 0; i < m_vChoiceUpdateSndBuf.size(); i++) {
@@ -1303,8 +1303,8 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 #ifdef DEBUG_SPLUT
 				cout << "sending choices of size " << ceil_divide(m_nChoiceUpdateSndCtr[i][j], 8) << " bytes " << endl;
 #endif
-					sendbuf.push_back(m_vChoiceUpdateSndBuf[i][j]->GetArr());
-					sndbytes.push_back(ceil_divide(m_nChoiceUpdateSndCtr[i][j], 8));
+					sendbuf.emplace_back(m_vChoiceUpdateSndBuf[i][j]->GetArr());
+					sndbytes.emplace_back(ceil_divide(m_nChoiceUpdateSndCtr[i][j], 8));
 				}
 			}
 
@@ -1322,8 +1322,8 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 #endif
 			tmpbuf = (uint8_t*) malloc(tmpbuf_bytes);
 			memcpy(tmpbuf, m_vInputShareSndBuf.GetArr(), tmpbuf_bytes);
-			m_vSndBufStash.push_back(tmpbuf);
-			m_vSndBytesStash.push_back(tmpbuf_bytes);
+			m_vSndBufStash.emplace_back(tmpbuf);
+			m_vSndBytesStash.emplace_back(tmpbuf_bytes);
 		}
 
 		//stash output shares
@@ -1334,8 +1334,8 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 #endif
 			tmpbuf = (uint8_t*) malloc(tmpbuf_bytes);
 			memcpy(tmpbuf, m_vOutputShareSndBuf.GetArr(), tmpbuf_bytes);
-			m_vSndBufStash.push_back(tmpbuf);
-			m_vSndBytesStash.push_back(tmpbuf_bytes);
+			m_vSndBufStash.emplace_back(tmpbuf);
+			m_vSndBytesStash.emplace_back(tmpbuf_bytes);
 		}
 
 		//stash table updates
@@ -1352,8 +1352,8 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 #endif
 					tmpbuf = (uint8_t*) malloc(tmpbuf_bytes);
 					memcpy(tmpbuf, m_vMaskUpdateSndBuf[i][j]->GetArr(), tmpbuf_bytes);
-					m_vSndBufStash.push_back(tmpbuf);
-					m_vSndBytesStash.push_back(tmpbuf_bytes);
+					m_vSndBufStash.emplace_back(tmpbuf);
+					m_vSndBytesStash.emplace_back(tmpbuf_bytes);
 				}
 			}
 		}
@@ -1381,8 +1381,8 @@ void SetupLUT::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvb
 		if (m_vInputShareRcvBuf.GetSize() < ceil_divide(m_nInputShareRcvSize, 8)) {
 			m_vInputShareRcvBuf.ResizeinBytes(ceil_divide(m_nInputShareRcvSize, 8));
 		}
-		rcvbuf.push_back(m_vInputShareRcvBuf.GetArr());
-		rcvbytes.push_back(ceil_divide(m_nInputShareRcvSize, 8));
+		rcvbuf.emplace_back(m_vInputShareRcvBuf.GetArr());
+		rcvbytes.emplace_back(ceil_divide(m_nInputShareRcvSize, 8));
 	}
 
 	//Output shares
@@ -1393,8 +1393,8 @@ void SetupLUT::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvb
 		if (m_vOutputShareRcvBuf.GetSize() < ceil_divide(m_nOutputShareRcvSize, 8)) {
 			m_vOutputShareRcvBuf.ResizeinBytes(ceil_divide(m_nOutputShareRcvSize, 8));
 		}
-		rcvbuf.push_back(m_vOutputShareRcvBuf.GetArr());
-		rcvbytes.push_back(ceil_divide(m_nOutputShareRcvSize, 8));
+		rcvbuf.emplace_back(m_vOutputShareRcvBuf.GetArr());
+		rcvbytes.emplace_back(ceil_divide(m_nOutputShareRcvSize, 8));
 	}
 
 	for(uint32_t i = 0; i < m_vChoiceUpdateRcvBuf.size(); i++) {
@@ -1403,15 +1403,15 @@ void SetupLUT::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvb
 #ifdef DEBUG_SPLUT
 			cout << "want to receive choices of size " << ceil_divide(m_nChoiceUpdateRcvCtr[i][j], 8) << " bytes" << endl;
 #endif
-				rcvbuf.push_back(m_vChoiceUpdateRcvBuf[i][j]->GetArr());
-				rcvbytes.push_back(ceil_divide(m_nChoiceUpdateRcvCtr[i][j], 8));
+				rcvbuf.emplace_back(m_vChoiceUpdateRcvBuf[i][j]->GetArr());
+				rcvbytes.emplace_back(ceil_divide(m_nChoiceUpdateRcvCtr[i][j], 8));
 			}
 			if(m_nMaskUpdateRcvCtr[i][j] > 0) {
 #ifdef DEBUG_SPLUT
 			cout << "want to receive masks of size " << ceil_divide(m_nMaskUpdateRcvCtr[i][j], 8) << " bytes" << endl;
 #endif
-				rcvbuf.push_back(m_vMaskUpdateRcvBuf[i][j]->GetArr());
-				rcvbytes.push_back(ceil_divide(m_nMaskUpdateRcvCtr[i][j], 8));
+				rcvbuf.emplace_back(m_vMaskUpdateRcvBuf[i][j]->GetArr());
+				rcvbytes.emplace_back(ceil_divide(m_nMaskUpdateRcvCtr[i][j], 8));
 			}
 		}
 	}

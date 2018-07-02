@@ -233,7 +233,7 @@ void YaoServerSharing::EvaluateInteractiveOperations(uint32_t depth) {
 		case G_OUT:
 			if (m_vOutputDestionations[m_nOutputDestionationsCtr] == SERVER ||
 					m_vOutputDestionations[m_nOutputDestionationsCtr] == ALL) {
-				m_vServerOutputGates.push_back(gate);
+				m_vServerOutputGates.emplace_back(gate);
 				m_nOutputShareRcvCtr += gate->nvals;
 			}
 			m_nOutputDestionationsCtr++;
@@ -289,7 +289,7 @@ void YaoServerSharing::SendConversionValues(uint32_t gateid) {
 	cout << " (client share) " << endl;
 #endif
 		m_nClientInBitCtr += gate->nvals;
-		m_vClientInputGate.push_back(gateid);
+		m_vClientInputGate.emplace_back(gateid);
 	}
 }
 
@@ -313,7 +313,7 @@ void YaoServerSharing::SendClientInputKey(uint32_t gateid) {
 	//push back and wait for bit of client
 	GATE* gate = m_pGates + gateid;
 	m_nClientInBitCtr += gate->nvals;
-	m_vClientInputGate.push_back(gateid);
+	m_vClientInputGate.emplace_back(gateid);
 }
 
 void YaoServerSharing::PrepareOnlinePhase() {
@@ -446,7 +446,7 @@ void YaoServerSharing::EvaluateInputGate(uint32_t gateid) {
 			input_gate_val_t ingatevals;
 			ingatevals.gateid = gateid;
 			ingatevals.inval = gate->gs.ishare.inval;
-			m_vPreSetInputGates.push_back(ingatevals);
+			m_vPreSetInputGates.emplace_back(ingatevals);
 		}
 		InstantiateGate(gate);
 
@@ -461,7 +461,7 @@ void YaoServerSharing::EvaluateInputGate(uint32_t gateid) {
 		memcpy(gate->gs.yinput.outKey, m_vClientInputKeys.GetArr() + m_nClientInBitCtr * m_nSecParamBytes, m_nSecParamBytes * gate->nvals);
 		memset(gate->gs.yinput.pi, 0, gate->nvals);
 		m_nClientInBitCtr += gate->nvals;
-		m_vClientInputGate.push_back(gateid);
+		m_vClientInputGate.emplace_back(gateid);
 	}
 #ifdef DEBUGYAOSERVER
 	cout << "Assigned key to input gate " << gateid << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") : ";
@@ -487,7 +487,7 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 		}
 
 		m_nClientInBitCtr += gate->nvals;
-		m_vClientInputGate.push_back(gateid);
+		m_vClientInputGate.emplace_back(gateid);
 	} else if(parent->context == S_YAO || parent->context == S_YAO_REV) {//TODO: merge with S_BOOL routine
 		//cout << "Performing transform roles protocol!" << endl;
 		memcpy(gate->gs.yinput.outKey, m_vClientInputKeys.GetArr() + m_nClientInBitCtr * m_nSecParamBytes, m_nSecParamBytes * gate->nvals);
@@ -497,7 +497,7 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 		}
 
 		m_nClientInBitCtr += gate->nvals;
-		m_vClientInputGate.push_back(gateid);
+		m_vClientInputGate.emplace_back(gateid);
 
 		//cout << "done" << endl;
 	} else if (parent->context == S_ARITH) {
@@ -508,7 +508,7 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 		a2y_gate_pos_t a2ygate;
 		a2ygate.gateid = gateid;
 		a2ygate.pos = pos;
-		m_vPreSetA2YPositions.push_back(a2ygate);
+		m_vPreSetA2YPositions.emplace_back(a2ygate);
 		if((pos & 0x01) == 0) {
 #ifdef DEBUGYAOSERVER
 			cout << " converting server share" << endl;
@@ -526,7 +526,7 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 			memset(gate->gs.yinput.pi, 0, gate->nvals);
 			//gate->gs.yinput.pi[0] = 0;
 			m_nClientInBitCtr += gate->nvals;
-			m_vClientInputGate.push_back(gateid);
+			m_vClientInputGate.emplace_back(gateid);
 		}
 	}
 #ifdef DEBUGYAOSERVER
@@ -746,8 +746,8 @@ void YaoServerSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& s
 		cout << "Server input keys = ";
 		m_vServerKeySndBuf.PrintHex();
 #endif
-		sendbuf.push_back(m_vServerKeySndBuf.GetArr());
-		sndbytes.push_back(m_nServerKeyCtr * m_nSecParamBytes);
+		sendbuf.emplace_back(m_vServerKeySndBuf.GetArr());
+		sndbytes.emplace_back(m_nServerKeyCtr * m_nSecParamBytes);
 	}
 	//Input keys of client
 	if (m_nClientInputKeyCtr > 0) {
@@ -758,10 +758,10 @@ void YaoServerSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& s
 		cout << "Client input keys[1] = ";
 		m_vClientKeySndBuf[1].PrintHex();
 #endif
-		sendbuf.push_back(m_vClientKeySndBuf[0].GetArr());
-		sndbytes.push_back(m_nClientInputKeyCtr * m_nSecParamBytes);
-		sendbuf.push_back(m_vClientKeySndBuf[1].GetArr());
-		sndbytes.push_back(m_nClientInputKeyCtr * m_nSecParamBytes);
+		sendbuf.emplace_back(m_vClientKeySndBuf[0].GetArr());
+		sndbytes.emplace_back(m_nClientInputKeyCtr * m_nSecParamBytes);
+		sendbuf.emplace_back(m_vClientKeySndBuf[1].GetArr());
+		sndbytes.emplace_back(m_nClientInputKeyCtr * m_nSecParamBytes);
 		m_nClientInputKeyCtr = 0;
 	}
 }
@@ -883,8 +883,8 @@ void YaoServerSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_
 		cout << "want to receive clients OT-bits which are of size " << m_nClientInBitCtr << " bits" << endl;
 #endif
 		m_vClientROTRcvBuf.Create(m_nClientInBitCtr);
-		rcvbuf.push_back(m_vClientROTRcvBuf.GetArr());
-		rcvbytes.push_back(ceil_divide(m_nClientInBitCtr, 8));
+		rcvbuf.emplace_back(m_vClientROTRcvBuf.GetArr());
+		rcvbytes.emplace_back(ceil_divide(m_nClientInBitCtr, 8));
 	}
 
 	if (m_nOutputShareRcvCtr > 0) {
@@ -892,8 +892,8 @@ void YaoServerSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_
 		cout << "want to receive server output bits which are of size " << m_nOutputShareRcvCtr << " bits" << endl;
 #endif
 		m_vOutputShareRcvBuf.Create(m_nOutputShareRcvCtr);
-		rcvbuf.push_back(m_vOutputShareRcvBuf.GetArr());
-		rcvbytes.push_back(ceil_divide(m_nOutputShareRcvCtr, 8));
+		rcvbuf.emplace_back(m_vOutputShareRcvBuf.GetArr());
+		rcvbytes.emplace_back(ceil_divide(m_nOutputShareRcvCtr, 8));
 	}
 }
 

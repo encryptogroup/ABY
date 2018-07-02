@@ -87,16 +87,16 @@ uint32_t ArithmeticCircuit::PutINGate(e_role src) {
 	UpdateInteractiveQueue(gateid);
 	switch (src) {
 	case SERVER:
-		m_vInputGates[0].push_back(gateid);
+		m_vInputGates[0].emplace_back(gateid);
 		m_vInputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case CLIENT:
-		m_vInputGates[1].push_back(gateid);
+		m_vInputGates[1].emplace_back(gateid);
 		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case ALL:
-		m_vInputGates[0].push_back(gateid);
-		m_vInputGates[1].push_back(gateid);
+		m_vInputGates[0].emplace_back(gateid);
+		m_vInputGates[1].emplace_back(gateid);
 		m_vInputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
@@ -119,16 +119,16 @@ uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t ninvals, e_role src) {
 	UpdateInteractiveQueue(gateid);
 	switch (src) {
 	case SERVER:
-		m_vInputGates[0].push_back(gateid);
+		m_vInputGates[0].emplace_back(gateid);
 		m_vInputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case CLIENT:
-		m_vInputGates[1].push_back(gateid);
+		m_vInputGates[1].emplace_back(gateid);
 		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case ALL:
-		m_vInputGates[0].push_back(gateid);
-		m_vInputGates[1].push_back(gateid);
+		m_vInputGates[0].emplace_back(gateid);
+		m_vInputGates[1].emplace_back(gateid);
 		m_vInputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
@@ -258,16 +258,16 @@ uint32_t ArithmeticCircuit::PutOUTGate(uint32_t parentid, e_role dst) {
 
 	switch (dst) {
 	case SERVER:
-		m_vOutputGates[0].push_back(gateid);
+		m_vOutputGates[0].emplace_back(gateid);
 		m_vOutputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case CLIENT:
-		m_vOutputGates[1].push_back(gateid);
+		m_vOutputGates[1].emplace_back(gateid);
 		m_vOutputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case ALL:
-		m_vOutputGates[0].push_back(gateid);
-		m_vOutputGates[1].push_back(gateid);
+		m_vOutputGates[0].emplace_back(gateid);
+		m_vOutputGates[1].emplace_back(gateid);
 		m_vOutputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		m_vOutputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
 		break;
@@ -402,7 +402,7 @@ void ArithmeticCircuit::UpdateInteractiveQueue(uint32_t gateid) {
 			m_nMaxDepth = m_pGates[gateid].depth + 1;
 		}
 	}
-	m_vInteractiveQueueOnLvl[m_pGates[gateid].depth].push_back(gateid);
+	m_vInteractiveQueueOnLvl[m_pGates[gateid].depth].emplace_back(gateid);
 }
 
 //enqueue locally evaluated gate queue
@@ -413,7 +413,7 @@ void ArithmeticCircuit::UpdateLocalQueue(uint32_t gateid) {
 			m_nMaxDepth = m_pGates[gateid].depth + 1;
 		}
 	}
-	m_vLocalQueueOnLvl[m_pGates[gateid].depth].push_back(gateid);
+	m_vLocalQueueOnLvl[m_pGates[gateid].depth].emplace_back(gateid);
 }
 
 void ArithmeticCircuit::Reset() {

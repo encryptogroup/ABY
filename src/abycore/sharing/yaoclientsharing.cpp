@@ -391,14 +391,14 @@ void YaoClientSharing::ReceiveClientKeys(uint32_t gateid) {
 	UGATE_T* input = gate->gs.ishare.inval;
 	m_vROTSndBuf.SetBits((BYTE*) input, (int) m_nClientSndOTCtr, gate->nvals);
 	m_nClientSndOTCtr += gate->nvals;
-	m_vClientSendCorrectionGates.push_back(gateid);
+	m_vClientSendCorrectionGates.emplace_back(gateid);
 }
 
 /* Add the servers input keys to the queue to receive them later on */
 void YaoClientSharing::ReceiveServerKeys(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 
-	m_vServerInputGates.push_back(gateid);
+	m_vServerInputGates.emplace_back(gateid);
 	m_nServerInBitCtr += gate->nvals;
 }
 
@@ -412,7 +412,7 @@ void YaoClientSharing::EvaluateConversionGate(uint32_t gateid) {
 #ifdef DEBUGYAOCLIENT
 		cout << "Server conversion gate with pos = " << gate->gs.pos << endl;
 #endif
-		m_vServerInputGates.push_back(gateid);
+		m_vServerInputGates.emplace_back(gateid);
 		m_nServerInBitCtr += gate->nvals;
 	} else {
 #ifdef DEBUGYAOCLIENT
@@ -447,7 +447,7 @@ void YaoClientSharing::EvaluateConversionGate(uint32_t gateid) {
 			std::cerr << "Error: unkown parent context: " << parent->context << std::endl;
 		}
 		m_nClientSndOTCtr += gate->nvals;
-		m_vClientSendCorrectionGates.push_back(gateid);
+		m_vClientSendCorrectionGates.emplace_back(gateid);
 	}
 }
 
@@ -465,8 +465,8 @@ void YaoClientSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& s
 		cout << " = value ^ ";
 		m_vChoiceBits.Print(m_nChoiceBitCtr, m_nChoiceBitCtr + m_nClientSndOTCtr);
 #endif
-		sendbuf.push_back(m_vROTSndBuf.GetArr());
-		sndbytes.push_back(ceil_divide(m_nClientSndOTCtr, 8));
+		sendbuf.emplace_back(m_vROTSndBuf.GetArr());
+		sndbytes.emplace_back(ceil_divide(m_nClientSndOTCtr, 8));
 		m_nChoiceBitCtr += m_nClientSndOTCtr;
 	}
 
@@ -474,8 +474,8 @@ void YaoClientSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& s
 #ifdef DEBUGYAOCLIENT
 		cout << "want to send server output shares which are of size " << m_nServerOutputShareCtr << " bits" << endl;
 #endif
-		sendbuf.push_back(m_vOutputShareSndBuf.GetArr());
-		sndbytes.push_back(ceil_divide(m_nServerOutputShareCtr, 8));
+		sendbuf.emplace_back(m_vOutputShareSndBuf.GetArr());
+		sndbytes.emplace_back(ceil_divide(m_nServerOutputShareCtr, 8));
 	}
 
 #ifdef DEBUGYAO
@@ -498,8 +498,8 @@ void YaoClientSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_
 		cout << "want to receive servers input keys which are of size " << (m_nServerInBitCtr * m_nSecParamBytes) << " bytes" << endl;
 #endif
 		m_vServerInputKeys.Create(m_nServerInBitCtr * m_cCrypto->get_seclvl().symbits);
-		rcvbuf.push_back(m_vServerInputKeys.GetArr());
-		rcvbytes.push_back(m_nServerInBitCtr * m_nSecParamBytes);
+		rcvbuf.emplace_back(m_vServerInputKeys.GetArr());
+		rcvbytes.emplace_back(m_nServerInBitCtr * m_nSecParamBytes);
 	}
 
 	if (m_nClientRcvKeyCtr > 0) {
@@ -507,12 +507,12 @@ void YaoClientSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_
 		cout << "want to receive client input keys which are of size 2* " << m_nClientRcvKeyCtr * m_nSecParamBytes << " bytes" << endl;
 #endif
 		m_vClientKeyRcvBuf[0].Create(m_nClientRcvKeyCtr * m_cCrypto->get_seclvl().symbits);
-		rcvbuf.push_back(m_vClientKeyRcvBuf[0].GetArr());
-		rcvbytes.push_back(m_nClientRcvKeyCtr * m_nSecParamBytes);
+		rcvbuf.emplace_back(m_vClientKeyRcvBuf[0].GetArr());
+		rcvbytes.emplace_back(m_nClientRcvKeyCtr * m_nSecParamBytes);
 
 		m_vClientKeyRcvBuf[1].Create(m_nClientRcvKeyCtr * m_cCrypto->get_seclvl().symbits);
-		rcvbuf.push_back(m_vClientKeyRcvBuf[1].GetArr());
-		rcvbytes.push_back(m_nClientRcvKeyCtr * m_nSecParamBytes);
+		rcvbuf.emplace_back(m_vClientKeyRcvBuf[1].GetArr());
+		rcvbytes.emplace_back(m_nClientRcvKeyCtr * m_nSecParamBytes);
 	}
 }
 
@@ -532,7 +532,7 @@ void YaoClientSharing::FinishCircuitLayer(uint32_t level) {
 		m_nClientSndOTCtr = 0;
 		//TODO optimize
 		for (uint32_t i = 0; i < m_vClientSendCorrectionGates.size(); i++) {
-			m_vClientRcvInputKeyGates.push_back(m_vClientSendCorrectionGates[i]);
+			m_vClientRcvInputKeyGates.emplace_back(m_vClientSendCorrectionGates[i]);
 		}
 		m_vClientSendCorrectionGates.clear();
 	}
