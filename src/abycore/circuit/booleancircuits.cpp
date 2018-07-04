@@ -2138,7 +2138,7 @@ vector<uint32_t> BooleanCircuit::PutMaxGate(const vector<vector<uint32_t>>& ws) 
 					PutDepthOptimizedGTGate(a, b);
 				return PutMUXGate(a, b, cmp);
 			};
-	return accumulate(ws, op, m_eContext);
+	return binary_accumulate(ws, op, m_eContext);
 }
 
 share* BooleanCircuit::PutMinGate(share** a, uint32_t nvals) {
