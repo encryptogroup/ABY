@@ -21,10 +21,12 @@
 
 #include "sharing.h"
 #include <algorithm>
+#include <vector>
+#include "../ENCRYPTO_utils/cbitvector.h"
 #include "../ENCRYPTO_utils/timer.h"
 #include "../circuit/booleancircuits.h"
 
-const uint64_t aes_sbox_multi_seq_perm_out_ttable[16][32] =
+constexpr uint64_t aes_sbox_multi_seq_perm_out_ttable[16][32] =
  { { 0xc56f6bf27b777c63L , 0x76abd7fe2b670130L , 0x6fc5f26b777b637cL , 0xab76fed7672b3001L , 0x6bf2c56f7c637b77L , 0xd7fe76ab01302b67L , 0xf26b6fc5637c777bL , 0xfed7ab763001672bL , 0x7b777c63c56f6bf2L , 0x2b67013076abd7feL , 0x777b637c6fc5f26bL , 0x672b3001ab76fed7L , 0x7c637b776bf2c56fL , 0x1302b67d7fe76abL , 0x637c777bf26b6fc5L , 0x3001672bfed7ab76L , 0x76abd7fe2b670130L , 0xc56f6bf27b777c63L , 0xab76fed7672b3001L , 0x6fc5f26b777b637cL , 0xd7fe76ab01302b67L , 0x6bf2c56f7c637b77L , 0xfed7ab763001672bL , 0xf26b6fc5637c777bL , 0x2b67013076abd7feL , 0x7b777c63c56f6bf2L , 0x672b3001ab76fed7L , 0x777b637c6fc5f26bL , 0x1302b67d7fe76abL , 0x7c637b776bf2c56fL , 0x3001672bfed7ab76L , 0x637c777bf26b6fc5L},
  { 0xf04759fa7dc982caL , 0xc072a49cafa2d4adL , 0x47f0fa59c97dca82L , 0x72c09ca4a2afadd4L , 0x59faf04782ca7dc9L , 0xa49cc072d4adafa2L , 0xfa5947f0ca82c97dL , 0x9ca472c0add4a2afL , 0x7dc982caf04759faL , 0xafa2d4adc072a49cL , 0xc97dca8247f0fa59L , 0xa2afadd472c09ca4L , 0x82ca7dc959faf047L , 0xd4adafa2a49cc072L , 0xca82c97dfa5947f0L , 0xadd4a2af9ca472c0L , 0xc072a49cafa2d4adL , 0xf04759fa7dc982caL , 0x72c09ca4a2afadd4L , 0x47f0fa59c97dca82L , 0xa49cc072d4adafa2L , 0x59faf04782ca7dc9L , 0x9ca472c0add4a2afL , 0xfa5947f0ca82c97dL , 0xafa2d4adc072a49cL , 0x7dc982caf04759faL , 0xa2afadd472c09ca4L , 0xc97dca8247f0fa59L , 0xd4adafa2a49cc072L , 0x82ca7dc959faf047L , 0xadd4a2af9ca472c0L , 0xca82c97dfa5947f0L},
  { 0xccf73f362693fdb7L , 0x1531d871f1e5a534L , 0xf7cc363f9326b7fdL , 0x311571d8e5f134a5L , 0x3f36ccf7fdb72693L , 0xd8711531a534f1e5L , 0x363ff7ccb7fd9326L , 0x71d8311534a5e5f1L , 0x2693fdb7ccf73f36L , 0xf1e5a5341531d871L , 0x9326b7fdf7cc363fL , 0xe5f134a5311571d8L , 0xfdb726933f36ccf7L , 0xa534f1e5d8711531L , 0xb7fd9326363ff7ccL , 0x34a5e5f171d83115L , 0x1531d871f1e5a534L , 0xccf73f362693fdb7L , 0x311571d8e5f134a5L , 0xf7cc363f9326b7fdL , 0xd8711531a534f1e5L , 0x3f36ccf7fdb72693L , 0x71d8311534a5e5f1L , 0x363ff7ccb7fd9326L , 0xf1e5a5341531d871L , 0x2693fdb7ccf73f36L , 0xe5f134a5311571d8L , 0x9326b7fdf7cc363fL , 0xa534f1e5d8711531L , 0xfdb726933f36ccf7L , 0x34a5e5f171d83115L , 0xb7fd9326363ff7ccL},
@@ -85,8 +87,8 @@ public:
 
 	inline void InstantiateGate(GATE* gate);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
-	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
+	void GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize);
+	void GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes);
 
 	void EvaluateSIMDGate(uint32_t gateid);
 
@@ -127,10 +129,10 @@ private:
 	uint64_t m_nTotalTTs;
 
 	XORMasking *fMaskFct;
-	vector<vector<uint32_t> > m_vTTGates;
+	std::vector<std::vector<uint32_t> > m_vTTGates;
 
-	vector<uint32_t> m_vInputShareGates;
-	vector<uint32_t> m_vOutputShareGates;
+	std::vector<uint32_t> m_vInputShareGates;
+	std::vector<uint32_t> m_vOutputShareGates;
 
 	uint32_t m_nInputShareSndSize;
 	uint32_t m_nOutputShareSndSize;
@@ -142,47 +144,47 @@ private:
 
 	//non_lin_vec_ctx* m_vANDs;
 	//first dimension is for server / client, second dimension is for ins, third dimension is for outs
-	vector<vector<vector<tt_lens_ctx> > > m_vNOTs;
+	std::vector<std::vector<std::vector<tt_lens_ctx> > > m_vNOTs;
 
-	vector<vector<uint32_t> > m_vOutBitMapping;
+	std::vector<std::vector<uint32_t> > m_vOutBitMapping;
 
 
 	CBitVector m_vInputShareSndBuf;
 	CBitVector m_vOutputShareSndBuf;
 
 	//information on updated choice bits from the OT
-	vector<vector<CBitVector*> > m_vChoiceUpdateSndBuf;
-	vector<vector<uint32_t> > m_nChoiceUpdateSndCtr;
-	vector<vector<CBitVector*> > m_vChoiceUpdateRcvBuf;
-	vector<vector<uint32_t> > m_nChoiceUpdateRcvCtr;
+	std::vector<std::vector<CBitVector*> > m_vChoiceUpdateSndBuf;
+	std::vector<std::vector<uint32_t> > m_nChoiceUpdateSndCtr;
+	std::vector<std::vector<CBitVector*> > m_vChoiceUpdateRcvBuf;
+	std::vector<std::vector<uint32_t> > m_nChoiceUpdateRcvCtr;
 
 	//information on updated masks from the OT
-	vector<vector<CBitVector*> > m_vMaskUpdateSndBuf;
-	vector<vector<uint32_t> > m_nMaskUpdateSndCtr;
-	vector<vector<CBitVector*> > m_vMaskUpdateRcvBuf;
-	vector<vector<uint32_t> > m_nMaskUpdateRcvCtr;
+	std::vector<std::vector<CBitVector*> > m_vMaskUpdateSndBuf;
+	std::vector<std::vector<uint32_t> > m_nMaskUpdateSndCtr;
+	std::vector<std::vector<CBitVector*> > m_vMaskUpdateRcvBuf;
+	std::vector<std::vector<uint32_t> > m_nMaskUpdateRcvCtr;
 
 
-	vector<uint8_t*> m_vSndBufStash;
-	vector<uint64_t> m_vSndBytesStash;
+	std::vector<uint8_t*> m_vSndBufStash;
+	std::vector<uint64_t> m_vSndBytesStash;
 
 	CBitVector m_vInputShareRcvBuf;
 	CBitVector m_vOutputShareRcvBuf;
 
 	BooleanCircuit* m_cBoolCircuit;
 
-	vector<vector<CBitVector**> > m_vPreCompOTX;
+	std::vector<std::vector<CBitVector**> > m_vPreCompOTX;
 
-	vector<vector<CBitVector*> > m_vPreCompOTMasks;
-	vector<vector<uint32_t> > m_vPreCompMaskIdx;
+	std::vector<std::vector<CBitVector*> > m_vPreCompOTMasks;
+	std::vector<std::vector<uint32_t> > m_vPreCompMaskIdx;
 
-	vector<vector<CBitVector*> > m_vPreCompOTC;
-	vector<vector<uint32_t> >m_vPreCompChoiceIdx;
-	vector<vector<CBitVector*> > m_vPreCompOTR;
+	std::vector<std::vector<CBitVector*> > m_vPreCompOTC;
+	std::vector<std::vector<uint32_t> >m_vPreCompChoiceIdx;
+	std::vector<std::vector<CBitVector*> > m_vPreCompOTR;
 
 
-	vector<vector<CBitVector*> > m_vTableRnd;
-	vector<vector<uint32_t> > m_nTableRndIdx;
+	std::vector<std::vector<CBitVector*> > m_vTableRnd;
+	std::vector<std::vector<uint32_t> > m_nTableRndIdx;
 
 	double t_snd, t_rcv;
 
@@ -300,7 +302,7 @@ private:
 
 #define MAX_GATEVAL_BUFSIZE 256
 
-const uint64_t gateval_masks[8][8][32] = {//1
+constexpr uint64_t gateval_masks[8][8][32] = {//1
 		{ {0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL, 0xffffffffffffffffL},
 		  {0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		  {0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},

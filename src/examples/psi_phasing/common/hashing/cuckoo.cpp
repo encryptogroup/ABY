@@ -51,17 +51,17 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 		ctx[i].cuckoo_entries = cuckoo_entries;
 		ctx[i].hs = &hs;
 		ctx[i].startpos = i * ceil_divide(neles, ntasks);
-		ctx[i].endpos = min(ctx[i].startpos + ceil_divide(neles, ntasks), neles);
-		//cout << "Thread " << i << " starting from " << ctx[i].startpos << " going to " << ctx[i].endpos << " for " << neles << " elements" << endl;
+		ctx[i].endpos = std::min(ctx[i].startpos + ceil_divide(neles, ntasks), neles);
+		//std::cout << "Thread " << i << " starting from " << ctx[i].startpos << " going to " << ctx[i].endpos << " for " << neles << " elements" << std::endl;
 		if(pthread_create(entry_gen_tasks+i, NULL, gen_cuckoo_entries, (void*) (ctx+i))) {
-			cerr << "Error in creating new pthread at cuckoo hashing!" << endl;
+			std::cerr << "Error in creating new pthread at cuckoo hashing!" << std::endl;
 			exit(0);
 		}
 	}
 
 	for(i = 0; i < ntasks; i++) {
 		if(pthread_join(entry_gen_tasks[i], NULL)) {
-			cerr << "Error in joining pthread at cuckoo hashing!" << endl;
+			std::cerr << "Error in joining pthread at cuckoo hashing!" << std::endl;
 			exit(0);
 		}
 	}
@@ -74,25 +74,25 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 	gen_cuckoo_entries(ctx);
 #endif
 	//for(i = 0; i < nbins; i++) {
-	//	cout << "Address " << i << " mapped to " << hs.address_used[i] << " times" << endl;
+	//	std::cout << "Address " << i << " mapped to " << hs.address_used[i] << " times" << std::endl;
 	//}
 	//insert all elements into the cuckoo hash table
 	for(i = 0; i < neles; i++) {
 		if(!(insert_element(cuckoo_table, cuckoo_entries + i, neles, hs.nhashfuns))) {
 #ifdef COUNT_FAILS
 			fails++;
-			/*cout << "insertion failed for element " << (hex) << (*(((uint32_t*) elements)+i)) << ", inserting to address: ";
+			/*std::cout << "insertion failed for element " << (hex) << (*(((uint32_t*) elements)+i)) << ", inserting to address: ";
 			for(uint32_t j = 0; j < NUM_HASH_FUNCTIONS; j++) {
-				cout << (cuckoo_entries + i)->address[j] << ", ";
+				std::cout << (cuckoo_entries + i)->address[j] << ", ";
 			}
-			cout << (dec) << endl;*/
+			std::cout << (dec) << std::endl;*/
 #else
 			if(stashctr < maxstashsize) {
-				cout << "Insertion not successful for element " << i <<", putting it on the stash" << endl;
+				std::cout << "Insertion not successful for element " << i <<", putting it on the stash" << std::endl;
 				cuckoo_stash[stashctr] = cuckoo_entries+i;
 				stashctr++;
 			} else {
-				cerr << "Stash exceeded maximum stash size of " << maxstashsize << ", terminating program" << endl;
+				std::cerr << "Stash exceeded maximum stash size of " << maxstashsize << ", terminating program" << std::endl;
 				exit(0);
 			}
 
@@ -108,14 +108,14 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 
 	for(i = 0; i < nbins; i++) {
 		if(cuckoo_table[i] != NULL) {
-			//cout << "Element: " << ((uint32_t*) cuckoo_table[i]->val)[0] << ", position = " << (cuckoo_table[i]->pos & 0x03) << ", in bin " << i << endl;
+			//std::cout << "Element: " << ((uint32_t*) cuckoo_table[i]->val)[0] << ", position = " << (cuckoo_table[i]->pos & 0x03) << ", in bin " << i << std::endl;
 			cuckoo_table[i]->val[0] ^= (cuckoo_table[i]->pos & 0x03);
 			memcpy(hash_table + i * hs.outbytelen, cuckoo_table[i]->val, hs.outbytelen);
-			/*cout << "copying value for bin " << i << ": " << (hex);
+			/*std::cout << "copying value for bin " << i << ": " << (hex);
 			for(uint32_t j = 0; j < hs.outbytelen; j++) {
-				cout <<(uint32_t) cuckoo_table[i]->val[j];
+				std::cout <<(uint32_t) cuckoo_table[i]->val[j];
 			}
-			cout << (dec) << endl;*/
+			std::cout << (dec) << std::endl;*/
 			*perm_ptr = cuckoo_table[i]->eleid;
 			perm_ptr++;
 			nelesinbin[i] = 1;
@@ -194,8 +194,8 @@ inline bool insert_element(cuckoo_entry_ctx** ctable, cuckoo_entry_ctx* element,
 	cuckoo_entry_ctx *evicted, *tmp_evicted;
 	uint32_t i, ev_pos, iter_cnt;
 #ifdef DEBUG_CUCKOO
-	cout << "iter_cnt = " << iter_cnt << " for element " << (hex) << (*((uint32_t*) element->element)) << (dec) << ", inserting to address: "
-			<< element->address[element->pos] << " or " << element->address[element->pos^1] << endl;
+	std::cout << "iter_cnt = " << iter_cnt << " for element " << (hex) << (*((uint32_t*) element->element)) << (dec) << ", inserting to address: "
+			<< element->address[element->pos] << " or " << element->address[element->pos^1] << std::endl;
 #endif
 
 	for(iter_cnt = 0, evicted = element; iter_cnt < max_iterations; iter_cnt++) {
@@ -237,10 +237,10 @@ inline uint32_t compute_stash_size(uint32_t nbins, uint32_t neles) {
 
 #ifdef TEST_CHAINLEN
 void print_chain_cnt() {
-	//cout << "Chain Count: " << endl;
+	//std::cout << "Chain Count: " << std::endl;
 	for(uint32_t i = 0; i < MAX_ITERATIONS; i++) {
 		//if(chain_cnt[i] > 0)
-			cout << i << "\t" << chain_cnt[i] << endl;
+			std::cout << i << "\t" << chain_cnt[i] << std::endl;
 	}
 }
 #endif

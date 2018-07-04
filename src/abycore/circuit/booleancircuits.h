@@ -24,7 +24,6 @@
 #include <assert.h>
 #include "circuit.h"
 #include <map>
-#include <fstream>
 #include <algorithm>
 #include "../ABY_utils/convtypes.h"
 #include "../ENCRYPTO_utils/parse_options.h"
@@ -47,18 +46,18 @@ public:
 	void Reset();
 
 	uint32_t PutANDGate(uint32_t left, uint32_t right);
-	vector<uint32_t> PutANDGate(vector<uint32_t> inleft, vector<uint32_t> inright);
+	std::vector<uint32_t> PutANDGate(std::vector<uint32_t> inleft, std::vector<uint32_t> inright);
 	share* PutANDGate(share* ina, share* inb);
 
 	uint32_t PutVectorANDGate(uint32_t choiceinput, uint32_t vectorinput);
 
 	uint32_t PutXORGate(uint32_t left, uint32_t right);
-	vector<uint32_t> PutXORGate(vector<uint32_t> inleft, vector<uint32_t> inright);
+	std::vector<uint32_t> PutXORGate(std::vector<uint32_t> inleft, std::vector<uint32_t> inright);
 	share* PutXORGate(share* ina, share* inb);
 
 	uint32_t PutORGate(uint32_t a, uint32_t b);
 	share* PutORGate(share* a, share* b);
-	vector<uint32_t> PutORGate(vector<uint32_t> a, vector<uint32_t> b);
+	std::vector<uint32_t> PutORGate(std::vector<uint32_t> a, std::vector<uint32_t> b);
 
 	uint32_t PutINGate(e_role src);
 	template<class T> uint32_t PutINGate(T val);
@@ -205,10 +204,10 @@ public:
 	share* PutYaoSharedSIMDINGate(uint32_t nvals, yao_fields* keys, uint32_t bitlen);
 
 	uint32_t PutOUTGate(uint32_t parent, e_role dst);
-	vector<uint32_t> PutOUTGate(vector<uint32_t> parents, e_role dst);
+	std::vector<uint32_t> PutOUTGate(std::vector<uint32_t> parents, e_role dst);
 	share* PutOUTGate(share* parent, e_role dst);
 
-	vector<uint32_t> PutSharedOUTGate(vector<uint32_t> parents);
+	std::vector<uint32_t> PutSharedOUTGate(std::vector<uint32_t> parents);
 	share* PutSharedOUTGate(share* parent);
 
 	share* PutCONSGate(UGATE_T val, uint32_t bitlen);
@@ -242,7 +241,7 @@ public:
 		return m_nNumANDSizes;
 	}
 	;
-	vector<vector<vector<tt_lens_ctx> > > GetTTLens() {
+        std::vector<std::vector<std::vector<tt_lens_ctx> > > GetTTLens() {
 		//inptr = m_vTTlens;
 		return m_vTTlens;
 	}
@@ -260,60 +259,60 @@ public:
 	share* PutEQGate(share* ina, share* inb);
 	share* PutMUXGate(share* ina, share* inb, share* sel);
 
-	vector<uint32_t> PutMulGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t resbitlen, bool depth_optimized = false, bool vector_ands = false);
+	std::vector<uint32_t> PutMulGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t resbitlen, bool depth_optimized = false, bool vector_ands = false);
 
 
-	vector<uint32_t> PutAddGate(vector<uint32_t> left, vector<uint32_t> right, BOOL bCarry = FALSE);
+	std::vector<uint32_t> PutAddGate(std::vector<uint32_t> left, std::vector<uint32_t> right, BOOL bCarry = FALSE);
 	share* PutADDGate(share* ina, share* inb);
 
-	vector<uint32_t> PutSizeOptimizedAddGate(vector<uint32_t> left, vector<uint32_t> right, BOOL bCarry = FALSE);
-	vector<uint32_t> PutDepthOptimizedAddGate(vector<uint32_t> lefta, vector<uint32_t> right, BOOL bCARRY = FALSE, bool vector_ands = false);
-	vector<uint32_t> PutLUTAddGate(vector<uint32_t> lefta, vector<uint32_t> right, BOOL bCARRY = FALSE);
+	std::vector<uint32_t> PutSizeOptimizedAddGate(std::vector<uint32_t> left, std::vector<uint32_t> right, BOOL bCarry = FALSE);
+	std::vector<uint32_t> PutDepthOptimizedAddGate(std::vector<uint32_t> lefta, std::vector<uint32_t> right, BOOL bCARRY = FALSE, bool vector_ands = false);
+	std::vector<uint32_t> PutLUTAddGate(std::vector<uint32_t> lefta, std::vector<uint32_t> right, BOOL bCARRY = FALSE);
 
-	vector<vector<uint32_t> > PutCarrySaveGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> c, uint32_t inbitlen, bool bCarry = FALSE);
-	vector<vector<uint32_t> > PutCSNNetwork(vector<vector<uint32_t> > ins);
+	std::vector<std::vector<uint32_t> > PutCarrySaveGate(std::vector<uint32_t> a, std::vector<uint32_t> b, std::vector<uint32_t> c, uint32_t inbitlen, bool bCarry = FALSE);
+	std::vector<std::vector<uint32_t> > PutCSNNetwork(std::vector<std::vector<uint32_t> > ins);
 
-	vector<uint32_t> PutSUBGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t max_bitlen);
+	std::vector<uint32_t> PutSUBGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t max_bitlen);
 	share* PutSUBGate(share* ina, share* inb);
-	vector<uint32_t> PutWideAddGate(vector<vector<uint32_t> > ins);
-	uint32_t PutGTGate(vector<uint32_t> a, vector<uint32_t> b);
-	uint32_t PutSizeOptimizedGTGate(vector<uint32_t> a, vector<uint32_t> b);
-	uint32_t PutDepthOptimizedGTGate(vector<uint32_t> a, vector<uint32_t> b);
-	uint32_t PutLUTGTGate(vector<uint32_t> a, vector<uint32_t> b);
+	std::vector<uint32_t> PutWideAddGate(std::vector<std::vector<uint32_t> > ins);
+	uint32_t PutGTGate(std::vector<uint32_t> a, std::vector<uint32_t> b);
+	uint32_t PutSizeOptimizedGTGate(std::vector<uint32_t> a, std::vector<uint32_t> b);
+	uint32_t PutDepthOptimizedGTGate(std::vector<uint32_t> a, std::vector<uint32_t> b);
+	uint32_t PutLUTGTGate(std::vector<uint32_t> a, std::vector<uint32_t> b);
 
-	uint32_t PutEQGate(vector<uint32_t> a, vector<uint32_t> b);
+	uint32_t PutEQGate(std::vector<uint32_t> a, std::vector<uint32_t> b);
 
 
 	share* PutANDVecGate(share* ina, share* inb);
-	vector<uint32_t> PutMUXGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t s, BOOL vecand = true);
+	std::vector<uint32_t> PutMUXGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t s, BOOL vecand = true);
 
 	share* PutVecANDMUXGate(share* a, share* b, share* s);
-	vector<uint32_t> PutVecANDMUXGate(vector<uint32_t> a, vector<uint32_t> b, vector<uint32_t> s);
+	std::vector<uint32_t> PutVecANDMUXGate(std::vector<uint32_t> a, std::vector<uint32_t> b, std::vector<uint32_t> s);
 	uint32_t PutVecANDMUXGate(uint32_t a, uint32_t b, uint32_t s);
-	uint32_t PutWideGate(e_gatetype type, vector<uint32_t> ins);
-	uint32_t PutLUTWideANDGate(vector<uint32_t> in);
+	uint32_t PutWideGate(e_gatetype type, std::vector<uint32_t> ins);
+	uint32_t PutLUTWideANDGate(std::vector<uint32_t> in);
 	share** PutCondSwapGate(share* a, share* b, share* s, BOOL vectorized);
-	vector<vector<uint32_t> > PutCondSwapGate(vector<uint32_t> a, vector<uint32_t> b, uint32_t s, BOOL vectorized);
-	vector<uint32_t> PutELM0Gate(vector<uint32_t> val, uint32_t b);
+	std::vector<std::vector<uint32_t> > PutCondSwapGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t s, BOOL vectorized);
+	std::vector<uint32_t> PutELM0Gate(std::vector<uint32_t> val, uint32_t b);
 
-  share* PutLeftShifterGate(share* in, uint32_t pos);
-	vector<uint32_t> PutLeftShifterGate(vector<uint32_t> val, uint32_t pos, uint32_t nvals = 1);
+	share* PutLeftShifterGate(share* in, uint32_t pos);
+	std::vector<uint32_t> PutLeftShifterGate(std::vector<uint32_t> val, uint32_t pos, uint32_t nvals = 1);
 
 	uint32_t PutIdxGate(uint32_t r, uint32_t maxidx);
 
 	share* PutStructurizedCombinerGate(share* input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
-	uint32_t PutStructurizedCombinerGate(vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
+	uint32_t PutStructurizedCombinerGate(std::vector<uint32_t> input, uint32_t pos_start, uint32_t pos_incr, uint32_t nvals);
 
-	uint32_t PutCallbackGate(vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
+	uint32_t PutCallbackGate(std::vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 	share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 
-	uint32_t PutTruthTableGate(vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable);
+	uint32_t PutTruthTableGate(std::vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable);
 	share* PutTruthTableGate(share* in, uint64_t* ttable);
 
-	vector<uint32_t> PutTruthTableMultiOutputGate(vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable);
+	std::vector<uint32_t> PutTruthTableMultiOutputGate(std::vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable);
 	share* PutTruthTableMultiOutputGate(share* in, uint32_t out_bits, uint64_t* ttable);
-	vector<uint32_t> PutLUTGateFromFile(const string filename, vector<uint32_t> inputs);
-	share* PutLUTGateFromFile(const string filename, share* input);
+	std::vector<uint32_t> PutLUTGateFromFile(const std::string filename, std::vector<uint32_t> inputs);
+	share* PutLUTGateFromFile(const std::string filename, share* input);
 
 
 	share* PutY2BGate(share* ina);
@@ -324,21 +323,21 @@ public:
 	uint32_t PutY2BCONVGate(uint32_t parentid);
 	uint32_t PutB2YCONVGate(uint32_t parentid);
 	uint32_t PutYSwitchRolesGate(uint32_t parentid);
-	vector<uint32_t> PutY2BCONVGate(vector<uint32_t> parentid);
-	vector<uint32_t> PutB2YCONVGate(vector<uint32_t> parentid);
-	vector<uint32_t> PutYSwitchRolesGate(vector<uint32_t> parentid);
+	std::vector<uint32_t> PutY2BCONVGate(std::vector<uint32_t> parentid);
+	std::vector<uint32_t> PutB2YCONVGate(std::vector<uint32_t> parentid);
+	std::vector<uint32_t> PutYSwitchRolesGate(std::vector<uint32_t> parentid);
 
 
-	vector<uint32_t> PutA2YCONVGate(vector<uint32_t> parentid);
+	std::vector<uint32_t> PutA2YCONVGate(std::vector<uint32_t> parentid);
 	share* PutA2YGate(share* ina);
 
-	share* PutB2AGate(share* ina) {
-		cerr << "B2A not available for Boolean circuits, please use Arithmetic circuits instead" << endl;
+	share* PutB2AGate(share*) {
+		std::cerr << "B2A not available for Boolean circuits, please use Arithmetic circuits instead" << std::endl;
 		return new boolshare(0, this);
 	}
 
 	uint32_t PutINVGate(uint32_t parentid);
-	vector<uint32_t> PutINVGate(vector<uint32_t> parentid);
+	std::vector<uint32_t> PutINVGate(std::vector<uint32_t> parentid);
 	share* PutINVGate(share* parent);
 
 	share* PutMaxGate(const vector<share*>& a);
@@ -346,7 +345,7 @@ public:
 	vector<uint32_t> PutMaxGate(const vector<vector<uint32_t>>& a);
 
 	share* PutMinGate(share** a, uint32_t nvals);
-	vector<uint32_t> PutMinGate(vector<vector<uint32_t> > a);
+	std::vector<uint32_t> PutMinGate(std::vector<std::vector<uint32_t> > a);
 
 	/**
 	 * \brief Floating point gate with one input
@@ -356,7 +355,7 @@ public:
 	 * \param nvals parallel instantiation
 	 * \return output wire IDs
 	 */
-	vector<uint32_t> PutFPGate(const string func, vector<uint32_t> inputs, uint8_t bitsize, uint32_t nvals = 1);
+	std::vector<uint32_t> PutFPGate(const std::string func, std::vector<uint32_t> inputs, uint8_t bitsize, uint32_t nvals = 1);
 
 	/**
 	 * \brief Floating point gate with two inputs
@@ -367,7 +366,7 @@ public:
 	 * \param nvals parallel instantiation
 	 * \return output wire IDs
 	 */
-	vector<uint32_t> PutFPGate(const string func, vector<uint32_t> ina, vector<uint32_t> inb, uint8_t bitsize, uint32_t nvals = 1);
+	std::vector<uint32_t> PutFPGate(const std::string func, std::vector<uint32_t> ina, std::vector<uint32_t> inb, uint8_t bitsize, uint32_t nvals = 1);
 
 	/**
 	 * \brief Add gate from a certain .aby file
@@ -375,22 +374,22 @@ public:
 	 * \param nvals parallel instantiation
 	 * \return output wire IDs
 	 */
-	vector<uint32_t> PutGateFromFile(const string filename, vector<uint32_t> inputs, uint32_t nvals = 1);
+	std::vector<uint32_t> PutGateFromFile(const std::string filename, std::vector<uint32_t> inputs, uint32_t nvals = 1);
 
 	/**
 	 * \brief Get the number of input bits for both parties that a given circuit file expects
 	 * \param the file name of the circuit
 	 * \return the number of input bits for both parties
 	 */
-	uint32_t GetInputLengthFromFile(const string filename);
+	uint32_t GetInputLengthFromFile(const std::string filename);
 
 	void PutMinIdxGate(share** vals, share** ids, uint32_t nvals, share** minval_shr, share** minid_shr);
-	void PutMinIdxGate(vector<vector<uint32_t> > vals, vector<vector<uint32_t> > ids,
-			vector<uint32_t>& minval, vector<uint32_t>& minid);
+	void PutMinIdxGate(std::vector<std::vector<uint32_t> > vals, std::vector<std::vector<uint32_t> > ids,
+			std::vector<uint32_t>& minval, std::vector<uint32_t>& minid);
 
 	void PutMaxIdxGate(share** vals, share** ids, uint32_t nvals, share** maxval_shr, share** maxid_shr);
-	void PutMaxIdxGate(vector<vector<uint32_t> > vals, vector<vector<uint32_t> > ids,
-			vector<uint32_t>& maxval, vector<uint32_t>& maxid);
+	void PutMaxIdxGate(std::vector<std::vector<uint32_t> > vals, std::vector<std::vector<uint32_t> > ids,
+			std::vector<uint32_t>& maxval, std::vector<uint32_t>& maxid);
 
 
 	void PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_t nshares, share** Sout);
@@ -441,7 +440,7 @@ public:
          * @param carry_in optional carry in bit c (zero gate if not needed)
          * @return sum of values on wires a and b
          */
-    	share* PutADDChainGate(vector <uint32_t> a, vector <uint32_t> b, uint32_t carry_in);
+    	share* PutADDChainGate(std::vector <uint32_t> a, std::vector <uint32_t> b, uint32_t carry_in);
         
 
         /**
@@ -467,7 +466,7 @@ public:
          * @param to type to which value will be converted
          * @return wires of the converted value
          */
-        vector<uint32_t> PutConvTypeGate(vector<uint32_t> wires, ConvType* from, ConvType* to, uint32_t nvals = 1);
+        std::vector<uint32_t> PutConvTypeGate(std::vector<uint32_t> wires, ConvType* from, ConvType* to, uint32_t nvals = 1);
         
         /**
          * Converts unsigned integer to floating point number
@@ -476,7 +475,7 @@ public:
          * @param to type to which value will be converted
          * @return wires of the converted value
          */
-        vector<uint32_t> PutUint2FpGate(vector<uint32_t> wires, UINTType* from, FPType* to, uint32_t nvals = 1);
+        std::vector<uint32_t> PutUint2FpGate(std::vector<uint32_t> wires, UINTType* from, FPType* to, uint32_t nvals = 1);
         
         /**
          * Converts floating point to unsigned integer number
@@ -485,7 +484,7 @@ public:
          * @param to type to which value will be converted
          * @return wires of the converted value
          */
-        vector<uint32_t> PutFp2UintGate(vector<uint32_t> wires, FPType* from, UINTType* to);
+        std::vector<uint32_t> PutFp2UintGate(std::vector<uint32_t> wires, FPType* from, UINTType* to);
         
         /**
          * Computes Prefix Or operation, thus, zeros before first seen 1 and 1s after (e.g. 0010100 => 0011111).
@@ -499,7 +498,7 @@ public:
          * @param wires input value
          * @return value of prefix or
          */
-        vector<uint32_t> PutPreOrGate(vector<uint32_t> wires);
+        std::vector<uint32_t> PutPreOrGate(std::vector<uint32_t> wires);
         
         /**
          * Uses MUXs to shift bits of the value to the left.
@@ -514,7 +513,7 @@ public:
          * @param n number of bits to shift
          * @return shifted value
          */
-        vector<uint32_t> PutBarrelLeftShifterGate(vector<uint32_t> wires, vector<uint32_t> n, uint32_t nvals = 1);
+        std::vector<uint32_t> PutBarrelLeftShifterGate(std::vector<uint32_t> wires, std::vector<uint32_t> n, uint32_t nvals = 1);
         /**
          * Uses MUXs to shift bits of the value to the right.
          * @param input input value
@@ -528,7 +527,7 @@ public:
          * @param n number of bits to shift
          * @return shifted value
          */
-        vector<uint32_t> PutBarrelRightShifterGate(vector<uint32_t> wires, vector<uint32_t> n);
+        std::vector<uint32_t> PutBarrelRightShifterGate(std::vector<uint32_t> wires, std::vector<uint32_t> n);
         
         /**
          * Put floating point gate with one input
@@ -555,11 +554,11 @@ private:
 
 	void UpdateTruthTableSizes(uint32_t len, uint32_t gateid, uint32_t out_bits);
 
-	void PadWithLeadingZeros(vector<uint32_t> &a, vector<uint32_t> &b);
+	void PadWithLeadingZeros(std::vector<uint32_t> &a, std::vector<uint32_t> &b);
 
 	non_lin_vec_ctx* m_vANDs;
 	//first dimension: circuit depth, second dimension: num-inputs, third dimension: out_bitlen
-	vector<vector<vector<tt_lens_ctx> > > m_vTTlens;
+	std::vector<std::vector<std::vector<tt_lens_ctx> > > m_vTTlens;
 
 	uint32_t m_nNumANDSizes;
 	//uint32_t m_nNumTTSizes;

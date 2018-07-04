@@ -27,8 +27,6 @@
 #include "../ENCRYPTO_utils/powmod.h"
 #include "../ENCRYPTO_utils/channel.h"
 
-using namespace std;
-
 class DGKParty {
 public:
 	DGKParty(UINT DGKbits, UINT sharelen, UINT readkey);

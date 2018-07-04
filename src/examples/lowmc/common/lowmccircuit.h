@@ -61,19 +61,19 @@ int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t n
 int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, LowMCParams* param, uint32_t maxgates,
 		crypto* crypt);
 share* BuildLowMCCircuit(share* val, share* key, BooleanCircuit* circ, LowMCParams* param, uint32_t zerogate, crypto* crypt);
-void LowMCAddRoundKey(vector<uint32_t>& val, vector<uint32_t> key, uint32_t locmcstatesize, uint32_t round, BooleanCircuit* circ);
-void LowMCMultiplyState(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
-void LowMCXORConstants(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
-void LowMCXORMultipliedKey(vector<uint32_t>& state, vector<uint32_t> key, uint32_t lowmcstatesize, uint32_t round, BooleanCircuit* circ);
-void LowMCPutSBoxLayer(vector<uint32_t>& input, uint32_t numsboxes, BooleanCircuit* circ);
+void LowMCAddRoundKey(std::vector<uint32_t>& val, std::vector<uint32_t> key, uint32_t locmcstatesize, uint32_t round, BooleanCircuit* circ);
+void LowMCMultiplyState(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
+void LowMCXORConstants(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
+void LowMCXORMultipliedKey(std::vector<uint32_t>& state, std::vector<uint32_t> key, uint32_t lowmcstatesize, uint32_t round, BooleanCircuit* circ);
+void LowMCPutSBoxLayer(std::vector<uint32_t>& input, uint32_t numsboxes, BooleanCircuit* circ);
 void LowMCPutSBox(uint32_t& o1, uint32_t& o2, uint32_t& o3, BooleanCircuit* circ);
 
-void LowMCMultiplyStateCallback(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
+void LowMCMultiplyStateCallback(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
 void CallbackMultiplication(GATE* gate, void* matmulinfos);
 void CallbackBuild4RMatrixAndMultiply(GATE* gate, void* matrix);
 void CallbackMultiplyAndDestroy4RMatrix(GATE* gate, void* matrix);
 
 
-void FourRussiansMatrixMult(vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
+void FourRussiansMatrixMult(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
 
 #endif /* __LOWMCCIRCUIT_H_ */

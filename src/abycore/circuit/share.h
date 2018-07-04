@@ -27,7 +27,7 @@ public:
 	/** Constructor overloaded with shared length and circuit.*/
 	share(uint32_t sharelen, Circuit* circ);
 	/** Constructor overloaded with gates and circuit.*/
-	share(vector<uint32_t> gates, Circuit* circ);
+	share(std::vector<uint32_t> gates, Circuit* circ);
 	/**
 	 Initialise Function
 	 \param circ 		Ciruit object.
@@ -40,7 +40,7 @@ public:
 	}
 	;
 
-	vector<uint32_t> get_wires() {
+        std::vector<uint32_t> get_wires() {
 		return m_ngateids;
 	}
 	;
@@ -50,7 +50,7 @@ public:
 
 	void set_wire_id(uint32_t posid, uint32_t wireid);
 
-	void set_wire_ids(vector<uint32_t> wires) {
+	void set_wire_ids(std::vector<uint32_t> wires) {
 		m_ngateids = wires;
 	}
 	;
@@ -109,7 +109,7 @@ public:
 	virtual void get_clear_value_vec(uint64_t** vec, uint32_t *bitlen, uint32_t *nvals) = 0;
 
 protected:
-	vector<uint32_t> m_ngateids;
+        std::vector<uint32_t> m_ngateids;
 	Circuit* m_ccirc;
 	uint32_t m_nmaxbitlen;
 };
@@ -124,7 +124,7 @@ public:
 	}
 	;
 	/** Constructor overloaded with gates and circuit.*/
-	boolshare(vector<uint32_t> gates, Circuit* circ) :
+	boolshare(std::vector<uint32_t> gates, Circuit* circ) :
 			share(gates, circ) {
 	}
 	;
@@ -168,7 +168,7 @@ public:
 	}
 	;
 	/** Constructor overloaded with gates and circuit.*/
-	arithshare(vector<uint32_t> gates, Circuit* circ) :
+	arithshare(std::vector<uint32_t> gates, Circuit* circ) :
 			share(gates, circ) {
 	}
 	;

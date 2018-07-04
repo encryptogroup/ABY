@@ -16,6 +16,13 @@
  \brief		Implementation of the SP-LUT protocol
  */
 #include "splut.h"
+#include <algorithm>
+#include <cstdint>
+#include <cstdlib>
+#include <deque>
+#include <iostream>
+#include <vector>
+
 
 void SetupLUT::Init() {
 
@@ -135,7 +142,7 @@ void SetupLUT::InitNewLayer() {
 
 void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 	//tt_lens_ctx* tmplens;
-	vector<vector<vector<tt_lens_ctx> > > tmplens = m_cBoolCircuit->GetTTLens();
+	std::vector<std::vector<std::vector<tt_lens_ctx> > > tmplens = m_cBoolCircuit->GetTTLens();
 
 	//Server has 1, Client has 0
 	uint32_t reverse = ((uint32_t) m_bPlaySender);
@@ -143,27 +150,27 @@ void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 	/*for(uint32_t i = 0; i < tmplens.size(); i++) {
 		for(uint32_t j = 0; j < tmplens[i].size(); j++) {
 			for(uint32_t k = 0; k < tmplens[i][j].size(); k++) {
-				cout << "numgates for i = " << i << ", j = " << j << ", k = " << k << ": " << tmplens[i][j][k].numgates <<
-						", len = " << tmplens[i][j][k].tt_len << ", out_bits = " << tmplens[i][j][k].out_bits << endl;
+				std::cout << "numgates for i = " << i << ", j = " << j << ", k = " << k << ": " << tmplens[i][j][k].numgates <<
+						", len = " << tmplens[i][j][k].tt_len << ", out_bits = " << tmplens[i][j][k].out_bits << std::endl;
 			}
 		}
 	}*/
 
 	uint32_t max_out_bits = 0;
-	vector<uint32_t> ingatelens(m_vNOTs[0].size(), 0);
-	vector<uint32_t> tmpgateid(m_vNOTs[0].size(), 0);
+	std::vector<uint32_t> ingatelens(m_vNOTs[0].size(), 0);
+	std::vector<uint32_t> tmpgateid(m_vNOTs[0].size(), 0);
 
 	for(uint32_t i = 0; i < tmplens[0].size(); i++) {
 		assert(1<<ceil_log2(tmplens[0][i][0].tt_len) == tmplens[0][i][0].tt_len);//check for power of two
 		assert(ceil_log2(tmplens[0][i][0].tt_len) <= 8); //check that it is smaller than 8
 
-		//cout << "values for " << i << " with ttlen = " << tmplens[0][i][0].tt_len << ", numgates = " <<
-		//		tmplens[0][i][0].numgates << ", outbits = " << tmplens[0][i][0].out_bits << endl;
+		//std::cout << "values for " << i << " with ttlen = " << tmplens[0][i][0].tt_len << ", numgates = " <<
+		//		tmplens[0][i][0].numgates << ", outbits = " << tmplens[0][i][0].out_bits << std::endl;
 
 		ingatelens[ceil_log2(tmplens[0][i][0].tt_len)] = tmplens[0][i].size();
 
 		tmpgateid[ceil_log2(tmplens[0][i][0].tt_len)] = i;
-		//cout << "tmpgateid at " << ceil_log2(tmplens[0][i][0].tt_len) << " = " << tmpgateid[ceil_log2(tmplens[0][i][0].tt_len)]<<endl;
+		//std::cout << "tmpgateid at " << ceil_log2(tmplens[0][i][0].tt_len) << " = " << tmpgateid[ceil_log2(tmplens[0][i][0].tt_len)]<<std::endl;
 	}
 
 
@@ -210,8 +217,8 @@ void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 	/*for(uint32_t i = 0; i < m_vNOTs.size(); i++) {
 		for(uint32_t j = 0; j < m_vNOTs[i].size(); j++) {
 			for(uint32_t k = 0; k < m_vNOTs[i][j].size(); k++) {
-				cout << "m_vNOTs for i = " << i << ", j = " << j << ", k = " << k << ": " << m_vNOTs[i][j][k].numgates <<
-						", len = " << m_vNOTs[i][j][k].tt_len << ", out_bits = " << m_vNOTs[i][j][k].out_bits << endl;
+				std::cout << "m_vNOTs for i = " << i << ", j = " << j << ", k = " << k << ": " << m_vNOTs[i][j][k].numgates <<
+						", len = " << m_vNOTs[i][j][k].tt_len << ", out_bits = " << m_vNOTs[i][j][k].out_bits << std::endl;
 			}
 		}
 	}*/
@@ -239,24 +246,24 @@ void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 		m_nTableRndIdx[i].resize(m_vNOTs[0][i].size(), 0);
 
 		for(uint32_t k = 0; k < m_vNOTs[0][i].size(); k++) {
-			//cout << "I am creating for " << (!reverse ? "Sender" : "Receiver") << endl;
-			//cout << "Creating sender values of size " << m_vNOTs[!reverse][i].numgates << " and len = " << m_vNOTs[!reverse][i].tt_len << endl;
-			//cout << "Creating receiver values of size " << m_vNOTs[reverse][i].numgates << " and len = " << m_vNOTs[!reverse][i].tt_len<< endl;
+			//std::cout << "I am creating for " << (!reverse ? "Sender" : "Receiver") << std::endl;
+			//std::cout << "Creating sender values of size " << m_vNOTs[!reverse][i].numgates << " and len = " << m_vNOTs[!reverse][i].tt_len << std::endl;
+			//std::cout << "Creating receiver values of size " << m_vNOTs[reverse][i].numgates << " and len = " << m_vNOTs[!reverse][i].tt_len<< std::endl;
 
 			m_vPreCompOTX[i][k] = (CBitVector**) malloc(sizeof(CBitVector*) * m_vNOTs[!reverse][i][k].tt_len);
-			//cout << "Address of X = " << (uint64_t) m_vPreCompOTX[i][k] << endl;
-			//cout << "Creating OTX at i = " << i << ", k = " << k << " with size " << m_vNOTs[!reverse][i][k].numgates*m_vNOTs[!reverse][i][k].out_bits <<
-			//		", and ttlen = " << m_vNOTs[!reverse][i][k].tt_len << endl;
-			//cout << "Address of X = " << (uint64_t) m_vPreCompOTX[i][k] << " with tt_len = " <<  m_vNOTs[!reverse][i][k].tt_len << endl;
+			//std::cout << "Address of X = " << (uint64_t) m_vPreCompOTX[i][k] << std::endl;
+			//std::cout << "Creating OTX at i = " << i << ", k = " << k << " with size " << m_vNOTs[!reverse][i][k].numgates*m_vNOTs[!reverse][i][k].out_bits <<
+			//		", and ttlen = " << m_vNOTs[!reverse][i][k].tt_len << std::endl;
+			//std::cout << "Address of X = " << (uint64_t) m_vPreCompOTX[i][k] << " with tt_len = " <<  m_vNOTs[!reverse][i][k].tt_len << std::endl;
 			for(uint32_t j = 0; j < m_vNOTs[!reverse][i][k].tt_len; j++) {
-				//cout << "Allocating number " << j << " with size " << (m_vNOTs[!reverse][i][k].numgates*m_vNOTs[!reverse][i][k].out_bits) << endl;
-				//cout << "Address of XU = " << (uint64_t) m_vPreCompOTX[i][k] << endl;
+				//std::cout << "Allocating number " << j << " with size " << (m_vNOTs[!reverse][i][k].numgates*m_vNOTs[!reverse][i][k].out_bits) << std::endl;
+				//std::cout << "Address of XU = " << (uint64_t) m_vPreCompOTX[i][k] << std::endl;
 				m_vPreCompOTX[i][k][j] = new CBitVector();
 
 				m_vPreCompOTX[i][k][j]->Create(m_vNOTs[!reverse][i][k].numgates*m_vNOTs[!reverse][i][k].out_bits);//TODO Change from OLUT
 				//m_vPreCompOTX[i][k][j]->Create(m_vNOTs[!reverse][i][k].numgates*m_vNOTs[!reverse][i][k].tt_len);//TODO Change from OLUT
-				//cout << "Address = " << (uint64_t) m_vPreCompOTX[i][k][j] << endl;
-			//	cout << "Address = " << (uint64_t) m_vPreCompOTX[i][j] << endl;
+				//std::cout << "Address = " << (uint64_t) m_vPreCompOTX[i][k][j] << std::endl;
+			//	std::cout << "Address = " << (uint64_t) m_vPreCompOTX[i][j] << std::endl;
 			}
 			m_vTableRnd[i][k] = new CBitVector();
 			m_vTableRnd[i][k]->Create(m_vNOTs[!reverse][i][k].numgates*m_vNOTs[!reverse][i][k].out_bits, m_cCrypto);
@@ -303,16 +310,16 @@ void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 					task->mskfct = fMaskFct;
 					task->delete_mskfct = true;
 					if ((reverse ^ j)) {
-						//cout << "I assigned sender" << endl;
+						//std::cout << "I assigned sender" << std::endl;
 						task->pval.sndval.X = m_vPreCompOTX[i][k];
 					} else {
-						//cout << "I assigned receiver" << endl;
+						//std::cout << "I assigned receiver" << std::endl;
 						task->pval.rcvval.C = m_vPreCompOTC[i][k];
 						task->pval.rcvval.R = m_vPreCompOTR[i][k];
 					}
 #ifndef BATCH
-					cout << "Adding new " << (reverse^(j&0x01)? "Sender" : "Receiver") << " KK 1oo" << task->nsndvals <<
-							" OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
+					std::cout << "Adding new " << (reverse^(j&0x01)? "Sender" : "Receiver") << " KK 1oo" << task->nsndvals <<
+							" OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << std::endl;
 #endif
 					setup->AddOTTask(task, j);
 				}
@@ -337,9 +344,9 @@ void SetupLUT::FinishSetupPhase(ABYSetup* setup) {
 
 	for(uint32_t i = 1; i < m_vPreCompOTX.size(); i++) {
 		if(m_vNOTs[reverse][i].numgates > 0) {
-			cout << "Sender values in 1-out-of-" << m_vNOTs[reverse][i].tt_len << " OT" << endl;
+			std::cout << "Sender values in 1-out-of-" << m_vNOTs[reverse][i].tt_len << " OT" << std::endl;
 			for(uint32_t j = 0; j < m_vNOTs[reverse][i].tt_len; j++) {
-				cout << "X" << j << ": ";
+				std::cout << "X" << j << ": ";
 				m_vPreCompOTX[i][j]->PrintHex(0, m_vNOTs[reverse][i].numgates);
 			}
 		}
@@ -347,10 +354,10 @@ void SetupLUT::FinishSetupPhase(ABYSetup* setup) {
 
 	for(uint32_t i = 1; i < m_vPreCompOTC.size(); i++) {
 		if(m_vNOTs[reverse][i].numgates > 0) {
-			cout << "Receiver choices and values in the 1-out-of-" << m_vNOTs[reverse][i].tt_len << " OT" << endl;
-			cout << "C: ";
+			std::cout << "Receiver choices and values in the 1-out-of-" << m_vNOTs[reverse][i].tt_len << " OT" << std::endl;
+			std::cout << "C: ";
 			m_vPreCompOTC[i]->Print(0, m_vNOTs[reverse][i].numgates * ceil_log2(m_vNOTs[reverse][i].tt_len));
-			cout << "R: ";
+			std::cout << "R: ";
 			m_vPreCompOTR[i]->PrintHex(0, m_vNOTs[reverse][i].numgates);
 		}
 	}
@@ -400,7 +407,7 @@ void SetupLUT::PrepareOnlinePhase() {
 
 
 void SetupLUT::EvaluateLocalOperations(uint32_t depth) {
-	deque<uint32_t> localops = m_cBoolCircuit->GetLocalQueueOnLvl(depth);
+	std::deque<uint32_t> localops = m_cBoolCircuit->GetLocalQueueOnLvl(depth);
 	GATE* gate;
 #ifdef BENCHBOOLTIME
 	timeval tstart, tend;
@@ -408,7 +415,7 @@ void SetupLUT::EvaluateLocalOperations(uint32_t depth) {
 	for (uint32_t i = 0; i < localops.size(); i++) {
 		gate = m_pGates + localops[i];
 #ifdef DEBUGBOOL_NO_MT
-		cout << "Evaluating local gate with id = " << localops[i] << " and type " << get_gate_type_name(gate->type) << endl;
+		std::cout << "Evaluating local gate with id = " << localops[i] << " and type " << get_gate_type_name(gate->type) << std::endl;
 #endif
 		switch (gate->type) {
 		case G_LIN:
@@ -450,8 +457,8 @@ void SetupLUT::EvaluateLocalOperations(uint32_t depth) {
 			if (IsSIMDGate(gate->type)) {
 				EvaluateSIMDGate(localops[i]);
 			} else {
-				cerr << "SP-LUT: Non-interactive Operation not recognized: " << (uint32_t) gate->type
-						<< "(" << get_gate_type_name(gate->type) << "), stopping execution" << endl;
+				std::cerr << "SP-LUT: Non-interactive Operation not recognized: " << (uint32_t) gate->type
+						<< "(" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
 				exit(0);
 			}
 			break;
@@ -463,13 +470,13 @@ void SetupLUT::EvaluateLocalOperations(uint32_t depth) {
 
 
 void SetupLUT::EvaluateInteractiveOperations(uint32_t depth) {
-	deque<uint32_t> interactiveops = m_cBoolCircuit->GetInteractiveQueueOnLvl(depth);
+	std::deque<uint32_t> interactiveops = m_cBoolCircuit->GetInteractiveQueueOnLvl(depth);
 
 	for (uint32_t i = 0; i < interactiveops.size(); i++) {
 		GATE* gate = m_pGates + interactiveops[i];
 
 #ifdef DEBUG_SPLUT
-		cout << "Evaluating interactive gate with id = " << interactiveops[i] << " and type " << get_gate_type_name(gate->type) << endl;
+		std::cout << "Evaluating interactive gate with id = " << interactiveops[i] << " and type " << get_gate_type_name(gate->type) << std::endl;
 #endif
 		switch (gate->type) {
 		case G_NON_LIN:
@@ -506,8 +513,8 @@ void SetupLUT::EvaluateInteractiveOperations(uint32_t depth) {
 			EvaluateCallbackGate(interactiveops[i]);
 			break;
 		default:
-			cerr << "BoolNoMTSharing: Interactive Operation not recognized: " << (uint32_t) gate->type
-				<< " (" << get_gate_type_name(gate->type) << "), stopping execution" << endl;
+			std::cerr << "BoolNoMTSharing: Interactive Operation not recognized: " << (uint32_t) gate->type
+				<< " (" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
 			exit(0);
 		}
 	}
@@ -529,7 +536,7 @@ inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 
 	if(m_bPlaySender) {
 #ifdef DEBUG_SPLUT
-		cout << "evaluating TT gate as sender, choice rcv ctr = " << m_nChoiceUpdateRcvCtr[nparents][outbit_id]  << endl;
+		std::cout << "evaluating TT gate as sender, choice rcv ctr = " << m_nChoiceUpdateRcvCtr[nparents][outbit_id]  << std::endl;
 #endif
 		//in case I am the sender in the underlying OTs; need to update the Xs with the shares of the input gates, which is done later on.
 		//Before this, the sender increases the number of updated choice bits that will be received in this stage
@@ -538,7 +545,7 @@ inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 		m_vTTGates[nparents].push_back(gateid);
 	} else {
 #ifdef DEBUG_SPLUT
-		cout << "evaluating TT gate as receiver, choice snd ctr = " << m_nChoiceUpdateSndCtr[nparents][outbit_id] << endl;
+		std::cout << "evaluating TT gate as receiver, choice snd ctr = " << m_nChoiceUpdateSndCtr[nparents][outbit_id] << std::endl;
 #endif
 		//in case I am the receiver in the underlying OTs; need to update and send the choices using the shares on the input wires.
 		GATE* ingate;
@@ -555,14 +562,14 @@ inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 			//get the choice value from the pre-computed OTs
 			choice_bits = m_vPreCompOTC[nparents][outbit_id]->Get<uint64_t>(m_vPreCompChoiceIdx[nparents][outbit_id]*nparents+ctr, nparents);
 #ifdef DEBUG_SPLUT
-			cout << "Client parent input shares to gate " << gateid << ": " <<  (hex) << gate_shares << (dec) << endl;
+			std::cout << "Client parent input shares to gate " << gateid << ": " <<  (hex) << gate_shares << (dec) << std::endl;
 #endif
-			//cout << "Choice inputs: " << (hex) << choice_bits << (dec) << endl;
+			//std::cout << "Choice inputs: " << (hex) << choice_bits << (dec) << std::endl;
 			//XOR the inputs and the choices and send the result to the sender. MOD_SUB can be used to make the sender routine more efficient.
 			gate_shares = gate_shares ^ choice_bits;
 			//tmpval = MOD_SUB(tmpval, tmpvalb, (1<<nparents)-1);
 
-			//cout << "Sending updated choice: " << (hex) << gate_shares << (dec) << endl;
+			//std::cout << "Sending updated choice: " << (hex) << gate_shares << (dec) << std::endl;
 
 			//Write the choice into the buffer that is sent to the sender
 			m_vChoiceUpdateSndBuf[nparents][outbit_id]->Set<uint64_t>(gate_shares, ctr, nparents);
@@ -572,7 +579,7 @@ inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 
 		}
 #ifdef DEBUG_SPLUT
-		cout << "Receiver in gate vals: " << endl;
+		std::cout << "Receiver in gate vals: " << std::endl;
 		m_vChoiceUpdateSndBuf[nparents]->Print(m_nChoiceUpdateSndCtr[nparents]-(nvals*nparents), m_nChoiceUpdateSndCtr[nparents]);
 #endif
 		//push back the gate for later use
@@ -593,7 +600,7 @@ inline void SetupLUT::EvaluateXORGate(uint32_t gateid) {
 	for (uint32_t i = 0; i < ceil_divide(nvals, GATE_T_BITS); i++) {
 		gate->gs.val[i] = m_pGates[idleft].gs.val[i] ^ m_pGates[idright].gs.val[i];
 	}
-	//cout << "value = " << gate->gs.val[0] << " = " << m_pGates[idleft].gs.val[0] << " ^ " << m_pGates[idright].gs.val[0] << endl;
+	//std::cout << "value = " << gate->gs.val[0] << " = " << m_pGates[idleft].gs.val[0] << " ^ " << m_pGates[idright].gs.val[0] << std::endl;
 
 	UsedGate(idleft);
 	UsedGate(idright);
@@ -609,7 +616,7 @@ inline void SetupLUT::EvaluateConstantGate(uint32_t gateid) {
 		gate->gs.val[i] = value;
 	}
 #ifdef DEBUG_SPLUT
-		cout << "Constant gate value: "<< value << endl;
+		std::cout << "Constant gate value: "<< value << std::endl;
 #endif
 }
 
@@ -620,11 +627,11 @@ inline void SetupLUT::ShareValues(uint32_t gateid) {
 	InstantiateGate(gate);
 
 	for (uint32_t i = 0, bitstocopy = gate->nvals, len; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
-		len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+		len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 		gate->gs.val[i] = m_vInputShareSndBuf.Get<UGATE_T>(m_nInputShareSndSize, len) ^ input[i];
 #ifdef DEBUG_SPLUT
-		cout << (uint32_t) gate->gs.val[i] << " (mine) = " << (uint32_t) m_vInputShareSndBuf.Get<UGATE_T>(m_nInputShareSndSize, len)
-				<< " (others) ^ " << (uint32_t) input[i] << " (input)" << endl;
+		std::cout << (uint32_t) gate->gs.val[i] << " (mine) = " << (uint32_t) m_vInputShareSndBuf.Get<UGATE_T>(m_nInputShareSndSize, len)
+				<< " (others) ^ " << (uint32_t) input[i] << " (input)" << std::endl;
 #endif
 		m_nInputShareSndSize += len;
 	}
@@ -651,8 +658,8 @@ inline void SetupLUT::EvaluateINVGate(uint32_t gateid) {
 		gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
 	}
 #ifdef DEBUG_SPLUT
-	cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
-	" and input: " << m_pGates[parentid].gs.val[0]<< (dec) << endl;
+	std::cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
+	" and input: " << m_pGates[parentid].gs.val[0]<< (dec) << std::endl;
 #endif
 	UsedGate(parentid);
 }
@@ -661,7 +668,7 @@ inline void SetupLUT::EvaluateCONVGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t parentid = gate->ingates.inputs.parents[0];
 	if (m_pGates[parentid].context == S_ARITH)
-		cerr << "can't convert from arithmetic representation directly into Boolean" << endl;
+		std::cerr << "can't convert from arithmetic representation directly into Boolean" << std::endl;
 	InstantiateGate(gate);
 
 	memset(gate->gs.val, 0, ceil_divide(gate->nvals, 8));
@@ -675,7 +682,7 @@ inline void SetupLUT::EvaluateCONVGate(uint32_t gateid) {
 		}
 	}
 #ifdef DEBUG_SPLUT
-	cout << "Set conversion gate value to " << gate->gs.val[0] << endl;
+	std::cout << "Set conversion gate value to " << gate->gs.val[0] << std::endl;
 #endif
 
 	UsedGate(parentid);
@@ -686,10 +693,10 @@ inline void SetupLUT::ReconstructValue(uint32_t gateid) {
 	uint32_t parentid = gate->ingates.inputs.parent;
 	assert(m_pGates[parentid].instantiated);
 	for (uint32_t i = 0, bitstocopy = gate->nvals, len; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
-		len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+		len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 #ifdef DEBUG_SPLUT
-		cout << "m_vOutputShareSndBuf.size = " << m_vOutputShareSndBuf.GetSize() << ", ctr = " <<m_nOutputShareSndSize << ", len = " << len << ", gate->parent = " << parentid
-		<< " and val = " << (hex) << m_pGates[parentid].gs.val[i] << (dec) << endl;
+		std::cout << "m_vOutputShareSndBuf.size = " << m_vOutputShareSndBuf.GetSize() << ", ctr = " <<m_nOutputShareSndSize << ", len = " << len << ", gate->parent = " << parentid
+		<< " and val = " << (hex) << m_pGates[parentid].gs.val[i] << (dec) << std::endl;
 #endif
 		m_vOutputShareSndBuf.Set<UGATE_T>(m_pGates[parentid].gs.val[i], m_nOutputShareSndSize, len);	//gate->gs.val[i], len);
 		m_nOutputShareSndSize += len;
@@ -703,11 +710,11 @@ void SetupLUT::FinishCircuitLayer(uint32_t level) {
 	//Compute the values of the AND gates
 #ifdef DEBUGBOOL_NO_MT
 	if(m_nInputShareRcvSize > 0) {
-		cout << "Received "<< m_nInputShareRcvSize << " input shares: ";
+		std::cout << "Received "<< m_nInputShareRcvSize << " input shares: ";
 		m_vInputShareRcvBuf.Print(0, m_nInputShareRcvSize);
 	}
 	if(m_nOutputShareRcvSize > 0) {
-		cout << "Received " << m_nOutputShareRcvSize << " output shares: ";
+		std::cout << "Received " << m_nOutputShareRcvSize << " output shares: ";
 		m_vOutputShareRcvBuf.Print(0, m_nOutputShareRcvSize);
 	}
 #endif
@@ -716,12 +723,12 @@ void SetupLUT::FinishCircuitLayer(uint32_t level) {
 	//EvaluateANDGate();
 	if(m_bPlaySender) {
 #ifdef DEBUG_SPLUT
-		cout << "Setting TT gate as sender" << endl;
+		std::cout << "Setting TT gate as sender" << std::endl;
 #endif
 		SenderEvaluateTTGates();
 	} else {
 #ifdef DEBUG_SPLUT
-		cout << "Setting TT gate as sender" << endl;
+		std::cout << "Setting TT gate as sender" << std::endl;
 #endif
 		ReceiverEvaluateTTGates();
 	}
@@ -754,7 +761,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 		//bit-length of the choices
 		choicelen = ceil_log2(len);
 		//a counter for the starting position of differently sized tables
-		vector<uint32_t> ctr_idx(m_vOutBitMapping[i].size(), 0);
+		std::vector<uint32_t> ctr_idx(m_vOutBitMapping[i].size(), 0);
 
 		for(uint32_t g = 0; g < m_vTTGates[i].size(); g++) {
 			GATE* gate = m_pGates + m_vTTGates[i][g];
@@ -776,7 +783,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 
 
 #ifdef DEBUG_SPLUT
-			cout << "Received Choices: ";
+			std::cout << "Received Choices: ";
 			m_vChoiceUpdateRcvBuf[i][outs_id]->PrintHex(0, m_vTTGates[i].size()*choicelen);
 #endif
 
@@ -786,18 +793,18 @@ void SetupLUT::SenderEvaluateTTGates() {
 			m_nTableRndIdx[i][outs_id] += (gate->nvals);
 
 #ifdef DEBUG_SPLUT
-			cout << "Sender Gate " << m_vTTGates[i][g] << " set to: ";
+			std::cout << "Sender Gate " << m_vTTGates[i][g] << " set to: ";
 			for(uint32_t j = 0; j < ceil_divide(gate->nvals, typebitlen); j++) {
-				cout << (hex) << (uint64_t) gate->gs.val[j] << (dec);
+				std::cout << (hex) << (uint64_t) gate->gs.val[j] << (dec);
 			}nvals, GATE_T_BITS
-			cout << endl;
+			std::cout << std::endl;
 #endif
 
 			//Second step: update the pre-computed masks using the table and prepare the answers
 			for(uint32_t n = 0; n < nvals; n++, ctr_idx[outs_id] += choicelen) {
 				updated_choice = m_vChoiceUpdateRcvBuf[i][outs_id]->Get<uint64_t>(ctr_idx[outs_id], choicelen);
 				parents_value = 0;
-				//cout << "Sender getting mask " << tmpmaskidx << endl;
+				//std::cout << "Sender getting mask " << tmpmaskidx << std::endl;
 				for(uint32_t j = 0; j < nparents; j++) {
 					parents_value ^= (((m_pGates[input[j]].gs.val[n/typebitlen] >> (n%typebitlen)) & 0x01) << j);
 				}
@@ -808,12 +815,12 @@ void SetupLUT::SenderEvaluateTTGates() {
 					gate_mask |= (((gate->gs.val[(n+(o*nvals))/typebitlen] >> ((n+(o*nvals))%typebitlen)) & 0x01) << o);
 				}
 
-				//cout << "Server parent input shares to gate " << m_vTTGates[i][g] << ": " <<  (hex) << parents_value << (dec) << endl;
-				//cout << "Updated choice input: " << (hex) << updated_choice << (dec) << endl;
+				//std::cout << "Server parent input shares to gate " << m_vTTGates[i][g] << ": " <<  (hex) << parents_value << (dec) << std::endl;
+				//std::cout << "Updated choice input: " << (hex) << updated_choice << (dec) << std::endl;
 
 #ifdef DEBUG_SPLUT
-				cout << "Server parent input shares to gate " << m_vTTGates[i][g] << ": " <<  (hex) << parents_value <<
-						", receiver choice = " << updated_choice << (dec) << endl;
+				std::cout << "Server parent input shares to gate " << m_vTTGates[i][g] << ": " <<  (hex) << parents_value <<
+						", receiver choice = " << updated_choice << (dec) << std::endl;
 #endif
 
 				//todo: only supports up to 64 out_bits, replace by Byte* once this is working correctly
@@ -831,7 +838,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 				m_nMaskUpdateSndCtr[i][outs_id]+=(len*out_bits);
 			}
 
-			//cout << "Server Obtained gate result: " << gate->gs.val[0] << endl;
+			//std::cout << "Server Obtained gate result: " << gate->gs.val[0] << std::endl;
 			for(uint32_t j = 0; j < nparents; j++) {
 				UsedGate(input[j]);
 			}
@@ -844,7 +851,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 	}
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
 	t_snd += getMillies(t_start, t_end);
-	//cout << "TT Sender time: " << t_snd << endl;
+	//std::cout << "TT Sender time: " << t_snd << std::endl;
 }
 
 
@@ -909,9 +916,9 @@ void SetupLUT::SenderEvaluateTTGates() {
 	for(uint32_t i = 0; i < m_vTTGates.size(); i++) {
 		len = m_vNOTs[0][i][0].tt_len;
 		choicelen = ceil_log2(len);
-		vector<uint32_t> c_idx(m_vOutBitMapping[i].size(), 0);
+		std::vector<uint32_t> c_idx(m_vOutBitMapping[i].size(), 0);
 		//assert(len == (1<<choicelen));
-		//cout << "choicelen = " << choicelen << ", i = " << i << endl;
+		//std::cout << "choicelen = " << choicelen << ", i = " << i << std::endl;
 		//assert(choicelen == i);
 		tmp_mod = 1<<choicelen;
 
@@ -931,7 +938,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 			uint32_t outs_id = m_vOutBitMapping[nparents][out_bits];
 
 #ifdef DEBUGBOOL_NO_MT
-			cout << "Received Choices: ";
+			std::cout << "Received Choices: ";
 			m_vChoiceUpdateRcvBuf[i][outs_id]->PrintHex(0, m_vTTGates[i].size()*choicelen);
 #endif
 
@@ -942,11 +949,11 @@ void SetupLUT::SenderEvaluateTTGates() {
 			m_nTableRndIdx[i][outs_id] += (gate->nvals);
 
 #ifdef DEBUGBOOL_NO_MT
-			cout << "Sender Gate " << m_vTTGates[i][g] << " set to: ";
+			std::cout << "Sender Gate " << m_vTTGates[i][g] << " set to: ";
 			for(uint32_t j = 0; j < ceil_divide(gate->nvals, typebitlen); j++) {
-				cout << (hex) << (uint64_t) gate->gs.val[j] << (dec);
+				std::cout << (hex) << (uint64_t) gate->gs.val[j] << (dec);
 			}
-			cout << endl;
+			std::cout << std::endl;
 #endif
 
 			if((m_vPreCompMaskIdx[i][outs_id] & 0x03) == 0) {
@@ -961,7 +968,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 			for(uint32_t n = 0; n < nvals; n++, c_idx[outs_id] += choicelen) {
 				tmp_choice = m_vChoiceUpdateRcvBuf[i][outs_id]->Get<uint64_t>(c_idx[outs_id], choicelen);
 				tmp_val = 0;
-				//cout << "Sender getting mask " << tmpmaskidx << endl;
+				//std::cout << "Sender getting mask " << tmpmaskidx << std::endl;
 				for(uint32_t j = 0; j < nparents; j++) {
 					tmp_val ^= (((m_pGates[input[j]].gs.val[n/typebitlen] >> (n%typebitlen)) & 0x01) << j);
 				}
@@ -970,41 +977,41 @@ void SetupLUT::SenderEvaluateTTGates() {
 				//uint64_t gateval = 0;
 
 				uint32_t iters = ceil_divide(out_bits * len, sizeof(uint64_t) * 8);
-				//cout << out_bits * len << ", " << (sizeof(uint64_t) * 8) << endl;
+				//std::cout << out_bits * len << ", " << (sizeof(uint64_t) * 8) << std::endl;
 				memset(gateval_buf, 0, MAX_GATEVAL_BUFSIZE);
 				for(uint32_t o = 0; o < out_bits; o++) {
 					//gateval |= (((gate->gs.val[(n+(o*nvals))/typebitlen] >> ((n+(o*nvals))%typebitlen)) & 0x01) << o);
 					if(((gate->gs.val[(n+(o*nvals))/typebitlen] >> ((n+(o*nvals))%typebitlen)) & 0x01)) {
 						for(uint32_t p = 0; p < iters; p++) {
-							//cout << (hex) << gateval_buf[p] << " ^ " << gateval_masks[out_bits-1][o][p];;
+							//std::cout << (hex) << gateval_buf[p] << " ^ " << gateval_masks[out_bits-1][o][p];;
 							gateval_buf[p] ^= gateval_masks[out_bits-1][o][p];
-							//cout << " = " << gateval_buf[p] << (dec) << endl;
+							//std::cout << " = " << gateval_buf[p] << (dec) << std::endl;
 						}
 					}
 				}
-//				cout << "gateval = " << (hex) << gateval << (dec) << endl;
-//				cout << "gatebuf = ";
+//				std::cout << "gateval = " << (hex) << gateval << (dec) << std::endl;
+//				std::cout << "gatebuf = ";
 //				for(uint32_t p = 0; p < iters; p++) {
-//					cout << (hex) << gateval_buf[p] << (dec) << ", ";
+//					std::cout << (hex) << gateval_buf[p] << (dec) << ", ";
 //				}
-//				cout << endl;
+//				std::cout << std::endl;
 
-				//cout << "Server input gates = " << (hex) << tmp_val << (dec) << endl;
+				//std::cout << "Server input gates = " << (hex) << tmp_val << (dec) << std::endl;
 				uint64_t* tableptr = ttable;
 #ifdef DEBUGBOOL_NO_MT
-				cout << "Sender value = " << tmp_val << ", receiver choice = " << tmp_choice << endl;
-				cout << "iterating over masks: " << endl;
+				std::cout << "Sender value = " << tmp_val << ", receiver choice = " << tmp_choice << std::endl;
+				std::cout << "iterating over masks: " << std::endl;
 #endif
 				tmpmaskidx = m_vPreCompMaskIdx[i][outs_id];
 
-				//cout << "going to process this table entries:" << endl;
+				//std::cout << "going to process this table entries:" << std::endl;
 
 				uint32_t table_perm = (tmp_val >> 4) & 0x0F;
 				uint32_t entry_perm = (tmp_val) & 0x0F;
 
 //				for(uint32_t p = 0; p < 16; p++) {
-//					cout << (hex) << ((uint64_t*)aes_sbox_multi_seq_perm_out_ttable[p])[2*entry_perm] << ", " <<
-//							((uint64_t*)aes_sbox_multi_seq_perm_out_ttable[p])[2*entry_perm+1] << (dec) << endl;
+//					std::cout << (hex) << ((uint64_t*)aes_sbox_multi_seq_perm_out_ttable[p])[2*entry_perm] << ", " <<
+//							((uint64_t*)aes_sbox_multi_seq_perm_out_ttable[p])[2*entry_perm+1] << (dec) << std::endl;
 //				}
 
 				for(uint32_t p = 0; p < 16; p++) {
@@ -1013,7 +1020,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 
 				//TODO: currently not suited for arbitrary shifts. Most of the occurring cases should be covered
 				assert((len * out_bits > 64 && ((len * out_bits) & 0x3F) == 0) || len * out_bits < 64);
-				//cout << "tmp_choice = " << tmp_choice << ", shifting by " << tmp_choice * 8 << " positions" << endl;
+				//std::cout << "tmp_choice = " << tmp_choice << ", shifting by " << tmp_choice * 8 << " positions" << std::endl;
 				crshift((uint64_t*) mytable, len * out_bits, tmp_choice*out_bits, (uint64_t*) mytable_tmp);
 
 				//for(uint32_t p = 0; p < len; p++) {
@@ -1023,7 +1030,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 				//}
 				//mytable = mytable_tmp;
 
-				//cout << "tmp_choice = " <<  tmp_choice << ", tmp_val = " << tmp_val << ", offset = " << (tmp_choice ^ tmp_val) << endl;
+				//std::cout << "tmp_choice = " <<  tmp_choice << ", tmp_val = " << tmp_val << ", offset = " << (tmp_choice ^ tmp_val) << std::endl;
 				//uint8_t* tableval = (uint8_t*) calloc(len, sizeof(uint8_t));
 
 				m_vMaskUpdateSndBuf[i][outs_id]->XORBits(mytable, m_nMaskUpdateSndCtr[i][outs_id], out_bits*len);
@@ -1033,7 +1040,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 					//tmp_pre_mask = m_vPreCompOTMasks[i][outs_id]->Get<uint64_t>(tmpmaskidx + t * out_bits, out_bits);
 					//uint64_t bla = m_vMaskUpdateSndBuf[i][outs_id]->Get<uint64_t>(m_nMaskUpdateSndCtr[i][outs_id] + t * out_bits, out_bits);
 					//assert(tmp_pre_mask == bla);
-					//cout << tmpmaskidx << ", " << m_nMaskUpdateSndCtr[i][outs_id] << ": tmp_pre_mask = " << tmp_pre_mask << ", mask buf = " << bla << endl;
+					//std::cout << tmpmaskidx << ", " << m_nMaskUpdateSndCtr[i][outs_id] << ": tmp_pre_mask = " << tmp_pre_mask << ", mask buf = " << bla << std::endl;
 
 //					tmp_table = 0;
 //
@@ -1045,37 +1052,37 @@ void SetupLUT::SenderEvaluateTTGates() {
 //					}
 //					tableval[t] = tmp_table;
 
-					//cout << t << ": " << (tmp_val^posidx) << endl;
+					//std::cout << t << ": " << (tmp_val^posidx) << std::endl;
 
-					//cout << "table val = " << (hex) << tmp_table  << (dec) << endl;
+					//std::cout << "table val = " << (hex) << tmp_table  << (dec) << std::endl;
 					//tmp_mask = gateval;//^tmp_pre_mask;
 					//m_vMaskUpdateSndBuf[i][outs_id]->XOR<uint64_t>(tmp_mask, m_nMaskUpdateSndCtr[i][outs_id] + t * out_bits, out_bits);
 #ifdef DEBUGBOOL_NO_MT
-						cout << "For t = " << t << ", pos " << (tmp_choice+t)%tmp_mod << " send = " << (hex) << tmp_mask << ", table = " << tmp_table << " (tid = " << (tmp_val^t) <<
-								"), gval = " << gateval << ", precomp OT = " << tmp_pre_mask << (dec) << endl;
+						std::cout << "For t = " << t << ", pos " << (tmp_choice+t)%tmp_mod << " send = " << (hex) << tmp_mask << ", table = " << tmp_table << " (tid = " << (tmp_val^t) <<
+								"), gval = " << gateval << ", precomp OT = " << tmp_pre_mask << (dec) << std::endl;
 #endif
 
 
 #ifdef DEBUGBOOL_NO_MT
-					cout << "Mask Buf sent: " << endl;
+					std::cout << "Mask Buf sent: " << std::endl;
 					m_vMaskUpdateSndBuf[i][outs_id]->PrintHex(bits_in_bytes(m_nMaskUpdateSndCtr[i][outs_id]), bits_in_bytes(m_nMaskUpdateSndCtr[i][outs_id]+len));
 #endif
 				//}
-//				cout << "processed table:" << endl;
+//				std::cout << "processed table:" << std::endl;
 //				for(uint32_t p = 0; p < 16; p++) {
-//					cout << (hex) << ((uint64_t*)tableval)[2*p] << ", " <<
-//							((uint64_t*)tableval)[2*p+1] << (dec) << endl;
+//					std::cout << (hex) << ((uint64_t*)tableval)[2*p] << ", " <<
+//							((uint64_t*)tableval)[2*p+1] << (dec) << std::endl;
 //				}
-//				cout << "my table:" << endl;
+//				std::cout << "my table:" << std::endl;
 //				for(uint32_t p = 0; p < 16; p++) {
-//					cout << (hex) << ((uint64_t*)mytable)[2*p] << ", " <<
-//							((uint64_t*)mytable)[2*p+1] << (dec) << endl;
+//					std::cout << (hex) << ((uint64_t*)mytable)[2*p] << ", " <<
+//							((uint64_t*)mytable)[2*p+1] << (dec) << std::endl;
 //				}
 				m_nMaskUpdateSndCtr[i][outs_id]+=(out_bits * len);
 				m_vPreCompMaskIdx[i][outs_id]+=(out_bits * len);
 
 			}
-			//cout << "Server Obtained gate result: " << gate->gs.val[0] << endl;
+			//std::cout << "Server Obtained gate result: " << gate->gs.val[0] << std::endl;
 			for(uint32_t j = 0; j < nparents; j++) {
 				UsedGate(input[j]);
 			}
@@ -1089,7 +1096,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 	//free(gateval_buf);
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
 	t_snd += getMillies(t_start, t_end);
-	//cout << "TT Sender time: " << t_snd << endl;
+	//std::cout << "TT Sender time: " << t_snd << std::endl;
 }
 */
 
@@ -1111,7 +1118,7 @@ void SetupLUT::ReceiverEvaluateTTGates() {
 		//bit length of the choices
 		choicelen = ceil_log2(len);
 		//stores the addresses for truth tables with different numbers of output bits
-		vector<uint32_t> rcvbufaddr(m_vOutBitMapping[i].size(), 0);
+		std::vector<uint32_t> rcvbufaddr(m_vOutBitMapping[i].size(), 0);
 
 		for(uint32_t g = 0; g < m_vTTGates[i].size(); g++) {
 			GATE* gate = m_pGates + m_vTTGates[i][g];
@@ -1129,14 +1136,14 @@ void SetupLUT::ReceiverEvaluateTTGates() {
 
 			//Form the choice from the input values
 			for(uint32_t n = 0; n < nvals; n++) {
-				//cout << "Receiver getting choices bits " << m_vPreCompChoiceIdx[i] << endl;
+				//std::cout << "Receiver getting choices bits " << m_vPreCompChoiceIdx[i] << std::endl;
 #ifdef DEBUGBOOL_NO_MT
-				cout << "Mask Buf received: " << endl;
+				std::cout << "Mask Buf received: " << std::endl;
 				m_vMaskUpdateRcvBuf[i][outs_id]->PrintHex(bits_in_bytes(rcvbufaddr[outs_id]), bits_in_bytes(rcvbufaddr[outs_id]+out_bits*len));
 #endif
 				tmp_choice = m_vPreCompOTC[i][outs_id]->Get<uint64_t>(m_vPreCompChoiceIdx[i][outs_id] * choicelen, choicelen);
 #ifdef DEBUG_SPLUT
-				cout << "Receiver choosing value " << tmp_choice << ", adding len = " << len << endl;
+				std::cout << "Receiver choosing value " << tmp_choice << ", adding len = " << len << std::endl;
 #endif
 
 #ifdef SEQ_OUTBITS
@@ -1147,7 +1154,7 @@ void SetupLUT::ReceiverEvaluateTTGates() {
 					tmp_rcv = tmp_rcv ^ m_vPreCompOTR[i][outs_id]->Get<uint64_t>((m_vPreCompChoiceIdx[i][outs_id]*out_bits)+o, 1);
 					rcvbufaddr[outs_id]+=len;
 #ifdef DEBUGBOOL_NO_MT
-					cout << "Obtained result " << tmp_rcv << endl;
+					std::cout << "Obtained result " << tmp_rcv << std::endl;
 #endif
 					gate->gs.val[(n+(o*nvals))/typebitlen] = gate->gs.val[(n+(o*nvals))/typebitlen] ^ (tmp_rcv << ((n+(o*nvals))%typebitlen));
 				}
@@ -1155,8 +1162,8 @@ void SetupLUT::ReceiverEvaluateTTGates() {
 #else
 				tmp_rcv = m_vMaskUpdateRcvBuf[i][outs_id]->Get<uint64_t>(rcvbufaddr[outs_id] + tmp_choice*out_bits, out_bits);
 #ifdef DEBUG_SPLUT
-				cout << "Value from mask buf = " << (hex) << tmp_rcv << ", precomp OT = " <<
-						m_vPreCompOTR[i][outs_id]->Get<uint64_t>((m_vPreCompChoiceIdx[i][outs_id]*out_bits), out_bits) << (dec) << endl;
+				std::cout << "Value from mask buf = " << (hex) << tmp_rcv << ", precomp OT = " <<
+						m_vPreCompOTR[i][outs_id]->Get<uint64_t>((m_vPreCompChoiceIdx[i][outs_id]*out_bits), out_bits) << (dec) << std::endl;
 #endif
 				tmp_rcv = tmp_rcv ^ m_vPreCompOTR[i][outs_id]->Get<uint64_t>((m_vPreCompChoiceIdx[i][outs_id]*out_bits), out_bits);
 				rcvbufaddr[outs_id]+=(out_bits * len);
@@ -1167,11 +1174,11 @@ void SetupLUT::ReceiverEvaluateTTGates() {
 #endif
 			}
 #ifdef DEBUG_SPLUT
-			cout << "Receiver Gate " << m_vTTGates[i][g] << " set to: ";
+			std::cout << "Receiver Gate " << m_vTTGates[i][g] << " set to: ";
 			for(uint32_t j = 0; j < ceil_divide(gate->nvals, typebitlen); j++) {
-				cout << (uint64_t) gate->gs.val[j] << (dec);
+				std::cout << (uint64_t) gate->gs.val[j] << (dec);
 			}
-			cout << endl;
+			std::cout << std::endl;
 #endif
 			for(uint32_t j = 0; j < nparents; j++) {
 				UsedGate(input[j]);
@@ -1184,7 +1191,7 @@ void SetupLUT::ReceiverEvaluateTTGates() {
 	}
 	clock_gettime(CLOCK_MONOTONIC, &t_end);
 	t_rcv += getMillies(t_start, t_end);
-	//cout << "TT Receiver time: " << t_rcv << endl;
+	//std::cout << "TT Receiver time: " << t_rcv << std::endl;
 }
 
 
@@ -1196,10 +1203,10 @@ void SetupLUT::AssignInputShares() {
 
 		bitstocopy = gate->nvals;
 		for (j = 0; j < ceil_divide(gate->nvals, GATE_T_BITS); j++, bitstocopy -= GATE_T_BITS) {
-			len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+			len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 			gate->gs.val[j] = m_vInputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len);
 #ifdef DEBUG_SPLUT
-			cout << "assigned value " << gate->gs.val[j] << " to gate " << m_vInputShareGates[i] << " with nvals = " << gate->nvals << " and sharebitlen = " << gate->sharebitlen << endl;
+			std::cout << "assigned value " << gate->gs.val[j] << " to gate " << m_vInputShareGates[i] << " with nvals = " << gate->nvals << " and sharebitlen = " << gate->sharebitlen << std::endl;
 #endif
 			rcvshareidx += len;
 		}
@@ -1215,11 +1222,11 @@ void SetupLUT::AssignOutputShares() {
 
 		bitstocopy = gate->nvals;
 		for (j = 0; j < ceil_divide(gate->nvals, GATE_T_BITS); j++, bitstocopy -= GATE_T_BITS) {
-			len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+			len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 			gate->gs.val[j] = m_pGates[parentid].gs.val[j] ^ m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len);
 #ifdef DEBUG_SPLUT
-			cout << "Outshare: " << (hex) << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " (mine) ^ " <<
-					m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << " (others)" << (dec) << endl;
+			std::cout << "Outshare: " << (hex) << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " (mine) ^ " <<
+					m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << " (others)" << (dec) << std::endl;
 #endif
 			rcvshareidx += len;
 		}
@@ -1227,7 +1234,7 @@ void SetupLUT::AssignOutputShares() {
 	}
 }
 
-void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
+void SetupLUT::GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& sndbytes) {
 	//the receiver XORs the precomputed masks on top
 	/*if(!m_bPlaySender) {
 		for(uint32_t i = 0; i < m_nChoiceUpdateSndCtr.size(); i++) {
@@ -1235,15 +1242,15 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 				uint32_t choicecodelen = i;
 				if(m_nChoiceUpdateSndCtr[i][j] > 0) {
 #ifdef DEBUGBOOL_NO_MT
-					cout << "Orig Choice buffer =\t";
+					std::cout << "Orig Choice buffer =\t";
 					m_vChoiceUpdateSndBuf[i][j]->Print(0, m_nChoiceUpdateSndCtr[i][j]);
-					cout << "PreCompChoice buffer =\t";
+					std::cout << "PreCompChoice buffer =\t";
 					m_vPreCompOTC[i][j]->Print(0, m_nChoiceUpdateSndCtr[i][j]);
 #endif
 					m_vChoiceUpdateSndBuf[i][j]->XORBitsPosOffset(m_vPreCompOTC[i][j]->GetArr(),
 							m_vPreCompChoiceIdx[i][j]*choicecodelen, 0, m_nChoiceUpdateSndCtr[i][j]);
 #ifdef DEBUGBOOL_NO_MT
-					cout << "Updated Choice buffer =\t";
+					std::cout << "Updated Choice buffer =\t";
 					m_vChoiceUpdateS
 					SndBuf[i]->Print(0, m_nChoiceUpdateSndCtr[i][j]);
 #endif
@@ -1257,7 +1264,7 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 		//pass on what is still on the stash
 		for(uint32_t i = 0; i < m_vSndBufStash.size(); i++) {
 #ifdef DEBUG_SPLUT
-			cout << "pushing stash with " << m_vSndBytesStash[i] << " byte size" << endl;
+			std::cout << "pushing stash with " << m_vSndBytesStash[i] << " byte size" << std::endl;
 #endif
 			sendbuf.push_back(m_vSndBufStash[i]);
 			sndbytes.push_back(m_vSndBytesStash[i]);
@@ -1266,7 +1273,7 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 			for(uint32_t j = 0; j < m_nMaskUpdateSndCtr[i].size(); j++) {
 				if(m_nMaskUpdateSndCtr[i][j] > 0) {
 #ifdef DEBUG_SPLUT
-					cerr << "sending masks of " << ceil_divide(m_nMaskUpdateSndCtr[i][j], 8) << " byte size " << endl;
+					std::cerr << "sending masks of " << ceil_divide(m_nMaskUpdateSndCtr[i][j], 8) << " byte size " << std::endl;
 #endif
 					//exit(0);
 					sendbuf.push_back(m_vMaskUpdateSndBuf[i][j]->GetArr());
@@ -1281,7 +1288,7 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 		//Input shares
 		if (m_nInputShareSndSize > 0) {
 #ifdef DEBUG_SPLUT
-			cout << "sending input of size " << ceil_divide(m_nInputShareSndSize, 8) << " bytes" << endl;
+			std::cout << "sending input of size " << ceil_divide(m_nInputShareSndSize, 8) << " bytes" << std::endl;
 #endif
 			sendbuf.push_back(m_vInputShareSndBuf.GetArr());
 			sndbytes.push_back(ceil_divide(m_nInputShareSndSize, 8));
@@ -1290,7 +1297,7 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 		//Output shares
 		if (m_nOutputShareSndSize > 0) {
 #ifdef DEBUG_SPLUT
-			cout << "sending output of size " << ceil_divide(m_nOutputShareSndSize, 8) << " bytes" << endl;
+			std::cout << "sending output of size " << ceil_divide(m_nOutputShareSndSize, 8) << " bytes" << std::endl;
 #endif
 			sendbuf.push_back(m_vOutputShareSndBuf.GetArr());
 			sndbytes.push_back(ceil_divide(m_nOutputShareSndSize, 8));
@@ -1300,7 +1307,7 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 			for(uint32_t j = 0; j < m_vChoiceUpdateSndBuf[i].size(); j++) {
 				if(m_nChoiceUpdateSndCtr[i][j] > 0) {
 #ifdef DEBUG_SPLUT
-				cout << "sending choices of size " << ceil_divide(m_nChoiceUpdateSndCtr[i][j], 8) << " bytes " << endl;
+				std::cout << "sending choices of size " << ceil_divide(m_nChoiceUpdateSndCtr[i][j], 8) << " bytes " << std::endl;
 #endif
 					sendbuf.push_back(m_vChoiceUpdateSndBuf[i][j]->GetArr());
 					sndbytes.push_back(ceil_divide(m_nChoiceUpdateSndCtr[i][j], 8));
@@ -1317,7 +1324,7 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 		if (m_nInputShareSndSize > 0) {
 			tmpbuf_bytes = ceil_divide(m_nInputShareSndSize, 8);
 #ifdef DEBUG_SPLUT
-			cout << "stashing input of size " << tmpbuf_bytes << " bytes" << endl;
+			std::cout << "stashing input of size " << tmpbuf_bytes << " bytes" << std::endl;
 #endif
 			tmpbuf = (uint8_t*) malloc(tmpbuf_bytes);
 			memcpy(tmpbuf, m_vInputShareSndBuf.GetArr(), tmpbuf_bytes);
@@ -1329,7 +1336,7 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 		if (m_nOutputShareSndSize > 0) {
 			tmpbuf_bytes = ceil_divide(m_nOutputShareSndSize, 8);
 #ifdef DEBUG_SPLUT
-			cout << "stashing output of size " << tmpbuf_bytes << " bytes" << endl;
+			std::cout << "stashing output of size " << tmpbuf_bytes << " bytes" << std::endl;
 #endif
 			tmpbuf = (uint8_t*) malloc(tmpbuf_bytes);
 			memcpy(tmpbuf, m_vOutputShareSndBuf.GetArr(), tmpbuf_bytes);
@@ -1341,13 +1348,13 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 		for(uint32_t i = 0; i < m_nMaskUpdateSndCtr.size(); i++) {
 			for(uint32_t j = 0; j < m_nMaskUpdateSndCtr[i].size(); j++) {
 				if(m_nChoiceUpdateSndCtr[i][j] > 0) {
-					cerr << "Choices should not be stashed; Something is wrong here. Exiting!" << endl;
+					std::cerr << "Choices should not be stashed; Something is wrong here. Exiting!" << std::endl;
 					exit(0);
 				}
 				if(m_nMaskUpdateSndCtr[i][j] > 0) {
 					tmpbuf_bytes = ceil_divide(m_nMaskUpdateSndCtr[i][j], 8);
 #ifdef DEBUG_SPLUT
-					cout << "stashing masks of size " << tmpbuf_bytes << " bytes" << endl;
+					std::cout << "stashing masks of size " << tmpbuf_bytes << " bytes" << std::endl;
 #endif
 					tmpbuf = (uint8_t*) malloc(tmpbuf_bytes);
 					memcpy(tmpbuf, m_vMaskUpdateSndBuf[i][j]->GetArr(), tmpbuf_bytes);
@@ -1360,22 +1367,22 @@ void SetupLUT::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes)
 
 #ifdef DEBUG_SPLUT
 	if(m_nInputShareSndSize > 0) {
-		cout << "Sending " << m_nInputShareSndSize << " Input shares : ";
+		std::cout << "Sending " << m_nInputShareSndSize << " Input shares : ";
 		m_vInputShareSndBuf.Print(0, m_nInputShareSndSize);
 	}
 	if(m_nOutputShareSndSize > 0) {
-		cout << "Sending " << m_nOutputShareSndSize << " Output shares : ";
+		std::cout << "Sending " << m_nOutputShareSndSize << " Output shares : ";
 		m_vOutputShareSndBuf.Print(0, m_nOutputShareSndSize);
 	}
 #endif
 }
 
 
-void SetupLUT::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) {
+void SetupLUT::GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes) {
 	//Input shares
 	if (m_nInputShareRcvSize > 0) {
 #ifdef DEBUG_SPLUT
-		cout << "want to receive input of size " << ceil_divide(m_nInputShareRcvSize, 8) << " bytes" << endl;
+		std::cout << "want to receive input of size " << ceil_divide(m_nInputShareRcvSize, 8) << " bytes" << std::endl;
 #endif
 		if (m_vInputShareRcvBuf.GetSize() < ceil_divide(m_nInputShareRcvSize, 8)) {
 			m_vInputShareRcvBuf.ResizeinBytes(ceil_divide(m_nInputShareRcvSize, 8));
@@ -1387,7 +1394,7 @@ void SetupLUT::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvb
 	//Output shares
 	if (m_nOutputShareRcvSize > 0) {
 #ifdef DEBUG_SPLUT
-		cout << "want to receive output of size " << ceil_divide(m_nOutputShareRcvSize, 8) << " bytes " << endl;
+		std::cout << "want to receive output of size " << ceil_divide(m_nOutputShareRcvSize, 8) << " bytes " << std::endl;
 #endif
 		if (m_vOutputShareRcvBuf.GetSize() < ceil_divide(m_nOutputShareRcvSize, 8)) {
 			m_vOutputShareRcvBuf.ResizeinBytes(ceil_divide(m_nOutputShareRcvSize, 8));
@@ -1400,14 +1407,14 @@ void SetupLUT::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvb
 		for(uint32_t j = 0; j < m_vChoiceUpdateRcvBuf[i].size(); j++) {
 			if(m_nChoiceUpdateRcvCtr[i][j] > 0) {
 #ifdef DEBUG_SPLUT
-			cout << "want to receive choices of size " << ceil_divide(m_nChoiceUpdateRcvCtr[i][j], 8) << " bytes" << endl;
+			std::cout << "want to receive choices of size " << ceil_divide(m_nChoiceUpdateRcvCtr[i][j], 8) << " bytes" << std::endl;
 #endif
 				rcvbuf.push_back(m_vChoiceUpdateRcvBuf[i][j]->GetArr());
 				rcvbytes.push_back(ceil_divide(m_nChoiceUpdateRcvCtr[i][j], 8));
 			}
 			if(m_nMaskUpdateRcvCtr[i][j] > 0) {
 #ifdef DEBUG_SPLUT
-			cout << "want to receive masks of size " << ceil_divide(m_nMaskUpdateRcvCtr[i][j], 8) << " bytes" << endl;
+			std::cout << "want to receive masks of size " << ceil_divide(m_nMaskUpdateRcvCtr[i][j], 8) << " bytes" << std::endl;
 #endif
 				rcvbuf.push_back(m_vMaskUpdateRcvBuf[i][j]->GetArr());
 				rcvbytes.push_back(ceil_divide(m_nMaskUpdateRcvCtr[i][j], 8));
@@ -1432,7 +1439,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 
 	if (gate->type == G_COMBINE) {
 #ifdef DEBUGSHARING
-		cout << " which is a COMBINE gate" << endl;
+		std::cout << " which is a COMBINE gate" << std::endl;
 #endif
 
 		uint32_t* input = gate->ingates.inputs.parents;
@@ -1458,7 +1465,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		free(input);
 	} else if (gate->type == G_SPLIT) {
 #ifdef DEBUGSHARING
-		cout << " which is a SPLIT gate" << endl;
+		std::cout << " which is a SPLIT gate" << std::endl;
 #endif
 		uint32_t pos = gate->gs.sinput.pos;
 		uint32_t idparent = gate->ingates.inputs.parent;
@@ -1471,7 +1478,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 	} else if (gate->type == G_REPEAT) //TODO only meant for single bit values, update
 			{
 #ifdef DEBUGSHARING
-		cout << " which is a REPEATER gate" << endl;
+		std::cout << " which is a REPEATER gate" << std::endl;
 #endif
 		uint32_t idparent = gate->ingates.inputs.parent;
 		InstantiateGate(gate);
@@ -1481,9 +1488,9 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		UsedGate(idparent);
 	} else if (gate->type == G_PERM) {
 #ifdef DEBUGSHARING
-		cout << " which is a PERMUTATION gate" << endl;
+		std::cout << " which is a PERMUTATION gate" << std::endl;
 #endif
-		//cout << "I am evaluating a permutation gate" << endl;
+		//std::cout << "I am evaluating a permutation gate" << std::endl;
 		uint32_t* inputs = gate->ingates.inputs.parents;
 		uint32_t* posids = gate->gs.perm.posids;
 
@@ -1501,7 +1508,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		free(posids);
 	} else if (gate->type == G_COMBINEPOS) {
 #ifdef DEBUGSHARING
-		cout << " which is a COMBINEPOS gate" << endl;
+		std::cout << " which is a COMBINEPOS gate" << std::endl;
 #endif
 		uint32_t* combinepos = gate->ingates.inputs.parents; //gate->gs.combinepos.input;
 		uint32_t arraypos = gate->gs.combinepos.pos / GATE_T_BITS;
@@ -1518,7 +1525,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		free(combinepos);
 	} else if (gate->type == G_SUBSET) {
 #ifdef DEBUGSHARING
-		cout << " which is a Subset gate" << endl;
+		std::cout << " which is a Subset gate" << std::endl;
 #endif
 		uint32_t idparent = gate->ingates.inputs.parent;
 		uint32_t* positions = gate->gs.sub_pos.posids; //gate->gs.combinepos.input;
@@ -1545,9 +1552,9 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 #endif
 	} else if (gate->type == G_STRUCT_COMBINE) {
 #ifdef DEBUGSHARING
-		cout << " which is a Subset gate" << endl;
+		std::cout << " which is a Subset gate" << std::endl;
 #endif
-		//cout << "I am evaluating a structurized combiner gate" << endl;
+		//std::cout << "I am evaluating a structurized combiner gate" << std::endl;
 		uint32_t* inputs = gate->ingates.inputs.parents;
 		uint32_t pos_start = gate->gs.struct_comb.pos_start;
 		uint32_t pos_incr = gate->gs.struct_comb.pos_incr;
@@ -1559,7 +1566,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		memset(gate->gs.val, 0x00, ceil_divide(vsize, 8));
 
 		//TODO: Optimize
-		//cout << "ninputs = " << ninputs << ", nvals = " << vsize  << endl;
+		//std::cout << "ninputs = " << ninputs << ", nvals = " << vsize  << std::endl;
 		for(uint32_t pos_ctr = pos_start, ctr=0, p_tmp_idx, p_tmp_pos; ctr<vsize; pos_ctr+=pos_incr) {
 			p_tmp_idx = pos_ctr / GATE_T_BITS;
 			p_tmp_pos = pos_ctr % GATE_T_BITS;
@@ -1590,7 +1597,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 }
 
 uint32_t SetupLUT::AssignInput(CBitVector& inputvals) {
-	deque<uint32_t> myingates = m_cBoolCircuit->GetInputGatesForParty(m_eRole);
+	std::deque<uint32_t> myingates = m_cBoolCircuit->GetInputGatesForParty(m_eRole);
 	inputvals.Create((uint64_t) m_cBoolCircuit->GetNumInputBitsForParty(m_eRole), m_cCrypto);
 
 	GATE* gate;
@@ -1605,7 +1612,7 @@ uint32_t SetupLUT::AssignInput(CBitVector& inputvals) {
 			UGATE_T* inval = (UGATE_T*) calloc(lim, sizeof(UGATE_T));
 
 			for (uint32_t j = 0; j < lim; j++, bitstocopy -= GATE_T_BITS) {
-				len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+				len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 				inval[j] = inputvals.Get<UGATE_T>(inbitstart, len);
 				inbitstart += len;
 			}
@@ -1616,7 +1623,7 @@ uint32_t SetupLUT::AssignInput(CBitVector& inputvals) {
 }
 
 uint32_t SetupLUT::GetOutput(CBitVector& out) {
-	deque<uint32_t> myoutgates = m_cBoolCircuit->GetOutputGatesForParty(m_eRole);
+	std::deque<uint32_t> myoutgates = m_cBoolCircuit->GetOutputGatesForParty(m_eRole);
 	uint32_t outbits = m_cBoolCircuit->GetNumOutputBitsForParty(m_eRole);
 	out.Create(outbits);
 
@@ -1633,27 +1640,27 @@ uint32_t SetupLUT::GetOutput(CBitVector& out) {
 }
 
 void SetupLUT::PrintPerformanceStatistics() {
-	cout << "SP-LUT Sharing: OT-gates: ";
+	std::cout << "SP-LUT Sharing: OT-gates: ";
 	uint64_t total_not_gates = 0;
 	for (uint32_t i = 0; i < m_vNOTs[0].size(); i++) {
 		//TODO: udpdate
 		uint32_t notgates = m_vNOTs[0][i][0].numgates + m_vNOTs[1][i][0].numgates;
 		if(notgates>0) {
-			cout << "1oo" << m_vNOTs[0][i][0].tt_len << ": " << notgates << "; ";
+			std::cout << "1oo" << m_vNOTs[0][i][0].tt_len << ": " << notgates << "; ";
 		}
 		total_not_gates += notgates;
 	}
-	cout << "Total OT gates = " << total_not_gates << "; ";
+	std::cout << "Total OT gates = " << total_not_gates << "; ";
 
-	cout << "Depth: " << GetMaxCommunicationRounds() << endl;
+	std::cout << "Depth: " << GetMaxCommunicationRounds() << std::endl;
 
-/*	cout << "XOR vals: "<< m_cBoolCircuit->GetNumXORVals() << " gates: "<< m_cBoolCircuit->GetNumXORGates() << endl;
-	cout << "Comb gates: " << m_cBoolCircuit->GetNumCombGates() << ", CombStruct gates: " <<  m_cBoolCircuit->GetNumStructCombGates() <<
+/*	std::cout << "XOR vals: "<< m_cBoolCircuit->GetNumXORVals() << " gates: "<< m_cBoolCircuit->GetNumXORGates() << std::endl;
+	std::cout << "Comb gates: " << m_cBoolCircuit->GetNumCombGates() << ", CombStruct gates: " <<  m_cBoolCircuit->GetNumStructCombGates() <<
 			", Perm gates: "<< m_cBoolCircuit->GetNumPermGates() << ", Subset gates: " << m_cBoolCircuit->GetNumSubsetGates() <<
-			", Split gates: "<< m_cBoolCircuit->GetNumSplitGates() << endl;*/
+			", Split gates: "<< m_cBoolCircuit->GetNumSplitGates() << std::endl;*/
 #ifdef BENCHBOOLTIME
-	cout << "XOR time " << m_nXORTime << ", SIMD time " << m_nSIMDTime << ", Comb time: " << m_nCombTime << ", Comb structurized time: " <<
-			m_nCombStructTime << ", Subset time: " << m_nSubsetTime << endl;
+	std::cout << "XOR time " << m_nXORTime << ", SIMD time " << m_nSIMDTime << ", Comb time: " << m_nCombTime << ", Comb structurized time: " <<
+			m_nCombStructTime << ", Subset time: " << m_nSubsetTime << std::endl;
 #endif
 }
 

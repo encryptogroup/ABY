@@ -10,6 +10,7 @@
 
 #include "../hashing_includes.h"
 #include <math.h>
+#include <cassert>
 
 typedef uint16_t TABLEID_T;
 
@@ -66,8 +67,8 @@ static void init_hashing_state(hs_t* hs, uint32_t nelements, uint32_t inbitlen, 
 	hs->nbins = nbins;
 
 	hs->inbitlen = inbitlen;
-	hs->addrbitlen = min((uint32_t) ceil_log2(nbins), inbitlen);
-	hs->floor_addrbitlen = min((uint32_t) floor_log2(nbins), inbitlen);
+	hs->addrbitlen = std::min((uint32_t) ceil_log2(nbins), inbitlen);
+	hs->floor_addrbitlen = std::min((uint32_t) floor_log2(nbins), inbitlen);
 
 #ifdef USE_LUBY_RACKOFF
 	hs->outbitlen = hs->inbitlen - hs->addrbitlen+3;
@@ -77,7 +78,7 @@ static void init_hashing_state(hs_t* hs, uint32_t nelements, uint32_t inbitlen, 
 	//TODO prevent too much memory utilization
 	//assert(hs->outbitlen < 32);
 	//TODO: quickfix to enable hashing for large values
-	//hs->outbitlen = min((double) hs->outbitlen, (double) 24);
+	//hs->outbitlen = std::min((double) hs->outbitlen, (double) 24);
 
 	hs->inbytelen = ceil_divide(hs->inbitlen, 8);
 	hs->addrbytelen = ceil_divide(hs->addrbitlen, 8);

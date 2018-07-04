@@ -56,8 +56,8 @@ public:
 
 		//progress and processedOTs should always be divisible by MTBitLen
 		if (progress % m_nMTBitLen != 0 || len % m_nMTBitLen != 0) {
-			cerr << "progress or processed OTs not divisible by MTBitLen, cannot guarantee correct result. Progress = " << progress << ", processed OTs " << len
-					<< ", MTBitLen = " << m_nMTBitLen << endl;
+			std::cerr << "progress or processed OTs not divisible by MTBitLen, cannot guarantee correct result. Progress = " << progress << ", processed OTs " << len
+					<< ", MTBitLen = " << m_nMTBitLen << std::endl;
 		}
 
 		T tmpval, diff, gtmpval[m_nElements];
@@ -66,8 +66,8 @@ public:
 			gtmpval[i] = 0;
 
 #ifdef DEBUGARITHMTMASKING
-		cout << "Starting" << endl;
-		cout << "m_vInput.size= " << m_vInput->GetSize() << " progress = " << progress << ", mtbitlen = " << m_nMTBitLen << endl;
+		std::cout << "Starting" << std::endl;
+		std::cout << "m_vInput.size= " << m_vInput->GetSize() << " progress = " << progress << ", mtbitlen = " << m_nMTBitLen << std::endl;
 		m_vInput->PrintBinary();
 #endif
 
@@ -82,7 +82,7 @@ public:
 		for (uint32_t mtid = startpos, i = 0, mtbit, j, ctr = 0; i < len; mtid++) {
 			diff = input[mtid]; //m_vInput->Get<T>(mtid * m_nMTBitLen, m_nMTBitLen);
 #ifdef DEBUGARITHMTMASKING
-					cout << "mtid = " << mtid << "; getting from " << mtbit * m_nMTBitLen << " to " << m_nMTBitLen << ", val = " << (UINT64_T) diff << endl;
+					std::cout << "mtid = " << mtid << "; getting from " << mtbit * m_nMTBitLen << " to " << m_nMTBitLen << ", val = " << (UINT64_T) diff << std::endl;
 #endif
 
 			for (mtbit = 0; mtbit < m_nMTBitLen; mtbit++, i++) {
@@ -90,13 +90,13 @@ public:
 					//Get randomly generated mask from snd_buf[0]
 					tmpval = rndval[ctr];
 #ifdef DEBUGARITHMTMASKING
-							cout << "S: i = " << i << ", diff " << (UINT64_T) diff << " tmpval = " << (UINT64_T)tmpval;
+							std::cout << "S: i = " << i << ", diff " << (UINT64_T) diff << " tmpval = " << (UINT64_T)tmpval;
 #endif
 					//Add random mask to the already generated masks for this MT
 					gtmpval[j] = gtmpval[j] + tmpval;
 					tmpval = diff - tmpval;
 #ifdef DEBUGARITHMTMASKING
-					cout << ", added = " << (UINT64_T) tmpval << ", masked = " << (UINT64_T) snd_buf[1].Get<T>(i * m_nMTBitLen, m_nMTBitLen) << ", tmpsum mask = " << (UINT64_T) gtmpval[j] << endl;
+					std::cout << ", added = " << (UINT64_T) tmpval << ", masked = " << (UINT64_T) snd_buf[1].Get<T>(i * m_nMTBitLen, m_nMTBitLen) << ", tmpsum mask = " << (UINT64_T) gtmpval[j] << std::endl;
 #endif
 					//Mask the resulting correlation with the second OT result
 					maskedval[ctr] ^= tmpval;
@@ -107,7 +107,7 @@ public:
 			//Write out the result into values[0]
 			for (j = 0; j < m_nElements; j++, retvals++) {
 #ifdef DEBUGARITHMTMASKING
-				cout << "Computed Mask = " << (UINT64_T) gtmpval[j] << endl;
+				std::cout << "Computed Mask = " << (UINT64_T) gtmpval[j] << std::endl;
 #endif
 				retvals[0] = gtmpval[j];
 				gtmpval[j] = 0;
@@ -122,10 +122,10 @@ public:
 	void UnMask(uint32_t progress, uint32_t len, CBitVector* choices, CBitVector* output, CBitVector* rcv_buf, CBitVector* tmpmask, snd_ot_flavor version) {
 		//progress and len should always be divisible by MTBitLen
 		if (progress % m_nMTBitLen != 0 || len % m_nMTBitLen != 0) {
-			cerr << "progress or processed OTs not divisible by MTBitLen, cannot guarantee correct result. Progress = " << progress << ", processed OTs " << len
-					<< ", MTBitLen = " << m_nMTBitLen << endl;
+			std::cerr << "progress or processed OTs not divisible by MTBitLen, cannot guarantee correct result. Progress = " << progress << ", processed OTs " << len
+					<< ", MTBitLen = " << m_nMTBitLen << std::endl;
 		}
-		//cout << "Unmasking " << len << " Elements " << endl;
+		//std::cout << "Unmasking " << len << " Elements " << std::endl;
 		T tmpval, gtmpval[m_nElements];
 		uint32_t lim = progress + len;
 		BYTE* rcvbufptr = rcv_buf->GetArr();
@@ -141,7 +141,7 @@ public:
 
 		for (uint32_t mtid = startpos, i = progress, mtbit, j, maskctr = 0; i < lim; mtid++) {
 #ifdef DEBUGARITHMTMASKING
-			cout << "Receiver val = " << (UINT64_T) tmpmasks.Get<T>(mtid * m_nMTBitLen, m_nMTBitLen) << ", bits = ";
+			std::cout << "Receiver val = " << (UINT64_T) tmpmasks.Get<T>(mtid * m_nMTBitLen, m_nMTBitLen) << ", bits = ";
 			tmpmasks.Print(mtid * m_nMTBitLen, (mtid + 1) * m_nMTBitLen);
 #endif
 			for (mtbit = 0; mtbit < m_nMTBitLen; mtbit++, i++, rcvbufptr += m_nOTByteLen, maskctr++) {
@@ -151,7 +151,7 @@ public:
 						tmpval = masks[maskctr * m_nElements + j];
 						gtmpval[j] = gtmpval[j] + tmpval;
 #ifdef DEBUGARITHMTMASKING
-						cout << "R: i = " << i << ", tmpval " << (UINT64_T) tmpval << ", tmpsum = " << (UINT64_T) gtmpval[j] << ", choice = " << (UINT64_T) choices.GetBitNoMask(i) << endl;
+						std::cout << "R: i = " << i << ", tmpval " << (UINT64_T) tmpval << ", tmpsum = " << (UINT64_T) gtmpval[j] << ", choice = " << (UINT64_T) choices.GetBitNoMask(i) << std::endl;
 #endif
 					}
 				} else {
@@ -160,7 +160,7 @@ public:
 						gtmpval[j] =
 								gtmpval[j] - tmpval;
 #ifdef DEBUGARITHMTMASKING
-										cout << "R: i = " << i << ", tmpval " << (UINT64_T) tmpval << ", tmpsum = " << (UINT64_T) gtmpval[j] << ", choice = " << (UINT64_T) choices.GetBitNoMask(i) << endl;
+										std::cout << "R: i = " << i << ", tmpval " << (UINT64_T) tmpval << ", tmpsum = " << (UINT64_T) gtmpval[j] << ", choice = " << (UINT64_T) choices.GetBitNoMask(i) << std::endl;
 #endif
 					}
 				}
@@ -169,7 +169,7 @@ public:
 			//Write out the result into values[0]
 			for (j = 0; j < m_nElements; j++, outvals++) {
 #ifdef DEBUGARITHMTMASKING
-				cout << "Computed = " << (UINT64_T) gtmpval[j] << endl;
+				std::cout << "Computed = " << (UINT64_T) gtmpval[j] << std::endl;
 #endif
 				outvals[0] = gtmpval[j];
 				gtmpval[j] = 0;

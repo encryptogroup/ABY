@@ -25,7 +25,7 @@
 #include "common/aescircuit.h"
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* bitlen, uint32_t* nvals,
-		uint32_t* secparam, string* address, uint16_t* port, e_sharing* sharing, bool* verbose, uint32_t* nthreads,
+		uint32_t* secparam, std::string* address, uint16_t* port, e_sharing* sharing, bool* verbose, uint32_t* nthreads,
 		bool* use_vec_ands) {
 
 	uint32_t int_role = 0, int_port = 0, int_sharing = 0;
@@ -44,7 +44,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 
 	if (!parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
-		cout << "Exiting" << endl;
+		std::cout << "Exiting" << std::endl;
 		exit(0);
 	}
 
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
 	e_role role;
 	uint32_t bitlen = 32, nvals = 1, secparam = 128, nthreads = 1;
 	uint16_t port = 7766;
-	string address = "127.0.0.1";
+	std::string address = "127.0.0.1";
 	bool verbose = false;
 	bool use_vec_ands = false;
 	e_mt_gen_alg mt_alg = MT_OT;

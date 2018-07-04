@@ -24,7 +24,7 @@
 
 #include "common/min-euclidean-dist-circuit.h"
 
-int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* bitlen, uint32_t* nvals, uint32_t* dim, uint32_t* secparam, string* address, uint16_t* port, int32_t* sharing, ePreCompPhase* pre_comp_value) {
+int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* bitlen, uint32_t* nvals, uint32_t* dim, uint32_t* secparam, std::string* address, uint16_t* port, int32_t* sharing, ePreCompPhase* pre_comp_value) {
 
 	uint32_t int_role = 0, int_port = 0, int_precomp = 0;
 	bool useffc = false;
@@ -42,7 +42,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 
 	if (!parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
-		cout << "Exiting" << endl;
+		std::cout << "Exiting" << std::endl;
 		exit(0);
 	}
 
@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 	e_role role;
 	uint32_t bitlen = 32, nvals = 500, secparam = 128, nthreads = 1, dim = 6;
 	uint16_t port = 7766;
-	string address = "127.0.0.1";
+	std::string address = "127.0.0.1";
 	int32_t sharing = 0;
 	e_mt_gen_alg mt_alg = MT_OT;
 	ePreCompPhase precomp_phase_value;

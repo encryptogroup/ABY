@@ -17,6 +17,8 @@
  */
 
 #include "dgkparty.h"
+#include "../ENCRYPTO_utils/timer.h"
+#include "../ENCRYPTO_utils/utils.h"
 
 #define CHECKMT 0
 #define DGK_DEBUG 0
@@ -160,7 +162,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 
 	while (tosend > 0) {
 
-		window = min(window, tosend);
+		window = std::min(window, tosend);
 
 		chan->send(abuf + offset, window);
 		chan->blocking_receive(abuf + offset, window);
@@ -214,7 +216,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	offset = 0;
 
 	while (tosend > 0) {
-		window = min(window, tosend);
+		window = std::min(window, tosend);
 
 		chan->send(zbuf + offset, window);
 		chan->blocking_receive(zbuf + offset, window);

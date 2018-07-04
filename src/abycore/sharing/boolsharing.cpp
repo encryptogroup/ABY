@@ -17,6 +17,7 @@
  */
 #include "boolsharing.h"
 
+
 void BoolSharing::Init() {
 
 	m_nTotalNumMTs = 0;
@@ -58,7 +59,7 @@ void BoolSharing::InitNewLayer() {
 	for (uint32_t i = 0; i < m_vANDGates.size(); i++)
 		m_vANDGates[i].clear();
 
-	for(map<uint64_t,vector<uint32_t> >::iterator it=m_vOPLUTGates.begin(); it!=m_vOPLUTGates.end(); it++) {
+	for(auto it=m_vOPLUTGates.begin(); it!=m_vOPLUTGates.end(); it++) {
 		it->second.clear();
 	}
 
@@ -66,7 +67,7 @@ void BoolSharing::InitNewLayer() {
 	m_vOutputShareGates.clear();
 
 
-	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
+	for(auto it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
 		it->second = 0;
 		//if(it->second > 0) {
 		//	sendbuf.push_back(m_vOP_LUT_RecSelOpeningBuf[it->first]->GetArr());
@@ -127,7 +128,7 @@ void BoolSharing::PrepareSetupPhase(ABYSetup* setup) {
 	 */
 	//Get the data that corresponds to the OP-LUT tables
 	//tmplens: first dimension: circuit depth, second dimension: num-inputs, third dimension: out_bitlen. We can ignore the circuit depth here!
-	vector<vector<vector<tt_lens_ctx> > > tmplens = m_cBoolCircuit->GetTTLens();
+	std::vector<std::vector<std::vector<tt_lens_ctx> > > tmplens = m_cBoolCircuit->GetTTLens();
 	if (!(tmplens.size() == 1 && tmplens[0].size() == 1 && tmplens[0][0].size() == 1 && tmplens[0][0][0].numgates == 0)) {
 		PrepareSetupPhaseOPLUT(setup);
 	}
@@ -159,7 +160,7 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 				task->pval.rcvval.R = &(m_vKKC[m_eRole^1]);
 			}
 #ifndef BATCH
-			cout << "Adding new KK OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
+			std::cout << "Adding new KK OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << std::endl;
 #endif
 			setup->AddOTTask(task, j);
 		}
@@ -183,7 +184,7 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 					task->pval.rcvval.R = &(m_vS[i]);
 				}
 #ifndef BATCH
-				cout << "Adding new OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
+				std::cout << "Adding new OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << std::endl;
 #endif
 				setup->AddOTTask(task, j);
 			}
@@ -193,12 +194,12 @@ void BoolSharing::PrepareSetupPhaseMTs(ABYSetup* setup) {
 
 //Initialize data for the OP-LUT protocol, count how many tables need to be pre-computed, and set the number of OTs that need to be computed
 void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
-	vector<vector<vector<tt_lens_ctx> > > tmplens = m_cBoolCircuit->GetTTLens();
+	std::vector<std::vector<std::vector<tt_lens_ctx> > > tmplens = m_cBoolCircuit->GetTTLens();
 	uint32_t rnd_rot_bits, rnd_table_bits;
 	uint64_t address, n_inbits, n_outbits;
-	map<uint64_t, uint64_t> max_num_gates; //keeps track of the maximum number of OP-LUT gates for the layers of each input/output combination
+	std::map<uint64_t, uint64_t> max_num_gates; //keeps track of the maximum number of OP-LUT gates for the layers of each input/output combination
 
-	vector<vector<tt_lens_ctx> > depth_red_tmplens(tmplens[0].size());
+	std::vector<std::vector<tt_lens_ctx> > depth_red_tmplens(tmplens[0].size());
 	for(uint32_t i = 0; i < tmplens[0].size(); i++) {
 		depth_red_tmplens[i].resize(tmplens[0][i].size());
 
@@ -291,13 +292,13 @@ void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
 
 				//insert the lut into the map
 				address = (n_inbits << 32) | (n_outbits);
-				m_vOP_LUT_data.insert(pair<uint64_t, op_lut_ctx*>(address, lut_data));
+				m_vOP_LUT_data.insert(std::pair<uint64_t, op_lut_ctx*>(address, lut_data));
 				CBitVector* snd_sel_opening_buf = new CBitVector(lut_data->n_inbits * max_num_gates[address]);
 				CBitVector* rec_sel_opening_buf = new CBitVector(lut_data->n_inbits * max_num_gates[address]);
-				m_vOP_LUT_SndSelOpeningBuf.insert(pair<uint64_t, CBitVector*>(address, snd_sel_opening_buf));
-				m_vOP_LUT_RecSelOpeningBuf.insert(pair<uint64_t, CBitVector*>(address, rec_sel_opening_buf));
-				//	cout << "Created new OP-LUT data structure with " << n_inbits << " input bits, " << n_outbits << " output bits, and "<<
-				//			tmplens[i][i][j].numgates << " gates" << endl;
+				m_vOP_LUT_SndSelOpeningBuf.insert(std::pair<uint64_t, CBitVector*>(address, snd_sel_opening_buf));
+				m_vOP_LUT_RecSelOpeningBuf.insert(std::pair<uint64_t, CBitVector*>(address, rec_sel_opening_buf));
+				//	std::cout << "Created new OP-LUT data structure with " << n_inbits << " input bits, " << n_outbits << " output bits, and "<<
+				//			tmplens[i][i][j].numgates << " gates" << std::endl;
 			}
 		}
 	}
@@ -306,7 +307,7 @@ void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
 
 
 	//iterate over all elements in the map and create new 1ooN OT-tasks for each of them
-	for(map<uint64_t,op_lut_ctx*>::iterator it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
+	for(auto it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
 
 		//for (uint32_t j = 0; j < 2; j++) {
 		KK_OTTask* task = (KK_OTTask*) malloc(sizeof(KK_OTTask));
@@ -320,14 +321,14 @@ void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
 		task->mskfct = fMaskFct;
 		task->delete_mskfct = TRUE;
 		if (m_eRole == SERVER) {
-			//cout << "I assigned sender" << endl;
+			//std::cout << "I assigned sender" << std::endl;
 			task->pval.sndval.X = it->second->rot_OT_vals;
 		} else {
 			task->pval.rcvval.C = it->second->rot_val;
 			task->pval.rcvval.R = it->second->table_mask;
 		}
 //#ifndef BATCH
-		cout << "Adding new 1oo" << task->nsndvals << " OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << endl;
+		std::cout << "Adding new 1oo" << task->nsndvals << " OT task for " << task->numOTs << " OTs on " << task->bitlen << " bit-strings" << std::endl;
 //#endif
 		setup->AddOTTask(task, 0);
 		//}
@@ -350,7 +351,7 @@ void BoolSharing::FinishSetupPhase(ABYSetup* setup) {
 	PreComputationPhase();
 
 	//Delete the X values for OP-LUT of the sender when pre-computing the OTs
-	for(map<uint64_t,op_lut_ctx*>::iterator it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
+	for(auto it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
 		if(it->second->n_gates > 0 && m_eRole == SERVER) {
 			for(uint32_t i = 0; i < 1<<it->second->n_inbits; i++) {
 				it->second->rot_OT_vals[i]->delCBitVector();
@@ -359,7 +360,7 @@ void BoolSharing::FinishSetupPhase(ABYSetup* setup) {
 		}
 #ifdef DEBUGBOOL
 		if(it->second->n_gates > 0 && m_eRole == CLIENT) {
-			cout << "Resutling shared table:" << endl;
+			std::cout << "Resutling shared table:" << std::endl;
 			it->second->table_mask->PrintHex();
 		}
 #endif
@@ -367,11 +368,11 @@ void BoolSharing::FinishSetupPhase(ABYSetup* setup) {
 
 
 #ifdef DEBUGBOOL
-	cout << "A: ";
+	std::cout << "A: ";
 	m_vA[0].PrintBinary();
-	cout << "B: ";
+	std::cout << "B: ";
 	m_vB[0].PrintBinary();
-	cout << "C: ";
+	std::cout << "C: ";
 	m_vC[0].PrintBinary();
 #endif
 }
@@ -481,7 +482,7 @@ void BoolSharing::PrepareOnlinePhase() {
 }
 
 void BoolSharing::ComputeMTs() {
-	//cout << "Computing MTs " << endl;
+	//std::cout << "Computing MTs " << std::endl;
 	CBitVector temp;
 
 #ifdef USE_KK_OT_FOR_MT
@@ -512,7 +513,7 @@ void BoolSharing::ComputeMTs() {
 #else
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 #endif
-		//cout << "I = " << i << ", len = " << m_vANDs[i].bitlen << ", Num= " << m_nNumMTs[i] <<endl;
+		//std::cout << "I = " << i << ", len = " << m_vANDs[i].bitlen << ", Num= " << m_nNumMTs[i] <<std::endl;
 		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
 		uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
 
@@ -549,12 +550,12 @@ void BoolSharing::ComputeMTs() {
 		m_vE_snd[i].Copy(m_vB[i].GetArr(), 0, stringbytelen);
 
 #ifdef DEBUGBOOL
-		cout << "MT types for bitlen: " << m_vANDs[i].bitlen << endl;
-		cout << "A: ";
+		std::cout << "MT types for bitlen: " << m_vANDs[i].bitlen << std::endl;
+		std::cout << "A: ";
 		m_vA[i].PrintBinary();
-		cout << "B: ";
+		std::cout << "B: ";
 		m_vB[i].PrintHex();
-		cout << "C: ";
+		std::cout << "C: ";
 		m_vC[i].PrintHex();
 #endif
 		temp.delCBitVector();
@@ -563,7 +564,7 @@ void BoolSharing::ComputeMTs() {
 }
 
 void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
-	deque<uint32_t> localops = m_cBoolCircuit->GetLocalQueueOnLvl(depth);
+	std::deque<uint32_t> localops = m_cBoolCircuit->GetLocalQueueOnLvl(depth);
 	GATE* gate;
 #ifdef BENCHBOOLTIME
 	timespec tstart, tend;
@@ -572,7 +573,7 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 		gate = m_pGates + localops[i];
 
 #ifdef DEBUGBOOL
-		cout << "Evaluating local gate with id = " << localops[i] << " and type " << get_gate_type_name(gate->type) << endl;
+		std::cout << "Evaluating local gate with id = " << localops[i] << " and type " << get_gate_type_name(gate->type) << std::endl;
 #endif
 
 		switch (gate->type) {
@@ -615,8 +616,8 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 			if (IsSIMDGate(gate->type)) {
 				EvaluateSIMDGate(localops[i]);
 			} else {
-				cerr << "Boolsharing: Non-interactive Operation not recognized: " << (uint32_t) gate->type
-						<< "(" << get_gate_type_name(gate->type) << "), stopping execution" << endl;
+				std::cerr << "Boolsharing: Non-interactive Operation not recognized: " << (uint32_t) gate->type
+						<< "(" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
 				exit(0);
 			}
 			break;
@@ -625,13 +626,13 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 }
 
 void BoolSharing::EvaluateInteractiveOperations(uint32_t depth) {
-	deque<uint32_t> interactiveops = m_cBoolCircuit->GetInteractiveQueueOnLvl(depth);
+	std::deque<uint32_t> interactiveops = m_cBoolCircuit->GetInteractiveQueueOnLvl(depth);
 
 	for (uint32_t i = 0; i < interactiveops.size(); i++) {
 		GATE* gate = m_pGates + interactiveops[i];
 
 #ifdef DEBUGBOOL
-		cout << "Evaluating interactive gate with id = " << interactiveops[i] << " and type " << get_gate_type_name(gate->type) << endl;
+		std::cout << "Evaluating interactive gate with id = " << interactiveops[i] << " and type " << get_gate_type_name(gate->type) << std::endl;
 #endif
 		switch (gate->type) {
 		case G_NON_LIN:
@@ -667,8 +668,8 @@ void BoolSharing::EvaluateInteractiveOperations(uint32_t depth) {
 			EvaluateCallbackGate(interactiveops[i]);
 			break;
 		default:
-			cerr << "Boolsharing: Interactive Operation not recognized: " << (uint32_t) gate->type
-				<< " (" << get_gate_type_name(gate->type) << "), stopping execution" << endl;
+			std::cerr << "Boolsharing: Interactive Operation not recognized: " << (uint32_t) gate->type
+				<< " (" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
 			exit(0);
 		}
 	}
@@ -703,7 +704,7 @@ inline void BoolSharing::EvaluateConstantGate(uint32_t gateid) {
 	}
 	gate->gs.val[ceil_divide(gate->nvals, GATE_T_BITS)-1] &= ((1L<<(gate->nvals%64)) -1L);
 #ifdef DEBUGBOOL
-		cout << "Constant gate value: "<< value << endl;
+		std::cout << "Constant gate value: "<< value << std::endl;
 #endif
 }
 
@@ -714,10 +715,10 @@ inline void BoolSharing::ShareValues(uint32_t gateid) {
 	InstantiateGate(gate);
 
 	for (uint32_t i = 0, bitstocopy = gate->nvals, len; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
-		len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+		len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 		gate->gs.val[i] = m_vInputShareSndBuf.Get<UGATE_T>(m_nInputShareSndSize, len) ^ input[i];
 #ifdef DEBUGBOOL
-		cout << (unsigned uint32_t) gate->gs.val[i] << " = " << (unsigned uint32_t) m_vInputShareSndBuf.Get<UGATE_T>(m_nInputShareSndSize, len) << " ^ " << (unsigned uint32_t) input[i] << endl;
+		std::cout << (unsigned uint32_t) gate->gs.val[i] << " = " << (unsigned uint32_t) m_vInputShareSndBuf.Get<UGATE_T>(m_nInputShareSndSize, len) << " ^ " << (unsigned uint32_t) input[i] << std::endl;
 #endif
 		m_nInputShareSndSize += len;
 	}
@@ -744,8 +745,8 @@ inline void BoolSharing::EvaluateINVGate(uint32_t gateid) {
 		gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
 	}
 #ifdef DEBUGBOOL
-	cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
-	" and input: " << m_pGates[parentid].gs.val[0]<< (dec) << endl;
+	std::cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
+	" and input: " << m_pGates[parentid].gs.val[0]<< (dec) << std::endl;
 #endif
 	UsedGate(parentid);
 }
@@ -754,7 +755,7 @@ inline void BoolSharing::EvaluateCONVGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;
 	uint32_t parentid = gate->ingates.inputs.parents[0];
 	if (m_pGates[parentid].context == S_ARITH)
-		cerr << "can't convert from arithmetic representation directly into Boolean" << endl;
+		std::cerr << "can't convert from arithmetic representation directly into Boolean" << std::endl;
 	assert(m_pGates[parentid].context == S_YAO);
 	InstantiateGate(gate);
 
@@ -769,7 +770,7 @@ inline void BoolSharing::EvaluateCONVGate(uint32_t gateid) {
 		}
 	}
 #ifdef DEBUGBOOL
-	cout << "Set conversion gate value to " << gate->gs.val[0] << endl;
+	std::cout << "Set conversion gate value to " << gate->gs.val[0] << std::endl;
 #endif
 
 	UsedGate(parentid);
@@ -781,10 +782,10 @@ inline void BoolSharing::ReconstructValue(uint32_t gateid) {
 	uint32_t parentid = gate->ingates.inputs.parent;
 	assert(m_pGates[parentid].instantiated);
 	for (uint32_t i = 0, bitstocopy = gate->nvals, len; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
-		len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+		len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 #ifdef DEBUGBOOL
-		cout << "m_vOutputShareSndBuf.size = " << m_vOutputShareSndBuf.GetSize() << ", ctr = " <<m_nOutputShareSndSize << ", len = " << len << ", gate->parent = " << parentid
-		<< " and val = " << (hex) << m_pGates[parentid].gs.val[i] << (dec) << endl;
+		std::cout << "m_vOutputShareSndBuf.size = " << m_vOutputShareSndBuf.GetSize() << ", ctr = " <<m_nOutputShareSndSize << ", len = " << len << ", gate->parent = " << parentid
+		<< " and val = " << (hex) << m_pGates[parentid].gs.val[i] << (dec) << std::endl;
 #endif
 		m_vOutputShareSndBuf.Set<UGATE_T>(m_pGates[parentid].gs.val[i], m_nOutputShareSndSize, len);	//gate->gs.val[i], len);
 		m_nOutputShareSndSize += len;
@@ -799,12 +800,12 @@ inline void BoolSharing::SelectiveOpen(uint32_t gateid) {
 	uint32_t idright = gate->ingates.inputs.twin.right;
 
 	for (uint32_t i = 0, bitstocopy = gate->nvals, len; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
-		len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+		len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 		m_vD_snd[0].XOR(m_pGates[idleft].gs.val[i], m_vMTIdx[0], len);
 		m_vE_snd[0].XOR(m_pGates[idright].gs.val[i], m_vMTIdx[0], len);
 		m_vMTIdx[0] += len;
 #ifdef DEBUGBOOL
-		cout << "opening " << idleft << " = " << m_pGates[idleft].gs.val[i] << " , and " << idright << " = " << m_pGates[idright].gs.val[i] << endl;
+		std::cout << "opening " << idleft << " = " << m_pGates[idleft].gs.val[i] << " , and " << idright << " = " << m_pGates[idright].gs.val[i] << std::endl;
 #endif
 	}
 	m_vANDGates[0].push_back(gateid);
@@ -824,24 +825,24 @@ inline void BoolSharing::SelectiveOpenVec(uint32_t gateid) {
 	uint32_t startpos = m_vMTIdx[pos] * m_vANDs[pos].bitlen;
 	uint32_t nandvals = gate->nvals / gate->gs.avs.bitlen;
 
-	//cout << "Bit-length of values in vector gate is " << gate->gs.avs.bitlen << ", nvals = " << gate->nvals <<
-	//		", nandvals = " << nandvals << ", mtidx = " << m_vMTIdx[pos] << endl;
+	//std::cout << "Bit-length of values in vector gate is " << gate->gs.avs.bitlen << ", nvals = " << gate->nvals <<
+	//		", nandvals = " << nandvals << ", mtidx = " << m_vMTIdx[pos] << std::endl;
 
 	//XOR the choice bit onto the D-vector
 	m_vD_snd[pos].XORBits((uint8_t*) m_pGates[idchoice].gs.val, m_vMTIdx[pos], nandvals);
  	//m_vD_snd[pos].XORBitNoMask(m_vMTIdx[pos], m_pGates[idchoice].gs.val[0]);
 
-	//cout << "choice_val: " << m_pGates[idchoice].gs.val[0] << ", vec_val: " << m_pGates[idvector].gs.val[0] << " (" << gateid << ")" << endl;
+	//std::cout << "choice_val: " << m_pGates[idchoice].gs.val[0] << ", vec_val: " << m_pGates[idvector].gs.val[0] << " (" << gateid << ")" << std::endl;
 	//for (uint32_t i = 0, bitstocopy = gate->nvals * m_vANDs[pos].bitlen, ncopiedvals; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
 	for (uint32_t i = 0, bitstocopy = gate->nvals, ncopiedvals; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS, startpos+=GATE_T_BITS) {
-		ncopiedvals = min(bitstocopy, (uint32_t) GATE_T_BITS);
+		ncopiedvals = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 		//m_vE_snd[pos].XOR(m_pGates[idvector].gs.val[i], m_vMTIdx[pos] * m_vANDs[pos].bitlen, ncopiedvals); //*m_vANDs[pos].bitlen);
 		m_vE_snd[pos].XOR(m_pGates[idvector].gs.val[i], startpos, ncopiedvals); //*m_vANDs[pos].bitlen);
 #ifdef DEBUGBOOL
-		cout << "copying from " << m_vMTIdx[pos]*m_vANDs[pos].bitlen << " with len = " << ncopiedvals << endl;
+		std::cout << "copying from " << m_vMTIdx[pos]*m_vANDs[pos].bitlen << " with len = " << ncopiedvals << std::endl;
 
-		cout << "choice-gate " << idchoice << " = " << m_pGates[idchoice].gs.val[0] << " , and vec-gate " << idvector <<
-		" = " <<(hex) << m_pGates[idvector].gs.val[i] << (dec) << endl;
+		std::cout << "choice-gate " << idchoice << " = " << m_pGates[idchoice].gs.val[0] << " , and vec-gate " << idvector <<
+		" = " <<(hex) << m_pGates[idvector].gs.val[i] << (dec) << std::endl;
 #endif
 	}
 	//m_vMTIdx[pos]++;
@@ -865,7 +866,7 @@ inline void BoolSharing::SelectiveOpenOPLUT(uint32_t gateid) {
 	uint64_t op_lut_id = (((uint64_t) nparents) << 32) | outbits ;
 
 #ifdef DEBUGBOOL
-	cout << "Evaluating LUT with " << nparents << " input wires and " << outbits << " output wires" << endl;
+	std::cout << "Evaluating LUT with " << nparents << " input wires and " << outbits << " output wires" << std::endl;
 #endif
 	assert(m_vOP_LUT_data.find(op_lut_id) != m_vOP_LUT_data.end());
 	op_lut_ctx* lut_ctx = m_vOP_LUT_data.find(op_lut_id)->second;
@@ -882,7 +883,7 @@ inline void BoolSharing::SelectiveOpenOPLUT(uint32_t gateid) {
 		selective_opening = selective_opening ^ lut_ctx->rot_val->Get<uint64_t>(lut_ctx->sel_opening_ctr * nparents, nparents);
 		m_vOP_LUT_SndSelOpeningBuf[op_lut_id]->Set<uint64_t>(selective_opening, m_vOP_LUT_SelOpeningBitCtr[op_lut_id] + i * nparents, nparents);
 		lut_ctx->sel_opening_ctr++;
-		//cout << "Selective opening to be sent: " << selective_opening << endl;
+		//std::cout << "Selective opening to be sent: " << selective_opening << std::endl;
 	}
 	m_vOP_LUT_SelOpeningBitCtr[op_lut_id] += (nparents * nvals);
 
@@ -896,37 +897,37 @@ void BoolSharing::FinishCircuitLayer(uint32_t level) {
 	//Compute the values of the AND gates
 #ifdef DEBUGBOOL
 	if(m_nInputShareRcvSize > 0) {
-		cout << "Received "<< m_nInputShareRcvSize << " input shares: ";
+		std::cout << "Received "<< m_nInputShareRcvSize << " input shares: ";
 		m_vInputShareRcvBuf.Print(0, m_nInputShareRcvSize);
 	}
 	if(m_nOutputShareRcvSize > 0) {
-		cout << "Received " << m_nOutputShareRcvSize << " output shares: ";
+		std::cout << "Received " << m_nOutputShareRcvSize << " output shares: ";
 		m_vOutputShareRcvBuf.Print(0, m_nOutputShareRcvSize);
 	}
 #endif
 
 #ifdef DEBUGBOOL
-	cout << "Evaluating MTs" << endl;
+	std::cout << "Evaluating MTs" << std::endl;
 #endif
 	EvaluateMTs();
 #ifdef DEBUGBOOL
-	cout << "Setting Values of AND Gates" << endl;
+	std::cout << "Setting Values of AND Gates" << std::endl;
 #endif
 	EvaluateANDGate();
 #ifdef DEBUGBOOL
-	cout << "Assigning values to OP-LUT Gates" << endl;
+	std::cout << "Assigning values to OP-LUT Gates" << std::endl;
 #endif
 	EvaluateOPLUTGates();
 #ifdef DEBUGBOOL
-	cout << "Assigning Input Shares" << endl;
+	std::cout << "Assigning Input Shares" << std::endl;
 #endif
 	AssignInputShares();
 #ifdef DEBUGBOOL
-	cout << "Assigning Output Shares" << endl;
+	std::cout << "Assigning Output Shares" << std::endl;
 #endif
 	AssignOutputShares();
 #ifdef DEBUGBOOL
-	cout << "Initializing new layer" << endl;
+	std::cout << "Initializing new layer" << std::endl;
 #endif
 	InitNewLayer();
 }
@@ -945,10 +946,10 @@ void BoolSharing::EvaluateMTs() {
 			uint64_t mtbytelen = ceil_divide(m_vANDs[i].bitlen, 8);
 
 
-		/*	cout << "lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
+		/*	std::cout << "lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
 			", startposbytes = " << startposbytes << ", startposstring = " << startposstringbytes << ", nummts: " <<
 				m_nNumMTs[i] << ", mtidx = " << m_vMTIdx[i] << ", mtstartidx = " << m_vMTStartIdx[i] << ", numandgates: " <<
-				m_vANDs[i].numgates <<endl;*/
+				m_vANDs[i].numgates <<std::endl;*/
 
 			m_vD_snd[i].XORBytes(m_vD_rcv[i].GetArr() + startposbytes, startposbytes, lenbytes);
 			m_vE_snd[i].XORBytes(m_vE_rcv[i].GetArr() + startposstringbytes, startposstringbytes, stringbytelen);
@@ -956,25 +957,25 @@ void BoolSharing::EvaluateMTs() {
 
 #ifdef DEBUGBOOL
 			if(i > 0) {
-				cout << "i = " << i << ", lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
+				std::cout << "i = " << i << ", lenbytes = " << lenbytes << ", stringlen = " << stringbytelen << ", mtbytelen = " << mtbytelen <<
 					", startposbytes = " << startposbytes << ", startposstring = " << startposstringbytes << ", startidx = " <<
 					m_vMTStartIdx[i] << ", idx = " << m_vMTIdx[i] << ", num ANDs = " << m_vANDs[i].numgates << ", nummts = " <<
-					m_nNumMTs[i] << ", " << m_vMTIdx[i] - m_vMTStartIdx[i] << endl;
+					m_nNumMTs[i] << ", " << m_vMTIdx[i] - m_vMTStartIdx[i] << std::endl;
 
-			cout << "A share: ";
+			std::cout << "A share: ";
 			m_vA[i].Print(0, len);
-			cout << "B share: ";
+			std::cout << "B share: ";
 			m_vB[i].PrintHex(0, stringbytelen);
-			cout << "C-share: ";
+			std::cout << "C-share: ";
 			m_vC[i].PrintHex(0, stringbytelen);
 
-			cout << "D-rcv: ";
+			std::cout << "D-rcv: ";
 			m_vD_rcv[i].Print(0,len);
-			cout << "E-rcv: ";
+			std::cout << "E-rcv: ";
 			m_vE_rcv[i].PrintHex(0, stringbytelen);
-			cout << "D-total: ";
+			std::cout << "D-total: ";
 			m_vD_snd[i].Print(0,len);
-			cout << "E-total: ";
+			std::cout << "E-total: ";
 			m_vE_snd[i].PrintHex(0, stringbytelen);
 			}
 #endif
@@ -1059,19 +1060,19 @@ void BoolSharing::EvaluateANDGate() {
 			bitstocopy = gate->nvals;
 
 			for (j = 0; j < ceil_divide(gate->nvals, GATE_T_BITS); j++, bitstocopy -= GATE_T_BITS) {
-				len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+				len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 
 #ifdef DEBUGBOOL
 				m_vResA[k].PrintHex();
 
-				cout << "setting AND gate " << m_vANDGates[k][i] << " with val-size = " << gate->nvals <<
+				std::cout << "setting AND gate " << m_vANDGates[k][i] << " with val-size = " << gate->nvals <<
 				", sharinbits = " << gate->sharebitlen << ", and bitstocopy = " << bitstocopy <<
-				" to value: " << (hex) << m_vResA[k].Get<UGATE_T>(idx, len) << (dec) << endl;
+				" to value: " << (hex) << m_vResA[k].Get<UGATE_T>(idx, len) << (dec) << std::endl;
 #endif
 				gate->gs.val[j] = m_vResA[k].Get<UGATE_T>(idx, len);
 				/*if(k > 0) {
-					cout << "res_val = " << gate->gs.val[j] << " (" << m_vANDGates[k][i] << ")" <<
-							", startpos = " << m_vMTStartIdx[k] << ", idx = " << idx << ", len = " << len << endl;
+					std::cout << "res_val = " << gate->gs.val[j] << " (" << m_vANDGates[k][i] << ")" <<
+							", startpos = " << m_vMTStartIdx[k] << ", idx = " << idx << ", len = " << len << std::endl;
 				}*/
 				idx += len;
 			}
@@ -1090,18 +1091,18 @@ void BoolSharing::EvaluateOPLUTGates() {
 	uint32_t gatevalbitlen = sizeof(uint64_t) * 8;
 
 	//Compute the masked table indice and store it in the Receive Buffer for later use
-	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
+	for(auto it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
 		if(it->second > 0) {
 			m_vOP_LUT_RecSelOpeningBuf[it->first]->XORBits(m_vOP_LUT_SndSelOpeningBuf[it->first]->GetArr(), 0, it->second);
 #ifdef DEBUGBOOL
-			cout << "Combined Selective Openings:" <<endl;
+			std::cout << "Combined Selective Openings:" <<std::endl;
 			m_vOP_LUT_RecSelOpeningBuf[it->first]->PrintHex();
 #endif
 		}
 	}
 
 
-	for(map<uint64_t,vector<uint32_t> >::iterator it=m_vOPLUTGates.begin(); it!=m_vOPLUTGates.end(); it++) {
+	for(auto it=m_vOPLUTGates.begin(); it!=m_vOPLUTGates.end(); it++) {
 		op_lut_id = it->first;
 		uint32_t gatectr = 0;
 		uint32_t maskbit_ctr = m_vOP_LUT_data[op_lut_id]->mask_ctr * (1<<m_vOP_LUT_data[op_lut_id]->n_inbits) * m_vOP_LUT_data[op_lut_id]->n_outbits;
@@ -1119,7 +1120,7 @@ void BoolSharing::EvaluateOPLUTGates() {
 				tableid = m_vOP_LUT_RecSelOpeningBuf[op_lut_id]->Get<uint64_t>(gatectr, nparents);
 				table_out = m_vOP_LUT_data[op_lut_id]->table_mask->Get<uint64_t>(maskbit_ctr + tableid * outbits, outbits);
 #ifdef DEBUGBOOL
-				cout << "table output = " << (hex) << table_out << " for tableid = " << tableid << (dec) << " and ctr+n = " << m_vOP_LUT_data[op_lut_id]->mask_ctr+n << endl;
+				std::cout << "table output = " << (hex) << table_out << " for tableid = " << tableid << (dec) << " and ctr+n = " << m_vOP_LUT_data[op_lut_id]->mask_ctr+n << std::endl;
 #endif
 				for(uint32_t o = 0; o < outbits; o++) {
 					gate->gs.val[(o*nvals+n)/gatevalbitlen] |= (((table_out>>o) & 0x01L)<<((o*nvals+n)%gatevalbitlen));
@@ -1147,10 +1148,10 @@ void BoolSharing::AssignInputShares() {
 
 		bitstocopy = gate->nvals;
 		for (j = 0; j < ceil_divide(gate->nvals, GATE_T_BITS); j++, bitstocopy -= GATE_T_BITS) {
-			len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+			len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 			gate->gs.val[j] = m_vInputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len);
 #ifdef DEBUGBOOL
-			cout << "assigned value " << gate->gs.val[j] << " to gate " << m_vInputShareGates[i] << " with nvals = " << gate->nvals << " and sharebitlen = " << gate->sharebitlen << endl;
+			std::cout << "assigned value " << gate->gs.val[j] << " to gate " << m_vInputShareGates[i] << " with nvals = " << gate->nvals << " and sharebitlen = " << gate->sharebitlen << std::endl;
 #endif
 			rcvshareidx += len;
 		}
@@ -1166,11 +1167,11 @@ void BoolSharing::AssignOutputShares() {
 
 		bitstocopy = gate->nvals;
 		for (j = 0; j < ceil_divide(gate->nvals, GATE_T_BITS); j++, bitstocopy -= GATE_T_BITS) {
-			len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+			len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 			gate->gs.val[j] = m_pGates[parentid].gs.val[j] ^ m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len);
 #ifdef DEBUGBOOL
-			cout << "Outshare: " << (hex) << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " ^ " <<
-					m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << (dec) << endl;
+			std::cout << "Outshare: " << (hex) << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " ^ " <<
+					m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << (dec) << std::endl;
 #endif
 			rcvshareidx += len;
 		}
@@ -1178,7 +1179,7 @@ void BoolSharing::AssignOutputShares() {
 	}
 }
 
-void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbytes) {
+void BoolSharing::GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& sndbytes) {
 	//Input shares
 	if (m_nInputShareSndSize > 0) {
 		sendbuf.push_back(m_vInputShareSndBuf.GetArr());
@@ -1202,13 +1203,13 @@ void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbyt
 		}
 #ifdef DEBUGBOOL
 		if(mtbytelen > 0) {
-			cout << "Sending " << mtbytelen*8 << " multiplication triples" << endl;
+			std::cout << "Sending " << mtbytelen*8 << " multiplication triples" << std::endl;
 		}
 #endif
 	}
 
 	//OP-LUT selective openings
-	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
+	for(auto it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
 		if(it->second > 0) {
 			sendbuf.push_back(m_vOP_LUT_SndSelOpeningBuf[it->first]->GetArr());
 			sndbytes.push_back(ceil_divide(it->second, 8));
@@ -1217,17 +1218,17 @@ void BoolSharing::GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& sndbyt
 
 #ifdef DEBUGBOOL
 	if(m_nInputShareSndSize > 0) {
-		cout << "Sending " << m_nInputShareSndSize << " Input shares : ";
+		std::cout << "Sending " << m_nInputShareSndSize << " Input shares : ";
 		m_vInputShareSndBuf.Print(0, m_nInputShareSndSize);
 	}
 	if(m_nOutputShareSndSize > 0) {
-		cout << "Sending " << m_nOutputShareSndSize << " Output shares : ";
+		std::cout << "Sending " << m_nOutputShareSndSize << " Output shares : ";
 		m_vOutputShareSndBuf.Print(0, m_nOutputShareSndSize);
 	}
 #endif
 }
 
-void BoolSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes) {
+void BoolSharing::GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes) {
 	//Input shares
 	if (m_nInputShareRcvSize > 0) {
 		if (m_vInputShareRcvBuf.GetSize() < ceil_divide(m_nInputShareRcvSize, 8)) {
@@ -1258,7 +1259,7 @@ void BoolSharing::GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& r
 	}
 
 	//OP-LUT selective openings
-	for(map<uint64_t,uint64_t>::iterator it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
+	for(auto it=m_vOP_LUT_SelOpeningBitCtr.begin(); it!=m_vOP_LUT_SelOpeningBitCtr.end(); it++) {
 		if(it->second > 0) {
 			rcvbuf.push_back(m_vOP_LUT_RecSelOpeningBuf[it->first]->GetArr());
 			rcvbytes.push_back(ceil_divide(it->second, 8));
@@ -1282,7 +1283,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 
 	if (gate->type == G_COMBINE) {
 #ifdef DEBUGSHARING
-		cout << " which is a COMBINE gate" << endl;
+		std::cout << " which is a COMBINE gate" << std::endl;
 #endif
 
 		uint32_t* input = gate->ingates.inputs.parents;
@@ -1304,13 +1305,13 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		clock_gettime(CLOCK_MONOTONIC, &tend);
 		m_nCombTime += getMillies(tstart, tend);
 #endif
-		/*cout << "Res value = " << (hex);
+		/*std::cout << "Res value = " << (hex);
 		for(uint64_t i = 0; i < ceil_divide(vsize, GATE_T_BITS); i++) {
-			cout << gate->gs.val[i] << " ";
+			std::cout << gate->gs.val[i] << " ";
 		}
-		cout << (dec) << endl;*/
+		std::cout << (dec) << std::endl;*/
 		/*for (uint32_t k = 0, bitstocopy = vsize; k < ceil_divide(vsize, GATE_T_BITS); k++, bitstocopy -= GATE_T_BITS) {
-			uint32_t size = min(bitstocopy, ((uint32_t) GATE_T_BITS));
+			uint32_t size = std::min(bitstocopy, ((uint32_t) GATE_T_BITS));
 			gate->gs.val[k] = 0;
 			//TODO: not working if valsize of the original gate is greater than GATE_T_BITS!, replace for variable sized function
 			for (uint32_t i = 0; i < size; i++) {
@@ -1325,7 +1326,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		free(input);
 	} else if (gate->type == G_SPLIT) {
 #ifdef DEBUGSHARING
-		cout << " which is a SPLIT gate" << endl;
+		std::cout << " which is a SPLIT gate" << std::endl;
 #endif
 		uint32_t pos = gate->gs.sinput.pos;
 		uint32_t idparent = gate->ingates.inputs.parent;
@@ -1338,7 +1339,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 	} else if (gate->type == G_REPEAT) //TODO only meant for single bit values, update
 			{
 #ifdef DEBUGSHARING
-		cout << " which is a REPEATER gate" << endl;
+		std::cout << " which is a REPEATER gate" << std::endl;
 #endif
 		uint32_t idparent = gate->ingates.inputs.parent;
 		InstantiateGate(gate);
@@ -1348,9 +1349,9 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		UsedGate(idparent);
 	} else if (gate->type == G_PERM) {
 #ifdef DEBUGSHARING
-		cout << " which is a PERMUTATION gate" << endl;
+		std::cout << " which is a PERMUTATION gate" << std::endl;
 #endif
-		//cout << "I am evaluating a permutation gate" << endl;
+		//std::cout << "I am evaluating a permutation gate" << std::endl;
 		uint32_t* inputs = gate->ingates.inputs.parents;
 		uint32_t* posids = gate->gs.perm.posids;
 
@@ -1368,7 +1369,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		free(posids);
 	} else if (gate->type == G_COMBINEPOS) {
 #ifdef DEBUGSHARING
-		cout << " which is a COMBINEPOS gate" << endl;
+		std::cout << " which is a COMBINEPOS gate" << std::endl;
 #endif
 		uint32_t* combinepos = gate->ingates.inputs.parents; //gate->gs.combinepos.input;
 		uint32_t arraypos = gate->gs.combinepos.pos / GATE_T_BITS;
@@ -1385,7 +1386,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		free(combinepos);
 	} else if (gate->type == G_SUBSET) {
 #ifdef DEBUGSHARING
-		cout << " which is a Subset gate" << endl;
+		std::cout << " which is a Subset gate" << std::endl;
 #endif
 		uint32_t idparent = gate->ingates.inputs.parent;
 		uint32_t* positions = gate->gs.sub_pos.posids; //gate->gs.combinepos.input;
@@ -1409,9 +1410,9 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 #endif
 	} else if (gate->type == G_STRUCT_COMBINE) {
 #ifdef DEBUGSHARING
-		cout << " which is a Subset gate" << endl;
+		std::cout << " which is a Subset gate" << std::endl;
 #endif
-		//cout << "I am evaluating a structurized combiner gate" << endl;
+		//std::cout << "I am evaluating a structurized combiner gate" << std::endl;
 		uint32_t* inputs = gate->ingates.inputs.parents;
 		uint32_t pos_start = gate->gs.struct_comb.pos_start;
 		uint32_t pos_incr = gate->gs.struct_comb.pos_incr;
@@ -1423,7 +1424,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		memset(gate->gs.val, 0x00, ceil_divide(vsize, 8));
 
 		//TODO: Optimize
-		//cout << "ninputs = " << ninputs << ", nvals = " << vsize  << endl;
+		//std::cout << "ninputs = " << ninputs << ", nvals = " << vsize  << std::endl;
 		for(uint32_t pos_ctr = pos_start, ctr=0, p_tmp_idx, p_tmp_pos; ctr<vsize; pos_ctr+=pos_incr) {
 			p_tmp_idx = pos_ctr / GATE_T_BITS;
 			p_tmp_pos = pos_ctr % GATE_T_BITS;
@@ -1454,7 +1455,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 }
 
 uint32_t BoolSharing::AssignInput(CBitVector& inputvals) {
-	deque<uint32_t> myingates = m_cBoolCircuit->GetInputGatesForParty(m_eRole);
+	std::deque<uint32_t> myingates = m_cBoolCircuit->GetInputGatesForParty(m_eRole);
 	inputvals.Create((uint64_t) m_cBoolCircuit->GetNumInputBitsForParty(m_eRole), m_cCrypto);
 
 	GATE* gate;
@@ -1469,7 +1470,7 @@ uint32_t BoolSharing::AssignInput(CBitVector& inputvals) {
 			UGATE_T* inval = (UGATE_T*) calloc(lim, sizeof(UGATE_T));
 
 			for (uint32_t j = 0; j < lim; j++, bitstocopy -= GATE_T_BITS) {
-				len = min(bitstocopy, (uint32_t) GATE_T_BITS);
+				len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 				inval[j] = inputvals.Get<UGATE_T>(inbitstart, len);
 				inbitstart += len;
 			}
@@ -1480,7 +1481,7 @@ uint32_t BoolSharing::AssignInput(CBitVector& inputvals) {
 }
 
 uint32_t BoolSharing::GetOutput(CBitVector& out) {
-	deque<uint32_t> myoutgates = m_cBoolCircuit->GetOutputGatesForParty(m_eRole);
+	std::deque<uint32_t> myoutgates = m_cBoolCircuit->GetOutputGatesForParty(m_eRole);
 	uint32_t outbits = m_cBoolCircuit->GetNumOutputBitsForParty(m_eRole);
 	out.Create(outbits);
 
@@ -1497,24 +1498,24 @@ uint32_t BoolSharing::GetOutput(CBitVector& out) {
 }
 
 void BoolSharing::PrintPerformanceStatistics() {
-	cout << "Boolean Sharing: ANDs: ";
+	std::cout << "Boolean Sharing: ANDs: ";
 	uint64_t total_non_vec_ANDs = 0;
 	uint64_t total_vec_ANDs = 0;
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
-		cout << m_vANDs[i].numgates << " (" << m_vANDs[i].bitlen << "-bit) ; ";
+		std::cout << m_vANDs[i].numgates << " (" << m_vANDs[i].bitlen << "-bit) ; ";
 		total_non_vec_ANDs += (((uint64_t) m_vANDs[i].numgates ) * ((uint64_t) m_vANDs[i].bitlen));
 		total_vec_ANDs += ((uint64_t) m_vANDs[i].numgates);
 	}
-	cout << "Depth: " << GetMaxCommunicationRounds() << endl;
-	cout << "Total Vec AND: " << total_vec_ANDs << endl;
-	cout << "Total Non-Vec AND: " << total_non_vec_ANDs << endl;
-	cout << "XOR vals: "<< m_cBoolCircuit->GetNumXORVals() << " gates: "<< m_cBoolCircuit->GetNumXORGates() << endl;
-	cout << "Comb gates: " << m_cBoolCircuit->GetNumCombGates() << ", CombStruct gates: " <<  m_cBoolCircuit->GetNumStructCombGates() <<
+	std::cout << "Depth: " << GetMaxCommunicationRounds() << std::endl;
+	std::cout << "Total Vec AND: " << total_vec_ANDs << std::endl;
+	std::cout << "Total Non-Vec AND: " << total_non_vec_ANDs << std::endl;
+	std::cout << "XOR vals: "<< m_cBoolCircuit->GetNumXORVals() << " gates: "<< m_cBoolCircuit->GetNumXORGates() << std::endl;
+	std::cout << "Comb gates: " << m_cBoolCircuit->GetNumCombGates() << ", CombStruct gates: " <<  m_cBoolCircuit->GetNumStructCombGates() <<
 			", Perm gates: "<< m_cBoolCircuit->GetNumPermGates() << ", Subset gates: " << m_cBoolCircuit->GetNumSubsetGates() <<
-			", Split gates: "<< m_cBoolCircuit->GetNumSplitGates() << endl;
+			", Split gates: "<< m_cBoolCircuit->GetNumSplitGates() << std::endl;
 #ifdef BENCHBOOLTIME
-	cout << "XOR time " << m_nXORTime << ", SIMD time " << m_nSIMDTime << ", Comb time: " << m_nCombTime << ", Comb structurized time: " <<
-			m_nCombStructTime << ", Subset time: " << m_nSubsetTime << endl;
+	std::cout << "XOR time " << m_nXORTime << ", SIMD time " << m_nSIMDTime << ", Comb time: " << m_nCombTime << ", Comb structurized time: " <<
+			m_nCombStructTime << ", Subset time: " << m_nSubsetTime << std::endl;
 #endif
 }
 
@@ -1577,20 +1578,20 @@ void BoolSharing::Reset() {
 
 	//Reset the OP-LUT data structures
 	if(!m_vOP_LUT_data.empty()) {
-		cout << "Doing the deletion" << endl;
-		for (map<uint64_t,op_lut_ctx*>::iterator it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
+		std::cout << "Doing the deletion" << std::endl;
+		for (auto it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
 			free(it->second);
 		}
 		m_vOP_LUT_data.clear();
 	}
 	if(!m_vOP_LUT_SndSelOpeningBuf.empty()) {
-		for (map<uint64_t,CBitVector*>::iterator it=m_vOP_LUT_SndSelOpeningBuf.begin(); it!=m_vOP_LUT_SndSelOpeningBuf.end(); it++) {
+		for (auto it=m_vOP_LUT_SndSelOpeningBuf.begin(); it!=m_vOP_LUT_SndSelOpeningBuf.end(); it++) {
 			it->second->delCBitVector();
 		}
 		m_vOP_LUT_SndSelOpeningBuf.clear();
 	}
 	if(!m_vOP_LUT_RecSelOpeningBuf.empty()) {
-		for (map<uint64_t,CBitVector*>::iterator it=m_vOP_LUT_RecSelOpeningBuf.begin(); it!=m_vOP_LUT_RecSelOpeningBuf.end(); it++) {
+		for (auto it=m_vOP_LUT_RecSelOpeningBuf.begin(); it!=m_vOP_LUT_RecSelOpeningBuf.end(); it++) {
 			it->second->delCBitVector();
 		}
 		m_vOP_LUT_RecSelOpeningBuf.clear();
@@ -1706,10 +1707,10 @@ void BoolSharing::ReadMTsFromFile(char *filename) {
 	BYTE *ptr;
 	/**Seek the file pointer to the location of the last read position.*/
 	if(fseek(fp, m_nFilePos, SEEK_SET))
-            cout << "Error occured in fseek" << endl;
+            std::cout << "Error occured in fseek" << std::endl;
 	/**Reading the num and sizes from the file.*/
 	if(!fread(&num_and_sizes, sizeof(uint32_t), 1, fp))
-            cout << "Error occured in fread" << endl;;
+            std::cout << "Error occured in fread" << std::endl;;
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 
 		/**Calculating the required ANDGatelength in bytes for the provided circuit configuration.*/
@@ -1719,7 +1720,7 @@ void BoolSharing::ReadMTsFromFile(char *filename) {
 
 		/**Reading the ANDGate length in bytes from file.*/
 		if(!fread(&org_andbytelen, sizeof(uint32_t), 1, fp))
-                    cout << "Error occured in fread" << endl;
+                    std::cout << "Error occured in fread" << std::endl;
 
 		/**Allocating the memory for the BYTE pointer with the read ANDGate lenght size from the file.*/
 		ptr = (BYTE*)malloc(org_andbytelen*sizeof(BYTE));
@@ -1731,24 +1732,24 @@ void BoolSharing::ReadMTsFromFile(char *filename) {
 		if(org_andbytelen != andbytelen) {
 
 			if(!fread(ptr, org_andbytelen, 1, fp))
-                            cout << "Error occured in fread" << endl;
+                            std::cout << "Error occured in fread" << std::endl;
 			m_vA[i].Copy(ptr, 0, andbytelen);
 			if(!fread(ptr, org_andbytelen, 1, fp))
-                            cout << "Error occured in fread" << endl;
+                            std::cout << "Error occured in fread" << std::endl;
 			m_vB[i].Copy(ptr, 0, andbytelen);
 			if(!fread(ptr, org_andbytelen, 1, fp))
-                                cout << "Error occured in fread" << endl;
+                                std::cout << "Error occured in fread" << std::endl;
 			m_vC[i].Copy(ptr, 0, andbytelen);
 		}
 		else {
 			if(!fread(ptr, andbytelen, 1, fp))
-                            cout << "Error occured in fread" << endl;
+                            std::cout << "Error occured in fread" << std::endl;
 			m_vA[i].Copy(ptr, 0, andbytelen);
 			if(!fread(ptr, andbytelen, 1, fp))
-                                cout << "Error occured in fread" << endl;
+                                std::cout << "Error occured in fread" << std::endl;
 			m_vB[i].Copy(ptr, 0, andbytelen);
 			if(!fread(ptr, andbytelen, 1, fp))
-                            cout << "Error occured in fread" << endl;
+                            std::cout << "Error occured in fread" << std::endl;
 			m_vC[i].Copy(ptr, 0, andbytelen);
 		}
 		m_vD_snd[i].Copy(m_vA[i].GetArr(), 0, andbytelen);
@@ -1777,7 +1778,7 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 
 	/**Reading the circuit size mainly the NUMAndGate vector size*/
 	if(!fread(&circ_size_in_file, sizeof(uint32_t), 1, fp))
-            cout << "Error occured in fread" << endl;
+            std::cout << "Error occured in fread" << std::endl;
 	/**Checking if they are unequal.*/
 	if(circ_size_in_file != in_circ_size) {
 		/**Returning false and reverting the precomputation mode to default.*/
@@ -1793,7 +1794,7 @@ BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, 
 		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
 		/**Reading the AND gate length in bytes from the file.*/
 		if(!fread(&andbytelen_in_file, sizeof(uint32_t), 1, fp))
-                    cout << "Error occured in fread" << endl;
+                    std::cout << "Error occured in fread" << std::endl;
 		uint32_t traverseMT_size_in_file = andbytelen_in_file*3;
 
 		/**Shifting through the MTs based on the ANDGate size in byte length.*/

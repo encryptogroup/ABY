@@ -22,7 +22,7 @@ int32_t test_sha1_circuit(e_role role, char* address, uint16_t port, seclvl secl
 	uint32_t sha1bits_per_party = ABY_SHA1_INPUT_BITS/2;
 	uint32_t sha1bytes_per_party = bits_in_bytes(sha1bits_per_party);
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
-	vector<Sharing*>& sharings = party->GetSharings();
+	std::vector<Sharing*>& sharings = party->GetSharings();
 
 	crypto* crypt = new crypto(seclvl.symbits, (uint8_t*) const_seed);
 	CBitVector msgS, msgC, verify;
@@ -66,24 +66,24 @@ int32_t test_sha1_circuit(e_role role, char* address, uint16_t port, seclvl secl
 	verify_SHA1_hash(msgS.GetArr(), msgC.GetArr(), sha1bytes_per_party, nvals, verify.GetArr());
 
 #ifndef BATCH
-	cout << "Plaintext output: " << (hex) << endl;
+	std::cout << "Plaintext output: " << (hex) << std::endl;
 	for(uint32_t i = 0; i < 20; i++) {
-		cout << (uint32_t) plain_out[i];
+		std::cout << (uint32_t) plain_out[i];
 	}
-	cout << (dec) << endl;
+	std::cout << (dec) << std::endl;
 
 
-	cout << "Testing SHA1 hash in " << get_sharing_name(sharing) << " sharing: " << endl;
+	std::cout << "Testing SHA1 hash in " << get_sharing_name(sharing) << " sharing: " << std::endl;
 #endif
 	for (uint32_t i = 0; i < nvals; i++) {
 #ifndef BATCH
-		cout << "(" << i << ") Server Input:\t";
+		std::cout << "(" << i << ") Server Input:\t";
 		msgS.PrintHex(i * sha1bytes_per_party, (i + 1) * sha1bytes_per_party);
-		cout << "(" << i << ") Client Input:\t";
+		std::cout << "(" << i << ") Client Input:\t";
 		msgC.PrintHex(i * sha1bytes_per_party, (i + 1) * sha1bytes_per_party);
-		cout << "(" << i << ") Circ:\t";
+		std::cout << "(" << i << ") Circ:\t";
 		out.PrintHex(i * ABY_SHA1_OUTPUT_BYTES, (i + 1) * ABY_SHA1_OUTPUT_BYTES);
-		cout << "(" << i << ") Verify:\t";
+		std::cout << "(" << i << ") Verify:\t";
 		verify.PrintHex(i * ABY_SHA1_OUTPUT_BYTES, (i + 1) * ABY_SHA1_OUTPUT_BYTES);
 #endif
 		assert(verify.IsEqual(out, i*ABY_SHA1_OUTPUT_BITS, (i+1)*ABY_SHA1_OUTPUT_BITS));

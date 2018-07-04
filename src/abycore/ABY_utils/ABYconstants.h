@@ -19,6 +19,7 @@
 #ifndef _ABY_CONSTANTS_H_
 #define _ABY_CONSTANTS_H_
 
+#include <string>
 #include "../ENCRYPTO_utils/constants.h"
 
 // Set to 1 for production. 1 will circumvent output reconstruction in the PrintValue and Assert gates, 0 prints these intermediate values.
@@ -62,9 +63,6 @@
 //#define DEBUGABYPARTY
 
 #define USE_MULTI_MUX_GATES
-
-//TODO eventually remove this and prefix all couts, etc with std::
-using namespace std;
 
 /**
  \enum 	e_role
@@ -207,7 +205,7 @@ typedef struct {
 	std::string opname;
 } aby_ops_t;
 
-static string get_circuit_type_name(e_circuit c) {
+static std::string get_circuit_type_name(e_circuit c) {
 	switch(c) {
 	case C_BOOLEAN:
 		return "BOOLEAN";
@@ -218,7 +216,7 @@ static string get_circuit_type_name(e_circuit c) {
 	}
 }
 
-static string get_role_name(e_role r) {
+static std::string get_role_name(e_role r) {
 	switch(r) {
 	case SERVER:
 		return "SERVER";
@@ -231,7 +229,7 @@ static string get_role_name(e_role r) {
 	}
 }
 
-static string get_sharing_name(e_sharing s) {
+static std::string get_sharing_name(e_sharing s) {
 	switch (s) {
 	case S_BOOL:
 		return "Bool";
@@ -248,7 +246,7 @@ static string get_sharing_name(e_sharing s) {
 	}
 }
 
-static string get_gate_type_name(e_gatetype g) {
+static std::string get_gate_type_name(e_gatetype g) {
 	switch (g) {
 	case G_LIN: return "Linear";
 	case G_NON_LIN: return "Non-Linear";
@@ -283,7 +281,7 @@ typedef enum fp_op_setting{
 }fp_op_setting;
 
 
-static string get_op_name(e_operation op) {
+static std::string get_op_name(e_operation op) {
 	switch (op) {
 	case OP_XOR:
 		return "XOR";
@@ -346,12 +344,12 @@ static string get_op_name(e_operation op) {
 /** \var g_TruthTable
  \brief A truth-table for an AND gate
  */
-const uint8_t g_TruthTable[4] = { 0, 0, 0, 1 };		// and
+constexpr uint8_t g_TruthTable[4] = { 0, 0, 0, 1 };		// and
 
 /**\var m_vLUT_GT_IN
  * \brief Lookup-Table for the Greater-than functionality on input bits in No-MT sharing
  */
-const uint64_t m_vLUT_GT_IN[4][8] = {
+constexpr uint64_t m_vLUT_GT_IN[4][8] = {
 		{0x86L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0x86005586L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0x5555555586005586L, 0x8600558600000000L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
@@ -360,7 +358,7 @@ const uint64_t m_vLUT_GT_IN[4][8] = {
 /**\var m_vLUT_GT_INTERNAL
  * \brief Lookup-Table for the Greater-than functionality on internal bits in No-MT sharing
  */
-const uint64_t m_vLUT_GT_INTERNAL[3][8] = {
+constexpr uint64_t m_vLUT_GT_INTERNAL[3][8] = {
 		{0xb1e45500, 0L, 0L, 0L, 0L, 0L, 0L, 0L},
 		{0x5555555500000000L, 0xe4b10055b1e45500L, 0L, 0L, 0L, 0L, 0L, 0L},
 		{0x0L, 0x0L, 0x5555555555555555L, 0x5555555555555555L, 0x5555555500000000L, 0xe4b10055b1e45500L, 0x55555555L, 0xb1e45500e4b10055L}};
@@ -371,7 +369,7 @@ const uint64_t m_vLUT_GT_INTERNAL[3][8] = {
 /**\var m_vLUT_ADD_IN
  * \brief Lookup-Table for the addition functionality on inputs in No-MT sharing
  */
-const uint64_t m_vLUT_ADD_IN[4][24] = {
+constexpr uint64_t m_vLUT_ADD_IN[4][24] = {
 		{0x8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0xb24a90a90200L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0x5444522052201000L, 0x5444522052201000L, 0x5444522052201000L, 0xdcccdaa8daa89888L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
@@ -383,13 +381,13 @@ const uint64_t m_vLUT_ADD_IN[4][24] = {
 /**\var m_vLUT_ADD_N_OUTS
  * \brief Number of outputs for the m_vLUT_ADD_IN LUT
  */
-const uint32_t m_vLUT_ADD_N_OUTS[4] = {1, 3, 4, 6};
+constexpr uint32_t m_vLUT_ADD_N_OUTS[4] = {1, 3, 4, 6};
 
 
 /**\var m_vLUT_ADD_INTERNAL
  * \brief Lookup-Table for the addition functionality on internal signals in No-MT sharing
  */
-const uint64_t m_vLUT_ADD_INTERNAL[2][16] = {
+constexpr uint64_t m_vLUT_ADD_INTERNAL[2][16] = {
 		{0xeeaae400L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0x3232222232100000L, 0x3232222232100000L, 0x3232222232100000L, 0x3232222232100000L, 0x3232222232100000L, 0xfafaaaaafa500000L, 0xbabaaaaaba988888L, 0xfafaaaaafad88888L,
 				0xbabaaaaaba988888L, 0xbabaaaaaba988888L, 0xbabaaaaaba988888L, 0xbabaaaaaba988888L, 0xbabaaaaaba988888L, 0xfafaaaaafad88888L, 0xbabaaaaaba988888L, 0xfafaaaaafad88888L}
@@ -398,7 +396,7 @@ const uint64_t m_vLUT_ADD_INTERNAL[2][16] = {
 /**\var m_vLUT_ADD_CRIT_IN
  * \brief Lookup-Table for the addition functionality on the critical path where the inputs are real values in No-MT sharing
  */
-const uint64_t m_vLUT_ADD_CRIT_IN[4][16] = {
+constexpr uint64_t m_vLUT_ADD_CRIT_IN[4][16] = {
 		{0x8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0x3222300030001000L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0x200692600600200L, 0xe00200fb6e00e0L, 0xfb6f24f24b24fb6eL, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
@@ -409,7 +407,7 @@ const uint64_t m_vLUT_ADD_CRIT_IN[4][16] = {
 /**\var m_vLUT_ADD_CRIT
  * \brief Lookup-Table for the addition functionality on the critical path where the inputs are parity/carry signals in No-MT sharing
  */
-const uint64_t m_vLUT_ADD_CRIT[3][6] = {
+constexpr uint64_t m_vLUT_ADD_CRIT[3][6] = {
 		{0xf8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0xffeaffeaffc05540L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0xb6926db600249200L, 0x2492006db6926dL, 0xffffb6ffffb6fffeL, 0xffb6ffff24b6db24L, 0x24b6db24ffffb6ffL, 0xffffb6ffffb6ffffL}
@@ -418,7 +416,7 @@ const uint64_t m_vLUT_ADD_CRIT[3][6] = {
 /**\var m_vLUT_ADD_INV
  * \brief Lookup-Table for the addition functionality on the inverse carry tree in No-MT sharing
  */
-const uint64_t m_vLUT_ADD_INV[3][6] = {
+constexpr uint64_t m_vLUT_ADD_INV[3][6] = {
 		{0xf8L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0xffeaffeaddc85540L, 0x0L, 0x0L, 0x0L, 0x0L, 0x0L},
 		{0xb692659610249200L, 0x302492006db6926dL, 0xffffb6ffffb6e79eL,	0xffb6f7df34b6db24L, 0x34b6db24ffffb6ffL, 0xffffb6ffffb6f7dfL}

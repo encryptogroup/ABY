@@ -19,6 +19,7 @@
 
 
 #include "share.h"
+#include <cstring>
 
 
 /* =========================== Methods for the share class =========================== */
@@ -28,7 +29,7 @@ share::share(uint32_t sharelen, Circuit* circ) {
 	init(circ);
 }
 
-share::share(vector<uint32_t> gates, Circuit* circ) {
+share::share(std::vector<uint32_t> gates, Circuit* circ) {
 	m_ngateids.resize(gates.size());
 	m_ngateids = gates;
 	init(circ);

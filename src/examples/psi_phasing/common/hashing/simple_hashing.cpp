@@ -46,19 +46,19 @@ uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint
 		ctx[i].elements = elements;
 		ctx[i].table = table + i;
 		ctx[i].startpos = i * ceil_divide(neles, ntasks);
-		ctx[i].endpos = min(ctx[i].startpos + ceil_divide(neles, ntasks), neles);
+		ctx[i].endpos = std::min(ctx[i].startpos + ceil_divide(neles, ntasks), neles);
 		ctx[i].hs = &hs;
 
-		//cout << "Thread " << i << " starting from " << ctx[i].startpos << " going to " << ctx[i].endpos << " for " << neles << " elements" << endl;
+		//std::cout << "Thread " << i << " starting from " << ctx[i].startpos << " going to " << ctx[i].endpos << " for " << neles << " elements" << std::endl;
 		if(pthread_create(entry_gen_tasks+i, NULL, gen_entries, (void*) (ctx+i))) {
-			cerr << "Error in creating new pthread at simple hashing!" << endl;
+			std::cerr << "Error in creating new pthread at simple hashing!" << std::endl;
 			exit(0);
 		}
 	}
 
 	for(i = 0; i < ntasks; i++) {
 		if(pthread_join(entry_gen_tasks[i], NULL)) {
-			cerr << "Error in joining pthread at simple hashing!" << endl;
+			std::cerr << "Error in joining pthread at simple hashing!" << std::endl;
 			exit(0);
 		}
 	}
@@ -128,12 +128,12 @@ inline void insert_element(sht_ctx* table, uint8_t* element, uint32_t* address, 
 
 	hashElement(element, address, tmpbuf, hs);
 
-	//cout << "Element " <<
+	//std::cout << "Element " <<
 	for(i = 0; i < hs->nhashfuns; i++) {
 
 		tmp_bin=table->bins + address[i];
 		//pthread_mutex_lock(locks + address[i]);
-		//cout << "Element: " << ((uint32_t*) tmpbuf)[0] << ", position = " << (i&0x03) << " , mapped to " << address[i] << endl;
+		//std::cout << "Element: " << ((uint32_t*) tmpbuf)[0] << ", position = " << (i&0x03) << " , mapped to " << address[i] << std::endl;
 		memcpy(tmp_bin->values + tmp_bin->nvals * hs->outbytelen, tmpbuf, hs->outbytelen);
 		(tmp_bin->values + tmp_bin->nvals * hs->outbytelen)[0] ^= (i&0x03);
 		/*for(j = 0; j < i; j++) {
@@ -144,15 +144,15 @@ inline void insert_element(sht_ctx* table, uint8_t* element, uint32_t* address, 
 		tmp_bin->nvals++;
 
 		if(tmp_bin->nvals == table->maxbinsize) {
-			cout << "The hash table grew too big, increasing size!" << endl;
+			std::cout << "The hash table grew too big, increasing size!" << std::endl;
 			increase_max_bin_size(table, hs->outbytelen);
 		}
 		//assert(tmp_bin->nvals < table->maxbinsize);
-		/*cout << "Inserted into bin: " << address << ": " << (hex);
+		/*std::cout << "Inserted into bin: " << address << ": " << (hex);
 		for(uint32_t j = 0; j < table->outbytelen; j++) {
-			cout << (unsigned int) tmpbuf[j];
+			std::cout << (unsigned int) tmpbuf[j];
 		}
-		cout << (dec) << endl;*/
+		std::cout << (dec) << std::endl;*/
 		//pthread_mutex_unlock(locks + address[i]);
 	}
 }
@@ -197,7 +197,7 @@ inline uint32_t get_max_bin_size(uint32_t nbins, uint32_t neles) {
 		if(neles >= (1<<8))
 			return 23;
 	} else
-		return 6*max((uint32_t) ceil_divide(neles, nbins), (uint32_t) 3);
+		return 6*std::max((uint32_t) ceil_divide(neles, nbins), (uint32_t) 3);
 }
 
 void increase_max_bin_size(sht_ctx* table, uint32_t valbytelen) {
@@ -235,7 +235,7 @@ void nchoosek_mul(mpf_t res, int n, int k) {
 //first argument: number of balls, n, second argument: number of bins
 int compute_maxbin(uint32_t balls_int, uint32_t bins_int) {
 
-	//cout << "Computing parameters for balls = " << balls_int << ", and bins = " << bins_int << endl;
+	//std::cout << "Computing parameters for balls = " << balls_int << ", and bins = " << bins_int << std::endl;
 
 	mpf_set_default_prec(1024);
 
@@ -288,7 +288,7 @@ int compute_maxbin(uint32_t balls_int, uint32_t bins_int) {
 
 		if(mpf_cmp(tmp, p40) < 1  && !gotp40) {
 			maxbin = i;
-			//cout << ", 2^-{40}: " << i << endl;
+			//std::cout << ", 2^-{40}: " << i << std::endl;
 			gotp40=true;
 		}
 	}
@@ -304,7 +304,7 @@ int compute_maxbin(uint32_t balls_int, uint32_t bins_int) {
 	mpf_clear(p40);
 	mpf_clear(two);
 
-	//cout << "Resulting maxbin = " << maxbin << endl;
+	//std::cout << "Resulting maxbin = " << maxbin << std::endl;
 
 	return maxbin;
 }

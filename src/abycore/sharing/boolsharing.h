@@ -21,8 +21,11 @@
 
 #include "sharing.h"
 #include <algorithm>
+#include <map>
+#include <vector>
 #include "../circuit/booleancircuits.h"
 #include "../ENCRYPTO_utils/fileops.h"
+#include "../ENCRYPTO_utils/cbitvector.h"
 
 //#define DEBUGBOOL
 //#define BENCHBOOLTIME
@@ -74,8 +77,8 @@ public:
 
 	inline void InstantiateGate(GATE* gate);
 
-	void GetDataToSend(vector<BYTE*>& sendbuf, vector<uint64_t>& bytesize);
-	void GetBuffersToReceive(vector<BYTE*>& rcvbuf, vector<uint64_t>& rcvbytes);
+	void GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>& bytesize);
+	void GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vector<uint64_t>& rcvbytes);
 
 	void EvaluateSIMDGate(uint32_t gateid);
 
@@ -97,7 +100,7 @@ public:
 	;
 
 	void Reset();
-	vector<uint32_t> GetNumOTs() {
+	std::vector<uint32_t> GetNumOTs() {
 		return m_nNumMTs;
 	}
 	;
@@ -113,15 +116,15 @@ private:
 
 	uint32_t m_nTotalNumMTs;
 	uint32_t m_nOPLUT_Tables;
-	vector<uint32_t> m_nNumMTs;
+	std::vector<uint32_t> m_nNumMTs;
 	uint32_t m_nXORGates;
 
 	XORMasking *fMaskFct; // = new XORMasking(1);
-	vector<uint32_t> m_vMTStartIdx;
-	vector<uint32_t> m_vMTIdx;
-	vector<vector<uint32_t> > m_vANDGates;
-	vector<uint32_t> m_vInputShareGates;
-	vector<uint32_t> m_vOutputShareGates;
+	std::vector<uint32_t> m_vMTStartIdx;
+	std::vector<uint32_t> m_vMTIdx;
+	std::vector<std::vector<uint32_t> > m_vANDGates;
+	std::vector<uint32_t> m_vInputShareGates;
+	std::vector<uint32_t> m_vOutputShareGates;
 
 	uint32_t m_nInputShareSndSize;
 	uint32_t m_nOutputShareSndSize;
@@ -132,31 +135,31 @@ private:
 	uint32_t m_nNumANDSizes;
 
 
-	vector<CBitVector> m_vA; //Dim 1 for all pairs of sender / receiver, Dim 2 for MTs of different bitlengths as sender / receiver
-	vector<CBitVector> m_vB; //value B of a multiplication triple
-	vector<CBitVector> m_vS; // temporary value for the computation of the multiplication triples
-	vector<CBitVector> m_vC; // value C of a multiplication triple
-	vector<CBitVector> m_vD_snd; //Stores the D values (x ^ a) between an input and the multiplication value a
-	vector<CBitVector> m_vE_snd; //Stores the E values (y ^ b) between the other input and the multiplication value b
-	vector<CBitVector> m_vD_rcv;
-	vector<CBitVector> m_vE_rcv;
-	vector<CBitVector> m_vResA;
-	vector<CBitVector> m_vResB;
+	std::vector<CBitVector> m_vA; //Dim 1 for all pairs of sender / receiver, Dim 2 for MTs of different bitlengths as sender / receiver
+	std::vector<CBitVector> m_vB; //value B of a multiplication triple
+	std::vector<CBitVector> m_vS; // temporary value for the computation of the multiplication triples
+	std::vector<CBitVector> m_vC; // value C of a multiplication triple
+	std::vector<CBitVector> m_vD_snd; //Stores the D values (x ^ a) between an input and the multiplication value a
+	std::vector<CBitVector> m_vE_snd; //Stores the E values (y ^ b) between the other input and the multiplication value b
+	std::vector<CBitVector> m_vD_rcv;
+	std::vector<CBitVector> m_vE_rcv;
+	std::vector<CBitVector> m_vResA;
+	std::vector<CBitVector> m_vResB;
 	non_lin_vec_ctx* m_vANDs;
 
 	//multiplication triple values A, B and C for use in KK OT ext. Are later written to m_vA, m_vB and mvC. m_vKKS is used for temporary results
-	vector<CBitVector> m_vKKA;
-	vector<CBitVector> m_vKKB;
-	vector<CBitVector> m_vKKC;
-	vector<CBitVector*> m_vKKS;
-	vector<CBitVector*> m_vKKChoices;
+	std::vector<CBitVector> m_vKKA;
+	std::vector<CBitVector> m_vKKB;
+	std::vector<CBitVector> m_vKKC;
+	std::vector<CBitVector*> m_vKKS;
+	std::vector<CBitVector*> m_vKKChoices;
 
 	//Values that are needed for the OP-LUT protocol. The different dimensions correspond to the different input sizes and output sizes of the LUTs
-	map<uint64_t, op_lut_ctx*> 	m_vOP_LUT_data; //maps input and output bit-lengths to array indices for the m_vOP_LUT protocol
-	map<uint64_t, CBitVector*> 	m_vOP_LUT_SndSelOpeningBuf; //maps input and output bit-lengths to a send buffer which stores the selective openings
-	map<uint64_t, CBitVector*> 	m_vOP_LUT_RecSelOpeningBuf; //maps input and output bit-lengths to a receive buffer stores the received selective openings
-	map<uint64_t, uint64_t>		m_vOP_LUT_SelOpeningBitCtr; //Counts the bits in m_vOP_LUT_SndSelOpeningBuf to be send and in m_vOP_LUT_RecSelOpeningBuf to be received this round
-	map<uint64_t, vector<uint32_t> > m_vOPLUTGates;
+	std::map<uint64_t, op_lut_ctx*> 	m_vOP_LUT_data; //maps input and output bit-lengths to array indices for the m_vOP_LUT protocol
+	std::map<uint64_t, CBitVector*> 	m_vOP_LUT_SndSelOpeningBuf; //maps input and output bit-lengths to a send buffer which stores the selective openings
+	std::map<uint64_t, CBitVector*> 	m_vOP_LUT_RecSelOpeningBuf; //maps input and output bit-lengths to a receive buffer stores the received selective openings
+	std::map<uint64_t, uint64_t>		m_vOP_LUT_SelOpeningBitCtr; //Counts the bits in m_vOP_LUT_SndSelOpeningBuf to be send and in m_vOP_LUT_RecSelOpeningBuf to be received this round
+	std::map<uint64_t, std::vector<uint32_t> > m_vOPLUTGates;
 
 
 

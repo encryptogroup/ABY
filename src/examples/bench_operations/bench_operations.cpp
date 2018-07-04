@@ -73,7 +73,7 @@ static const aby_ops_t m_tBenchOps[] = {
 };
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* bitlen, uint32_t* secparam,
-		string* address, uint16_t* port, int32_t* operation, bool* numbers_only, uint32_t* nops, uint32_t* nruns,
+		std::string* address, uint16_t* port, int32_t* operation, bool* numbers_only, uint32_t* nops, uint32_t* nruns,
 		uint32_t* threads, bool* no_verify, bool* detailed) {
 
 	uint32_t int_role = 0, int_port = 0;
@@ -99,16 +99,16 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, int32_t* 
 	success = parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx));
 
 	if(oplist) {
-		cout << "Operations with IDs: " << endl;
+		std::cout << "Operations with IDs: " << std::endl;
 		for(uint32_t i = 0; i < sizeof(m_tBenchOps)/sizeof(aby_ops_t); i++) {
-			cout << "Operation " << i << ": " << m_tBenchOps[i].opname << endl;
+			std::cout << "Operation " << i << ": " << m_tBenchOps[i].opname << std::endl;
 		}
 		exit(0);
 	}
 
 	if (!success) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
-		cout << "Exiting" << endl;
+		std::cout << "Exiting" << std::endl;
 		exit(0);
 	}
 
@@ -135,7 +135,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 	share *shra, *shrb, *shrres, *shrout, *shrsel;
 	//Shares for Yao IPP
 	share *shray, *shrayr, *shrby, *shrbyr, *shrresy, *shrresyr, *shrouty, *shroutyr;
-	vector<Sharing*>& sharings = party->GetSharings();
+	std::vector<Sharing*>& sharings = party->GetSharings();
 	Circuit *bc, *yc, *ac, *ycr;
 	double op_time, o_time, s_time, o_comm, s_comm;
 	uint32_t non_linears, depth, ynvals, yrnvals;
@@ -162,29 +162,29 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 
 	if (!numbers_only) {
 
-		cout << "Base OTs:\t";
-		cout << party->GetTiming(P_BASE_OT) << endl;
+		std::cout << "Base OTs:\t";
+		std::cout << party->GetTiming(P_BASE_OT) << std::endl;
 
-		cout << "Op\t";
+		std::cout << "Op\t";
 		if (!detailed) {
 			for (uint32_t b = 0; b < nbitlens; b++) {
-				cout << bitlens[b] << "-bit \t";
+				std::cout << bitlens[b] << "-bit \t";
 			}
-			cout << endl;
+			std::cout << std::endl;
 		}
 		else {
-			cout << "Setup Time [ms] / Online Time [ms] / Setup Comm [Byte] / Online Comm [Byte] / Non-Linear Ops" << endl;
+			std::cout << "Setup Time [ms] / Online Time [ms] / Setup Comm [Byte] / Online Comm [Byte] / Non-Linear Ops" << std::endl;
 		}
-		cout << "-----------------------------------------------" << endl;
+		std::cout << "-----------------------------------------------" << std::endl;
 	}
 
 	for (uint32_t i = 0; i < nops; i++) {
 		if (!numbers_only) {
-			cout << bench_ops[i].opname << "\t";
+			std::cout << bench_ops[i].opname << "\t";
 		}
 
 		if(detailed){
-			cout << endl;
+			std::cout << std::endl;
 		}
 
 		for (uint32_t b = 0; b < nbitlens; b++) {
@@ -261,7 +261,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 					break;
 				case OP_MUL:
 					if(nvals > 1000 && bench_ops[i].sharing == S_YAO) {
-						cout << "Yao multiplication ignored due to high memory requirement!\t";
+						std::cout << "Yao multiplication ignored due to high memory requirement!\t";
 						shrres = shra; //Do nothing since memory footprint is too high
 						for (uint32_t j = 0; j < nvals; j++)
 							verifyvec[j] = avec[j];
@@ -372,7 +372,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 							verifyvec[j] = (uint64_t) plaintext_aes_sbox[avec[j] & 0xFF]; //(avec[j] + bvec[j]) & typebitmask;
 					}
 					else{
-						cout << "AES only works with bitlen >= 8!\t";
+						std::cout << "AES only works with bitlen >= 8!\t";
 						shrres = shra;
 						for (uint32_t j = 0; j < nvals; j++){
 							verifyvec[j] = avec[j];
@@ -397,7 +397,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 
 				party->ExecCircuit();
 
-				//cout << "Size of output: " << shrout->size() << endl;
+				//std::cout << "Size of output: " << shrout->size() << std::endl;
 				if(bench_ops[i].sharing == S_YAO_REV) {
 					uint32_t tmpyrnvals;
 					cvec = (uint64_t*) malloc(sizeof(uint64_t*) * nvals);
@@ -425,42 +425,42 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 				depth += sharings[bench_ops[i].sharing]->GetMaxCommunicationRounds();
 
 				if(detailed) {
-					cout << bitlen <<"\t"
+					std::cout << bitlen <<"\t"
 						<< party->GetTiming(P_SETUP) << "\t"
 						<< party->GetTiming(P_ONLINE) << "\t"
 						<< party->GetSentData(P_SETUP)+party->GetReceivedData(P_SETUP) << "\t"
 						<< party->GetSentData(P_ONLINE)+party->GetReceivedData(P_ONLINE) << "\t"
 						<< sharings[bench_ops[i].sharing]->GetNumNonLinearOperations() << "\t"
-						<< sharings[bench_ops[i].sharing]->GetMaxCommunicationRounds() << endl;
+						<< sharings[bench_ops[i].sharing]->GetMaxCommunicationRounds() << std::endl;
 				}
 
 				party->Reset();
 
 
 				if(!no_verify) {
-					//cout << "Running verification" << endl;
+					//std::cout << "Running verification" << std::endl;
 					assert(tmpnvals == nvals);
 
 					for (uint32_t j = 0; j < nvals; j++) {
 						if(verifyvec[j] != (cvec[j]&typebitmask)) {
-							cout << "Error: " << endl;
-							cout << "\t" << get_role_name(role) << " " << bench_ops[i].opname << ": values[" << j <<
+							std::cout << "Error: " << std::endl;
+							std::cout << "\t" << get_role_name(role) << " " << bench_ops[i].opname << ": values[" << j <<
 							"]: a = " << avec[j] <<	", b = " << bvec[j] << ", c = " << (cvec[j]&typebitmask) << ", verify = " <<
-							verifyvec[j] << endl;
+							verifyvec[j] << std::endl;
 
 							assert(verifyvec[j] == (cvec[j]&typebitmask));
 						}
 					}
-					//cout << "Verification succeeded" << endl;
+					//std::cout << "Verification succeeded" << std::endl;
 				}
 			} // nruns
 
 			if(!detailed) {
-				cout << op_time/nruns << "\t";
+				std::cout << op_time/nruns << "\t";
 			}
 		}
 		if(!detailed)
-			cout << endl;
+			std::cout << std::endl;
 
 	}
 
@@ -529,7 +529,7 @@ int main(int argc, char** argv) {
 	e_role role;
 	uint32_t secparam = 128, nvals = 1, nruns = 1;
 	uint16_t port = 7766;
-	string address = "127.0.0.1";
+	std::string address = "127.0.0.1";
 	int32_t operation = -1, bitlen = -1;
 	bool numbers_only = false;
 	bool no_verify = false;

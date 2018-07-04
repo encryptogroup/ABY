@@ -191,7 +191,7 @@ public:
 	uint32_t PutOUTGate(uint32_t parent, e_role dst);
 	share* PutOUTGate(share* parent, e_role dst);
 
-	vector<uint32_t> PutSharedOUTGate(vector<uint32_t> parentids);
+        std::vector<uint32_t> PutSharedOUTGate(std::vector<uint32_t> parentids);
 	share* PutSharedOUTGate(share* parent);
 
 
@@ -202,21 +202,21 @@ public:
 
 
 	uint32_t PutINVGate(uint32_t parentid);
-	uint32_t PutCONVGate(vector<uint32_t> parentids);
+	uint32_t PutCONVGate(std::vector<uint32_t> parentids);
 
 	share* PutADDGate(share* ina, share* inb);
 
 	share* PutSUBGate(share* ina, share* inb);
-	share* PutANDGate(share* ina, share* inb) {
-		cerr << "AND not implemented in arithmetic sharing" << endl;
+	share* PutANDGate(share*, share*) {
+                std::cerr << "AND not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	share* PutXORGate(share* ina, share* inb) {
-		cerr << "XOR not implemented in arithmetic sharing" << endl;
+	share* PutXORGate(share*, share*) {
+          std::cerr << "XOR not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	share* PutSubGate(share* ina, share* inb) {
-		cerr << "Sub not implemented in arithmetic sharing" << endl;
+	share* PutSubGate(share*, share*) {
+		std::cerr << "Sub not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
 	share* PutMULGate(share* ina, share* inb);
@@ -224,35 +224,35 @@ public:
 	/* Multiplication with a constant - offline & free */
 	share* PutMULCONSTGate(share* ina, share* inb);
 
-	share* PutGTGate(share* ina, share* inb) {
-		cerr << "GT not implemented in arithmetic sharing" << endl;
+	share* PutGTGate(share*, share*) {
+		std::cerr << "GT not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	share* PutEQGate(share* ina, share* inb) {
-		cerr << "EQ not implemented in arithmetic sharing" << endl;
+	share* PutEQGate(share*, share*) {
+		std::cerr << "EQ not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	share* PutMUXGate(share* ina, share* inb, share* sel) {
-		cerr << "MUX not implemented in arithmetic sharing" << endl;
+	share* PutMUXGate(share*, share*, share*) {
+		std::cerr << "MUX not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	share* PutY2BGate(share* ina) {
-		cerr << "Y2B not implemented in arithmetic sharing" << endl;
+	share* PutY2BGate(share*) {
+		std::cerr << "Y2B not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	share* PutB2YGate(share* ina) {
-		cerr << "B2Y not implemented in arithmetic sharing" << endl;
+	share* PutB2YGate(share*) {
+		std::cerr << "B2Y not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	share* PutA2YGate(share* ina) {
-		cerr << "A2Y not implemented in arithmetic sharing" << endl;
+	share* PutA2YGate(share*) {
+		std::cerr << "A2Y not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	share* PutANDVecGate(share* ina, share* inb) {
-		cerr << "ANDVec Gate not implemented in arithmetic sharing" << endl;
+	share* PutANDVecGate(share*, share*) {
+          std::cerr << "ANDVec Gate not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
-	uint32_t PutB2AGate(vector<uint32_t> ina);
+	uint32_t PutB2AGate(std::vector<uint32_t> ina);
 	share* PutB2AGate(share* ina);
 
 
