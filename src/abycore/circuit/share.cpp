@@ -68,7 +68,7 @@ uint32_t share::get_nvals() {
 	for (auto i : m_ngateids) {
 		n = m_ccirc->GetNumVals(i);
 		if (nvals) {
-			assert(nvals == n); // check that nvals on all wires are the same
+			assert(nvals == n && "get_nvals() needs all wires to have the same nvals in order to be unambiguous."); // check that nvals on all wires are the same
 		} else {
 			nvals = n; // set nvals to that of first wire
 		}
