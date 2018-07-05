@@ -5,6 +5,28 @@
 
 By *Daniel Demmler, Thomas Schneider and Michael Zohner* ([ENCRYPTO](http://www.encrypto.de), TU Darmstadt)<br>in [Network and Distributed System Security Symposium (NDSS'15)](http://www.internetsociety.org/events/ndss-symposium-2015). [Paper available here.](http://thomaschneider.de/papers/DSZ15.pdf)
 
+
+### Table of Contents
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [ABY Source Code](#aby-source-code)
+    - [Repository Structure](#repository-structure)
+    - [Building the ABY Framework](#building-the-aby-framework)
+        - [Short Version](#short-version)
+        - [Detailed Guide](#detailed-guide)
+            - [External Dependencies](#external-dependencies)
+            - [Test Executables and Example Applications](#test-executables-and-example-applications)
+            - [Build Options](#build-options)
+            - [Cleaning the Build Directory](#cleaning-the-build-directory)
+            - [Installation](#installation)
+    - [Developer Guide and Documentation](#developer-guide-and-documentation)
+- [ABY Applications](#aby-applications)
+    - [Included Example Applications](#included-example-applications)
+    - [Running Applications](#running-applications)
+    - [Creating and Building your own ABY Application](#creating-and-building-your-own-aby-application)
+
+
 ### Features
 ---
 ABY efficiently combines secure computation schemes based on **Arithmetic sharing**, **Boolean sharing**, and **Yao’s garbled circuits** and makes available best-practice solutions in secure two-party computation.
