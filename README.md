@@ -20,56 +20,143 @@ This code is provided as a experimental implementation for testing purposes and 
 * **Required packages for ABY:**
   * [`g++`](https://packages.debian.org/testing/g++)
   * [`make`](https://packages.debian.org/testing/make)
+  * [`cmake`](https://packages.debian.org/testing/cmake)
   * [`libgmp-dev`](https://packages.debian.org/testing/libgmp-dev)
-  * [`libglib2.0-dev`](https://packages.debian.org/testing/libglib2.0-dev)
   * [`libssl-dev`](https://packages.debian.org/testing/libssl-dev)
 
   Install these packages with your favorite package manager, e.g, `sudo apt-get install <package-name>`.
 
 * Optional packages: `doxygen` and `graphviz` to create your own [Doxygen](http://www.doxygen.org) documentation of the code.
 
-### ABY Sourcecode
+### ABY Source Code
 ---
 
-#### File System Structure
+#### Repository Structure
 
-* `/bin/`    - Executables.
-* `/src/`    - Source code.
+* `bin/circ/`    - Circuits in the ABY format.
+* `cmake/`    - CMake helper files.
+* `extern/`    - External dependencies as Git submodules.
+* `src/`    - Source code.
  * `src/abycore/` - Source of the internal ABY functions.
  * `src/examples/` - Example applications. Each application has a `/common` directory that holds the functionality (circuit). The idea is to re-use this circuit even outside of the application. The application's root directory contains a `.cpp` file with a main method that runs the circuit and is used to verify correctness.
  * `src/test/` - Currently one application to test internal ABY functions as well as example applications and print debug information.
 
 #### Building the ABY Framework
 
-1. **Recursively clone** the ABY git repository (including its submodules) by running:
-	```
-	git clone --recursive https://github.com/encryptogroup/ABY.git
-	```
-Please **don't** download the .zip file, since it doesn't include submodules. Also note that there has been an update where the OT extension code has been outsourced as **submodule**. In case an older code version is updated to the current version, please run `git submodule init` and `git submodule update`.
+##### Short Version
+
+1. Clone the ABY git repository by running:
+    ```
+    git clone https://github.com/encryptogroup/ABY.git
+    ```
 
 2. Enter the Framework directory: `cd ABY/`
 
-3. Call `make` in the root directory of ABY to compile all dependencies, tests, and examples and create the corresponding executables.
+3. Create and enter the build directory: `mkdir build && cd build`
 
-#### Makefile Options
-##### Building ABY
-**In most cases you should be fine with simply running `make` in the ABY root directory.** This will invoke `make all`, which will obviously build everything and is called by default. There are several options you can pass to `make` to build parts of ABY.
+4. Use CMake configure the build:
+    ```
+    cmake ..
+    ```
+    This also initializes and updates the Git submodules of the dependencies
+    located in `extern/`.  If you plan to work without a network connection,
+    you should to a `--recursive` clone in Step 1.
 
-* `make miracl` - build the Miracl library, which is included as submodule according to their build instructions
-* `make otext` - copies the [**OT extension source files**](https://github.com/encryptogroup/OTExtension) from the external repository into the internal ABY repository
-* `make core` - build only the core files of ABY, requires Miracl
-* `make examples` - build all examples and create executables for them, requires core
-* `make test` - build the tests and create an executable, requires core
+5. Call `make` in the build directory.
+   You can find the build executables and libraries in the directories `bin/`
+   and `lib/`, respectively.
 
-##### Testing ABY
-* `make runtest` - executes the test binary for both roles in 1 terminal
+##### Detailed Guide
 
-##### Cleaning ABY
-* `make clean` - cleans all binaries plus example and test object files
-* `make cleanmore` - same as `make clean` plus ABY core object files
-* `make cleanall` - same as `make cleanmore` plus Miracl and OT extension library objects
+###### External Dependencies
 
-There are several compiler flags that can be set within `Makefile` for the ABY core and `Example_Makefile` for the ABY examples. There are several predefined options, that can be commented out as needed.
+ABY depends on the [OTExtension](https://github.com/encryptogroup/OTExtension)
+and [ENCRYPTO_utils](https://github.com/encryptogroup/ENCRYPTO_utils)
+libraries, which are referenced using the Git submodules in the `extern/`
+directory.
+During configure phase of the build (calling `cmake ..`) CMake searches your
+system for these libraries.
+
+* If they are already installed at a standard location, e.g., at `/usr` or
+  `/usr/local`, CMake should find these automatically.
+* In case they are installed at a nonstandard location, e.g., at `~/some/path/`,
+  you can point CMake to their location via the
+  [`CMAKE_PREFIX_PATH`](https://cmake.org/cmake/help/latest/variable/CMAKE_PREFIX_PATH.html)
+  option:
+    ```
+    cmake .. -DCMAKE_PREFIX_PATH=~/some/path/
+    ```
+* Otherwise, CMake updates and initializes the Git submodules in `extern/` (if
+  not already done), and the missing dependencies are built together with ABY.
+  If you want to do this without a network connection, consider to clone the
+  repository recursively.
+
+###### Test Executables and Example Applications
+
+To build the ABY test and benchmark executables as well as the bundled example
+applications, you use the `ABY_BUILD_EXE` option:
+```
+cmake .. -DABY_BUILD_EXE=On
+```
+
+###### Build Options
+
+You can choose the build type, e.g. `Release` or `Debug` using
+[`CMAKE_BUILD_TYPE`](https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html):
+```
+cmake .. -DCMAKE_BUILD_TYPE=Release
+# or
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+```
+`Release` will enable optimizations whereas `Debug` includes debug symbols.
+
+To choose a different compiler, use the `CXX` environment variable:
+```
+CXX=/usr/bin/clang++ cmake ..
+```
+
+###### Cleaning the Build Directory
+
+Executing `make clean` in the build directory removes all build artifacts.
+This includes built dependencies and examples.
+To clean only parts of the build, either invoke `make clean` in the specific
+subdirectory or use `make -C`:
+
+* `make clean` - clean everything
+* `make -C src/abycore clean` - clean only the ABY library
+* `make -C src/examples clean` - clean only the examples
+* `make -C src/test clean` - clean only the test application
+* `make -C extern clean` - clean only the built dependencies
+
+
+###### Installation
+
+In case you plan to use ABY for your own application, you might want to install
+the ABY library to some place, for example system-wide (e.g. at `/usr/local`)
+or somewhere in your workspace (e.g. `/path/to/aby`).
+There are two relevant options:
+
+* [`CMAKE_INSTALL_PREFIX`](https://cmake.org/cmake/help/latest/variable/CMAKE_INSTALL_PREFIX.html)
+  defaults to `/usr/local` and is preprended by CMake to all installation paths
+  (e.g. `lib/` and `include/` for library and header files, respectively,
+  become `/usr/local/lib` and `usr/local/include`).
+  CMake will also look for dependencies at this location.
+* [`DESTDIR`](https://cmake.org/cmake/help/latest/envvar/DESTDIR.html)
+  is used by the Makefile to install to a nonstandard location.
+
+Example:
+If you want to install ABY to `~/path/to/aby/prefix/{include,lib}` you can use:
+```
+cmake .. -DCMAKE_INSTALL_PREFIX=""
+make
+make DESTDIR=~/path/to/aby/prefix install
+```
+or
+```
+cmake .. -DCMAKE_INSTALL_PREFIX=~/path/to/aby/prefix
+make
+make install
+```
 
 
 #### Developer Guide and Documentation
@@ -89,11 +176,13 @@ Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.
   * The **Minimum Euclidean Distance** for finding the closest match between one d-dimensional element and a database of n d-dimensional elements.
   * The [**Arithmetic Inner Product**](https://en.wikipedia.org/wiki/Dot_product#Algebraic_definition) that multiplies N values component-wise and then adds all multiplication results (modulo 16 Bit in this case).
   * Secure Hash Function Evaluation [**SHA1**](https://en.wikipedia.org/wiki/SHA1), where both parties concatenate their 256-bit inputs to a 512-bit message which is collaboratively hashed using SHA1.
-  * The LowMC block cipher family [**LowMC**](http://eprint.iacr.org/2016/687), which is a block cipher familiy with a low number of AND gates and a low AND depth. In the example, one party inputs the key and the other party inputs a message to collaboratively encrypt.
+  * The LowMC block cipher family [**LowMC**](http://eprint.iacr.org/2016/687), which is a block cipher family with a low number of AND gates and a low AND depth. In the example, one party inputs the key and the other party inputs a message to collaboratively encrypt.
   * Further example applications will be added soon.
 
 #### Running Applications
-  * Make sure you have called `make` and the application's binary was created in `bin/`.
+  * Make sure you have build ABY as described above and set the
+    `-DABY_BUILD_EXE=On` option and the application's binary was created in
+    `bin/` inside the build directory.
   * To locally execute an application, run the created executable from **two different terminals** and pass all required parameters accordingly.
   * By default applications are tested locally (via sockets on `localhost`). You can run them on two different machines by specifying IP addresses and ports as parameters.
   * **Example:** The Millionaire's problem requires to specify the role of the executing party. All other parameters will use default values if they are not set. You execute it locally with: `./millionaire_prob.exe -r 0` and `./millionaire_prob.exe -r 1`, each in a separate terminal.
@@ -101,14 +190,26 @@ Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.
   * Performance statistics can be turned on setting `#define PRINT_PERFORMANCE_STATS 1` in `src/abycore/ABY_utils/ABYconstants.h` in [line 32](https://github.com/encryptogroup/ABY/blob/public/src/abycore/ABY_utils/ABYconstants.h#L32).
 
 #### Creating and Building your own ABY Application
-  * Create a copy of the folder `millionaire_prob` inside the `examples/` directory and give it a meaningful name, e.g. `my_application`:
-```bash
-cd src/examples/
-cp -r millionaire_prob/ my_application/
-```
-  * We now work in this newly created folder, e.g. `cd my_application/`.
-  * You can rename the file names inside your folder, just make sure to reference them correctly within each other. The included `Makefile` is generic and should be left unchanged.
-  * Follow the comments in the included `.cpp` files to get an idea how to create an ABY example.
-  * The `common/` directory should contain a description of the circuit (its functionality) and ideally a function to test this circuit. The root `.cpp` should contain a `main()` method that calls this test function and passes the correct parameters.
-  * When ready to build, simply execute `make` in your example's directory *or* in the ABY root directory.
-  * On successful build an executable with the name `my_application.exe` is created in `bin/` (this depends on the directory name you chose).
+* To get an idea how to create a simple ABY application, you can follow the
+  comments in the Millionaire's Problem example.
+
+* If you are using CMake, install ABY somewhere it can be found and use
+  `find_package(ABY)` or add the ABY repository as subdirectory via
+  `add_subdirectory(path/to/ABY)`, e.g.
+	```cmake
+	find_package(ABY QUIET)
+	if(ABY_FOUND)
+		message(STATUS "Found ABY")
+	elseif (NOT ABY_FOUND AND NOT TARGET ABY::aby)
+		message("ABY was not found: add ABY subdirectory")
+		add_subdirectory(extern/ABY)
+	endif()
+	```
+	Then define your executable and link it to the `ABY::aby` target:
+	```cmake
+	add_executable(my_application my_application.cpp)
+	target_link_libraries(my_application ABY::aby)
+	```
+* Otherwise, setup the include path such that the headers of ABY and its
+  dependencies can be found and link your application to the `libaby.a`
+  library and the other dependencies (see above).
