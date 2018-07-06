@@ -2887,6 +2887,7 @@ share* BooleanCircuit::PutHammingWeightGateRec(uint32_t * wires, uint32_t bitlen
     std::vector<uint32_t> in(wires, wires + bitlen);
     share * s = new boolshare(in, this);
     PutPrintValueGate(s, "INPUT3");
+    delete s;
 #endif
 
     if (bitlen > 3) {
@@ -2920,10 +2921,12 @@ share* BooleanCircuit::PutHammingWeightGateRec(uint32_t * wires, uint32_t bitlen
         PutPrintValueGate(v, "V");
         PutPrintValueGate(u, "U");
         std::vector<uint32_t> v_i(1, i);
-        PutPrintValueGate(new boolshare(v_i, this), "i");
+        PutPrintValueGate(make_unique<boolshare>(v_i, this).get(), "i");
         std::cout << std::endl;
 #endif
         out = PutADDChainGate(v->get_wires(), u->get_wires(), i);
+        delete v;
+        if (bitlen_u>0) delete u; // u == zero_share otherwise and deleted later
     } else if (bitlen > 2)
         out = PutFullAdderGate(wires[2], wires[1], wires[0]);
     else if (bitlen > 1) {
@@ -2934,6 +2937,8 @@ share* BooleanCircuit::PutHammingWeightGateRec(uint32_t * wires, uint32_t bitlen
     } else {
         return zero_share;
     }
+
+    delete zero_share;
     return out;
 }
 
