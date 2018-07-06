@@ -74,6 +74,9 @@ public:
 	uint32_t get_nvals_on_wire(uint32_t wireid) {
 		return m_ccirc->GetNumVals(m_ngateids[wireid]);
 	};
+
+	uint32_t get_nvals();
+
 	e_circuit get_circuit_type() {
 		return m_ccirc->GetCircuitType();
 	}

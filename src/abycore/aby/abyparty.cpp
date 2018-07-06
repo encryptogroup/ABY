@@ -25,17 +25,9 @@
 #include <cassert>
 #endif
 
-ABYParty::ABYParty(e_role pid, char* addr, uint16_t port, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo, uint32_t maxgates) {
+ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo, uint32_t maxgates) :
+		m_eMTGenAlg(mg_algo), m_eRole(pid), m_nPort(port), m_sSecLvl(seclvl), m_cAddress(addr) {
 	StartWatch("Initialization", P_INIT);
-
-	m_eRole = pid;
-	//std::cout << "m_eRole = " << m_eRole << std::endl;
-
-	m_cAddress = addr;
-	m_nPort = port;
-	m_sSecLvl = seclvl;
-
-	m_eMTGenAlg = mg_algo;
 
 	m_cCrypt = new crypto(seclvl.symbits);
 

@@ -295,7 +295,8 @@ public:
 	std::vector<std::vector<uint32_t> > PutCondSwapGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t s, BOOL vectorized);
 	std::vector<uint32_t> PutELM0Gate(std::vector<uint32_t> val, uint32_t b);
 
-	std::vector<uint32_t> LShift(std::vector<uint32_t> val, uint32_t pos, uint32_t nvals = 1);
+	share* PutLeftShifterGate(share* in, uint32_t pos);
+	std::vector<uint32_t> PutLeftShifterGate(std::vector<uint32_t> val, uint32_t pos, uint32_t nvals = 1);
 
 	uint32_t PutIdxGate(uint32_t r, uint32_t maxidx);
 
@@ -338,6 +339,10 @@ public:
 	uint32_t PutINVGate(uint32_t parentid);
 	std::vector<uint32_t> PutINVGate(std::vector<uint32_t> parentid);
 	share* PutINVGate(share* parent);
+
+	share* PutMaxGate(const std::vector<share*>& a);
+	share* PutMaxGate(share** a, uint32_t nvals);
+	std::vector<uint32_t> PutMaxGate(const std::vector<std::vector<uint32_t>>& a);
 
 	share* PutMinGate(share** a, uint32_t nvals);
 	std::vector<uint32_t> PutMinGate(std::vector<std::vector<uint32_t> > a);

@@ -21,6 +21,7 @@
 #define CIRCUIT_H_
 
 #include "abycircuit.h"
+#include <functional>
 
 #include <cassert>
 #include <deque>
@@ -37,6 +38,36 @@ struct non_lin_on_layers {
 	uint32_t min_depth;
 	uint32_t max_depth;
 };
+
+/*
+ * Accumulates all objects of vector using binary operation op in a balanced
+ * binary tree structure.
+ */
+template <typename T>
+T binary_accumulate(std::vector<T> vals,
+    std::function<T (const T&, const T&)>& op) {
+  for(size_t j, n{vals.size()}; n > 1; n = j) {
+    j = 0;
+    for(size_t i{0}; i < n; ++j) {
+      if (i + 1 >= n) { // only i+1 == n possible
+        vals[j] = vals[i];
+        ++i;
+      } else {
+        vals[j] = op(vals[i], vals[i + 1]);
+        i += 2;
+      }
+    }
+  }
+
+  return vals[0];
+}
+
+/**
+ * A binary operation on uint32_t
+ * Those are passed to binary_accumulate() as op
+ */
+using BinaryOp_uint32_t = std::function<std::vector<uint32_t>
+	(const std::vector<uint32_t>&, const std::vector<uint32_t>&)>;
 
 /** Circuit class */
 class Circuit {
@@ -378,8 +409,8 @@ public:
 	uint32_t PutCombineAtPosGate(std::vector<uint32_t> input, uint32_t pos);
 	uint32_t PutSubsetGate(uint32_t input, uint32_t* posids, uint32_t nvals_out, bool copy_posids = true);
 	uint32_t PutPermutationGate(std::vector<uint32_t> input, uint32_t* positions);
-        std::vector<uint32_t> PutSplitterGate(uint32_t input);
-
+	std::vector<uint32_t> PutSplitterGate(uint32_t input);
+	std::vector<uint32_t> PutSplitterGate(uint32_t input, const std::vector<uint32_t>& new_nvals);
 
 	//Templates may not be virtual, hence use dummy functions
 	template<class T> uint32_t PutINGate(T val) {

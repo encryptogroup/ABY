@@ -113,6 +113,7 @@ enum e_gatetype {
 	G_SHARED_OUT = 0x09, /**< Enum for shared output gate, where the output is kept secret-shared between parties after the evaluation*/
 	G_TT = 0x0A, /**< Enum for computing an arbitrary truth table gate. Is needed for the 1ooN OT in SPLUT */
 	G_SHARED_IN = 0x0B, /**< Enum for pre-shared input gate, where the parties dont secret-share (e.g. in outsourcing) */
+	G_NON_LIN_CONST = 0x0C, /**< Enum for non-linear gate with a constant input (AND in boolean circuits, MUL in arithmetic circuits. One of the parents need to be a CONST gate */
 	G_PRINT_VAL = 0x40, /**< Enum gate that reconstructs the shares and prints the plaintext value with the designated string */
 	G_ASSERT = 0x41, /**< Enum gate that reconstructs the shares and compares it to an provided input plaintext value */
 	G_COMBINE = 0x80, /**< Enum for COMBINER gates that combine multiple single-value gates to one multi-value gate  */
@@ -250,6 +251,7 @@ static std::string get_gate_type_name(e_gatetype g) {
 	case G_LIN: return "Linear";
 	case G_NON_LIN: return "Non-Linear";
 	case G_NON_LIN_VEC: return "Vector-Non-Linear";
+	case G_NON_LIN_CONST: return "Constant-Non-Linear";
 	case G_IN: return "Input";
 	case G_OUT: return "Output";
 	case G_SHARED_OUT: return "Shared output";

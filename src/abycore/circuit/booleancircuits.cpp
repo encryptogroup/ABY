@@ -1022,17 +1022,16 @@ void BooleanCircuit::UpdateLocalQueue(uint32_t gateid) {
 	m_nGates++;
 }
 
+share* BooleanCircuit::PutLeftShifterGate(share* in, uint32_t pos) {
+	return new boolshare(PutLeftShifterGate(in->get_wires(), pos, in->get_nvals()), this);
+}
 
-//shift val by pos positions to the left and fill with zeros
-std::vector<uint32_t> BooleanCircuit::LShift(std::vector<uint32_t> val, uint32_t pos, uint32_t nvals) {
-	std::vector<uint32_t> out(val.size());
-	uint32_t i, zerogate = PutConstantGate(0, nvals);
-	for (i = 0; i < pos && i < val.size(); i++) {
-		out[i] = zerogate;
-	}
-	for (i = pos; i < val.size(); i++) {
-		out[i] = val[i - pos];
-	}
+//shift val by pos positions to the left and fill lower wires with zeros
+std::vector<uint32_t> BooleanCircuit::PutLeftShifterGate(std::vector<uint32_t> val, uint32_t pos, uint32_t nvals) {
+	uint32_t zerogate = PutConstantGate(0, nvals);
+	std::vector<uint32_t> out(pos, zerogate);
+	out.reserve(pos + val.size());
+	out.insert(out.end(), val.cbegin(), val.cend());
 	return out;
 }
 
@@ -2119,6 +2118,28 @@ std::vector<uint32_t> BooleanCircuit::PutELM0Gate(std::vector<uint32_t> val, uin
 	return out;
 }
 
+share* BooleanCircuit::PutMaxGate(const std::vector<share*>& a) {
+	std::vector<std::vector<uint32_t>> max(a.size());
+	std::transform(a.cbegin(), a.cend(), max.begin(),
+			[](share* s){return s->get_wires();});
+	return new boolshare(PutMaxGate(max), this);
+}
+
+share* BooleanCircuit::PutMaxGate(share** a, uint32_t size) {
+	std::vector<share*> v(a, a+size);
+	return PutMaxGate(v);
+}
+
+std::vector<uint32_t> BooleanCircuit::PutMaxGate(const std::vector<std::vector<uint32_t>>& ws) {
+	BinaryOp_uint32_t op = [this](auto a, auto b) {
+				uint32_t cmp = (m_eContext == S_YAO) ?
+					PutSizeOptimizedGTGate(a, b) :
+					PutDepthOptimizedGTGate(a, b);
+				return PutMUXGate(a, b, cmp);
+			};
+	return binary_accumulate(ws, op);
+}
+
 share* BooleanCircuit::PutMinGate(share** a, uint32_t nvals) {
 	std::vector<std::vector<uint32_t> > min(nvals);
 	uint32_t i;
@@ -2847,22 +2868,25 @@ share* BooleanCircuit::PutHammingWeightGate(share* s_in, uint32_t bitlen) {
 #ifdef HW_DEBUG
     PutPrintValueGate(s_in, "INPUT_BUILD");
 #endif
-    share* s_out;
+    // force all nvals equal assert
+    s_in->get_nvals();
     std::vector<uint32_t> wires = s_in->get_wires();
-    uint32_t * wires_a = &wires[0];
-    s_out = PutHammingWeightGateRec(wires_a, bitlen);
-    return s_out;
+    return PutHammingWeightGateRec(wires.data(), bitlen);
 }
 
 share* BooleanCircuit::PutHammingWeightGateRec(uint32_t * wires, uint32_t bitlen) {
     share* out;
-    static uint64_t zero = 0;
-    static uint32_t zerolen = 1;
+    uint32_t nvals = GetNumVals(wires[0]);
+
+    UGATE_T zero = 0u;
+    share* zero_share = PutSIMDCONSGate(nvals, zero, 1);
+    uint32_t zero_wire = zero_share->get_wire_id(0);
 
 #ifdef HW_DEBUG
     std::vector<uint32_t> in(wires, wires + bitlen);
     share * s = new boolshare(in, this);
     PutPrintValueGate(s, "INPUT3");
+    delete s;
 #endif
 
     if (bitlen > 3) {
@@ -2883,37 +2907,37 @@ share* BooleanCircuit::PutHammingWeightGateRec(uint32_t * wires, uint32_t bitlen
         if (bitlen_u > 0) {
             u = PutHammingWeightGateRec(&wires[1], bitlen_u);
         } else {
-            u = PutCONSGate(zero, zerolen);
+            u = zero_share;
         }
 
         //build i
         if (bitlen - bitlen_v > 0) {
-            i = PutHammingWeightGateRec(&wires[0], 1)->get_wires()[0];
+            i = wires[0];
         } else {
-            i = PutCONSGate(zero, zerolen)->get_wires()[0];
+            i = zero_wire;
         }
 #ifdef HW_DEBUG
         PutPrintValueGate(v, "V");
         PutPrintValueGate(u, "U");
-        std::vector<uint32_t> v_i(1);
-        v_i[0] = i;
-        PutPrintValueGate(new boolshare(v_i, this), "i");
+        std::vector<uint32_t> v_i(1, i);
+        PutPrintValueGate(make_unique<boolshare>(v_i, this).get(), "i");
         std::cout << std::endl;
 #endif
         out = PutADDChainGate(v->get_wires(), u->get_wires(), i);
+        delete v;
+        if (bitlen_u>0) delete u; // u == zero_share otherwise and deleted later
     } else if (bitlen > 2)
         out = PutFullAdderGate(wires[2], wires[1], wires[0]);
     else if (bitlen > 1) {
-        share * tmp = PutCONSGate(zero, zerolen);
-        out = PutFullAdderGate(wires[1], wires[0], tmp->get_wires()[0]);
+        out = PutFullAdderGate(wires[1], wires[0], zero_wire);
     } else if (bitlen > 0) {
-        std::vector<uint32_t> out_v(1);
-        out_v[0] = wires[0];
+        std::vector<uint32_t> out_v(1, wires[0]);
         out = new boolshare(out_v, this);
     } else {
-        share * tmp = PutCONSGate(zero, zerolen);
-        return new boolshare(tmp->get_wires(), this);
+        return zero_share;
     }
+
+    delete zero_share;
     return out;
 }
 
