@@ -1,5 +1,5 @@
 /**
- \file 		arithsharing.cpp
+ \file		arithsharing.cpp
  \author	michael.zohner@ec-spride.de
  \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
  Copyright (C) 2015 Engineering Cryptographic Protocols Group, TU Darmstadt
@@ -414,7 +414,7 @@ void ArithSharing<T>::EvaluateMULCONSTGate(GATE* gate) {
 	// a weird circuit anyways...
 	GATE* gate_const = &(m_pGates[idleft]);
 	GATE* gate_var = &(m_pGates[idright]);
-	if (!(gate_const->type == G_CONSTANT)) swap(gate_const, gate_var);
+	if (!(gate_const->type == G_CONSTANT)) std::swap(gate_const, gate_var);
 	assert (gate_const->type == G_CONSTANT && "At least one of the inputs in a MULCONST gate must be a constant.");
 	// Current implementation of evaluation of CONST gates writes 0s to gs.aval
 	// array on CLIENT side, so we need to take constant from constant struct
@@ -422,7 +422,7 @@ void ArithSharing<T>::EvaluateMULCONSTGate(GATE* gate) {
 	for (uint32_t i = 0; i < nvals; ++i) {
 		((T*) gate->gs.aval)[i] = ((T*) gate_var->gs.aval)[i] * constval;
 #ifdef DEBUGARITH
-		cout << "Result MULCONST (" << i << "): "<< ((T*)gate->gs.aval)[i] << " = " << ((T*) gate_var->gs.aval)[i] << " * " << constval << endl;
+		std::cout << "Result MULCONST (" << i << "): "<< ((T*)gate->gs.aval)[i] << " = " << ((T*) gate_var->gs.aval)[i] << " * " << constval << endl;
 #endif
 	}
 
@@ -852,7 +852,7 @@ void ArithSharing<T>::GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uin
 	}
 
 	if(m_nConvShareSndCtr > 0) {
-		std::cout << "Sending values for  " << m_nConvShareSndCtr << " conversion gates ( " << m_vCONVGates.size() << "gates in total)"<< std::endl;
+		std::cout << "Sending values for	" << m_nConvShareSndCtr << " conversion gates ( " << m_vCONVGates.size() << "gates in total)"<< std::endl;
 	}
 #endif
 }
@@ -904,7 +904,7 @@ void ArithSharing<T>::GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vecto
 	}
 
 	if(m_nConvShareRcvCtr > 0) {
-		std::cout << "Receiving values for  " << m_nConvShareRcvCtr << " conversion gates" << std::endl;
+		std::cout << "Receiving values for	" << m_nConvShareRcvCtr << " conversion gates" << std::endl;
 	}
 #endif
 }
