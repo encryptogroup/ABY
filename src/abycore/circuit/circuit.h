@@ -66,7 +66,7 @@ T binary_accumulate(std::vector<T> vals,
  * A binary operation on uint32_t
  * Those are passed to binary_accumulate() as op
  */
-using BinaryOp_uint32_t = std::function<std::vector<uint32_t>
+using BinaryOp_v_uint32_t = std::function<std::vector<uint32_t>
 	(const std::vector<uint32_t>&, const std::vector<uint32_t>&)>;
 
 /** Circuit class */
