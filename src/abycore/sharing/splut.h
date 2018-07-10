@@ -22,9 +22,12 @@
 #include "sharing.h"
 #include <algorithm>
 #include <vector>
+#include "../circuit/abycircuit.h"
 #include "../ENCRYPTO_utils/cbitvector.h"
 #include "../ENCRYPTO_utils/timer.h"
-#include "../circuit/booleancircuits.h"
+
+class BooleanCircuit;
+class XORMasking;
 
 constexpr uint64_t aes_sbox_multi_seq_perm_out_ttable[16][32] =
  { { 0xc56f6bf27b777c63L , 0x76abd7fe2b670130L , 0x6fc5f26b777b637cL , 0xab76fed7672b3001L , 0x6bf2c56f7c637b77L , 0xd7fe76ab01302b67L , 0xf26b6fc5637c777bL , 0xfed7ab763001672bL , 0x7b777c63c56f6bf2L , 0x2b67013076abd7feL , 0x777b637c6fc5f26bL , 0x672b3001ab76fed7L , 0x7c637b776bf2c56fL , 0x1302b67d7fe76abL , 0x637c777bf26b6fc5L , 0x3001672bfed7ab76L , 0x76abd7fe2b670130L , 0xc56f6bf27b777c63L , 0xab76fed7672b3001L , 0x6fc5f26b777b637cL , 0xd7fe76ab01302b67L , 0x6bf2c56f7c637b77L , 0xfed7ab763001672bL , 0xf26b6fc5637c777bL , 0x2b67013076abd7feL , 0x7b777c63c56f6bf2L , 0x672b3001ab76fed7L , 0x777b637c6fc5f26bL , 0x1302b67d7fe76abL , 0x7c637b776bf2c56fL , 0x3001672bfed7ab76L , 0x637c777bf26b6fc5L},
@@ -57,18 +60,10 @@ class SetupLUT: public Sharing {
 
 public:
 	/** Constructor of the class.*/
-	SetupLUT(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :\
+	SetupLUT(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt);
 
-			Sharing(context, role, sharebitlen, circuit, crypt) {
-		Init();
-	}
-	;
 	/** Destructor of the class.*/
-	virtual ~SetupLUT() {
-		Reset();
-		delete m_cBoolCircuit;
-	}
-	;
+	virtual ~SetupLUT();
 
 	//SUPER CLASS MEMBER FUNCTION
 	void PrepareSetupPhase(ABYSetup* setup);
@@ -92,18 +87,13 @@ public:
 
 	void EvaluateSIMDGate(uint32_t gateid);
 
-	Circuit* GetCircuitBuildRoutine() {
-		return m_cBoolCircuit;
-	}
-	;
+	Circuit* GetCircuitBuildRoutine();
 
 	uint32_t AssignInput(CBitVector& input);
 	uint32_t GetOutput(CBitVector& out);
 
-	uint32_t GetMaxCommunicationRounds() {
-		return m_cBoolCircuit->GetMaxDepth()+1;
-	}
-	;
+	uint32_t GetMaxCommunicationRounds();
+
 	uint32_t GetNumNonLinearOperations() {
 		return m_nTotalTTs;
 	}

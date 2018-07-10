@@ -23,8 +23,11 @@
 #include "../ABY_utils/yaokey.h"
 #include "../circuit/booleancircuits.h"
 #include "../ENCRYPTO_utils/constants.h"
+#include "../ENCRYPTO_utils/crypto/crypto.h"
 
 #define FIXED_KEY_GARBLING
+
+class XORMasking;
 
 typedef struct {
 	uint32_t gateid;

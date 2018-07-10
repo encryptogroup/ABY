@@ -16,8 +16,29 @@
  \brief		Sharing class implementation.
  */
 #include "sharing.h"
+#include "../circuit/circuit.h"
+#include "../circuit/abycircuit.h"
+#include "../ENCRYPTO_utils/crypto/crypto.h"
+#include "../ENCRYPTO_utils/fileops.h"
+#include <cassert>
 #include <iostream>
 #include <iomanip>
+
+Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) {
+	m_eContext = context;
+	m_nShareBitLen = sharebitlen;
+	m_pCircuit = circuit;
+	m_pGates = m_pCircuit->Gates();
+	m_eRole = role;
+	m_cCrypto = crypt;
+	m_nSecParamBytes = ceil_divide(m_cCrypto->get_seclvl().symbits, 8);
+	m_ePhaseValue = ePreCompDefault;
+	m_nFilePos = -1;
+	m_nTypeBitLen = sharebitlen;
+}
+
+Sharing::~Sharing() {
+}
 
 void Sharing::EvaluateCallbackGate(uint32_t gateid) {
 	GATE* gate = m_pGates + gateid;

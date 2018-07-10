@@ -16,6 +16,7 @@
  \brief		Yao Client Sharing class implementation.
  */
 #include "yaoclientsharing.h"
+#include "../aby/abysetup.h"
 
 void YaoClientSharing::InitClient() {
 

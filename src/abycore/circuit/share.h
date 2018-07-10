@@ -20,6 +20,11 @@
 #define SHARE_H_
 
 #include "circuit.h"
+#include "../ABY_utils/ABYconstants.h"
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
 
 /** Share Class */
 class share {
@@ -50,41 +55,24 @@ public:
 
 	void set_wire_id(uint32_t posid, uint32_t wireid);
 
-	void set_wire_ids(std::vector<uint32_t> wires) {
-		m_ngateids = wires;
-	}
-	;
-	uint32_t get_bitlength() {
-		return m_ngateids.size();
-	}
-	;
-	void set_bitlength(uint32_t sharelen) {
-		m_ngateids.resize(sharelen);
-	}
-	;
-	uint32_t get_max_bitlength() {
-		return m_nmaxbitlen;
-	}
-	;
-	void set_max_bitlength(uint32_t max_bitlength) {
-		assert(max_bitlength >= m_ngateids.size());
-		m_nmaxbitlen = max_bitlength;
-	}
-	;
-	uint32_t get_nvals_on_wire(uint32_t wireid) {
-		return m_ccirc->GetNumVals(m_ngateids[wireid]);
-	};
+	void set_wire_ids(std::vector<uint32_t> wires);
+
+	uint32_t get_bitlength();
+
+	void set_bitlength(uint32_t sharelen);
+
+	uint32_t get_max_bitlength();
+
+	void set_max_bitlength(uint32_t max_bitlength);
 
 	uint32_t get_nvals();
 
-	e_circuit get_circuit_type() {
-		return m_ccirc->GetCircuitType();
-	}
-	;
-	e_sharing get_share_type() {
-		return m_ccirc->GetContext();
-	}
-	;
+	uint32_t get_nvals_on_wire(uint32_t wireid);
+
+	e_circuit get_circuit_type();
+
+	e_sharing get_share_type();
+
 
 	template<class T> T get_clear_value() {
 

@@ -16,6 +16,7 @@
  \brief		Bool sharing class implementation.
  */
 #include "boolsharing.h"
+#include "../aby/abysetup.h"
 
 
 void BoolSharing::Init() {

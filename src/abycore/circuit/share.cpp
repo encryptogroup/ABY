@@ -19,6 +19,7 @@
 
 
 #include "share.h"
+#include "circuit.h"
 #include <cstring>
 
 
@@ -58,6 +59,27 @@ void share::set_wire_id(uint32_t pos_id, uint32_t wireid) {
 	m_ngateids[pos_id] = wireid;
 }
 
+void share::set_wire_ids(std::vector<uint32_t> wires) {
+	m_ngateids = wires;
+}
+
+uint32_t share::get_bitlength() {
+	return m_ngateids.size();
+}
+
+void share::set_bitlength(uint32_t sharelen) {
+	m_ngateids.resize(sharelen);
+}
+
+uint32_t share::get_max_bitlength() {
+	return m_nmaxbitlen;
+}
+
+void share::set_max_bitlength(uint32_t max_bitlength) {
+	assert(max_bitlength >= m_ngateids.size());
+	m_nmaxbitlen = max_bitlength;
+}
+
 /*
  * Returns nvals of this share
  * Asserts that all nvals of all wires are the same, so only use this method if
@@ -74,6 +96,18 @@ uint32_t share::get_nvals() {
 		}
 	}
   return nvals;
+}
+
+uint32_t share::get_nvals_on_wire(uint32_t wireid) {
+	return m_ccirc->GetNumVals(m_ngateids[wireid]);
+}
+
+e_circuit share::get_circuit_type() {
+	return m_ccirc->GetCircuitType();
+}
+
+e_sharing share::get_share_type() {
+	return m_ccirc->GetContext();
 }
 
 /* =========================== Methods for the Boolean share class =========================== */

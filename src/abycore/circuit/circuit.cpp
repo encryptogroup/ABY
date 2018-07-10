@@ -17,6 +17,7 @@
  \brief		Circuit class implementation.
 */
 #include "circuit.h"
+#include "share.h"
 #include <cstring>
 
 

@@ -27,6 +27,8 @@
 #include "../ENCRYPTO_utils/fileops.h"
 #include "../ENCRYPTO_utils/cbitvector.h"
 
+class XORMasking;
+
 //#define DEBUGBOOL
 //#define BENCHBOOLTIME
 /**

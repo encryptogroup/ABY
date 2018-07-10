@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include "arithsharing.h"
+#include "../aby/abysetup.h"
 
 template<typename T>
 void ArithSharing<T>::Init() {

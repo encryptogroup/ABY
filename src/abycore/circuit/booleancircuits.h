@@ -18,15 +18,16 @@
 #ifndef __BOOLEANCIRCUITS_H_
 #define __BOOLEANCIRCUITS_H_
 
-#include "../ENCRYPTO_utils/typedefs.h"
+#include "share.h"
+#include "../ABY_utils/convtypes.h"
 #include "../ENCRYPTO_utils/cbitvector.h"
+#include "../ENCRYPTO_utils/parse_options.h"
+#include "../ENCRYPTO_utils/typedefs.h"
 #include "abycircuit.h"
 #include <assert.h>
 #include "circuit.h"
 #include <map>
 #include <algorithm>
-#include "../ABY_utils/convtypes.h"
-#include "../ENCRYPTO_utils/parse_options.h"
 
 /** BooleanCircuit class. */
 class BooleanCircuit: public Circuit {
