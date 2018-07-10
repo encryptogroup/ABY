@@ -18,6 +18,7 @@
 #include "min-euclidean-dist-circuit.h"
 #include "../../../abycore/circuit/booleancircuits.h"
 #include "../../../abycore/sharing/sharing.h"
+#include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include <iostream>
 #include <vector>
 

@@ -17,6 +17,7 @@
  */
 
 #include "yaoserversharing.h"
+#include "../aby/abysetup.h"
 
 void YaoServerSharing::InitServer() {
 

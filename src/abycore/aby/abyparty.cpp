@@ -18,6 +18,7 @@
  */
 
 #include "abyparty.h"
+#include "abysetup.h"
 #include "../circuit/abycircuit.h"
 #include "../sharing/arithsharing.h"
 #include "../sharing/boolsharing.h"

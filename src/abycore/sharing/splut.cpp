@@ -22,6 +22,19 @@
 #include <deque>
 #include <iostream>
 #include <vector>
+#include "../aby/abysetup.h"
+#include "../circuit/booleancircuits.h"
+
+
+SetupLUT::SetupLUT(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt)
+	: Sharing(context, role, sharebitlen, circuit, crypt) {
+	Init();
+}
+
+SetupLUT::~SetupLUT() {
+	Reset();
+	delete m_cBoolCircuit;
+}
 
 
 void SetupLUT::Init() {
@@ -1596,6 +1609,10 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 #endif
 }
 
+Circuit* SetupLUT::GetCircuitBuildRoutine() {
+	return m_cBoolCircuit;
+}
+
 uint32_t SetupLUT::AssignInput(CBitVector& inputvals) {
 	std::deque<uint32_t> myingates = m_cBoolCircuit->GetInputGatesForParty(m_eRole);
 	inputvals.Create((uint64_t) m_cBoolCircuit->GetNumInputBitsForParty(m_eRole), m_cCrypto);
@@ -1637,6 +1654,10 @@ uint32_t SetupLUT::GetOutput(CBitVector& out) {
 		}
 	}
 	return outbits;
+}
+
+uint32_t SetupLUT::GetMaxCommunicationRounds() {
+	return m_cBoolCircuit->GetMaxDepth()+1;
 }
 
 void SetupLUT::PrintPerformanceStatistics() {

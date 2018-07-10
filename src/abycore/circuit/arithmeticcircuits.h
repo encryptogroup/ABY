@@ -22,6 +22,7 @@
 #include "../ENCRYPTO_utils/typedefs.h"
 #include "abycircuit.h"
 #include "circuit.h"
+#include "share.h"
 
 /** Arithmetic Circuit class.*/
 class ArithmeticCircuit: public Circuit {
