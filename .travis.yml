@@ -7,14 +7,13 @@ before_install:
   - sudo apt-get update -qq
 
 install:
-  - sudo apt-get install -qq g++-6
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
+  - sudo apt-get install -qq g++-8
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
 
 addons:
   apt:
     packages:
     - libgmp-dev
-    - libglib2.0-dev
     - libssl-dev
 
 script:
