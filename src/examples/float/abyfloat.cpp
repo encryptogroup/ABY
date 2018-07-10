@@ -18,6 +18,10 @@
 #include "../../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include "../../abycore/ENCRYPTO_utils/parse_options.h"
 #include "../../abycore/aby/abyparty.h"
+#include "../../abycore/circuit/share.h"
+#include "../../abycore/circuit/booleancircuits.h"
+#include "../../abycore/sharing/sharing.h"
+#include <cassert>
 #include <iomanip>
 #include <iostream>
 

@@ -18,6 +18,8 @@
  *              Implements the functionality from PST’15 (http://ieeexplore.ieee.org/document/7232947/).
  */
 #include "threshold-euclidean-dist.h"
+#include "../../../abycore/circuit/booleancircuits.h"
+#include "../../../abycore/sharing/sharing.h"
 
 int32_t test_min_eucliden_dist_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t pointbitlen,
         uint32_t thresbitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing, uint32_t n,

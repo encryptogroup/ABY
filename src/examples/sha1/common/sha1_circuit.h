@@ -24,6 +24,8 @@
 #include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include <cassert>
 
+class BooleanCircuit;
+
 #define ABY_SHA1_INPUT_BITS 512
 #define ABY_SHA1_INPUT_BYTES ABY_SHA1_INPUT_BITS/8
 
