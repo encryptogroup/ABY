@@ -17,6 +17,7 @@
  */
 
 #include "sort_compare_shuffle.h"
+#include "../../../abycore/sharing/sharing.h"
 
 #include <math.h>
 #include <cassert>

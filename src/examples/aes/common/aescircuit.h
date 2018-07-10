@@ -24,6 +24,8 @@
 #include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include <cassert>
 
+class BooleanCircuit;
+
 #define AES_ROUNDS 10
 #define AES_STATE_SIZE 16
 #define AES_STATE_SIZE_BITS 128

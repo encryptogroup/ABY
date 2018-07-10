@@ -38,10 +38,10 @@
 #include "../ENCRYPTO_utils/sndthread.h"
 #include "../ENCRYPTO_utils/rcvthread.h"
 
-typedef struct {
+struct comm_ctx {
 	SndThread *snd_std, *snd_inv;
 	RcvThread *rcv_std, *rcv_inv;
-} comm_ctx;
+};
 
 
 //#define DEBUGSETUP

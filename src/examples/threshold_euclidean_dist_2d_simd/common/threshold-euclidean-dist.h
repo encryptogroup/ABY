@@ -27,6 +27,8 @@
 #include "../../../abycore/aby/abyparty.h"
 #include <cassert>
 
+class BooleanCircuit;
+
 //void verify_min_euclidean_dist(uint32_t* x1, uint32_t* x2, uint32_t* y1,
 //        uint32_t* y2, uint32_t * res, uint32_t n, uint32_t t);
 void verify_min_euclidean_dist(uint64_t* x1, uint64_t* x2, uint64_t* y1,

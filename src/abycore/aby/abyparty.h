@@ -19,34 +19,25 @@
 #ifndef __ABYPARTY_H__
 #define __ABYPARTY_H__
 
-#include "../ENCRYPTO_utils/typedefs.h"
-#include "../ENCRYPTO_utils/crypto/crypto.h"
 #include "../ABY_utils/ABYconstants.h"
-#include "../circuit/abycircuit.h"
-#include "../ENCRYPTO_utils/socket.h"
-#include "../ENCRYPTO_utils/thread.h"
-#include "../ENCRYPTO_utils/cbitvector.h"
-#include "abysetup.h"
-#include "../sharing/sharing.h"
-#include "../sharing/boolsharing.h"
-#include "../sharing/splut.h"
+#include "../ENCRYPTO_utils/timer.h"
+#include <memory>
 #include <vector>
-#include "../ENCRYPTO_utils/timer.h"
-#include "../sharing/yaoclientsharing.h"
-#include "../sharing/yaoserversharing.h"
-#include "../sharing/arithsharing.h"
-#include "../ENCRYPTO_utils/sndthread.h"
-#include "../ENCRYPTO_utils/rcvthread.h"
 
-#include "../ABY_utils/yaokey.h"
-#include "../ENCRYPTO_utils/timer.h"
-
-#include <limits.h>
-#include "../ENCRYPTO_utils/connection.h"
 
 #ifdef DEBUGCOMM
 #include <mutex>
 #endif
+
+class ABYCircuit;
+class ABYSetup;
+class channel;
+struct comm_ctx;
+class crypto;
+class Sharing;
+struct GATE;
+class CEvent;
+class CLock;
 
 class ABYParty {
 public:
@@ -54,11 +45,8 @@ public:
 			uint32_t nthreads =	2, e_mt_gen_alg mg_algo = MT_OT, uint32_t maxgates = 4000000);
 	~ABYParty();
 
-        std::vector<Sharing*>& GetSharings() {
-		return m_vSharings;
-	}
-	CBitVector ExecCircuit();
-	CBitVector ExecSetupPhase();
+	std::vector<Sharing*>& GetSharings();
+	void ExecCircuit();
 
 	void Reset();
 
@@ -117,9 +105,6 @@ private:
 
 	uint32_t m_nSizeOfVal;
 
-	// Input values
-	CBitVector m_vInputBits;
-
 	std::vector<Sharing*> m_vSharings;
 
 	crypto* m_cCrypt;
@@ -136,32 +121,15 @@ private:
 	std::mutex cout_mutex;
 #endif
 
-	class CPartyWorkerThread: public CThread {
-	public:
-		CPartyWorkerThread(uint32_t id, ABYParty* callback) :
-				threadid(id), m_pCallback(callback) {
-			m_eJob = e_Party_Undefined;
-		};
-
-		void PutJob(EPartyJobType e) {
-			m_eJob = e;
-			m_evt.Set();
-		}
-
-		void ThreadMain();
-		uint32_t threadid;
-		ABYParty* m_pCallback;
-		CEvent m_evt;
-		EPartyJobType m_eJob;
-	};
+	class CPartyWorkerThread;
 
 	BOOL WakeupWorkerThreads(EPartyJobType);
 	BOOL WaitWorkerThreads();
 	BOOL ThreadNotifyTaskDone(BOOL);
 
 	std::vector<CPartyWorkerThread*> m_vThreads;
-	CEvent m_evt;
-	CLock m_lock;
+	std::unique_ptr<CEvent> m_evt;
+	std::unique_ptr<CLock> m_lock;
 
 	uint32_t m_nWorkingThreads;
 	BOOL m_bWorkerThreadSuccess;

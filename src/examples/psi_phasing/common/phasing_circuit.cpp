@@ -17,6 +17,7 @@
  */
 
 #include "phasing_circuit.h"
+#include "../../../abycore/sharing/sharing.h"
 
 #include <math.h>
 #include <cassert>

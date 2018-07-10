@@ -17,6 +17,8 @@
  */
 
 //Utility libs
+#include "../../abycore/sharing/sharing.h"
+#include "../../abycore/circuit/booleancircuits.h"
 #include "../../abycore/ENCRYPTO_utils/crypto/crypto.h"
 #include "../../abycore/ENCRYPTO_utils/parse_options.h"
 #include "../aes/common/aescircuit.h"

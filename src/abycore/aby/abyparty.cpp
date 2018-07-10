@@ -18,6 +18,16 @@
  */
 
 #include "abyparty.h"
+#include "../circuit/abycircuit.h"
+#include "../sharing/arithsharing.h"
+#include "../sharing/boolsharing.h"
+#include "../sharing/sharing.h"
+#include "../sharing/splut.h"
+#include "../sharing/yaoclientsharing.h"
+#include "../sharing/yaoserversharing.h"
+#include "../ENCRYPTO_utils/crypto/crypto.h"
+#include "../ENCRYPTO_utils/connection.h"
+#include "../ENCRYPTO_utils/thread.h"
 
 #include <sstream>
 
@@ -25,8 +35,31 @@
 #include <cassert>
 #endif
 
-ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo, uint32_t maxgates) :
-		m_eMTGenAlg(mg_algo), m_eRole(pid), m_nPort(port), m_sSecLvl(seclvl), m_cAddress(addr) {
+class ABYParty::CPartyWorkerThread: public CThread {
+public:
+	CPartyWorkerThread(uint32_t id, ABYParty* callback) :
+			threadid(id), m_pCallback(callback) {
+		m_eJob = e_Party_Undefined;
+	};
+
+	void PutJob(EPartyJobType e) {
+		m_eJob = e;
+		m_evt.Set();
+	}
+
+	void ThreadMain();
+	uint32_t threadid;
+	ABYParty* m_pCallback;
+	CEvent m_evt;
+	EPartyJobType m_eJob;
+};
+
+ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl,
+	uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo,
+	uint32_t maxgates)
+	: m_eMTGenAlg(mg_algo), m_eRole(pid), m_nPort(port), m_sSecLvl(seclvl),
+	m_cAddress(addr) {
+
 	StartWatch("Initialization", P_INIT);
 
 
@@ -67,6 +100,9 @@ ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl, u
 	std::cout << "Performing Init" << std::endl;
 #endif
 
+	m_evt = std::make_unique<CEvent>();
+	m_lock = std::make_unique<CLock>();
+
 	Init();
 
 	m_pCircuit = NULL;
@@ -105,6 +141,10 @@ ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl, u
 ABYParty::~ABYParty() {
 	m_vSharings[S_BOOL]->PreCompFileDelete();
 	Cleanup();
+}
+
+std::vector<Sharing*>& ABYParty::GetSharings() {
+	return m_vSharings;
 }
 
 BOOL ABYParty::Init() {
@@ -174,13 +214,12 @@ void ABYParty::Cleanup() {
 		delete glock;
 }
 
-CBitVector ABYParty::ExecCircuit() {
+void ABYParty::ExecCircuit() {
 
 #ifndef BATCH
 	std::cout << "Finishing circuit generation" << std::endl;
 #endif
 
-	CBitVector result;
 	StartRecording("Starting execution", P_TOTAL, m_vSockets);
 
 	//Setup phase
@@ -255,7 +294,6 @@ CBitVector ABYParty::ExecCircuit() {
 #if PRINT_COMMUNICATION_STATS
 	PrintCommunication();
 #endif
-	return result;
 }
 
 
@@ -625,25 +663,25 @@ BOOL ABYParty::WaitWorkerThreads() {
 		return TRUE;
 
 	for (;;) {
-		m_lock.Lock();
+		m_lock->Lock();
 		uint32_t n = m_nWorkingThreads;
-		m_lock.Unlock();
+		m_lock->Unlock();
 		if (!n)
 			return m_bWorkerThreadSuccess;
-		m_evt.Wait();
+		m_evt->Wait();
 	}
 	return m_bWorkerThreadSuccess;
 }
 
 BOOL ABYParty::ThreadNotifyTaskDone(BOOL bSuccess) {
-	m_lock.Lock();
+	m_lock->Lock();
 	uint32_t n = --m_nWorkingThreads;
 	if (!bSuccess)
 		m_bWorkerThreadSuccess = FALSE;
-	m_lock.Unlock();
+	m_lock->Unlock();
 
 	if (!n)
-		m_evt.Set();
+		m_evt->Set();
 	return TRUE;
 }
 

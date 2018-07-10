@@ -16,6 +16,7 @@
  \brief		Prototypical benchmark implementation of LowMCCiruit. Attention: Does not yield correct result!
  */
 #include "lowmccircuit.h"
+#include "../../../abycore/sharing/sharing.h"
 
 //sboxes (m), key-length (k), statesize (n), data (d), rounds (r)
 int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t nvals, uint32_t nthreads,
