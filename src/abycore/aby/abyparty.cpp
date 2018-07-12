@@ -368,7 +368,7 @@ BOOL ABYParty::EvaluateCircuit() {
 	//Evaluate Circuit layerwise;
 	for (uint32_t depth = 0; depth < maxdepth; depth++, m_nDepth++) {
 #if DEBUGABYPARTY
-		std::cout << "Starting evaluation on depth " << depth << std::endl << flush;
+		std::cout << "Starting evaluation on depth " << depth << std::endl << std::flush;
 #endif
 		for (uint32_t i = 0; i < m_vSharings.size(); i++) {
 #if DEBUGABYPARTY
@@ -453,9 +453,9 @@ BOOL ABYParty::ThreadSendValues() {
 			snd_buf_size_total += sndbytes[j][i];
 			//m_tPartyChan->send(sendbuf[j][i], sndbytes[j][i]);
 #ifdef DEBUGCOMM
-			std::cout_mutex.lock();
+			cout_mutex.lock();
 			std::cout << "(" << m_nDepth << ") Sending " << sndbytes[j][i] << " bytes on socket " << m_eRole << " for sharing " << j << std::endl;
-			std::cout_mutex.unlock();
+			cout_mutex.unlock();
 #endif
 		}
 		//sendbuf[j].clear();
@@ -493,9 +493,9 @@ BOOL ABYParty::ThreadReceiveValues() {
 			rcvbytestotal += rcvbytes[j][i];
 			//	m_tPartyChan->blocking_receive(sendbuf[j][i], sndbytes[j][i]);
 #ifdef DEBUGCOMM
-			std::cout_mutex.lock();
+			cout_mutex.lock();
 			std::cout << "(" << m_nDepth << ") Receiving " << rcvbytes[j][i] << " bytes on socket " << (m_eRole^1) << " for sharing " << j << std::endl;
-			std::cout_mutex.unlock();
+			cout_mutex.unlock();
 #endif
 		}
 	}
