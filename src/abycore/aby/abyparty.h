@@ -117,7 +117,7 @@ private:
 	comm_ctx* m_tComm;
 
 	channel* m_tPartyChan;
-#if DEBUGCOMM
+#ifdef DEBUGCOMM
 	std::mutex cout_mutex;
 #endif
 
