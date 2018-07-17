@@ -19,7 +19,7 @@
 #define __ARITHMTMASKING_H_
 
 #include <vector>
-#include "maskingfunction.h"
+#include <ot/maskingfunction.h>
 
 //#define DEBUGARITHMTMASKING
 //TODO optimize

@@ -17,8 +17,8 @@
  */
 
 #include "common/lowmccircuit.h"
-#include "../../abycore/ENCRYPTO_utils/parse_options.h"
-#include "../../abycore/ENCRYPTO_utils/crypto/crypto.h"
+#include <ENCRYPTO_utils/parse_options.h>
+#include <ENCRYPTO_utils/crypto/crypto.h>
 #include "../../abycore/aby/abyparty.h"
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* nvals, uint32_t* secparam, std::string* address, uint16_t* port, uint32_t* statesize, uint32_t* keysize,

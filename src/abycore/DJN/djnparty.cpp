@@ -17,8 +17,8 @@
  */
 
 #include "djnparty.h"
-#include "../ENCRYPTO_utils/timer.h"
-#include "../ENCRYPTO_utils/utils.h"
+#include <ENCRYPTO_utils/timer.h>
+#include <ENCRYPTO_utils/utils.h>
 
 #define CHECKMT 0
 #define DJN_DEBUG 0

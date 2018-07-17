@@ -18,8 +18,8 @@
 #include "sha1_circuit.h"
 #include "../../../abycore/circuit/booleancircuits.h"
 #include "../../../abycore/sharing/sharing.h"
-#include "../../../abycore/ENCRYPTO_utils/cbitvector.h"
-#include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
+#include <ENCRYPTO_utils/cbitvector.h>
+#include <ENCRYPTO_utils/crypto/crypto.h>
 
 int32_t test_sha1_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing) {
 	uint32_t bitlen = 32;

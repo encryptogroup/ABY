@@ -21,7 +21,7 @@
 
 #include "../../../abycore/circuit/circuit.h"
 #include "../../../abycore/aby/abyparty.h"
-#include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
+#include <ENCRYPTO_utils/crypto/crypto.h>
 #include <cassert>
 
 class BooleanCircuit;

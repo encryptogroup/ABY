@@ -18,8 +18,8 @@
 #include "sharing.h"
 #include "../circuit/circuit.h"
 #include "../circuit/abycircuit.h"
-#include "../ENCRYPTO_utils/crypto/crypto.h"
-#include "../ENCRYPTO_utils/fileops.h"
+#include <ENCRYPTO_utils/crypto/crypto.h>
+#include <ENCRYPTO_utils/fileops.h>
 #include <cassert>
 #include <iostream>
 #include <iomanip>
