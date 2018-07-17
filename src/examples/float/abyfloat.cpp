@@ -15,8 +15,8 @@
  along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../abycore/ENCRYPTO_utils/crypto/crypto.h"
-#include "../../abycore/ENCRYPTO_utils/parse_options.h"
+#include <ENCRYPTO_utils/crypto/crypto.h>
+#include <ENCRYPTO_utils/parse_options.h>
 #include "../../abycore/aby/abyparty.h"
 #include "../../abycore/circuit/share.h"
 #include "../../abycore/circuit/booleancircuits.h"

@@ -26,9 +26,9 @@
 #include "../sharing/splut.h"
 #include "../sharing/yaoclientsharing.h"
 #include "../sharing/yaoserversharing.h"
-#include "../ENCRYPTO_utils/crypto/crypto.h"
-#include "../ENCRYPTO_utils/connection.h"
-#include "../ENCRYPTO_utils/thread.h"
+#include <ENCRYPTO_utils/crypto/crypto.h>
+#include <ENCRYPTO_utils/connection.h>
+#include <ENCRYPTO_utils/thread.h>
 
 #include <sstream>
 

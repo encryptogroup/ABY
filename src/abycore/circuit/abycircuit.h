@@ -19,14 +19,14 @@
 #define __ABYCIRCUIT_H_
 
 #include <math.h>
-#include "../ENCRYPTO_utils/typedefs.h"
+#include <ENCRYPTO_utils/typedefs.h>
 #include "../ABY_utils/ABYconstants.h"
 #include <string>
 #include <vector>
 #include <fstream>
 #include <limits.h>
-#include "../ENCRYPTO_utils/constants.h"
-#include "../ENCRYPTO_utils/utils.h"
+#include <ENCRYPTO_utils/constants.h>
+#include <ENCRYPTO_utils/utils.h>
 
 //#define DEBUG_CIRCUIT_CONSTRUCTION
 

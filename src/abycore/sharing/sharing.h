@@ -21,7 +21,7 @@
 #ifndef __SHARING_H__
 #define __SHARING_H__
 
-#include "../ENCRYPTO_utils/cbitvector.h"
+#include <ENCRYPTO_utils/cbitvector.h>
 #include "../ABY_utils/ABYconstants.h"
 #include <cstdint>
 #include <vector>

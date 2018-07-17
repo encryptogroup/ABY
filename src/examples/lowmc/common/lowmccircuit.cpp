@@ -17,7 +17,7 @@
  */
 #include "lowmccircuit.h"
 #include "../../../abycore/sharing/sharing.h"
-#include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
+#include <ENCRYPTO_utils/crypto/crypto.h>
 
 //sboxes (m), key-length (k), statesize (n), data (d), rounds (r)
 int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t nvals, uint32_t nthreads,

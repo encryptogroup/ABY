@@ -20,8 +20,8 @@
 #ifndef HASHING_INCLUDES_H_
 #define HASHING_INCLUDES_H_
 
-#include "../../../abycore/ENCRYPTO_utils/typedefs.h"
-#include "../../../abycore/ENCRYPTO_utils/utils.h"
-#include "../../../abycore/ENCRYPTO_utils/crypto/crypto.h"
+#include <ENCRYPTO_utils/typedefs.h>
+#include <ENCRYPTO_utils/utils.h>
+#include <ENCRYPTO_utils/crypto/crypto.h>
 
 #endif /* HASHING_INCLUDES_H_ */

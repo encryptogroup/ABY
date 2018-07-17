@@ -23,8 +23,8 @@
 #include <algorithm>
 #include <vector>
 #include "../circuit/abycircuit.h"
-#include "../ENCRYPTO_utils/cbitvector.h"
-#include "../ENCRYPTO_utils/timer.h"
+#include <ENCRYPTO_utils/cbitvector.h>
+#include <ENCRYPTO_utils/timer.h>
 
 class BooleanCircuit;
 class XORMasking;

@@ -24,8 +24,8 @@
 #include <map>
 #include <vector>
 #include "../circuit/booleancircuits.h"
-#include "../ENCRYPTO_utils/fileops.h"
-#include "../ENCRYPTO_utils/cbitvector.h"
+#include <ENCRYPTO_utils/fileops.h>
+#include <ENCRYPTO_utils/cbitvector.h>
 
 class XORMasking;
 

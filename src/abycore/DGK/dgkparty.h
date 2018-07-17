@@ -21,11 +21,11 @@
 
 #include <gmp.h>
 #include <vector>
-#include "../ENCRYPTO_utils/typedefs.h"
-#include "../ENCRYPTO_utils/socket.h"
-#include "../ENCRYPTO_utils/crypto/dgk.h"
-#include "../ENCRYPTO_utils/powmod.h"
-#include "../ENCRYPTO_utils/channel.h"
+#include <ENCRYPTO_utils/typedefs.h>
+#include <ENCRYPTO_utils/socket.h>
+#include <ENCRYPTO_utils/crypto/dgk.h>
+#include <ENCRYPTO_utils/powmod.h>
+#include <ENCRYPTO_utils/channel.h>
 
 class DGKParty {
 public:

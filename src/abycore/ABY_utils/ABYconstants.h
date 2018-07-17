@@ -20,7 +20,7 @@
 #define _ABY_CONSTANTS_H_
 
 #include <string>
-#include "../ENCRYPTO_utils/constants.h"
+#include <ENCRYPTO_utils/constants.h>
 
 // Set to 1 for production. 1 will circumvent output reconstruction in the PrintValue and Assert gates, 0 prints these intermediate values.
 #define ABY_PRODUCTION 0

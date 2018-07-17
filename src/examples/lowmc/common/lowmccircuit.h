@@ -20,9 +20,9 @@
 
 #include "../../../abycore/circuit/booleancircuits.h"
 #include "../../../abycore/aby/abyparty.h"
-#include "../../../abycore/ENCRYPTO_utils/cbitvector.h"
-#include "../../../abycore/ENCRYPTO_utils/typedefs.h"
-#include "../../../abycore/ENCRYPTO_utils/graycode.h"
+#include <ENCRYPTO_utils/cbitvector.h>
+#include <ENCRYPTO_utils/typedefs.h>
+#include <ENCRYPTO_utils/graycode.h>
 #include <cassert>
 
 static const BYTE mpccseed[16] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };

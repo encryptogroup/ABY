@@ -20,10 +20,9 @@
 #define __ABYPARTY_H__
 
 #include "../ABY_utils/ABYconstants.h"
-#include "../ENCRYPTO_utils/timer.h"
+#include <ENCRYPTO_utils/timer.h>
 #include <memory>
 #include <vector>
-
 
 #ifdef DEBUGCOMM
 #include <mutex>

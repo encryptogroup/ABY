@@ -17,8 +17,8 @@
  */
 
 #include "dgkparty.h"
-#include "../ENCRYPTO_utils/timer.h"
-#include "../ENCRYPTO_utils/utils.h"
+#include <ENCRYPTO_utils/timer.h>
+#include <ENCRYPTO_utils/utils.h>
 
 #define CHECKMT 0
 #define DGK_DEBUG 0
