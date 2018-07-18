@@ -18,6 +18,7 @@
 
 #include "booleancircuits.h"
 #include <algorithm>
+#include <cstring>
 #include <fstream>
 #include <map>
 #include <string>

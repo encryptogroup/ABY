@@ -11,6 +11,7 @@
 #include "../hashing_includes.h"
 #include <math.h>
 #include <cassert>
+#include <cstring>
 
 typedef uint16_t TABLEID_T;
 

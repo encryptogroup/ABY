@@ -21,6 +21,7 @@
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/fileops.h>
 #include <cassert>
+#include <cstring>
 #include <iostream>
 #include <iomanip>
 

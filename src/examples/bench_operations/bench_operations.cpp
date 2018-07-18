@@ -24,6 +24,7 @@
 #include "../aes/common/aescircuit.h"
 //ABY Party class
 #include "../../abycore/aby/abyparty.h"
+#include <cstring>
 
 static const uint32_t m_vBitLens[] = {1, 8, 16, 32, 64};
 
