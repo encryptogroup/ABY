@@ -19,9 +19,9 @@
 #include "../circuit/circuit.h"
 #include "../circuit/abycircuit.h"
 #include <ENCRYPTO_utils/crypto/crypto.h>
-#include <ENCRYPTO_utils/fileops.h>
 #include <cassert>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <iomanip>
 
@@ -64,24 +64,26 @@ ePreCompPhase Sharing::GetPreCompPhaseValue() {
 	return m_ePhaseValue;
 }
 void Sharing::PreCompFileDelete() {
-	char filename[21];
 	uint64_t truncation_size;
+	std::filesystem::path filename;
 	if(m_eRole == SERVER) {
-		strcpy(filename, "pre_comp_server.dump");
-	}
-	else {
-		strcpy(filename, "pre_comp_client.dump");
+		filename = "pre_comp_server.dump";
+	} else {
+		filename = "pre_comp_client.dump";
 	}
 
-	if((FileExists(filename))&&(GetPreCompPhaseValue() == ePreCompRead)) {
+	if((std::filesystem::exists(filename))&&(GetPreCompPhaseValue() == ePreCompRead)) {
 
-		if(m_nFilePos >= FileSize(filename)) {
-			remove(filename);
+		if(m_nFilePos >= std::filesystem::file_size(filename)) {
+			std::filesystem::remove(filename);
 		}
 		else {
-			truncation_size = FileSize(filename) - m_nFilePos;
-			if(truncate(filename, truncation_size))
-                        std::cout << "Error occured in truncate" << std::endl;
+			truncation_size = std::filesystem::file_size(filename) - m_nFilePos;
+			std::error_code ec;
+			std::filesystem::resize_file(filename, truncation_size, ec);
+			if(ec) {
+				std::cout << "Error occured in truncate:" << ec.message() << std::endl;
+			}
 		}
 	}
 }

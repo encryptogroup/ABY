@@ -17,6 +17,7 @@
  */
 #include "boolsharing.h"
 #include "../aby/abysetup.h"
+#include <filesystem>
 
 
 void BoolSharing::Init() {
@@ -1603,20 +1604,19 @@ void BoolSharing::Reset() {
 
 	/**Checking the role and and deciding upon the file to be deleted if the precomputation values are
 	  completely used up in a Precomputation READ mode.*/
+	std::filesystem::path precomputation_file;
 	if(m_eRole == SERVER) {
-		if((FileExists((char*)"pre_comp_server.dump"))&&(m_nFilePos >=
-                        FileSize((char*)"pre_comp_server.dump"))&&(GetPreCompPhaseValue() == ePreCompRead)) {
-			remove((char*)"pre_comp_server.dump");
-			m_nFilePos = -1;
-		}
+		precomputation_file = "pre_comp_server.dump";
+	} else {
+		precomputation_file = "pre_comp_client.dump";
 	}
-	else  {
-		if((FileExists((char*)"pre_comp_client.dump"))&&(m_nFilePos >=
-                        FileSize((char*)"pre_comp_client.dump"))&&(GetPreCompPhaseValue() == ePreCompRead)) {
-			remove((char*)"pre_comp_client.dump");
-			m_nFilePos = -1;
-		}
+	if (std::filesystem::exists(precomputation_file)
+		&& (m_nFilePos >= std::filesystem::file_size(precomputation_file))
+		&& (GetPreCompPhaseValue() == ePreCompRead)) {
+		std::filesystem::remove(precomputation_file);
+		m_nFilePos = -1;	// FIXME: m_nFilePos is unsigned ...
 	}
+
 }
 
 /**Pre-computations*/
@@ -1626,12 +1626,11 @@ void BoolSharing::PreComputationPhase() {
 	ePreCompPhase phase_value = GetPreCompPhaseValue();
 
 	/**Decision of the precomputation file based on the role of executor.*/
-	char filename[50];
+	std::filesystem::path filename;
 	if(m_eRole == SERVER) {
-		strcpy(filename, "pre_comp_server.dump");
-	}
-	else {
-		strcpy(filename, "pre_comp_client.dump");
+		filename = "pre_comp_server.dump";
+	} else {
+		filename = "pre_comp_client.dump";
 	}
 
 	/**Check if the precomputation mode is in RAM Reading phase*/
@@ -1639,12 +1638,12 @@ void BoolSharing::PreComputationPhase() {
 		return;
 	}
 	/**Check if the execution is non-Read mode or if the file to be used in READ mode doesn't exist*/
-	else if((phase_value != ePreCompRead)||(!FileExists(filename))) {
+	else if((phase_value != ePreCompRead)||(!std::filesystem::exists(filename))) {
 		/**Compute the MTs normally*/
 		ComputeMTs();
 		/**Check if the mode of precomputation is store. If so store it to respective file.*/
 		if(phase_value == ePreCompStore) {
-			StoreMTsToFile(filename);
+			StoreMTsToFile(filename.c_str());
 		}
 		/**
 			Check if precompution mode is in RAM writing phase. If so, change it to RAM reading phase
@@ -1656,11 +1655,11 @@ void BoolSharing::PreComputationPhase() {
 	}
 	/**This condition is activated once READ mode is persistent and execution of the mode is possible.*/
 	else {
-		ReadMTsFromFile(filename);
+		ReadMTsFromFile(filename.c_str());
 	}
 }
 
-void BoolSharing::StoreMTsToFile(char *filename) {
+void BoolSharing::StoreMTsToFile(const char *filename) {
 
 
 	FILE *fp;
@@ -1669,7 +1668,7 @@ void BoolSharing::StoreMTsToFile(char *filename) {
 		Condition to check if the file already exists. If so then, the mode of write would
 		be file append.
 	*/
-	if(FileExists(filename)) {
+	if(std::filesystem::exists(filename)) {
 		fp = fopen(filename, "a+b");
 	}
 	else {
@@ -1693,11 +1692,11 @@ void BoolSharing::StoreMTsToFile(char *filename) {
 	fclose(fp);
 }
 
-void BoolSharing::ReadMTsFromFile(char *filename) {
+void BoolSharing::ReadMTsFromFile(const char *filename) {
 
 	FILE *fp;
 	/**Calculate the file size*/
-	uint64_t file_size = FileSize(filename);
+	uint64_t file_size = std::filesystem::file_size(filename);
 
 	/**Variable for the storing the NUMANDSizes value from the file.*/
 	uint32_t num_and_sizes;
@@ -1767,7 +1766,7 @@ void BoolSharing::ReadMTsFromFile(char *filename) {
 BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, uint32_t in_circ_size) {
 
 	/**Check if the file already exists and if the existing is empty. If so, return false.*/
-	if(!FileExists(filename)||FileEmpty(filename)) {
+	if(!std::filesystem::exists(filename)||std::filesystem::is_empty(filename)) {
 		/**Returning false and reverting the precomputation mode to default.*/
 		return FALSE;
 	}

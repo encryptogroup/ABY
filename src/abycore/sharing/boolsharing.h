@@ -24,7 +24,6 @@
 #include <map>
 #include <vector>
 #include "../circuit/booleancircuits.h"
-#include <ENCRYPTO_utils/fileops.h>
 #include <ENCRYPTO_utils/cbitvector.h>
 
 class XORMasking;
@@ -276,12 +275,12 @@ private:
 	/**
 	 Method for store MTs to File
 	*/
-	void StoreMTsToFile(char *filename);
+	void StoreMTsToFile(const char *filename);
 
 	/**
 	 Method for read MTs from file
 	*/
-	void ReadMTsFromFile(char *filename);
+	void ReadMTsFromFile(const char *filename);
 	/**
 	Method to check if it is the right nvals or the circuit size.
 	*/
