@@ -23,6 +23,7 @@
 #include "abycircuit.h"
 #include "circuit.h"
 #include "share.h"
+#include <cstring>
 
 /** Arithmetic Circuit class.*/
 class ArithmeticCircuit: public Circuit {
@@ -60,19 +61,49 @@ public:
 	}
 
 	uint32_t PutSIMDINGate(uint32_t nvals, e_role src);
-	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val, e_role role);
+
+	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val, e_role role) {
+		uint32_t gateid = PutSIMDINGate(nvals, role);
+		if (role == m_eMyRole) {
+			GATE* gate = m_pGates + gateid;
+			gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+
+			*gate->gs.ishare.inval = (UGATE_T) val;
+			gate->instantiated = true;
+		}
+
+		return gateid;
+	}
 
 	//SharedIN
 	uint32_t PutSharedINGate();
-	template<class T> uint32_t PutSharedINGate(T val);
+
+	template<class T> uint32_t PutSharedINGate(T val) {
+		uint32_t gateid = PutSharedINGate();
+		GATE* gate = m_pGates + gateid;
+		gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+
+		*gate->gs.val = (UGATE_T) val;
+		gate->instantiated = true;
+		return gateid;
+	}
+
 	uint32_t PutSharedSIMDINGate(uint32_t nvals);
-	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val);
+
+	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val) {
+		uint32_t gateid = PutSharedSIMDINGate(nvals);
+		GATE* gate = m_pGates + gateid;
+		gate->gs.val = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+
+		*gate->gs.val = (UGATE_T) val;
+		gate->instantiated = true;
+		return gateid;
+	}
 
 	share* PutDummyINGate(uint32_t bitlen);
 	share* PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen);
 
 
-	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role);
 	/* Unfortunately, a template function cannot be used due to virtual */
 	share* PutINGate(uint64_t val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint64_t>(1, val, bitlen, role);
@@ -100,9 +131,6 @@ public:
 		return InternalPutINGate<uint8_t>(nvals, val, bitlen, role);
 	};
 
-
-
-	template<class T> share* InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role);
 	/* Unfortunately, a template function cannot be used due to virtual. Call Internal PutINGate*/
 	share* PutINGate(uint64_t* val, uint32_t bitlen, e_role role) {
 		return InternalPutINGate<uint64_t>(1, val, bitlen, role);
@@ -130,7 +158,6 @@ public:
 		return InternalPutINGate<uint8_t>(nvals, val, bitlen, role);
 	};
 
-	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen);
 	/* Unfortunately, a template function cannot be used due to virtual */
 	share* PutSharedINGate(uint64_t val, uint32_t bitlen) {
 		return InternalPutSharedINGate<uint64_t>(1, val, bitlen);
@@ -158,9 +185,6 @@ public:
 		return InternalPutSharedINGate<uint8_t>(nvals, val, bitlen);
 	};
 
-
-	//SharedIN
-	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T* val, uint32_t bitlen);
 	/* Unfortunately, a template function cannot be used due to virtual. Call Internal PutSharedINGate*/
 	share* PutSharedINGate(uint64_t* val, uint32_t bitlen) {
 		return InternalPutSharedINGate<uint64_t>(1, val, bitlen);
@@ -287,6 +311,62 @@ private:
 
 	uint32_t m_nMULs; //number of AND gates in the circuit
 	uint32_t m_nCONVGates; //number of Boolean to arithmetic conversion gates
+
+	//SharedIN
+	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T* val, uint32_t bitlen) {
+		assert(bitlen <= m_nShareBitLen);
+		share* shr = new arithshare(this);
+		uint32_t gateid = PutSharedSIMDINGate(nvals);
+		uint32_t iters = sizeof(UGATE_T) / sizeof(T);
+		assert(iters > 0);
+		shr->set_wire_id(0, gateid);
+
+		GATE* gate = m_pGates + gateid;
+		uint32_t sharebytelen = ceil_divide(m_nShareBitLen, 8);
+		uint32_t inbytelen = ceil_divide(bitlen, 8);
+		gate->gs.val = (UGATE_T*) calloc(nvals, PadToMultiple(sharebytelen, sizeof(UGATE_T)));
+		for (uint32_t i = 0; i < nvals; i++) {
+			memcpy(((uint8_t*) gate->gs.val) + i * sharebytelen, val + i, inbytelen);
+		}
+		gate->instantiated = true;
+		return shr;
+	}
+
+	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen) {
+		share* shr = new arithshare(this);
+		shr->set_wire_id(0, PutSharedSIMDINGate(nvals, val));
+		return shr;
+	}
+
+	template<class T> share* InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role) {
+		assert(bitlen <= m_nShareBitLen);
+		share* shr = new arithshare(this);
+		uint32_t gateid = PutSIMDINGate(nvals, role);
+		uint32_t iters = sizeof(UGATE_T) / sizeof(T);
+		assert(iters > 0);
+		shr->set_wire_id(0, gateid);
+
+		if (role == m_eMyRole) {
+			GATE* gate = m_pGates + gateid;
+			uint32_t sharebytelen = ceil_divide(m_nShareBitLen, 8);
+			uint32_t inbytelen = ceil_divide(bitlen, 8);
+			gate->gs.ishare.inval = (UGATE_T*) calloc(nvals, PadToMultiple(sharebytelen, sizeof(UGATE_T)));
+			for (uint32_t i = 0; i < nvals; i++) {
+				memcpy(((uint8_t*) gate->gs.ishare.inval) + i * sharebytelen, val + i, inbytelen);
+			}
+
+			gate->instantiated = true;
+		}
+
+		return shr;
+	}
+
+	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role) {
+		share* shr = new arithshare(this);
+		shr->set_wire_id(0, PutSIMDINGate(nvals, val, role));
+		return shr;
+	}
+
 };
 
 #endif /* __ARITHMETICCIRCUITS_H_ */
