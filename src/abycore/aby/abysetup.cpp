@@ -17,6 +17,7 @@
  */
 
 #include "abysetup.h"
+#include <mutex>
 
 ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg mtalgo) {
 	m_nNumOTThreads = numThreads;
@@ -512,8 +513,11 @@ BOOL ABYSetup::WakeupWorkerThreads(EJobType e) {
 }
 
 BOOL ABYSetup::WaitWorkerThreads() {
-	if (!m_nWorkingThreads)
-		return TRUE;
+	{
+		std::lock_guard<CLock> lock(m_lock);
+		if (!m_nWorkingThreads)
+			return TRUE;
+	}
 
 	for (;;) {
 		m_lock.Lock();
@@ -544,7 +548,13 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 	for (;;) {
 		m_evt.Wait();
 
-		switch (m_eJob) {
+		EJobType job;
+		{
+			std::lock_guard<std::mutex> lock(m_eJob_mutex_);
+			job = m_eJob;
+		}
+
+		switch (job) {
 		case e_Stop:
 			return;
 		case e_IKNPOTExt:

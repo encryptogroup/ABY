@@ -37,6 +37,7 @@
 #include <ENCRYPTO_utils/channel.h>
 #include <ENCRYPTO_utils/sndthread.h>
 #include <ENCRYPTO_utils/rcvthread.h>
+#include <mutex>
 
 struct comm_ctx {
 	SndThread *snd_std, *snd_inv;
@@ -214,14 +215,17 @@ private:
 			m_eJob = e_Undefined;
 		}
 		void PutJob(EJobType e) {
+			std::lock_guard<std::mutex> lock(m_eJob_mutex_);
 			m_eJob = e;
 			m_evt.Set();
 		}
+	private:
 		void ThreadMain();
 		uint32_t threadid;
 		ABYSetup* m_pCallback;
 		CEvent m_evt;
 		EJobType m_eJob;
+		std::mutex m_eJob_mutex_;
 	};
 
 	std::vector<CWorkerThread*> m_vThreads;

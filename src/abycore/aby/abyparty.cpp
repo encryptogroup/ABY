@@ -30,6 +30,7 @@
 #include <ENCRYPTO_utils/connection.h>
 #include <ENCRYPTO_utils/thread.h>
 
+#include <mutex>
 #include <sstream>
 
 #ifdef _DEBUG
@@ -44,15 +45,18 @@ public:
 	};
 
 	void PutJob(EPartyJobType e) {
+		std::lock_guard<std::mutex> lock(m_eJob_mutex_);
 		m_eJob = e;
 		m_evt.Set();
 	}
 
+private:
 	void ThreadMain();
 	uint32_t threadid;
 	ABYParty* m_pCallback;
 	CEvent m_evt;
 	EPartyJobType m_eJob;
+	std::mutex m_eJob_mutex_;
 };
 
 ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl,
@@ -660,8 +664,11 @@ BOOL ABYParty::WakeupWorkerThreads(EPartyJobType e) {
 }
 
 BOOL ABYParty::WaitWorkerThreads() {
-	if (!m_nWorkingThreads)
-		return TRUE;
+	{
+		std::lock_guard<CLock> lock(*m_lock);
+		if (!m_nWorkingThreads)
+			return TRUE;
+	}
 
 	for (;;) {
 		m_lock->Lock();
@@ -691,7 +698,13 @@ void ABYParty::CPartyWorkerThread::ThreadMain() {
 	for (;;) {
 		m_evt.Wait();
 
-		switch (m_eJob) {
+		EPartyJobType job;
+		{
+			std::lock_guard<std::mutex> lock(m_eJob_mutex_);
+			job = m_eJob;
+		}
+
+		switch (job) {
 		case e_Party_Stop:
 			return;
 		case e_Party_Comm:
