@@ -131,7 +131,7 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 			task->pval.sndval.X1 = &(m_vConversionMasks[1]);
 		} else {
 			m_vConversionMasks[0].Create(m_nNumCONVs * m_nTypeBitLen, m_cCrypto); //the choice bits of the receiver
-			m_vConversionMasks[1].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen); //the resulting masks
+			m_vConversionMasks[1].Create(m_nNumCONVs * m_nTypeBitLen * m_nTypeBitLen); //the resulting masks
 			task->pval.rcvval.C = &(m_vConversionMasks[0]);
 			task->pval.rcvval.R = &(m_vConversionMasks[1]);
 		}
