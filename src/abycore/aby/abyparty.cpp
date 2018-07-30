@@ -122,7 +122,10 @@ ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl,
 		exit(0);
 	}
 	StopWatch("Time for circuit generation: ", P_CIRCUIT);
+}
 
+
+void ABYParty::InitOnline() {
 #ifndef BATCH
 	std::cout << "Establishing network connection" << std::endl;
 #endif
@@ -141,6 +144,8 @@ ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl,
 	StartRecording("Starting NP OT", P_BASE_OT, m_vSockets);
 	m_pSetup->PrepareSetupPhase(m_tComm);
 	StopRecording("Time for NP OT: ", P_BASE_OT, m_vSockets);
+
+	is_online = true;
 }
 
 ABYParty::~ABYParty() {
@@ -224,6 +229,10 @@ void ABYParty::ExecCircuit() {
 #ifndef BATCH
 	std::cout << "Finishing circuit generation" << std::endl;
 #endif
+
+	if (!is_online) {
+		InitOnline();
+	}
 
 	StartRecording("Starting execution", P_TOTAL, m_vSockets);
 
