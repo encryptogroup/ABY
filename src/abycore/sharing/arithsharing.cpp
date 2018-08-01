@@ -34,6 +34,7 @@ void ArithSharing<T>::Init() {
 	m_vConversionMasks.resize(2);
 
 	m_nConvShareIdx = 0;
+	m_nConvShareIdx2 = 0;
 	m_nConvShareSndCtr = 0;
 	m_nConvShareRcvCtr = 0;
 
@@ -43,7 +44,7 @@ void ArithSharing<T>::Init() {
 	m_nOutputShareRcvCtr = 0;
 
 	m_vCONVGates.clear();
-
+	m_vCONVGates2.clear();
 }
 
 //Pre-set values for new layer
@@ -650,30 +651,47 @@ void ArithSharing<T>::AssignOutputShares() {
 template<typename T>
 void ArithSharing<T>::AssignConversionShares() {
 	if (m_eRole == SERVER) {
+		// Reset send counter in case we sent something this round
 		m_nConvShareSndCtr = 0;
 		if (m_nConvShareRcvCtr > 0) {
 			AssignServerConversionShares();
 		}
 	} else {
 		if (m_nConvShareRcvCtr > 0) {
+			// 2nd round - we received OT data
 			AssignClientConversionShares();
 		}
-		m_nConvShareRcvCtr = 0;
+		// We sent something this round - prepare next layer and round
+		// For server side, this all happens in AssignServerConversionShares
 		if (m_nConvShareSndCtr > 0) {
+			// Now is 1st round (send) - prepare 2nd round (receive OT data)
+			// Backup old index for next round's AssignClientConversionShares
+			m_nConvShareIdx2 = m_nConvShareIdx;
+			// Increase index for next layer's EvaluateCONVGate
+			m_nConvShareIdx += m_nConvShareSndCtr;
+			// Need to free 1st vector for possible EvaluateCONVGate gate collection.
+			m_vCONVGates2 = m_vCONVGates; // backup for 2nd round
+			m_vCONVGates.clear();
+			// In round 2 we receive the same amount of data that we just sent.
 			m_nConvShareRcvCtr = m_nConvShareSndCtr;
-			m_nConvShareSndCtr = 0;
+			m_nConvShareSndCtr = 0; // reset for next layer
 		}
 	}
 }
 
 template<typename T>
 void ArithSharing<T>::AssignServerConversionShares() {
+	// Prepare the send counter. We'll send as much next round as we received this
+	// round. Since we consume what was received this round, reset the receive
+	// counter.
+	m_nConvShareSndCtr = m_nConvShareRcvCtr;
+	m_nConvShareRcvCtr = 0;
+	// We received conversion shares from the client this round. Now we consume
+	// that data and prepare the send buffer for sending the OTs in the next
+	// round.
 	GATE* gate;
 	uint32_t* parentids, clientpermbit;
 	uint32_t nparents;
-	//I just received conversion shares - send data that was precomputed in the OTs
-	m_nConvShareSndCtr = m_nConvShareRcvCtr;
-	m_nConvShareRcvCtr = 0;
 	T cor, tmpa, tmpb, *tmpsum;
 
 	//Allocate sufficient memory
@@ -714,7 +732,7 @@ void ArithSharing<T>::AssignServerConversionShares() {
 		}
 		InstantiateGate(gate);
 #ifdef DEBUGARITH
-		std::cout << "Result for conversion gate: ";
+		std::cout << "Result for conversion gate: " << i << ": " << std::hex;
 #endif
 		for (uint32_t k = 0; k < gate->nvals; k++) {
 			((T*) gate->gs.aval)[k] = tmpsum[k];
@@ -726,16 +744,20 @@ void ArithSharing<T>::AssignServerConversionShares() {
 #ifdef DEBUGARITH
 		std::cout << std::endl;
 #endif
-		m_nConvShareIdx += gate->nvals;
 		free(parentids);
 	}
 	free(tmpsum);
-	m_vCONVGates.clear();
+	// Prepare next round - for client side this happens directly in AssignConversionShares
+	m_nConvShareIdx += m_nConvShareSndCtr; // Increment by #gates just received
+	m_vCONVGates.clear(); // Clear for next layer's collection in EvaluateCONV
 }
 
 template<typename T>
 void ArithSharing<T>::AssignClientConversionShares() {
-	//I just sent conversion shares - receive and unmask data using values that were precomputed in the OTs
+	// Reset - we'll now consume what we received.
+	m_nConvShareRcvCtr = 0;
+	// We sent conversion shares in the last round and received data from server
+	// this round. Unmask the data using values that were precomputed in the OTs
 	GATE* gate;
 	uint32_t* parentids;
 	uint32_t nparents;
@@ -745,8 +767,8 @@ void ArithSharing<T>::AssignClientConversionShares() {
 	uint32_t maxvectorsize = m_pCircuit->GetMaxVectorSize();
 	tmpsum = (T*) malloc(sizeof(T) * maxvectorsize);
 	//Take the masks from the pre-computed OTs down from the received string
-	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx * m_nTypeBitLen; i < m_vCONVGates.size(); i++) {
-		gate = m_vCONVGates[i];
+	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx2 * m_nTypeBitLen; i < m_vCONVGates2.size(); i++) {
+		gate = m_vCONVGates2[i];
 		parentids = gate->ingates.inputs.parents;
 		nparents = gate->ingates.ningates;
 		memset(tmpsum, 0, sizeof(T) * maxvectorsize);
@@ -769,11 +791,10 @@ void ArithSharing<T>::AssignClientConversionShares() {
 
 		InstantiateGate(gate);
 #ifdef DEBUGARITH
-		std::cout << "Result for conversion gate: ";
+		std::cout << "Result for conversion gate " << i << ": " << std::hex;
 #endif
 		for (uint32_t k = 0; k < gate->nvals; k++) {
 			((T*) gate->gs.aval)[k] = tmpsum[k];
-			//std::cout << "Gate val = " << ((T*) gate->gs.aval)[k] << std::endl;
 #ifdef DEBUGARITH
 			std::cout << tmpsum[k] << " ";
 #endif
@@ -781,11 +802,10 @@ void ArithSharing<T>::AssignClientConversionShares() {
 #ifdef DEBUGARITH
 		std::cout << std::endl;
 #endif
-		m_nConvShareIdx += gate->nvals;
 		free(parentids);
 	}
 	free(tmpsum);
-	m_vCONVGates.clear();
+	m_vCONVGates2.clear();
 }
 
 template<typename T>
@@ -1146,10 +1166,12 @@ void ArithSharing<T>::Reset() {
 	m_cArithCircuit->Reset();
 
 	m_nConvShareIdx = 0;
+	m_nConvShareIdx2 = 0;
 	m_nConvShareSndCtr = 0;
 	m_nConvShareRcvCtr = 0;
 
 	m_vCONVGates.clear();
+	m_vCONVGates2.clear();
 }
 
 //The explicit instantiation part

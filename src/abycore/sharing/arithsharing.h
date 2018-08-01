@@ -123,7 +123,12 @@ private:
         std::vector<GATE*> m_vMULGates;
         std::vector<GATE*> m_vInputShareGates;
         std::vector<GATE*> m_vOutputShareGates;
+        /* We collect conversion shares for round 1 in this vector (SERVER uses
+         * them in AssignServerConversionShares) */
         std::vector<GATE*> m_vCONVGates;
+        /* We collect conversion shares for round 2 in this vector (CLIENT uses
+         * them in AssignClientConversionShares) */
+        std::vector<GATE*> m_vCONVGates2;
 
 	uint32_t m_nInputShareSndCtr;
 	uint32_t m_nOutputShareSndCtr;
@@ -155,9 +160,13 @@ private:
 
 	CBitVector m_vConversionRandomness;
 
-	uint32_t m_nConvShareIdx; //the global
-	uint32_t m_nConvShareSndCtr; //counts for each round
-	uint32_t m_nConvShareRcvCtr;
+	// Global index into conversion buffers for randomness and OTs
+	uint32_t m_nConvShareIdx;
+	// 2nd layer (client side) needs its own counter to not interfere with prevous layer
+	uint32_t m_nConvShareIdx2;
+	uint32_t m_nConvShareSndCtr; // Network send counter per round
+	uint32_t m_nConvShareRcvCtr; // Network receive counter per round
+
 	/**
 	 Share Values
 	 \param 	gate 	Object of class Gate
