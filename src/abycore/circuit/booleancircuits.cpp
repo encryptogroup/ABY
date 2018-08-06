@@ -841,15 +841,18 @@ void BooleanCircuit::UpdateLocalQueue(uint32_t gateid) {
 }
 
 share* BooleanCircuit::PutLeftShifterGate(share* in, uint32_t pos) {
-	return new boolshare(PutLeftShifterGate(in->get_wires(), pos, in->get_nvals()), this);
+	return new boolshare(PutLeftShifterGate(in->get_wires(), in->get_max_bitlength(), pos, in->get_nvals()), this);
 }
 
 //shift val by pos positions to the left and fill lower wires with zeros
-std::vector<uint32_t> BooleanCircuit::PutLeftShifterGate(std::vector<uint32_t> val, uint32_t pos, uint32_t nvals) {
+std::vector<uint32_t> BooleanCircuit::PutLeftShifterGate(std::vector<uint32_t> val, uint32_t max_bitlen, uint32_t pos, uint32_t nvals) {
+	assert(pos < max_bitlen); // cannot shift beyond last bit
 	uint32_t zerogate = PutConstantGate(0, nvals);
 	std::vector<uint32_t> out(pos, zerogate);
-	out.reserve(pos + val.size());
-	out.insert(out.end(), val.cbegin(), val.cend());
+	uint32_t newsize = pos + val.size();
+	uint32_t extra_bits = newsize > max_bitlen ? (newsize - max_bitlen) : 0;
+	out.reserve(newsize - extra_bits);
+	out.insert(out.end(), val.cbegin(), val.cend() - extra_bits);
 	return out;
 }
 
