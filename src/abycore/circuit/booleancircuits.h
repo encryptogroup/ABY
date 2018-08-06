@@ -297,7 +297,7 @@ public:
 	std::vector<uint32_t> PutELM0Gate(std::vector<uint32_t> val, uint32_t b);
 
 	share* PutLeftShifterGate(share* in, uint32_t pos);
-	std::vector<uint32_t> PutLeftShifterGate(std::vector<uint32_t> val, uint32_t pos, uint32_t nvals = 1);
+	std::vector<uint32_t> PutLeftShifterGate(std::vector<uint32_t> val, uint32_t max_bitlen, uint32_t pos, uint32_t nvals = 1);
 
 	uint32_t PutIdxGate(uint32_t r, uint32_t maxidx);
 
