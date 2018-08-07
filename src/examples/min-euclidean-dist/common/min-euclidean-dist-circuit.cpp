@@ -22,7 +22,7 @@
 #include <iostream>
 #include <vector>
 
-int32_t test_min_eucliden_dist_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t dbsize,
+int32_t test_min_eucliden_dist_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t dbsize,
 		uint32_t dim, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing, ePreCompPhase pre_comp_value) {
 	uint32_t bitlen = 8, i, j, temp, tempsum, maxbitlen=32;
 	uint64_t output;

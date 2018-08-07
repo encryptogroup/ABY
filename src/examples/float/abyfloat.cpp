@@ -64,7 +64,7 @@ void read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 	*test_bit = int_testbit;
 }
 
-void test_verilog_add64_SIMD(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
+void test_verilog_add64_SIMD(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
 	e_mt_gen_alg mt_alg, e_sharing sharing, double afp, double bfp) {
 
 	// we operate on doubles, so set bitlen to 64 bits
@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
 	seclvl seclvl = get_sec_lvl(secparam);
 
 
-	test_verilog_add64_SIMD(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_BOOL, fpa, fpb);
+	test_verilog_add64_SIMD(role, address, port, seclvl, nvals, nthreads, mt_alg, S_BOOL, fpa, fpb);
 
 	return 0;
 }

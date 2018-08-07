@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 		min_sharing = S_YAO;
 	}
 
-	test_min_eucliden_dist_circuit(role, (char*) address.c_str(), port, seclvl, nvals, dim, nthreads, mt_alg, S_ARITH, min_sharing, precomp_phase_value);
+	test_min_eucliden_dist_circuit(role, address, port, seclvl, nvals, dim, nthreads, mt_alg, S_ARITH, min_sharing, precomp_phase_value);
 
 	return 0;
 }

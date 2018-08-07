@@ -22,7 +22,7 @@
 #include "../../../abycore/sharing/sharing.h"
 #include <ENCRYPTO_utils/crypto/crypto.h>
 
-int32_t test_min_eucliden_dist_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t pointbitlen,
+int32_t test_min_eucliden_dist_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t pointbitlen,
         uint32_t thresbitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing, uint32_t n,
         bool only_yao) {
 

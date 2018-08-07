@@ -67,10 +67,10 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	test_euclid_dist_circuit(role, (char*) address.c_str(), port, seclvl, 1, 32,
+	test_euclid_dist_circuit(role, address, port, seclvl, 1, 32,
 			nthreads, mt_alg, S_YAO);
 
-	test_euclid_dist_circuit(role, (char*) address.c_str(), port, seclvl, 1, 32,
+	test_euclid_dist_circuit(role, address, port, seclvl, 1, 32,
 			nthreads, mt_alg, S_BOOL);
 
 	return 0;

@@ -478,7 +478,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 }
 
 
-bool run_bench(e_role role, char* address, uint16_t port, seclvl seclvl, int32_t operation, int32_t bitlen, uint32_t nvals,
+bool run_bench(e_role role, const std::string& address, uint16_t port, seclvl seclvl, int32_t operation, int32_t bitlen, uint32_t nvals,
 		uint32_t nruns, e_mt_gen_alg mt_alg, uint32_t nthreads, bool numbers_only, bool no_verify, bool detailed) {
 
 	uint32_t nops, nbitlens;
@@ -544,7 +544,7 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	run_bench(role, (char*) address.c_str(), port, seclvl, operation, bitlen, nvals, nruns, mt_alg, nthreads, numbers_only, no_verify, detailed);
+	run_bench(role, address, port, seclvl, operation, bitlen, nvals, nruns, mt_alg, nthreads, numbers_only, no_verify, detailed);
 
 	return 0;
 }
