@@ -59,7 +59,7 @@ private:
 	std::mutex m_eJob_mutex_;
 };
 
-ABYParty::ABYParty(e_role pid, const char* addr, uint16_t port, seclvl seclvl,
+ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl seclvl,
 	uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo,
 	uint32_t maxgates)
 	: m_eMTGenAlg(mg_algo), m_eRole(pid), m_nPort(port), m_sSecLvl(seclvl),
