@@ -27,7 +27,7 @@
 class BooleanCircuit;
 
 uint64_t verify_min_euclidean_dist(uint32_t** serverdb, uint32_t* clientquery, uint32_t dbsize, uint32_t dim);
-int32_t test_min_eucliden_dist_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t dbsize, uint32_t dim,
+int32_t test_min_eucliden_dist_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t dbsize, uint32_t dim,
 		uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing, ePreCompPhase pre_comp_value);
 share* build_min_euclidean_dist_circuit(share*** S, share** C, uint32_t n, uint32_t d, share** Ssqr, share* Csqr,
 		Circuit* distcirc, BooleanCircuit* mincirc, std::vector<Sharing*>& sharings, e_sharing minsharing);

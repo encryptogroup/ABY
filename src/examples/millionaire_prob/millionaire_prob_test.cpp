@@ -80,10 +80,10 @@ int main(int argc, char** argv) {
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	//evaluate the millionaires circuit using Yao
-	test_millionaire_prob_circuit(role, (char*) address.c_str(), port, seclvl, 1, 32,
+	test_millionaire_prob_circuit(role, address, port, seclvl, 1, 32,
 			nthreads, mt_alg, S_YAO);
 	//evaluate the millionaires circuit using GMW
-	//test_millionaire_prob_circuit(role, (char*) address.c_str(), seclvl, 1, 32,
+	//test_millionaire_prob_circuit(role, address, seclvl, 1, 32,
 	//		nthreads, mt_alg, S_BOOL);
 
 	return 0;
