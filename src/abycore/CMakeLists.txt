@@ -19,7 +19,8 @@ add_library(aby
 add_library(ABY::aby ALIAS aby)
 
 target_compile_features(aby PUBLIC cxx_std_17)
-target_compile_options(aby PRIVATE "-Wall" "-Wextra" "-Weffc++")
+#target_compile_options(aby PRIVATE "-Wall" "-Wextra" "-Weffc++")
+target_compile_options(aby PRIVATE "-Wall" "-Wextra")
 
 target_include_directories(aby
     PUBLIC
