@@ -33,17 +33,18 @@ class ArithSharing: public Sharing {
 public:
 	/** Constructor of the class.*/
 	ArithSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, e_mt_gen_alg mt_alg) :
-			Sharing(context, role, sharebitlen, circuit, crypt) {
-		m_eMTGenAlg = mt_alg;
+			Sharing(context, role, sharebitlen, circuit, crypt),
+			m_eMTGenAlg{mt_alg},
+			m_vConversionMasks(2)
+	{
 		Init();
-	}
-	;
+	};
+
 	/** Destructor of the class.*/
 	~ArithSharing() {
 		Reset();
 		delete m_cArithCircuit;
-	}
-	;
+	};
 
 	//MEMBER FUNCTIONS OF THE SUPER CLASS
 	void Reset();
