@@ -31,8 +31,6 @@ void ArithSharing<T>::Init() {
 
 	m_cArithCircuit = new ArithmeticCircuit(m_pCircuit, m_eContext, m_eRole, m_nTypeBitLen);
 
-	m_vConversionMasks.resize(2);
-
 	m_nConvShareIdx = 0;
 	m_nConvShareIdx2 = 0;
 	m_nConvShareSndCtr = 0;
@@ -122,29 +120,31 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 		task->bitlen = m_nTypeBitLen;
 		task->snd_flavor = Snd_R_OT;
 		task->rec_flavor = Rec_OT;
-		task->numOTs = m_nNumCONVs * m_nTypeBitLen;
+		task->numOTs = m_nNumCONVs;
 		task->mskfct = fXORMaskFct;
 		task->delete_mskfct = TRUE;
 		if ((m_eRole) == SERVER) {
-			m_vConversionMasks[0].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
-			m_vConversionMasks[1].Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
+			m_vConversionMasks[0].Create(m_nNumCONVs, m_nTypeBitLen);
+			m_vConversionMasks[1].Create(m_nNumCONVs, m_nTypeBitLen);
 			task->pval.sndval.X0 = &(m_vConversionMasks[0]);
 			task->pval.sndval.X1 = &(m_vConversionMasks[1]);
 		} else {
-			m_vConversionMasks[0].Create(m_nNumCONVs * m_nTypeBitLen, m_cCrypto); //the choice bits of the receiver
-			m_vConversionMasks[1].Create(m_nNumCONVs * m_nTypeBitLen * m_nTypeBitLen); //the resulting masks
+			m_vConversionMasks[0].Create(m_nNumCONVs, m_cCrypto); //the choice bits of the receiver
+			m_vConversionMasks[1].Create(m_nNumCONVs, m_nTypeBitLen); //the resulting masks
 			task->pval.rcvval.C = &(m_vConversionMasks[0]);
 			task->pval.rcvval.R = &(m_vConversionMasks[1]);
 		}
 #ifdef DEBUGARITH
-		std::cout << "Conv: Adding a OT task which is supposed to perform " << task->numOTs << " OTs on " << m_nTypeBitLen << " bits for B2A" << std::endl;
+		std::cout << "Conv: Adding an OT task to perform " << task->numOTs <<
+				" OTs for B2A" << std::endl;
 #endif
 		setup->AddOTTask(task, 0);
 
 		//Pre-create the buffer
-		m_vConvShareSndBuf.Create(2 * m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
-		m_vConvShareRcvBuf.Create(2 * m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen);
-		m_vConversionRandomness.Create(m_nNumCONVs * m_nTypeBitLen, m_nTypeBitLen, m_cCrypto);
+		// TODO Network buffers can be much smaller, only used per round
+		m_vConvShareSndBuf.Create(2 * m_nNumCONVs, m_nTypeBitLen);
+		m_vConvShareRcvBuf.Create(2 * m_nNumCONVs, m_nTypeBitLen);
+		m_vConversionRandomness.Create(m_nNumCONVs, m_nTypeBitLen, m_cCrypto);
 	}
 }
 
@@ -461,6 +461,7 @@ template<typename T>
 void ArithSharing<T>::EvaluateCONVGate(GATE* gate) {
 	uint32_t* parentids = gate->ingates.inputs.parents; //gate->gs.parentgate;
 	uint32_t nparents = gate->ingates.ningates;
+	uint32_t nvals = gate->nvals;
 
 #ifdef DEBUGARITH
 	std::cout << "Values of B2A gates with id " << ((((uint64_t) gate)-((uint64_t)m_pGates))/sizeof(GATE)) << ": ";
@@ -475,27 +476,28 @@ void ArithSharing<T>::EvaluateCONVGate(GATE* gate) {
 	}
 #ifdef DEBUGARITH
 	std::cout << std::endl;
-	std::cout << "Evaluating conv gate which has " << gate->nvals << " values, current number of conv gates: " << m_vCONVGates.size() << std::endl;
+	std::cout << "Evaluating conv gate which has " << nvals << " values, current number of conv gates: " << m_vCONVGates.size() << std::endl;
 #endif
 
 	m_vCONVGates.push_back(gate);
 	if (m_eRole == SERVER) {
-		m_nConvShareRcvCtr += gate->nvals;
+		m_nConvShareRcvCtr += nvals * nparents;
 	} else {
-
-		//Client routine - receive values
+		//Client routine - send bits
 		//copy values into snd buffer
-		m_vConvShareSndBuf.SetBytes(m_vConversionMasks[0].GetArr() + (m_nConvShareIdx + m_nConvShareSndCtr) * sizeof(T),
-				m_nConvShareSndCtr * sizeof(T), sizeof(T) * gate->nvals);
-		for (uint32_t i = 0, ctr = m_nConvShareSndCtr * sizeof(T) * 8; i < nparents; i++, ctr += gate->nvals) {
+		m_vConvShareSndBuf.SetBitsPosOffset(m_vConversionMasks[0].GetArr(),
+				m_nConvShareIdx + m_nConvShareSndCtr,
+				m_nConvShareSndCtr, nparents * nvals);
+		for (uint32_t i = 0; i < nparents; ++i) {
 			//XOR the choice bits and the current values of the gate and write into the snd buffer
-			m_vConvShareSndBuf.XORBits((BYTE*) m_pGates[parentids[i]].gs.val, ctr, gate->nvals);
+			m_vConvShareSndBuf.XORBits((BYTE*) m_pGates[parentids[i]].gs.val,
+					m_nConvShareSndCtr, nvals);
+			m_nConvShareSndCtr += nvals;
 		}
 #ifdef DEBUGARITH
 		std::cout << "Conversion shares: ";
 		m_vConvShareSndBuf.PrintBinary();
 #endif
-		m_nConvShareSndCtr += gate->nvals;
 	}
 }
 
@@ -691,38 +693,40 @@ void ArithSharing<T>::AssignServerConversionShares() {
 	// round.
 	GATE* gate;
 	uint32_t* parentids, clientpermbit;
-	uint32_t nparents;
+	uint32_t nparents, nvals;
 	T cor, tmpa, tmpb, *tmpsum;
 
 	//Allocate sufficient memory
 	uint32_t maxvectorsize = m_pCircuit->GetMaxVectorSize();
 	tmpsum = (T*) malloc(sizeof(T) * maxvectorsize);
 
-	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx * m_nTypeBitLen; i < m_vCONVGates.size(); i++) {
+	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx; i < m_vCONVGates.size(); i++) {
 		gate = m_vCONVGates[i];
 		parentids = gate->ingates.inputs.parents;
 		nparents = gate->ingates.ningates;
+		nvals = gate->nvals;
 		memset(tmpsum, 0, sizeof(T) * maxvectorsize);
 
 		for (uint32_t j = 0; j < nparents; j++) {
-			for (uint32_t k = 0; k < m_pGates[parentids[j]].nvals; k++, lctr++, gctr++) {
+			for (uint32_t k = 0; k < nvals; k++, lctr++, gctr++) {
 				clientpermbit = m_vConvShareRcvBuf.GetBitNoMask(lctr);
 				cor = (m_pGates[parentids[j]].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01;
+				T rnd = m_vConversionRandomness.template Get<T>(gctr);
 
-				tmpa = (m_nTypeBitMask - (m_vConversionRandomness.template Get<T>(gctr) - 1)) + (cor) * (1L << j);
-				tmpb = (m_nTypeBitMask - (m_vConversionRandomness.template Get<T>(gctr) - 1)) + (!cor) * (1L << j);
+				tmpa = (m_nTypeBitMask - (rnd - 1)) + (cor) * (1L << j);
+				tmpb = (m_nTypeBitMask - (rnd - 1)) + (!cor) * (1L << j);
 
 				tmpa = m_vConversionMasks[clientpermbit].template Get<T>(gctr) ^ tmpa;
 				tmpb = m_vConversionMasks[!clientpermbit].template Get<T>(gctr) ^ tmpb;
 
-				tmpsum[k] += m_vConversionRandomness.template Get<T>(gctr);
+				tmpsum[k] += rnd;
 
 #ifdef DEBUGARITH
-				std::cout << "Gate " << i << ", " << j << ", " << k << ": " << m_vConversionRandomness.template Get<T>(gctr) <<
+				std::cout << "Gate " << i << ", " << j << ", " << k << ": " << rnd <<
 				", A: " << m_vConversionMasks[clientpermbit].template Get<T>(gctr) << ", " << tmpa <<
 				", B: " << m_vConversionMasks[!clientpermbit].template Get<T>(gctr) << ", " << tmpb << ", tmpsum = " << tmpsum[k] << ", gctr = " << gctr << std::endl;
 				//std::cout << "gctr = " << gctr << ", nconvmasks = " << m_vConversionMasks[clientpermbit].GetSize() <<", nconvgates = " << m_nNumCONVs << std::endl;
-				assert(gate->nvals == 1);
+				assert(nvals == 1); // FIXME stupid assertion in debugging
 #endif
 
 				m_vConvShareSndBuf.template Set<T>(tmpa, 2 * lctr);
@@ -734,7 +738,7 @@ void ArithSharing<T>::AssignServerConversionShares() {
 #ifdef DEBUGARITH
 		std::cout << "Result for conversion gate: " << i << ": " << std::hex;
 #endif
-		for (uint32_t k = 0; k < gate->nvals; k++) {
+		for (uint32_t k = 0; k < nvals; k++) {
 			((T*) gate->gs.aval)[k] = tmpsum[k];
 			//std::cout << "Gate val = " << ((T*) gate->gs.aval)[k] << std::endl;
 #ifdef DEBUGARITH
@@ -748,7 +752,7 @@ void ArithSharing<T>::AssignServerConversionShares() {
 	}
 	free(tmpsum);
 	// Prepare next round - for client side this happens directly in AssignConversionShares
-	m_nConvShareIdx += m_nConvShareSndCtr; // Increment by #gates just received
+	m_nConvShareIdx += m_nConvShareSndCtr; // Increment by #gates just received (was moved to SndCtr above)
 	m_vCONVGates.clear(); // Clear for next layer's collection in EvaluateCONV
 }
 
@@ -760,25 +764,25 @@ void ArithSharing<T>::AssignClientConversionShares() {
 	// this round. Unmask the data using values that were precomputed in the OTs
 	GATE* gate;
 	uint32_t* parentids;
-	uint32_t nparents;
+	uint32_t nparents, nvals;
 	T rcv, mask, tmp, *tmpsum;
 
 	//Allocate sufficient memory
 	uint32_t maxvectorsize = m_pCircuit->GetMaxVectorSize();
 	tmpsum = (T*) malloc(sizeof(T) * maxvectorsize);
 	//Take the masks from the pre-computed OTs down from the received string
-	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx2 * m_nTypeBitLen; i < m_vCONVGates2.size(); i++) {
+	for (uint32_t i = 0, lctr = 0, gctr = m_nConvShareIdx2; i < m_vCONVGates2.size(); i++) {
 		gate = m_vCONVGates2[i];
 		parentids = gate->ingates.inputs.parents;
 		nparents = gate->ingates.ningates;
+		nvals = gate->nvals;
 		memset(tmpsum, 0, sizeof(T) * maxvectorsize);
 
 		for (uint32_t j = 0; j < nparents; j++) {
-			for (uint32_t k = 0; k < m_pGates[parentids[j]].nvals; k++, lctr++, gctr++) {
+			for (uint32_t k = 0; k < nvals; k++, lctr++, gctr++) {
 				rcv = m_vConvShareRcvBuf.template Get<T>(
-						(2 * lctr + ((m_pGates[parentids[j]].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01))
-								* m_nTypeBitLen, m_nTypeBitLen);
-				mask = m_vConversionMasks[1].template Get<T>(gctr * m_nTypeBitLen, m_nTypeBitLen);
+						(2 * lctr + ((m_pGates[parentids[j]].gs.val[k / GATE_T_BITS] >> (k % GATE_T_BITS)) & 0x01)) );
+				mask = m_vConversionMasks[1].template Get<T>(gctr);
 				tmp = rcv ^ mask;
 				tmpsum[k] += tmp;
 #ifdef DEBUGARITH
@@ -793,7 +797,7 @@ void ArithSharing<T>::AssignClientConversionShares() {
 #ifdef DEBUGARITH
 		std::cout << "Result for conversion gate " << i << ": " << std::hex;
 #endif
-		for (uint32_t k = 0; k < gate->nvals; k++) {
+		for (uint32_t k = 0; k < nvals; k++) {
 			((T*) gate->gs.aval)[k] = tmpsum[k];
 #ifdef DEBUGARITH
 			std::cout << tmpsum[k] << " ";
@@ -837,11 +841,9 @@ void ArithSharing<T>::GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uin
 	if (m_nConvShareSndCtr > 0) {
 		sendbuf.push_back(m_vConvShareSndBuf.GetArr());
 		//the client sends shares of his choice bits, the server the masks
-		if (m_eRole == SERVER) {
-			sndbytes.push_back(2 * m_nConvShareSndCtr * sizeof(T) * m_nTypeBitLen);
-		} else {
-			sndbytes.push_back(ceil_divide(m_nConvShareSndCtr * m_nTypeBitLen, 8));
-		}
+		uint32_t snd_bytes = (m_eRole == CLIENT) ?
+			ceil_divide(m_nConvShareSndCtr, 8) : 2 * m_nConvShareSndCtr * sizeof(T);
+		sndbytes.push_back(snd_bytes);
 	}
 
 	uint32_t mtbytelen = (m_vMTIdx[0] - m_vMTStartIdx[0]) * sizeof(T);
@@ -900,14 +902,14 @@ void ArithSharing<T>::GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vecto
 	//conversion shares
 	if (m_nConvShareRcvCtr > 0) {
 		//std::cout << "Receiving conversion gate values " << std::endl;
-		if (m_vConvShareRcvBuf.GetSize() < m_nConvShareRcvCtr * sizeof(T) * m_nTypeBitLen)
-			m_vConvShareRcvBuf.ResizeinBytes(m_nConvShareRcvCtr * sizeof(T) * m_nTypeBitLen);
-		rcvbuf.push_back(m_vConvShareRcvBuf.GetArr());
-		if (m_eRole == SERVER) {
-			rcvbytes.push_back(ceil_divide(m_nConvShareRcvCtr * m_nTypeBitLen, 8));
-		} else {
-			rcvbytes.push_back(2 * m_nConvShareRcvCtr * sizeof(T) * m_nTypeBitLen);
+		// SERVER only receives bits, no ot masks
+		uint32_t rcv_bytes = (m_eRole == SERVER) ?
+			ceil_divide(m_nConvShareRcvCtr, 8) : 2 * m_nConvShareRcvCtr * sizeof(T);
+		if (m_vConvShareRcvBuf.GetSize() < rcv_bytes) {
+			m_vConvShareRcvBuf.ResizeinBytes(rcv_bytes);
 		}
+		rcvbuf.push_back(m_vConvShareRcvBuf.GetArr());
+		rcvbytes.push_back(rcv_bytes);
 	}
 
 	uint32_t mtbytelen = (m_vMTIdx[0] - m_vMTStartIdx[0]) * sizeof(T);
@@ -1128,6 +1130,7 @@ void ArithSharing<T>::PrintPerformanceStatistics() {
 
 template<typename T>
 void ArithSharing<T>::Reset() {
+	assert(m_cArithCircuit->GetNumCONVGates() == m_nConvShareIdx);
 	m_nMTs = 0;
 
 	for (uint32_t i = 0; i < m_vMTStartIdx.size(); i++)
