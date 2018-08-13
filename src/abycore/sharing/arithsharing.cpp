@@ -140,10 +140,17 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 #endif
 		setup->AddOTTask(task, 0);
 
-		//Pre-create the buffer
-		// TODO Network buffers can be much smaller, only used per round
-		m_vConvShareSndBuf.Create(2 * m_nNumCONVs, m_nTypeBitLen);
-		m_vConvShareRcvBuf.Create(2 * m_nNumCONVs, m_nTypeBitLen);
+		// Pre-create some conversion buffers
+		// TODO Network send buffers could be much smaller, only used per round.
+		// But since there's currently no way of knowing in advance each round's
+		// conversion gates, the send buffer is created with max possible size...
+		if (m_eRole == CLIENT) {
+			m_vConvShareSndBuf.Create(m_nNumCONVs, 1);
+		} else {
+			m_vConvShareSndBuf.Create(2 * m_nNumCONVs, m_nTypeBitLen);
+		}
+		// Note: Network receive buffer m_vConvShareRcvBuf is created per round in
+		// GetBuffersToReceive
 		m_vConversionRandomness.Create(m_nNumCONVs, m_nTypeBitLen, m_cCrypto);
 	}
 }
@@ -906,7 +913,11 @@ void ArithSharing<T>::GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vecto
 		uint32_t rcv_bytes = (m_eRole == SERVER) ?
 			ceil_divide(m_nConvShareRcvCtr, 8) : 2 * m_nConvShareRcvCtr * sizeof(T);
 		if (m_vConvShareRcvBuf.GetSize() < rcv_bytes) {
-			m_vConvShareRcvBuf.ResizeinBytes(rcv_bytes);
+			if (m_eRole == SERVER) {
+				m_vConvShareRcvBuf.Create(rcv_bytes * 8, 1);
+			} else {
+				m_vConvShareRcvBuf.Create(2 * m_nConvShareRcvCtr, m_nTypeBitLen);
+			}
 		}
 		rcvbuf.push_back(m_vConvShareRcvBuf.GetArr());
 		rcvbytes.push_back(rcv_bytes);
