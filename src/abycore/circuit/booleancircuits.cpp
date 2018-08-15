@@ -2312,7 +2312,6 @@ std::vector<uint32_t> BooleanCircuit::PutGateFromFile(const std::string filename
 					for (uint32_t i = 0; i < tokens.size(); i++) {
 						outputs.push_back(wires[tokens[i]]);
 					}
-					std::cout << std::endl;
 					break;
 				}
 			}
