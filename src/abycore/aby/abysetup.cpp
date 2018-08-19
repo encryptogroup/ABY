@@ -17,6 +17,7 @@
  */
 
 #include "abysetup.h"
+#include <iostream>
 #include <mutex>
 
 ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg mtalgo) {

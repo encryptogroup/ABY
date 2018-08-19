@@ -18,6 +18,7 @@
 #ifndef __ARITHMTMASKING_H_
 #define __ARITHMTMASKING_H_
 
+#include <iostream>
 #include <vector>
 #include <ot/maskingfunction.h>
 

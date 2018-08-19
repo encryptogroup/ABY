@@ -5,6 +5,7 @@
  *      Author: mzohner
  */
 
+#include <iostream>
 #include "simple_hashing.h"
 
 uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint32_t *outbitlen, uint32_t* nelesinbin, uint32_t nbins,

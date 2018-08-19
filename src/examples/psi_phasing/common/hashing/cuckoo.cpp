@@ -5,6 +5,7 @@
  *      Author: mzohner
  */
 
+#include <iostream>
 #include "cuckoo.h"
 
 //returns a cuckoo hash table with the first dimension being the bins and the second dimension being the pointer to the elements
