@@ -6,7 +6,8 @@ while IFS= read -r line || [[ -n "${line}" ]]; do
     parties+=(${l})
 done < parties.conf
 
-idx=${parties[${1}]}
+idx= ${1}
+addr=${parties[0]}
 
 cd ../build/bin
-./innerproduct_test -r ${1} -a ${idx} -p 8000
+./innerproduct_test -r ${idx} -a ${addr}
