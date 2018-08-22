@@ -1,8 +1,6 @@
 [submodule "extern/ENCRYPTO_utils"]
 	path = extern/ENCRYPTO_utils
 	url = ../ENCRYPTO_utils.git
-	branch = feature-cmake
 [submodule "extern/OTExtension"]
 	path = extern/OTExtension
 	url = ../OTExtension.git
-	branch = feature-cmake
