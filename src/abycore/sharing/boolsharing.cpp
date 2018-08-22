@@ -17,8 +17,11 @@
  */
 #include "boolsharing.h"
 #include "../aby/abysetup.h"
+#if _GNUC_ >= 8
 #include <filesystem>
-
+#else
+#include <experimental/filesystem>
+#endif
 
 void BoolSharing::Init() {
 
@@ -1604,18 +1607,31 @@ void BoolSharing::Reset() {
 
 	/**Checking the role and and deciding upon the file to be deleted if the precomputation values are
 	  completely used up in a Precomputation READ mode.*/
+#if _GNUC_ >= 8
 	std::filesystem::path precomputation_file;
+#else
+	std::experimental::filesystem::path precomputation_file;
+#endif
 	if(m_eRole == SERVER) {
 		precomputation_file = "pre_comp_server.dump";
 	} else {
 		precomputation_file = "pre_comp_client.dump";
 	}
+#if _GNUC_ >= 8
 	if (std::filesystem::exists(precomputation_file)
 		&& (m_nFilePos >= std::filesystem::file_size(precomputation_file))
 		&& (GetPreCompPhaseValue() == ePreCompRead)) {
 		std::filesystem::remove(precomputation_file);
 		m_nFilePos = -1;	// FIXME: m_nFilePos is unsigned ...
 	}
+#else
+    if (std::experimental::filesystem::exists(precomputation_file)
+        && (m_nFilePos >= std::experimental::filesystem::file_size(precomputation_file))
+        && (GetPreCompPhaseValue() == ePreCompRead)) {
+        std::experimental::filesystem::remove(precomputation_file);
+        m_nFilePos = -1;	// FIXME: m_nFilePos is unsigned ...
+    }
+#endif
 
 }
 
@@ -1626,7 +1642,11 @@ void BoolSharing::PreComputationPhase() {
 	ePreCompPhase phase_value = GetPreCompPhaseValue();
 
 	/**Decision of the precomputation file based on the role of executor.*/
+#if _GNUC_ >= 8
 	std::filesystem::path filename;
+#else
+    std::experimental::filesystem::path filename;
+#endif
 	if(m_eRole == SERVER) {
 		filename = "pre_comp_server.dump";
 	} else {
@@ -1638,7 +1658,11 @@ void BoolSharing::PreComputationPhase() {
 		return;
 	}
 	/**Check if the execution is non-Read mode or if the file to be used in READ mode doesn't exist*/
+#if _GNUC_ >= 8
 	else if((phase_value != ePreCompRead)||(!std::filesystem::exists(filename))) {
+#else
+	else if((phase_value != ePreCompRead)||(!std::experimental::filesystem::exists(filename))) {
+#endif
 		/**Compute the MTs normally*/
 		ComputeMTs();
 		/**Check if the mode of precomputation is store. If so store it to respective file.*/
@@ -1668,7 +1692,11 @@ void BoolSharing::StoreMTsToFile(const char *filename) {
 		Condition to check if the file already exists. If so then, the mode of write would
 		be file append.
 	*/
+#if _GNUC_ >= 8
 	if(std::filesystem::exists(filename)) {
+#else
+    if(std::experimental::filesystem::exists(filename)) {
+#endif
 		fp = fopen(filename, "a+b");
 	}
 	else {
@@ -1696,7 +1724,11 @@ void BoolSharing::ReadMTsFromFile(const char *filename) {
 
 	FILE *fp;
 	/**Calculate the file size*/
+#if __GNUC_ >= 8
 	uint64_t file_size = std::filesystem::file_size(filename);
+#else
+	uint64_t file_size = std::experimental::filesystem::file_size(filename);
+#endif
 
 	/**Variable for the storing the NUMANDSizes value from the file.*/
 	uint32_t num_and_sizes;
@@ -1766,7 +1798,11 @@ void BoolSharing::ReadMTsFromFile(const char *filename) {
 BOOL BoolSharing::isCircuitSizeLessThanOrEqualWithValueFromFile(char *filename, uint32_t in_circ_size) {
 
 	/**Check if the file already exists and if the existing is empty. If so, return false.*/
-	if(!std::filesystem::exists(filename)||std::filesystem::is_empty(filename)) {
+#if __GNUC_ >= 8
+	if(!std::experimental::filesystem::exists(filename)||std::filesystem::is_empty(filename)) {
+#else
+    if(!std::experimental::filesystem::exists(filename)||std::experimental::filesystem::is_empty(filename)) {
+#endif
 		/**Returning false and reverting the precomputation mode to default.*/
 		return FALSE;
 	}

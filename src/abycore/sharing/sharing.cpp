@@ -21,7 +21,11 @@
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <cassert>
 #include <cstring>
+#if _GNUC_ >= 8
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 #include <iostream>
 #include <iomanip>
 
@@ -65,13 +69,17 @@ ePreCompPhase Sharing::GetPreCompPhaseValue() {
 }
 void Sharing::PreCompFileDelete() {
 	uint64_t truncation_size;
+#if __GNUC_ >= 8
 	std::filesystem::path filename;
+#else
+	std::experimental::filesystem::path filename;
+#endif
 	if(m_eRole == SERVER) {
 		filename = "pre_comp_server.dump";
 	} else {
 		filename = "pre_comp_client.dump";
 	}
-
+#if __GNUC_ >= 8
 	if((std::filesystem::exists(filename))&&(GetPreCompPhaseValue() == ePreCompRead)) {
 
 		if(m_nFilePos >= std::filesystem::file_size(filename)) {
@@ -86,6 +94,22 @@ void Sharing::PreCompFileDelete() {
 			}
 		}
 	}
+#else
+	if((std::experimental::filesystem::exists(filename))&&(GetPreCompPhaseValue() == ePreCompRead)) {
+
+		if(m_nFilePos >= std::experimental::filesystem::file_size(filename)) {
+			std::experimental::filesystem::remove(filename);
+		}
+		else {
+			truncation_size = std::experimental::filesystem::file_size(filename) - m_nFilePos;
+			std::error_code ec;
+			std::experimental::filesystem::resize_file(filename, truncation_size, ec);
+			if(ec) {
+				std::cout << "Error occured in truncate:" << ec.message() << std::endl;
+			}
+		}
+	}
+#endif
 }
 
 
