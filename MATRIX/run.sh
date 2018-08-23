@@ -22,4 +22,4 @@ idx=${1}
 addr=${parties[0]}
 
 cd ../build/bin
-echo "./innerproduct_test -r ${idx} -a ${addr} ${values}"
+./innerproduct_test -r ${idx} -a ${addr} ${values}
