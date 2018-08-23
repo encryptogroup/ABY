@@ -75,8 +75,7 @@ public:
         // if this is the last task and last iteration write the data to file
         if (taskIdx == m_tasksNames.size() - 1 && currentIterationNumber == m_cpuEndTimes[0].size() - 1)
         {
-            string logFileName = getcwdStr() + "/" + m_arguments + ".log";
-            cout << "Log file name : " << logFileName << endl;
+            string logFileName = getcwdStr() + "/../../MATRIX/logs/" + m_arguments + ".log";
             ofstream logFile(logFileName);
             if (logFile.is_open())
             {
