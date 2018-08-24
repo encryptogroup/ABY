@@ -34,6 +34,11 @@ void ABYCircuit::Cleanup() {
 ABYCircuit::ABYCircuit(uint32_t maxgates) {
 	m_nMaxGates = maxgates;
 	m_pGates = (GATE*) calloc(maxgates, sizeof(GATE));
+	if (!m_pGates){
+		//calloc call failed
+		std::cerr << "Failed to allocate memory for "<<maxgates<<" gates. Reduce maxgates and retry." << std::endl;
+		exit(-1);
+	}
 	m_nNextFreeGate = 0;
 	m_nMaxVectorSize = 1;
 	m_nMaxDepth = 0;
