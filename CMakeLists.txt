@@ -54,6 +54,7 @@ endif()
 
 find_package(GMP REQUIRED)
 find_package(Threads REQUIRED)
+find_package(Boost REQUIRED)
 
 add_subdirectory(src/abycore)
 

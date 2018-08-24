@@ -34,6 +34,8 @@ namespace filesystem = std::experimental::filesystem;
 
 #include <iostream>
 #include <iomanip>
+#include <iterator>
+#include <boost/algorithm/hex.hpp>
 
 Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) {
 	m_eContext = context;
@@ -105,19 +107,18 @@ void Sharing::PreCompFileDelete() {
  */
 
 UGATE_T* Sharing::ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t* bitlen) {
-	uint32_t nvals, ugate_bits, val_offset, valbytelen;
+	uint32_t nvals, val_offset, valbytelen;
 	UGATE_T* value;
 	GATE *parentgate, *gate;
 
 	gate = m_pGates + gateid;
 	nvals = gate->nvals;
-	ugate_bits = sizeof(UGATE_T) * 8;
 
 	//in case the values are in Boolean form, reformat them.
 	switch (circ_type) {
 		case C_BOOLEAN:
 			*bitlen = gate->ingates.ningates;
-			val_offset = ceil_divide((*bitlen), ugate_bits);
+			val_offset = ceil_divide((*bitlen), GATE_T_BITS);
 			value = (UGATE_T*) calloc(val_offset * nvals, sizeof(UGATE_T));
 
 			for (uint32_t i = 0; i < *bitlen; i++) {
@@ -126,7 +127,7 @@ UGATE_T* Sharing::ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t
 				assert(parentgate->instantiated);
 
 				for (uint32_t j = 0; j < nvals; j++) {
-					value[i / ugate_bits + j * val_offset] += (((parentgate->gs.val[j/ugate_bits] >> (j % ugate_bits)) & 0x01) << (i % ugate_bits));
+					value[i / GATE_T_BITS + j * val_offset] += (((parentgate->gs.val[j/GATE_T_BITS] >> (j % GATE_T_BITS)) & 0x01) << (i % GATE_T_BITS));
 				}
 			}
 			break;
@@ -174,9 +175,6 @@ void Sharing::EvaluateAssertGate(uint32_t gateid, e_circuit circ_type) {
 	free(m_pGates[gateid].gs.assertval);
 }
 
-
-
-
 /*
  * Print the plaintext values of gates for all sharings
  */
@@ -187,33 +185,35 @@ void Sharing::EvaluatePrintValGate(uint32_t gateid, e_circuit circ_type) {
 
 	nvals = m_pGates[gateid].nvals;
 
+	std::cout << m_pGates[gateid].gs.infostr << ": ";
+
 	//print the resulting value depending on its bitlength and nvals
 	if(bitlen <= 64) {//for bitlen <= 64 print numbers
 		if(nvals == 1) { //for non-SIMD wires a different format is used
-			std::cout << m_pGates[gateid].gs.infostr << ": " << value[0] << std::endl;
+			std::cout << value[0] << std::endl;
 		} else {
-			std::cout << m_pGates[gateid].gs.infostr << ": ";
 			for(uint32_t i = 0; i < nvals; i++) {
-				std::cout << "[" << i << "]: " << value[i] << "; ";//std::endl;
+				std::cout << "[" << i << "]: " << value[i] << "; ";
 			}
 			std::cout << std::endl;
 		}
 	} else {// for bitlen > 64 print hex values
 		if(nvals == 1) { //for non-SIMD wires a different format is used
-			std::cout << m_pGates[gateid].gs.infostr << ": ";
-			for(uint32_t i = 0; i < ceil_divide(bitlen, 8); i++) {
-				std::cout << std::setw(2) << std::setfill('0') << (std::hex) << (uint32_t) ((uint8_t*) value)[i] << (std::dec);
-			}
+			auto from = reinterpret_cast<uint8_t*>(value);
+			auto to = from + ceil_divide(bitlen, 8);
+			boost::algorithm::hex(from, to, std::ostream_iterator<char>(std::cout));
 			std::cout << std::endl;
 		} else {
-			std::cout << m_pGates[gateid].gs.infostr << ": " << std::endl;
-			for(uint32_t i = 0; i < nvals; i++) {
+			// ReadOutputValue reserves memory in full UGATE_T chunks per value...
+			size_t bytes_per_value = ceil_divide(bitlen, GATE_T_BITS) * sizeof(UGATE_T);
+			auto from = reinterpret_cast<uint8_t*>(value);
+			auto bytelen = ceil_divide(bitlen, 8);
+			for(uint32_t i = 0; i < nvals; i++, from += bytes_per_value) {
 				std::cout << "[" << i << "]: ";
-				for(uint32_t j = 0; j < ceil_divide(bitlen, 8); j++) {
-					std::cout << (std::hex) << (uint32_t) ((uint8_t*) value)[i * ceil_divide(bitlen, 8) + j] << (std::dec);
-				}
-				std::cout << std::endl;
+				boost::algorithm::hex(from, from + bytelen, std::ostream_iterator<char>(std::cout));
+				std::cout << "\n";
 			}
+			std::cout.flush();
 		}
 	}
 
