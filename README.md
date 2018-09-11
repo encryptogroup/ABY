@@ -40,7 +40,8 @@ This code is provided as a experimental implementation for testing purposes and 
 
 * A **Linux distribution** of your choice (ABY was developed and tested with recent versions of [Debian](https://www.debian.org/) and [Ubuntu](http://www.ubuntu.com/)).
 * **Required packages for ABY:**
-  * [`g++`](https://packages.debian.org/testing/g++)
+  * [`g++`](https://packages.debian.org/testing/g++) (version >=8)
+    or another compiler and standard library implementing C++17 including the filesystem library
   * [`make`](https://packages.debian.org/testing/make)
   * [`cmake`](https://packages.debian.org/testing/cmake)
   * [`libgmp-dev`](https://packages.debian.org/testing/libgmp-dev)
