@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
 
 	crypto* crypt = new crypto(secparam, (uint8_t*) const_seed);
 
-	test_lowmc_circuit(role, (char*) address.c_str(), port, nvals, nthreads, mt_alg, S_BOOL, statesize, keysize, sboxes, rounds, maxnumgates, crypt);
+	test_lowmc_circuit(role, address, port, nvals, nthreads, mt_alg, S_BOOL, statesize, keysize, sboxes, rounds, maxnumgates, crypt);
 
 	return 0;
 }

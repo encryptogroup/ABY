@@ -135,7 +135,7 @@ static uint32_t* pos_even;
 static uint32_t* pos_odd;
 
 void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t* out, crypto* crypt);
-int32_t test_aes_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose = false, bool use_vec_ands=false);
+int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose = false, bool use_vec_ands=false);
 share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ, bool use_vec_ands=false);
 std::vector<uint32_t> AddAESRoundKey(std::vector<uint32_t>& val, std::vector<uint32_t> key, uint32_t keyaddr, BooleanCircuit* circ);
 std::vector<uint32_t> Mul2(std::vector<uint32_t>& element, BooleanCircuit* circ);

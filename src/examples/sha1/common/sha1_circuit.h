@@ -47,7 +47,7 @@ const uint32_t ABY_SHA1_K1 = 0x6ED9EBA1;
 const uint32_t ABY_SHA1_K2 = 0x8F1BBCDC;
 const uint32_t ABY_SHA1_K3 = 0xCA62C1D6;
 
-int32_t test_sha1_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing);
+int32_t test_sha1_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing);
 
 share* BuildSHA1Circuit(share* s_msgS, share* s_msgC, uint8_t* msgS, uint8_t* msgC, uint8_t* int_out, uint32_t nvals, BooleanCircuit* circ);
 share* process_block(share* s_msg, uint8_t* msg, uint8_t* tmp_int_out, share** s_h, uint32_t* h, uint32_t nvals, BooleanCircuit* circ);

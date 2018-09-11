@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	test_min_eucliden_dist_circuit(role, (char*) address.c_str(), port,
+	test_min_eucliden_dist_circuit(role, address, port,
                 seclvl, pointbitlen, thresbitlen, 2, mt_alg, S_ARITH, S_YAO, n, only_yao);
 
 	return 0;

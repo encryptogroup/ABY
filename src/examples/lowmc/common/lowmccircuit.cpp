@@ -20,7 +20,7 @@
 #include <ENCRYPTO_utils/crypto/crypto.h>
 
 //sboxes (m), key-length (k), statesize (n), data (d), rounds (r)
-int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t nvals, uint32_t nthreads,
+int32_t test_lowmc_circuit(e_role role, const std::string& address, uint16_t port, uint32_t nvals, uint32_t nthreads,
 		e_mt_gen_alg mt_alg, e_sharing sharing, uint32_t statesize, uint32_t keysize,
 		uint32_t sboxes, uint32_t rounds, uint32_t maxnumgates, crypto* crypt) {
 
@@ -28,7 +28,7 @@ int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t n
 	return test_lowmc_circuit(role, address, port, nvals, nthreads, mt_alg, sharing, &param, maxnumgates, crypt);
 }
 
-int32_t test_lowmc_circuit(e_role role, char* address, uint16_t port, uint32_t nvals, uint32_t nthreads,
+int32_t test_lowmc_circuit(e_role role, const std::string& address, uint16_t port, uint32_t nvals, uint32_t nthreads,
 		e_mt_gen_alg mt_alg, e_sharing sharing, LowMCParams* param, uint32_t maxgates, crypto* crypt) {
 
 	uint32_t bitlen = 32, ctr = 0, exp_key_bitlen = param->blocksize * (param->nrounds+1), zero_gate;

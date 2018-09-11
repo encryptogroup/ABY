@@ -20,7 +20,7 @@
 #include "../../../abycore/sharing/sharing.h"
 #include <ENCRYPTO_utils/cbitvector.h>
 
-int32_t test_aes_circuit(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
+int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
 		e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose, bool use_vec_ands) {
 	uint32_t bitlen = 32;
 	uint32_t aes_key_bits;

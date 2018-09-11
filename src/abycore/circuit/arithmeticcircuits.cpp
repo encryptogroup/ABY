@@ -250,7 +250,7 @@ uint32_t ArithmeticCircuit::PutINVGate(uint32_t parentid) {
 uint32_t ArithmeticCircuit::PutCONVGate(std::vector<uint32_t> parentids) {
 	uint32_t gateid = m_cCircuit->PutCONVGate(parentids, 2, S_ARITH, m_nShareBitLen);
 	UpdateInteractiveQueue(gateid);
-	m_nCONVGates += m_pGates[gateid].nvals;
+	m_nCONVGates += m_pGates[gateid].nvals * parentids.size();
 	return gateid;
 }
 

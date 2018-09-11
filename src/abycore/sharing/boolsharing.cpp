@@ -747,8 +747,8 @@ inline void BoolSharing::EvaluateINVGate(uint32_t gateid) {
 		gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
 	}
 #ifdef DEBUGBOOL
-	std::cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
-	" and input: " << m_pGates[parentid].gs.val[0]<< (dec) << std::endl;
+	std::cout << "Evaluated INV gate " << gateid << " with result: " << (std::hex) << gate->gs.val[0] <<
+	" and input: " << m_pGates[parentid].gs.val[0]<< (std::dec) << std::endl;
 #endif
 	UsedGate(parentid);
 }
@@ -787,7 +787,7 @@ inline void BoolSharing::ReconstructValue(uint32_t gateid) {
 		len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 #ifdef DEBUGBOOL
 		std::cout << "m_vOutputShareSndBuf.size = " << m_vOutputShareSndBuf.GetSize() << ", ctr = " <<m_nOutputShareSndSize << ", len = " << len << ", gate->parent = " << parentid
-		<< " and val = " << (hex) << m_pGates[parentid].gs.val[i] << (dec) << std::endl;
+		<< " and val = " << (std::hex) << m_pGates[parentid].gs.val[i] << (std::dec) << std::endl;
 #endif
 		m_vOutputShareSndBuf.Set<UGATE_T>(m_pGates[parentid].gs.val[i], m_nOutputShareSndSize, len);	//gate->gs.val[i], len);
 		m_nOutputShareSndSize += len;
@@ -844,7 +844,7 @@ inline void BoolSharing::SelectiveOpenVec(uint32_t gateid) {
 		std::cout << "copying from " << m_vMTIdx[pos]*m_vANDs[pos].bitlen << " with len = " << ncopiedvals << std::endl;
 
 		std::cout << "choice-gate " << idchoice << " = " << m_pGates[idchoice].gs.val[0] << " , and vec-gate " << idvector <<
-		" = " <<(hex) << m_pGates[idvector].gs.val[i] << (dec) << std::endl;
+		" = " <<(std::hex) << m_pGates[idvector].gs.val[i] << (std::dec) << std::endl;
 #endif
 	}
 	//m_vMTIdx[pos]++;
@@ -1069,7 +1069,7 @@ void BoolSharing::EvaluateANDGate() {
 
 				std::cout << "setting AND gate " << m_vANDGates[k][i] << " with val-size = " << gate->nvals <<
 				", sharinbits = " << gate->sharebitlen << ", and bitstocopy = " << bitstocopy <<
-				" to value: " << (hex) << m_vResA[k].Get<UGATE_T>(idx, len) << (dec) << std::endl;
+				" to value: " << (std::hex) << m_vResA[k].Get<UGATE_T>(idx, len) << (std::dec) << std::endl;
 #endif
 				gate->gs.val[j] = m_vResA[k].Get<UGATE_T>(idx, len);
 				/*if(k > 0) {
@@ -1122,7 +1122,7 @@ void BoolSharing::EvaluateOPLUTGates() {
 				tableid = m_vOP_LUT_RecSelOpeningBuf[op_lut_id]->Get<uint64_t>(gatectr, nparents);
 				table_out = m_vOP_LUT_data[op_lut_id]->table_mask->Get<uint64_t>(maskbit_ctr + tableid * outbits, outbits);
 #ifdef DEBUGBOOL
-				std::cout << "table output = " << (hex) << table_out << " for tableid = " << tableid << (dec) << " and ctr+n = " << m_vOP_LUT_data[op_lut_id]->mask_ctr+n << std::endl;
+				std::cout << "table output = " << (std::hex) << table_out << " for tableid = " << tableid << (std::dec) << " and ctr+n = " << m_vOP_LUT_data[op_lut_id]->mask_ctr+n << std::endl;
 #endif
 				for(uint32_t o = 0; o < outbits; o++) {
 					gate->gs.val[(o*nvals+n)/gatevalbitlen] |= (((table_out>>o) & 0x01L)<<((o*nvals+n)%gatevalbitlen));
@@ -1172,8 +1172,8 @@ void BoolSharing::AssignOutputShares() {
 			len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 			gate->gs.val[j] = m_pGates[parentid].gs.val[j] ^ m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len);
 #ifdef DEBUGBOOL
-			std::cout << "Outshare: " << (hex) << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " ^ " <<
-					m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << (dec) << std::endl;
+			std::cout << "Outshare: " << (std::hex) << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " ^ " <<
+					m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << (std::dec) << std::endl;
 #endif
 			rcvshareidx += len;
 		}
@@ -1307,11 +1307,11 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 		clock_gettime(CLOCK_MONOTONIC, &tend);
 		m_nCombTime += getMillies(tstart, tend);
 #endif
-		/*std::cout << "Res value = " << (hex);
+		/*std::cout << "Res value = " << (std::hex);
 		for(uint64_t i = 0; i < ceil_divide(vsize, GATE_T_BITS); i++) {
 			std::cout << gate->gs.val[i] << " ";
 		}
-		std::cout << (dec) << std::endl;*/
+		std::cout << (std::dec) << std::endl;*/
 		/*for (uint32_t k = 0, bitstocopy = vsize; k < ceil_divide(vsize, GATE_T_BITS); k++, bitstocopy -= GATE_T_BITS) {
 			uint32_t size = std::min(bitstocopy, ((uint32_t) GATE_T_BITS));
 			gate->gs.val[k] = 0;

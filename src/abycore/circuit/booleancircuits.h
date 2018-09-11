@@ -19,13 +19,14 @@
 #define __BOOLEANCIRCUITS_H_
 
 #include "share.h"
+#include "abycircuit.h"
+#include "circuit.h"
 #include "../ABY_utils/convtypes.h"
 #include <ENCRYPTO_utils/cbitvector.h>
 #include <ENCRYPTO_utils/parse_options.h>
 #include <ENCRYPTO_utils/typedefs.h>
-#include "abycircuit.h"
-#include <assert.h>
-#include "circuit.h"
+#include <cassert>
+#include <cstring>
 #include <map>
 #include <algorithm>
 
@@ -61,30 +62,113 @@ public:
 	std::vector<uint32_t> PutORGate(std::vector<uint32_t> a, std::vector<uint32_t> b);
 
 	uint32_t PutINGate(e_role src);
-	template<class T> uint32_t PutINGate(T val);
+	template<class T> uint32_t PutINGate(T val) {
+
+		uint32_t gateid = PutINGate(m_eMyRole);
+		//assign value
+		GATE* gate = m_pGates + gateid;
+		gate->gs.ishare.inval = (UGATE_T*) calloc(1 * m_nShareBitLen, sizeof(UGATE_T));
+
+		*gate->gs.ishare.inval = (UGATE_T) val;
+		gate->instantiated = true;
+
+		return gateid;
+	}
+
+
 	uint32_t PutINGate(uint64_t val, e_role role);
-	template<class T> uint32_t PutINGate(T* val, e_role role);
+	template<class T> uint32_t PutINGate(T* val, e_role role) {
+		uint32_t gateid = PutINGate(role);
+		if (role == m_eMyRole) {
+			//assign value
+			GATE* gate = m_pGates + gateid;
+			gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+			memcpy(gate->gs.ishare.inval, val, ceil_divide(1 * m_nShareBitLen, 8));
+
+			gate->instantiated = true;
+		}
+		return gateid;
+	}
 
 	uint32_t PutSIMDINGate(uint32_t nvals, e_role src);
-	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val);
+	template<class T> uint32_t PutSIMDINGate(uint32_t ninvals, T val) {
+
+		uint32_t gateid = PutSIMDINGate(ninvals, m_eMyRole);
+		//assign value
+		GATE* gate = m_pGates + gateid;
+		gate->gs.ishare.inval = (UGATE_T*) calloc(ninvals * m_nShareBitLen, sizeof(UGATE_T));
+
+		*gate->gs.ishare.inval = (UGATE_T) val;
+		gate->instantiated = true;
+
+		return gateid;
+	}
 	uint32_t PutSIMDINGate(uint32_t nvals, uint64_t val, e_role role);
-	template<class T> uint32_t PutSIMDINGate(uint32_t ninvals, T* val, e_role role);
+	template<class T> uint32_t PutSIMDINGate(uint32_t ninvals, T* val, e_role role) {
+		uint32_t gateid = PutSIMDINGate(ninvals, role);
+		if (role == m_eMyRole) {
+			//assign value
+			GATE* gate = m_pGates + gateid;
+			gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(ninvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+			memcpy(gate->gs.ishare.inval, val, ceil_divide(ninvals * m_nShareBitLen, 8));
+			gate->instantiated = true;
+		}
+		return gateid;
+	}
 
 	// SharedINGates
 	uint32_t PutSharedINGate();
-	template<class T> uint32_t PutSharedINGate(T val);
+	template<class T> uint32_t PutSharedINGate(T val) {
+
+		uint32_t gateid = PutSharedINGate();
+		//assign value
+		GATE* gate = m_pGates + gateid;
+		gate->gs.val = (UGATE_T*) calloc(1 * m_nShareBitLen, sizeof(UGATE_T));
+
+		*gate->gs.val = (UGATE_T) val;
+		gate->instantiated = true;
+
+		return gateid;
+	}
 	uint32_t PutSharedINGate(uint64_t val);
-	template<class T> uint32_t PutSharedINGate(T* val);
+	template<class T> uint32_t PutSharedINGate(T* val) {
+		uint32_t gateid = PutSharedINGate();
+
+			//assign value
+			GATE* gate = m_pGates + gateid;
+			gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+			memcpy(gate->gs.val, val, ceil_divide(1 * m_nShareBitLen, 8));
+
+			gate->instantiated = true;
+
+		return gateid;
+	}
 
 	// SharedSIMDINGates
 	uint32_t PutSharedSIMDINGate(uint32_t nvals);
-	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val);
+	template<class T> uint32_t PutSharedSIMDINGate(uint32_t ninvals, T val) {
+
+		uint32_t gateid = PutSharedSIMDINGate(ninvals);
+		//assign value
+		GATE* gate = m_pGates + gateid;
+		gate->gs.val = (UGATE_T*) calloc(ninvals * m_nShareBitLen, sizeof(UGATE_T));
+
+		*gate->gs.val = (UGATE_T) val;
+		gate->instantiated = true;
+
+		return gateid;
+	}
 	uint32_t PutSharedSIMDINGate(uint32_t nvals, uint64_t val);
-	template<class T> uint32_t PutSharedSIMDINGate(uint32_t ninvals, T* val);
+	template<class T> uint32_t PutSharedSIMDINGate(uint32_t ninvals, T* val) {
+		uint32_t gateid = PutSharedSIMDINGate(ninvals);
+		//assign value
+		GATE* gate = m_pGates + gateid;
+		gate->gs.val = (UGATE_T*) calloc(ceil_divide(ninvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
+		memcpy(gate->gs.val, val, ceil_divide(ninvals * m_nShareBitLen, 8));
+		gate->instantiated = true;
+		return gateid;
+	}
 
-
-	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role);
-	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen);
 
 	share* PutDummyINGate(uint32_t bitlen);
 	share* PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen);
@@ -142,9 +226,6 @@ public:
 	share* PutSharedSIMDINGate(uint32_t nvals, uint8_t val, uint32_t bitlen) {
 		return InternalPutSharedINGate<uint8_t>(nvals, val, bitlen);
 	};
-
-	template<class T> share* InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role);
-	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T* val, uint32_t bitlen);
 
 	/* Unfortunately, a template function cannot be used due to virtual. Call Internal PutINGate*/
 	share* PutINGate(uint64_t* val, uint32_t bitlen, e_role role) {
@@ -550,6 +631,83 @@ public:
         share * PutFPGate(share * in_a, share * in_b, op_t op, uint32_t nvals = 1, fp_op_setting s = no_status);
 
 private:
+	/**
+	 * When inputting shares with bitlen>1 and nvals convert to regular SIMD in gates
+	 */
+	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role) {
+		share* shr = new boolshare(bitlen, this);
+		assert(nvals <= sizeof(T) * 8);
+		T mask = 0;
+
+		memset(&mask, 0xFF, ceil_divide(nvals, 8));
+		mask = mask >> (PadToMultiple(nvals, 8)-nvals);
+
+		for (uint32_t i = 0; i < bitlen; i++) {
+			shr->set_wire_id(i, PutSIMDINGate(nvals, (val >> i) & mask, role));
+		}
+		return shr;
+	}
+
+	/**
+	 * When inputting shares with bitlen>1 and nvals convert to regular SIMD in gates
+	 */
+	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen) {
+		share* shr = new boolshare(bitlen, this);
+		assert(nvals <= sizeof(T) * 8);
+		T mask = 0;
+
+		memset(&mask, 0xFF, ceil_divide(nvals, 8));
+		mask = mask >> (PadToMultiple(nvals, 8)-nvals);
+
+		for (uint32_t i = 0; i < bitlen; i++) {
+			shr->set_wire_id(i, PutSharedSIMDINGate(nvals, (val >> i) & mask));
+		}
+		return shr;
+	}
+
+	template<class T> share* InternalPutINGate(uint32_t nvals, T* val, uint32_t bitlen, e_role role) {
+		share* shr = new boolshare(bitlen, this);
+		uint32_t typebitlen = sizeof(T) * 8;
+		uint32_t typebyteiters = ceil_divide(bitlen, typebitlen);
+		uint64_t tmpval_bytes = std::max(typebyteiters * nvals, (uint32_t) sizeof(T));// * sizeof(T);
+		//uint32_t valstartpos = ceil_divide(nvals, typebitlen);
+		T* tmpval = (T*) malloc(tmpval_bytes);
+
+		for (uint32_t i = 0; i < bitlen; i++) {
+			memset(tmpval, 0, tmpval_bytes);
+			for (uint32_t j = 0; j < nvals; j++) {
+				//tmpval[j / typebitlen] += ((val[j] >> (i % typebitlen) & 0x01) << j);
+				tmpval[j /typebitlen] += (((val[j * typebyteiters + i/typebitlen] >> (i % typebitlen)) & 0x01) << (j%typebitlen));
+			}
+			shr->set_wire_id(i, PutSIMDINGate(nvals, tmpval, role));
+		}
+		free(tmpval);
+		return shr;
+	}
+
+	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T* val, uint32_t bitlen) {
+		share* shr = new boolshare(bitlen, this);
+		uint32_t typebitlen = sizeof(T) * 8;
+		uint32_t typebyteiters = ceil_divide(bitlen, typebitlen);
+		uint64_t tmpval_bytes = std::max(typebyteiters * nvals, (uint32_t) sizeof(T));;// * sizeof(T);
+		//uint32_t valstartpos = ceil_divide(nvals, typebitlen);
+		T* tmpval = (T*) malloc(tmpval_bytes);
+
+		for (uint32_t i = 0; i < bitlen; i++) {
+			memset(tmpval, 0, tmpval_bytes);
+			for (uint32_t j = 0; j < nvals; j++) {
+				//tmpval[j / typebitlen] += ((val[j] >> (i % typebitlen) & 0x01) << j);
+				tmpval[j /typebitlen] += (((val[j * typebyteiters + i/typebitlen] >> (i % typebitlen)) & 0x01) << (j%typebitlen));
+			}
+			shr->set_wire_id(i, PutSharedSIMDINGate(nvals, tmpval));
+		}
+		free(tmpval);
+		return shr;
+	}
+
+
+
+
 	void UpdateInteractiveQueue(uint32_t);
 	void UpdateLocalQueue(uint32_t gateid);
 
