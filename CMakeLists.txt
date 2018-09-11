@@ -28,10 +28,13 @@ find_package(ENCRYPTO_utils QUIET)
 if(ENCRYPTO_utils_FOUND)
     message(STATUS "Found ENCRYPTO_utils")
 elseif(NOT ENCRYPTO_utils_FOUND AND NOT TARGET ENCRYPTO_utils::encrypto_utils)
-	message("ENCRYPTO_utils was not found: add ENCRYPTO_utils subdirectory")
-    find_package(Git REQUIRED)
-    execute_process(COMMAND git submodule update --init extern/ENCRYPTO_utils
-                    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    message("ENCRYPTO_utils was not found: add ENCRYPTO_utils subdirectory")
+    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/ENCRYPTO_utils/.git")
+        find_package(Git REQUIRED)
+        message("initialize Git submodule: extern/ENCRYPTO_utils")
+        execute_process(COMMAND git submodule update --init extern/ENCRYPTO_utils
+                        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    endif()
     add_subdirectory(extern/ENCRYPTO_utils)
 endif()
 
@@ -40,9 +43,12 @@ if(OTExtension_FOUND)
     message(STATUS "Found OTExtension")
 elseif (NOT OTExtension_FOUND AND NOT TARGET OTExtension::otextension)
     message("OTExtension was not found: add OTExtension subdirectory")
-    find_package(Git REQUIRED)
-    execute_process(COMMAND git submodule update --init extern/OTExtension
-                    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+    if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/OTExtension/.git")
+        find_package(Git REQUIRED)
+        message("initialize Git submodule: extern/OTExtension")
+        execute_process(COMMAND git submodule update --init extern/OTExtension
+                        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
+    endif()
     add_subdirectory(extern/OTExtension)
 endif()
 
