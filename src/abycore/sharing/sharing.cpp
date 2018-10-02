@@ -21,7 +21,17 @@
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <cassert>
 #include <cstring>
+
+#if __has_include(<filesystem>)
 #include <filesystem>
+namespace filesystem = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem>
+namespace filesystem = std::experimental::filesystem;
+#else
+#error "C++17 filesystem library not found"
+#endif
+
 #include <iostream>
 #include <iomanip>
 
@@ -65,22 +75,22 @@ ePreCompPhase Sharing::GetPreCompPhaseValue() {
 }
 void Sharing::PreCompFileDelete() {
 	uint64_t truncation_size;
-	std::filesystem::path filename;
+	filesystem::path filename;
 	if(m_eRole == SERVER) {
 		filename = "pre_comp_server.dump";
 	} else {
 		filename = "pre_comp_client.dump";
 	}
 
-	if((std::filesystem::exists(filename))&&(GetPreCompPhaseValue() == ePreCompRead)) {
+	if((filesystem::exists(filename))&&(GetPreCompPhaseValue() == ePreCompRead)) {
 
-		if(m_nFilePos >= std::filesystem::file_size(filename)) {
-			std::filesystem::remove(filename);
+		if(m_nFilePos >= filesystem::file_size(filename)) {
+			filesystem::remove(filename);
 		}
 		else {
-			truncation_size = std::filesystem::file_size(filename) - m_nFilePos;
+			truncation_size = filesystem::file_size(filename) - m_nFilePos;
 			std::error_code ec;
-			std::filesystem::resize_file(filename, truncation_size, ec);
+			filesystem::resize_file(filename, truncation_size, ec);
 			if(ec) {
 				std::cout << "Error occured in truncate:" << ec.message() << std::endl;
 			}
