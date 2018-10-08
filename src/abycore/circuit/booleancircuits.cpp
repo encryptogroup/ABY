@@ -2303,6 +2303,10 @@ std::vector<uint32_t> BooleanCircuit::PutGateFromFile(const std::string filename
 					wires[tokens[2]] = PutXORGate(wires[tokens[0]], wires[tokens[1]]);
 					break;
 
+				case 'V': // OR Gate
+					wires[tokens[2]] = PutORGate(wires[tokens[0]], wires[tokens[1]]);
+					break;
+
 				case 'M': // MUX Gate
 					wires[tokens[3]] = PutVecANDMUXGate(wires[tokens[1]], wires[tokens[0]], wires[tokens[2]]);
 					break;
