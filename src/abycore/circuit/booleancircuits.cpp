@@ -2308,7 +2308,7 @@ std::vector<uint32_t> BooleanCircuit::PutGateFromFile(const std::string filename
 					break;
 
 				case 'I': // INV Gate
-					wires[tokens[1]] = PutINVGate(tokens[0]);
+					wires[tokens[1]] = PutINVGate(wires[tokens[0]]);
 					break;
 
 				case 'O': // List of output wires
