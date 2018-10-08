@@ -2250,8 +2250,9 @@ std::vector<uint32_t> BooleanCircuit::PutFPGate(const std::string func, std::vec
 
 std::vector<uint32_t> BooleanCircuit::PutGateFromFile(const std::string filename, std::vector<uint32_t> inputs, uint32_t nvals){
 	std::string line;
-	std::vector<uint32_t> tokens, outputs;
-	std::map<uint32_t, uint32_t> wires;
+	std::vector<int> tokens;
+	std::vector<uint32_t> outputs;
+	std::map<int, uint32_t> wires;
 
 	std::ifstream myfile;
 
@@ -2346,8 +2347,9 @@ share* BooleanCircuit::PutLUTGateFromFile(const std::string filename, share* inp
 
 std::vector<uint32_t> BooleanCircuit::PutLUTGateFromFile(const std::string filename, std::vector<uint32_t> inputs){
 	std::string line;
-	std::vector<uint32_t> tokens, outputs;
-	std::map<uint32_t, uint32_t> wires;
+	std::vector<int> tokens;
+	std::vector<uint32_t> outputs;
+	std::map<int, uint32_t> wires;
 	std::vector<uint32_t> lut_inputs, lut_outputs, token_outputs;
 
 	uint32_t n_inputs, n_outputs, ttable_vals, ctr;
@@ -2467,7 +2469,7 @@ std::vector<uint32_t> BooleanCircuit::PutLUTGateFromFile(const std::string filen
 
 uint32_t BooleanCircuit::GetInputLengthFromFile(const std::string filename){
 	std::string line;
-	std::vector<uint32_t> tokens;
+	std::vector<int> tokens;
 	std::ifstream myfile;
 
 	//std::cout << "opening " << filename <<  std::endl;
