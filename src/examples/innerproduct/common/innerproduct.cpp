@@ -57,8 +57,8 @@ int32_t test_inner_product_circuit(e_role role, const std::string& address, uint
 
 	uint16_t output, v_sum = 0;
 
-	uint16_t * xvals = (uint16_t*) malloc(num * sizeof(uint16_t));
-	uint16_t * yvals = (uint16_t*) malloc(num * sizeof(uint16_t));
+	std::vector<uint16_t> xvals(num);
+	std::vector<uint16_t> yvals(num);
 
 	uint32_t i;
 	srand(time(NULL));
@@ -84,8 +84,8 @@ int32_t test_inner_product_circuit(e_role role, const std::string& address, uint
 		yvals[i] = y;
 	}
 
-	s_x_vec = circ->PutSIMDINGate(num, xvals, 16, SERVER);
-	s_y_vec = circ->PutSIMDINGate(num, yvals, 16, CLIENT);
+	s_x_vec = circ->PutSIMDINGate(num, xvals.data(), 16, SERVER);
+	s_y_vec = circ->PutSIMDINGate(num, yvals.data(), 16, CLIENT);
 
 	/**
 	 Step 7: Call the build method for building the circuit for the
