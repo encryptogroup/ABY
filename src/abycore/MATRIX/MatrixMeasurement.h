@@ -9,6 +9,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <unistd.h>
 
 
 using namespace std;
@@ -17,26 +18,31 @@ using namespace std::chrono;
 class MatrixMeasurement
 {
 private:
-    string getcwdStr()
+    string getcwdStr() const
     {
-        char* buff;//automatically cleaned when it exits scope
-        return string(getcwd(buff,255));
+        char buff[256];
+        auto res = getcwd(buff, 255);
+        assert(res != NULL);
+        return std::string(buff);
     }
 
-    int getTaskIdx(string name)
+    size_t getTaskIdx(string name) const
     {
         auto it = std::find(m_tasksNames.begin(), m_tasksNames.end(), name);
         auto idx = distance(m_tasksNames.begin(), it);
         return idx;
     }
 
+    size_t numberOfIterations;
+    vector<string> m_tasksNames;
     vector<vector<long>> m_cpuStartTimes;
     vector<vector<long>> m_cpuEndTimes;
     string m_arguments = "";
-    vector<string> m_tasksNames;
 
 public:
-    MatrixMeasurement(size_t argc, char* argv[], vector<string> tasksNames, int numberOfIterations):
+    MatrixMeasurement(size_t argc, char* argv[], vector<string> tasksNames, size_t numberOfIterations):
+            numberOfIterations(numberOfIterations),
+            m_tasksNames(tasksNames),
             m_cpuStartTimes(vector<vector<long>>(tasksNames.size(), vector<long>(numberOfIterations))),
             m_cpuEndTimes(vector<vector<long>>(tasksNames.size(), vector<long>(numberOfIterations)))
     {
@@ -50,53 +56,60 @@ public:
                 m_arguments += s;
         }
 
-        m_tasksNames = tasksNames;
     }
 
-    void startSubTask(string taskName, int currentIterationNumber)
+    auto get_ms_since_epoch() const
     {
-        int taskIdx = getTaskIdx(taskName);
-        auto now = system_clock::now();
-
         //Cast the time point to ms, then get its duration, then get the duration's count.
-        auto ms = time_point_cast<milliseconds>(now).time_since_epoch().count();
-        m_cpuStartTimes[taskIdx][currentIterationNumber] = ms;
+        auto now = system_clock::now();
+        return time_point_cast<milliseconds>(now).time_since_epoch().count();
     }
 
-    void endSubTask(string taskName, int currentIterationNumber)
+    void startSubTask(string taskName, size_t currentIterationNumber)
     {
-        int taskIdx = getTaskIdx(taskName);
-        auto now = system_clock::now();
+        auto taskIdx = getTaskIdx(taskName);
+        m_cpuStartTimes[taskIdx][currentIterationNumber] = get_ms_since_epoch();
+    }
 
-        //Cast the time point to ms, then get its duration, then get the duration's count.
-        auto ms = time_point_cast<milliseconds>(now).time_since_epoch().count();
-        m_cpuEndTimes[taskIdx][currentIterationNumber] = ms;
+    void endSubTask(string taskName, size_t currentIterationNumber)
+    {
+        auto taskIdx = getTaskIdx(taskName);
+        m_cpuEndTimes[taskIdx][currentIterationNumber] = get_ms_since_epoch();
 
         // if this is the last task and last iteration write the data to file
         if (taskIdx == m_tasksNames.size() - 1 && currentIterationNumber == m_cpuEndTimes[0].size() - 1)
         {
-            string logFileName = getcwdStr() + "/../../MATRIX/logs/" + m_arguments + ".log";
-            ofstream logFile(logFileName);
-            if (logFile.is_open())
-            {
-                //write to file
-                int numberOfIterations = m_cpuEndTimes[0].size();
-                for (size_t idx = 0; idx < m_tasksNames.size(); ++idx)
-                {
-                    logFile << m_tasksNames[idx] + ":";
-                    cout << "taskName : " << m_tasksNames[idx] << endl;
-                    for (size_t idx2 = 0; idx2 < numberOfIterations; ++idx2)
-                    {
-                        cout << "value : " << m_cpuEndTimes[idx][idx2] << endl;
-                        logFile << to_string(m_cpuEndTimes[idx][idx2]- m_cpuStartTimes[taskIdx][currentIterationNumber])
-                        + ",";
-                    }
-
-                    logFile << "\n";
-                }
-                logFile.close();
-            }
+            write_log();
         }
+    }
+
+    void write_log() const
+    {
+        string logFileName = getcwdStr() + "/../../MATRIX/logs/" + m_arguments + ".log";
+        ofstream logFile(logFileName);
+        if (!logFile.is_open())
+        {
+            cerr << "MatrixMeasurement: Could not open log file '"
+                 << logFileName
+                 << "'\n";
+            return;
+        }
+        //write to file
+        for (size_t task_idx = 0; task_idx < m_tasksNames.size(); ++task_idx)
+        {
+            logFile << m_tasksNames[task_idx] + ":";
+            cout << "taskName : " << m_tasksNames[task_idx] << endl;
+            for (size_t iteration = 0; iteration < numberOfIterations; ++iteration)
+            {
+                cout << "value : " << m_cpuEndTimes[task_idx][iteration] << endl;
+                logFile << to_string(m_cpuEndTimes[task_idx][iteration]
+                                     - m_cpuStartTimes[task_idx][iteration])
+                        << ",";
+            }
+
+            logFile << "\n";
+        }
+        logFile.close();
     }
 };
 
