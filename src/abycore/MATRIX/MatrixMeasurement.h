@@ -75,12 +75,6 @@ public:
     {
         auto taskIdx = getTaskIdx(taskName);
         m_cpuEndTimes[taskIdx][currentIterationNumber] = get_ms_since_epoch();
-
-        // if this is the last task and last iteration write the data to file
-        if (taskIdx == m_tasksNames.size() - 1 && currentIterationNumber == m_cpuEndTimes[0].size() - 1)
-        {
-            write_log();
-        }
     }
 
     void write_log() const

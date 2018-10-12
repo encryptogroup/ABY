@@ -128,6 +128,10 @@ int32_t test_inner_product_circuit(e_role role, const std::string& address, uint
 	party->ExecCircuit();
     log.endSubTask("ExecCircuit", 0);
 
+#ifdef ABY_ENABLE_MATRIX
+	log.write_log();
+#endif
+
 	/**
 	 Step 10: Type caste the plaintext output to 16 bit unsigned integer.
 	 */
