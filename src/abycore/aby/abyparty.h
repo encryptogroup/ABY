@@ -44,6 +44,13 @@ public:
 			uint32_t nthreads =	2, e_mt_gen_alg mg_algo = MT_OT, uint32_t maxgates = 4000000);
 	~ABYParty();
 
+	/**
+	 * Online part of initialization. Needs to be called after ABYParty has been
+	 * construced. If not called, it is implicitly called at the first call to
+	 * ExecCircuit() for backwards compatibility.
+	 */
+	void InitOnline();
+
 	std::vector<Sharing*>& GetSharings();
 	void ExecCircuit();
 
@@ -79,6 +86,8 @@ private:
 	BOOL ThreadReceiveValues();
 
 	void PrintPerformanceStatistics();
+
+	bool is_online = false;
 
 	e_mt_gen_alg m_eMTGenAlg;
 	ABYSetup* m_pSetup;
