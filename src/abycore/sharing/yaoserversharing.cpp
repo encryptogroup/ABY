@@ -669,12 +669,10 @@ void YaoServerSharing::CreateGarbledTable(GATE* ggate, uint32_t pos, GATE* gleft
 	}
 
 	//Set permutation bit
-	if((outwire_key[m_nSecParamBytes-1] & 0x01)) {
-		m_pKeyOps->XOR(outwire_key, outwire_key, m_vR.GetArr());
-		ggate->gs.yinput.pi[pos] = !(outwire_key[m_nSecParamBytes-1] & 0x01) ^ ((lpbit) & (rpbit));
-	} else {
-		ggate->gs.yinput.pi[pos] = (outwire_key[m_nSecParamBytes-1] & 0x01) ^ ((lpbit) & (rpbit));
+	if(outwire_key[m_nSecParamBytes-1] & 0x01) {
+		m_pKeyOps->XOR(outwire_key, outwire_key, m_vR.GetArr());	
 	}
+	ggate->gs.yinput.pi[pos] = lpbit & rpbit;
 
 #ifdef DEBUGYAOSERVER
 		std::cout << " encr : ";
