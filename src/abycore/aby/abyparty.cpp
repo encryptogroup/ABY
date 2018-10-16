@@ -62,13 +62,11 @@ private:
 ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl seclvl,
 	uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo,
 	uint32_t maxgates)
-	: m_eMTGenAlg(mg_algo), m_eRole(pid), m_nPort(port), m_sSecLvl(seclvl),
+	: m_cCrypt(std::make_unique<crypto>(seclvl.symbits)), glock(std::make_unique<CLock>()),
+	m_eMTGenAlg(mg_algo), m_eRole(pid), m_nPort(port), m_sSecLvl(seclvl),
 	m_cAddress(addr) {
 
 	StartWatch("Initialization", P_INIT);
-
-
-	m_cCrypt = new crypto(seclvl.symbits);
 
 #if BENCH_HARDWARE
 	timespec bench_start, bench_end;
@@ -95,8 +93,6 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 	free(m_kGarble);
 #endif
 
-	//private member lock defined in abyparty.h for passing to establish connection
-	glock = new CLock();
 	//m_aSeed = (uint8_t*) malloc(sizeof(uint8_t) * m_cCrypt->get_hash_bytes());
 
 	//Are doubled to have both parties play both roles
@@ -165,7 +161,7 @@ BOOL ABYParty::Init() {
 	m_vSockets.resize(2);
 
 	//Initialize necessary routines for computing the setup phase
-	m_pSetup = new ABYSetup(m_cCrypt, m_nNumOTThreads, m_eRole, m_eMTGenAlg);
+	m_pSetup = new ABYSetup(m_cCrypt.get(), m_nNumOTThreads, m_eRole, m_eMTGenAlg);
 
 	m_vThreads.resize(m_nHelperThreads);
 	for (uint32_t i = 0; i < m_nHelperThreads; i++) {
@@ -219,9 +215,6 @@ void ABYParty::Cleanup() {
 		m_vSockets[i]->Close();
 		delete m_vSockets[i];
 	}
-	delete m_cCrypt;
-	if (glock)
-		delete glock;
 }
 
 void ABYParty::ExecCircuit() {
@@ -316,33 +309,33 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
 	m_pCircuit = new ABYCircuit(maxgates);
 
 	m_vSharings.resize(S_LAST);
-	m_vSharings[S_BOOL] = new BoolSharing(S_BOOL, m_eRole, 1, m_pCircuit, m_cCrypt);
+	m_vSharings[S_BOOL] = new BoolSharing(S_BOOL, m_eRole, 1, m_pCircuit, m_cCrypt.get());
 	if (m_eRole == SERVER) {
-		m_vSharings[S_YAO] = new YaoServerSharing(S_YAO, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
-		m_vSharings[S_YAO_REV] = new YaoClientSharing(S_YAO_REV, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
+		m_vSharings[S_YAO] = new YaoServerSharing(S_YAO, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get());
+		m_vSharings[S_YAO_REV] = new YaoClientSharing(S_YAO_REV, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get());
 	}
 	else {
-		m_vSharings[S_YAO] = new YaoClientSharing(S_YAO, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
-		m_vSharings[S_YAO_REV] = new YaoServerSharing(S_YAO_REV, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt);
+		m_vSharings[S_YAO] = new YaoClientSharing(S_YAO, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get());
+		m_vSharings[S_YAO_REV] = new YaoServerSharing(S_YAO_REV, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get());
 	}
 	switch (bitlen) {
 	case 8:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT8_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT8_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	case 16:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT16_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT16_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	case 32:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	case 64:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT64_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT64_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	default:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt, m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	}
-	m_vSharings[S_SPLUT] = new SetupLUT(S_SPLUT, m_eRole, 1, m_pCircuit, m_cCrypt);
+	m_vSharings[S_SPLUT] = new SetupLUT(S_SPLUT, m_eRole, 1, m_pCircuit, m_cCrypt.get());
 
 	m_pGates = m_pCircuit->Gates();
 
@@ -569,11 +562,11 @@ BOOL ABYParty::EstablishConnection() {
 		success = ABYPartyConnect();
 
 	}
-	m_tComm->snd_std = new SndThread(m_vSockets[0], glock);
-	m_tComm->rcv_std = new RcvThread(m_vSockets[0], glock);
+	m_tComm->snd_std = new SndThread(m_vSockets[0], glock.get());
+	m_tComm->rcv_std = new RcvThread(m_vSockets[0], glock.get());
 
-	m_tComm->snd_inv = new SndThread(m_vSockets[1], glock);
-	m_tComm->rcv_inv = new RcvThread(m_vSockets[1], glock);
+	m_tComm->snd_inv = new SndThread(m_vSockets[1], glock.get());
+	m_tComm->rcv_inv = new RcvThread(m_vSockets[1], glock.get());
 
 	m_tComm->snd_std->Start();
 	m_tComm->snd_inv->Start();

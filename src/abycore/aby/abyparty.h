@@ -89,6 +89,9 @@ private:
 
 	bool is_online = false;
 
+	std::unique_ptr<crypto> m_cCrypt;
+	std::unique_ptr<CLock> glock;
+
 	e_mt_gen_alg m_eMTGenAlg;
 	ABYSetup* m_pSetup;
 
@@ -114,9 +117,6 @@ private:
 	uint32_t m_nSizeOfVal;
 
 	std::vector<Sharing*> m_vSharings;
-
-	crypto* m_cCrypt;
-	CLock *glock;
 
 	enum EPartyJobType {
 		e_Party_Comm, e_Party_Stop, e_Party_Undefined
