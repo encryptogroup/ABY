@@ -87,6 +87,9 @@ private:
 
 	void PrintPerformanceStatistics();
 
+	// benchmarks AES performance
+	void bench_aes() const;
+
 	bool is_online = false;
 
 	std::unique_ptr<crypto> m_cCrypt;

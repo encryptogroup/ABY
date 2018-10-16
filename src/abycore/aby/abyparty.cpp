@@ -69,28 +69,7 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 	StartWatch("Initialization", P_INIT);
 
 #if BENCH_HARDWARE
-	timespec bench_start, bench_end;
-	AES_KEY_CTX* m_kGarble = (AES_KEY_CTX*) malloc(sizeof(AES_KEY_CTX));
-	m_cCrypt->init_aes_key(m_kGarble, (uint8_t*) m_vFixedKeyAESSeed);
-
-	uint64_t bench_aes_len = 128 * 1024 * 1024; // 128 MiB blocks
-	uint32_t bench_aes_rounds = 8;
-
-	BYTE * bench_outp = new BYTE[bench_aes_len + AES_BYTES];
-
-	clock_gettime(CLOCK_MONOTONIC, &bench_start);
-
-	for (uint32_t ctr = 0; ctr < bench_aes_rounds; ++ctr) {
-		m_cCrypt->encrypt(m_kGarble, bench_outp, bench_outp, bench_aes_len);
-	}
-
-	clock_gettime(CLOCK_MONOTONIC, &bench_end);
-
-	double bench_time = getMillies(bench_start, bench_end);
-	std::cout << "AES performance: " << ((bench_aes_len >> 20) / (bench_time / 1000)) * bench_aes_rounds << " MiB/sec" << std::endl;
-
-	delete bench_outp;
-	free(m_kGarble);
+	bench_aes();
 #endif
 
 	//m_aSeed = (uint8_t*) malloc(sizeof(uint8_t) * m_cCrypt->get_hash_bytes());
@@ -547,6 +526,28 @@ void ABYParty::PrintPerformanceStatistics() {
 	std::cout << "Total number of gates: " << m_pCircuit->GetGateHead() << " Total depth: " << m_pCircuit->GetTotalDepth() << std::endl;
 	PrintTimings();
 	std::cout << std::endl;
+}
+
+void ABYParty::bench_aes() const {
+	timespec bench_start, bench_end;
+	AES_KEY_CTX kGarble;
+	m_cCrypt->init_aes_key(&kGarble, (uint8_t*) m_vFixedKeyAESSeed);
+
+	uint64_t bench_aes_len = 128 * 1024 * 1024; // 128 MiB blocks
+	uint32_t bench_aes_rounds = 8;
+
+	std::vector<BYTE> bench_outp(bench_aes_len + AES_BYTES);
+
+	clock_gettime(CLOCK_MONOTONIC, &bench_start);
+
+	for (uint32_t ctr = 0; ctr < bench_aes_rounds; ++ctr) {
+		m_cCrypt->encrypt(&kGarble, bench_outp.data(), bench_outp.data(), bench_aes_len);
+	}
+
+	clock_gettime(CLOCK_MONOTONIC, &bench_end);
+
+	double bench_time = getMillies(bench_start, bench_end);
+	std::cout << "AES performance: " << ((bench_aes_len >> 20) / (bench_time / 1000)) * bench_aes_rounds << " MiB/sec" << std::endl;
 }
 
 //=========================================================
