@@ -96,15 +96,20 @@ private:
 	std::unique_ptr<CLock> glock;
 
 	e_mt_gen_alg m_eMTGenAlg;
-	ABYSetup* m_pSetup;
-
-	// Network Communication
-	std::vector<CSocket*> m_vSockets; // sockets for threads
 	e_role m_eRole; // thread id
+	uint32_t m_nNumOTThreads;
+
+	// Order of destruction is important:
+	// ABYSetup << comm_ctx << sockets
+	std::vector<std::unique_ptr<CSocket>> m_vSockets; // sockets for threads
+
+	std::unique_ptr<comm_ctx> m_tComm;
+
+	std::unique_ptr<ABYSetup> m_pSetup;
+
 	uint16_t m_nPort;
 	seclvl m_sSecLvl;
 
-	uint32_t m_nNumOTThreads;
 
 	uint32_t m_nHelperThreads;
 
@@ -124,8 +129,6 @@ private:
 	enum EPartyJobType {
 		e_Party_Comm, e_Party_Stop, e_Party_Undefined
 	};
-
-	comm_ctx* m_tComm;
 
 	channel* m_tPartyChan;
 #ifdef DEBUGCOMM

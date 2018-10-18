@@ -37,11 +37,12 @@
 #include <ENCRYPTO_utils/channel.h>
 #include <ENCRYPTO_utils/sndthread.h>
 #include <ENCRYPTO_utils/rcvthread.h>
+#include <memory>
 #include <mutex>
 
 struct comm_ctx {
-	SndThread *snd_std, *snd_inv;
-	RcvThread *rcv_std, *rcv_inv;
+	std::unique_ptr<RcvThread> rcv_std, rcv_inv;
+	std::unique_ptr<SndThread> snd_std, snd_inv;
 };
 
 

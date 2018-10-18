@@ -102,7 +102,7 @@ void ABYSetup::Cleanup() {
 BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 	m_tComm = comm;
 
-	m_tSetupChan = new channel(ABY_SETUP_CHANNEL, m_tComm->rcv_std, m_tComm->snd_std);
+	m_tSetupChan = new channel(ABY_SETUP_CHANNEL, m_tComm->rcv_std.get(), m_tComm->snd_std.get());
 
 #if BENCH_HARDWARE
 	uint8_t dummyrcv = 0;
@@ -134,9 +134,9 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		delete[] benchtmp;
 #endif
 
-		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std,
+		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_std.get(), m_tComm->snd_std.get(),
 				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
-		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv,
+		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_inv.get(), m_tComm->snd_inv.get(),
 				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
 
 #ifdef USE_KK_OT
@@ -166,9 +166,9 @@ BOOL ABYSetup::PrepareSetupPhase(comm_ctx* comm) {
 		std::cout << "Throughput: " << 2 * (tmparraysize>>20)*benchrounds / (getMillies(start, end) / 1000) << " MiB/s" << std::endl;
 				delete benchtmp;
 #endif
-		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std, m_tComm->snd_std,
+		iknp_ot_receiver = new IKNPOTExtRec(m_cCrypt, m_tComm->rcv_std.get(), m_tComm->snd_std.get(),
 				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
-		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_inv, m_tComm->snd_inv,
+		iknp_ot_sender = new IKNPOTExtSnd(m_cCrypt, m_tComm->rcv_inv.get(), m_tComm->snd_inv.get(),
 				/* num_ot_blocks */ 1024, /* verify_ot */ false, /* use_fixed_aes_key_hashing */ true);
 
 #ifdef USE_KK_OT
@@ -392,7 +392,7 @@ BOOL ABYSetup::ThreadRunPaillierMTGen(uint32_t threadid) {
 
 	uint32_t nthreads = 2 * m_nNumOTThreads;
 
-	channel* djnchan = new channel(DJN_CHANNEL+threadid, m_tComm->rcv_std, m_tComm->snd_std);
+	channel* djnchan = new channel(DJN_CHANNEL+threadid, m_tComm->rcv_std.get(), m_tComm->snd_std.get());
 	for (uint32_t i = 0; i < m_vPKMTGenTasks.size(); i++) {
 
 		PKMTGenVals* ptask = m_vPKMTGenTasks[i];
@@ -428,7 +428,7 @@ BOOL ABYSetup::ThreadRunDGKMTGen(uint32_t threadid) {
 
 	uint32_t nthreads = 2 * m_nNumOTThreads;
 
-	channel* dgkchan = new channel(DGK_CHANNEL+threadid, m_tComm->rcv_std, m_tComm->snd_std);
+	channel* dgkchan = new channel(DGK_CHANNEL+threadid, m_tComm->rcv_std.get(), m_tComm->snd_std.get());
 
 	for (uint32_t i = 0; i < m_vPKMTGenTasks.size(); i++) {
 		PKMTGenVals* ptask = m_vPKMTGenTasks[i];

@@ -63,7 +63,10 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 	uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo,
 	uint32_t maxgates)
 	: m_cCrypt(std::make_unique<crypto>(seclvl.symbits)), glock(std::make_unique<CLock>()),
-	m_eMTGenAlg(mg_algo), m_eRole(pid), m_nPort(port), m_sSecLvl(seclvl),
+	m_eMTGenAlg(mg_algo), m_eRole(pid), m_nNumOTThreads(nthreads),
+	m_tComm(std::make_unique<comm_ctx>()),
+	m_pSetup(std::make_unique<ABYSetup>(m_cCrypt.get(), m_nNumOTThreads, m_eRole, m_eMTGenAlg)),
+	m_nPort(port), m_sSecLvl(seclvl),
 	m_cAddress(addr) {
 
 	StartWatch("Initialization", P_INIT);
@@ -74,8 +77,6 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 
 	//m_aSeed = (uint8_t*) malloc(sizeof(uint8_t) * m_cCrypt->get_hash_bytes());
 
-	//Are doubled to have both parties play both roles
-	m_nNumOTThreads = nthreads;
 #ifndef BATCH
 	std::cout << "Performing Init" << std::endl;
 #endif
@@ -117,7 +118,7 @@ void ABYParty::ConnectAndBaseOTs() {
 #endif
 	/* Pre-Compute Naor-Pinkas base OTs by starting two threads */
 	StartRecording("Starting NP OT", P_BASE_OT, m_vSockets);
-	m_pSetup->PrepareSetupPhase(m_tComm);
+	m_pSetup->PrepareSetupPhase(m_tComm.get());
 	StopRecording("Time for NP OT: ", P_BASE_OT, m_vSockets);
 
 	is_online = true;
@@ -139,9 +140,6 @@ BOOL ABYParty::Init() {
 	//m_vSockets.resize(m_nNumOTThreads * 2);
 	m_vSockets.resize(2);
 
-	//Initialize necessary routines for computing the setup phase
-	m_pSetup = new ABYSetup(m_cCrypt.get(), m_nNumOTThreads, m_eRole, m_eMTGenAlg);
-
 	m_vThreads.resize(m_nHelperThreads);
 	for (uint32_t i = 0; i < m_nHelperThreads; i++) {
 		m_vThreads[i] = new CPartyWorkerThread(i, this); //First thread is started as receiver, second as sender
@@ -150,15 +148,10 @@ BOOL ABYParty::Init() {
 
 	m_nMyNumInBits = 0;
 
-	m_tComm = (comm_ctx*) malloc(sizeof(comm_ctx));
-
 	return TRUE;
 }
 
 void ABYParty::Cleanup() {
-	if (m_pSetup)
-		delete m_pSetup;
-
 	// free any gates that are still instantiated
 	for(size_t i = 0; i < m_pCircuit->GetGateHead(); i++) {
 		if(m_pGates[i].instantiated) {
@@ -182,18 +175,6 @@ void ABYParty::Cleanup() {
 		m_vThreads[i]->Wait();
 		delete m_vThreads[i];
 	}
-
-	delete m_tComm->snd_std;
-	delete m_tComm->snd_inv;
-	delete m_tComm->rcv_std;
-	delete m_tComm->rcv_inv;
-
-	free(m_tComm);
-
-	for (uint32_t i = 0; i < m_vSockets.size(); i++) {
-		m_vSockets[i]->Close();
-		delete m_vSockets[i];
-	}
 }
 
 void ABYParty::ExecCircuit() {
@@ -214,7 +195,7 @@ void ABYParty::ExecCircuit() {
 #ifndef BATCH
 		std::cout << "Preparing setup phase for " << m_vSharings[i]->sharing_type() << " sharing" << std::endl;
 #endif
-		m_vSharings[i]->PrepareSetupPhase(m_pSetup);
+		m_vSharings[i]->PrepareSetupPhase(m_pSetup.get());
 	}
 
 #ifndef BATCH
@@ -231,22 +212,22 @@ void ABYParty::ExecCircuit() {
 		if(i == S_YAO) {
 			StartWatch("Starting Circuit Garbling", P_GARBLE);
 			if(m_eRole == SERVER) {
-				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup);
-				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup);
+				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup.get());
+				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup.get());
 			} else {
-				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup);
-				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup);
+				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup.get());
+				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup.get());
 			}
-			/*m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup);
-			m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup);*/
-			m_vSharings[S_YAO]->FinishSetupPhase(m_pSetup);
-			m_vSharings[S_YAO_REV]->FinishSetupPhase(m_pSetup);
+			/*m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup.get());
+			m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup.get());*/
+			m_vSharings[S_YAO]->FinishSetupPhase(m_pSetup.get());
+			m_vSharings[S_YAO_REV]->FinishSetupPhase(m_pSetup.get());
 			StopWatch("Time for Circuit garbling: ", P_GARBLE);
 		} else if (i == S_YAO_REV) {
 			//Do nothing, was done in parallel to Yao
 		} else {
-			m_vSharings[i]->PerformSetupPhase(m_pSetup);
-			m_vSharings[i]->FinishSetupPhase(m_pSetup);
+			m_vSharings[i]->PerformSetupPhase(m_pSetup.get());
+			m_vSharings[i]->FinishSetupPhase(m_pSetup.get());
 		}
 
 	}
@@ -336,7 +317,7 @@ BOOL ABYParty::EvaluateCircuit() {
 #endif
 	m_nDepth = 0;
 
-	m_tPartyChan = new channel(ABY_PARTY_CHANNEL, m_tComm->rcv_std, m_tComm->snd_std);
+	m_tPartyChan = new channel(ABY_PARTY_CHANNEL, m_tComm->rcv_std.get(), m_tComm->snd_std.get());
 
 	for (uint32_t i = 0; i < m_vSharings.size(); i++) {
 		m_vSharings[i]->PrepareOnlinePhase();
@@ -563,11 +544,11 @@ BOOL ABYParty::EstablishConnection() {
 		success = ABYPartyConnect();
 
 	}
-	m_tComm->snd_std = new SndThread(m_vSockets[0], glock.get());
-	m_tComm->rcv_std = new RcvThread(m_vSockets[0], glock.get());
+	m_tComm->snd_std = std::make_unique<SndThread>(m_vSockets[0].get(), glock.get());
+	m_tComm->rcv_std = std::make_unique<RcvThread>(m_vSockets[0].get(), glock.get());
 
-	m_tComm->snd_inv = new SndThread(m_vSockets[1], glock.get());
-	m_tComm->rcv_inv = new RcvThread(m_vSockets[1], glock.get());
+	m_tComm->snd_inv = std::make_unique<SndThread>(m_vSockets[1].get(), glock.get());
+	m_tComm->rcv_inv = std::make_unique<RcvThread>(m_vSockets[1].get(), glock.get());
 
 	m_tComm->snd_std->Start();
 	m_tComm->snd_inv->Start();
@@ -581,27 +562,26 @@ BOOL ABYParty::EstablishConnection() {
 BOOL ABYParty::ABYPartyConnect() {
 	//Will open m_vSockets.size new sockets to
 	for(uint32_t i = 0; i < m_vSockets.size(); i++) {
-		m_vSockets[i] = new CSocket();
+		m_vSockets[i] = std::make_unique<CSocket>();
 	}
 	return Connect(m_cAddress, m_nPort, m_vSockets, (uint32_t) m_eRole);
 }
 
 //Interface to the listening method
 BOOL ABYParty::ABYPartyListen() {
-	std::vector<std::vector<CSocket*> > tempsocks(2);
+	std::vector<std::vector<std::unique_ptr<CSocket>> > tempsocks(2);
 
 	for(uint32_t i = 0; i < 2; i++) {
 		tempsocks[i].resize(m_vSockets.size());
 
 		for(uint32_t j = 0; j < m_vSockets.size(); j++) {
-			tempsocks[i][j] = new CSocket();
+			tempsocks[i][j] = std::make_unique<CSocket>();
 		}
 	}
 
 	bool success = Listen(m_cAddress, m_nPort, tempsocks, m_vSockets.size(), (uint32_t) m_eRole);
 	for(uint32_t i = 0; i < m_vSockets.size(); i++) {
-		m_vSockets[i] = tempsocks[1][i];
-		delete tempsocks[0][i];
+		m_vSockets[i] = std::move(tempsocks[1][i]);
 	}
 	return success;
 }
