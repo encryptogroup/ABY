@@ -25,7 +25,6 @@
 #include <ENCRYPTO_utils/constants.h>
 #include <ENCRYPTO_utils/crypto/crypto.h>
 
-#define FIXED_KEY_GARBLING
 
 class XORMasking;
 
@@ -147,10 +146,8 @@ protected:
 	uint64_t m_nANDWindowCtr; /**< Counts #AND gates for pipelined exec */
 	uint64_t m_nRemANDGates; /**< Remaining AND gates to be processed for pipelined exec */
 
-#ifdef FIXED_KEY_GARBLING
 	BYTE* m_bResKeyBuf; /**< _________________________*/
 	AES_KEY_CTX* m_kGarble; /**< _________________________*/
-#endif
 
 	/** Initiator function. This method is invoked from the constructor of the class.*/
 	void Init();
