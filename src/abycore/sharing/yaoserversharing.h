@@ -160,6 +160,12 @@ private:
 	 */
 	void EvaluateANDGate(GATE* gate, ABYSetup* setup);
 	/**
+	 Method for evaluating a Universal gate for the inputted
+	 gate object.
+	 \param gate		Gate Object
+	 */
+	void EvaluateUniversalGate(GATE* gate);
+	/**
 	 Method for evaluating SIMD gate for the inputted
 	 gateid.
 	 \param gateid		Gate identifier
@@ -177,6 +183,15 @@ private:
 	 \param gateid		Gate Identifier
 	 */
 	void EvaluateConversionGate(uint32_t gateid);
+	/**
+	 Method for garbling a universal gate.
+	 \param ggate	gate Object.
+	 \param pos 		Position of the object in the queue.
+	 \param gleft	left gate in the queue.
+	 \param gright	right gate in the queue.
+	 \param ttable	the 4-bit truth table of the form x_0x_1x_2x_3
+	 */
+	void GarbleUniversalGate(GATE* ggate, uint32_t pos, GATE* gleft, GATE* gright, uint32_t ttable);
 	/**
 	 Method for creating garbled table.
 	 \param ggate	gate Object.

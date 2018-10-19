@@ -32,6 +32,7 @@ void YaoServerSharing::InitServer() {
 
 	m_vOutputDestionations = nullptr;
 
+	m_nUniversalGateTableCtr = 0;
 	m_nGarbledTableCtr = 0L;
 	m_nGarbledTableSndCtr = 0L;
 
@@ -70,10 +71,13 @@ void YaoServerSharing::InitNewLayer() {
 void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 	BYTE* buf;
 	uint64_t gt_size;
+	uint64_t univ_size;
 	uint32_t symbits = m_cCrypto->get_seclvl().symbits;
 	m_nANDGates = m_cBoolCircuit->GetNumANDGates();
+	m_nUNIVGates = m_cBoolCircuit->GetNumUNIVGates();
 
 	gt_size = ((uint64_t) m_nANDGates) * KEYS_PER_GATE_IN_TABLE * m_nSecParamBytes;
+	univ_size = ((uint64_t) m_nUNIVGates) * KEYS_PER_UNIV_GATE_IN_TABLE * m_nSecParamBytes;
 
 	/* If no gates were built, return */
 	if (m_cBoolCircuit->GetMaxDepth() == 0)
@@ -88,6 +92,10 @@ void YaoServerSharing::PrepareSetupPhase(ABYSetup* setup) {
 
 	buf = (BYTE*) malloc(gt_size);
 	m_vGarbledCircuit.AttachBuf(buf, gt_size);
+
+	m_vUniversalGateTable.Create(0);
+	buf = (BYTE*) malloc(univ_size);
+	m_vUniversalGateTable.AttachBuf(buf, univ_size);
 
 	m_vR.Create(symbits, m_cCrypto);
 	m_vR.SetBit(symbits - 1, 1);
@@ -341,6 +349,8 @@ void YaoServerSharing::CreateAndSendGarbledCircuit(ABYSetup* setup) {
 				(m_nGarbledTableCtr - m_nGarbledTableSndCtr) * m_nSecParamBytes * KEYS_PER_GATE_IN_TABLE);
 		m_nGarbledTableSndCtr = m_nGarbledTableCtr;
 	}
+	if (m_nUNIVGates > 0)
+		setup->AddSendTask(m_vUniversalGateTable.GetArr(), m_nUNIVGates * m_nSecParamBytes * KEYS_PER_UNIV_GATE_IN_TABLE);
 	if (m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT) > 0) {
 		setup->AddSendTask(m_vOutputShareSndBuf.GetArr(), ceil_divide(m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT), 8));
 	}
@@ -400,6 +410,8 @@ void YaoServerSharing::PrecomputeGC(std::deque<uint32_t>& queue, ABYSetup* setup
 			EvaluateInversionGate(gate);
 		} else if (gate->type == G_CALLBACK) {
 			EvaluateCallbackGate(queue[i]);
+		} else if (gate->type == G_UNIV) {
+			EvaluateUniversalGate(gate);
 		} else if (gate->type == G_SHARED_OUT) {
 			GATE* parent = m_pGates + gate->ingates.inputs.parent;
 			InstantiateGate(gate);
@@ -700,6 +712,86 @@ void YaoServerSharing::CreateGarbledTable(GATE* ggate, uint32_t pos, GATE* gleft
 		std::cout << std::endl;
 
 #endif
+}
+
+//Evaluate a Universal Gate
+void YaoServerSharing::EvaluateUniversalGate(GATE* gate) {
+	uint32_t idleft = gate->ingates.inputs.twin.left;
+	uint32_t idright = gate->ingates.inputs.twin.right;
+
+	GATE* gleft = m_pGates + idleft;
+	GATE* gright = m_pGates + idright;
+	uint32_t ttable = gate->gs.ttable;
+
+	InstantiateGate(gate);
+
+	for(uint32_t g = 0; g < gate->nvals; g++) {
+		GarbleUniversalGate(gate, g, gleft, gright, ttable);
+		m_nUniversalGateTableCtr++;
+		//gate->gs.yinput.pi[g] = 0;
+		assert(gate->gs.yinput.pi[g] < 2);
+	}
+	UsedGate(idleft);
+	UsedGate(idright);
+}
+
+//Garble a universal gate via the GRR-3 optimization
+void YaoServerSharing::GarbleUniversalGate(GATE* ggate, uint32_t pos, GATE* gleft, GATE* gright, uint32_t ttable) {
+	BYTE* univ_table = m_vUniversalGateTable.GetArr() + m_nUniversalGateTableCtr * KEYS_PER_UNIV_GATE_IN_TABLE * m_nSecParamBytes;
+	uint32_t ttid = (gleft->gs.yinput.pi[pos] << 1) + gright->gs.yinput.pi[pos];
+
+	assert(gright->instantiated && gleft->instantiated);
+
+	memcpy(m_bLMaskBuf[0], gleft->gs.yinput.outKey + pos * m_nSecParamBytes, m_nSecParamBytes);
+	m_pKeyOps->XOR(m_bLMaskBuf[1], m_bLMaskBuf[0], m_vR.GetArr());
+
+	memcpy(m_bRMaskBuf[0], gright->gs.yinput.outKey + pos * m_nSecParamBytes, m_nSecParamBytes);
+	m_pKeyOps->XOR(m_bRMaskBuf[1], m_bRMaskBuf[0], m_vR.GetArr());
+
+	BYTE* outkey[2];
+	outkey[0] = ggate->gs.yinput.outKey + pos * m_nSecParamBytes;
+	outkey[1] = m_bOKeyBuf[0];
+
+	assert(((uint64_t*) m_bZeroBuf)[0] == 0);
+	//GRR: Encryption with both original keys of a zero-string becomes the key on the output wire of the gate
+	EncryptWireGRR3(outkey[0], m_bZeroBuf, m_bLMaskBuf[0], m_bRMaskBuf[0], 0);
+
+	//Sort the values according to the permutation bit and precompute the second wire key
+	BYTE kbit = outkey[0][m_nSecParamBytes-1] & 0x01;
+	ggate->gs.yinput.pi[pos] = ((ttable>>ttid)&0x01) ^ kbit;//((kbit^1) & (ttid == 3)) | (kbit & (ttid != 3));
+
+#ifdef DEBUGYAOSERVER
+		cout << " encrypting : ";
+		PrintKey(m_bZeroBuf);
+		cout << " using: ";
+		PrintKey(m_bLMaskBuf[0]);
+		cout << " (" << (uint32_t) gleft->gs.yinput.pi[pos] << ") and : ";
+		PrintKey(m_bRMaskBuf[0]);
+		cout << " (" << (uint32_t) gright->gs.yinput.pi[pos] << ") to : ";
+		PrintKey(m_bOKeyBuf[0]);
+		cout << endl;
+#endif
+	memcpy(outkey[kbit], outkey[0], m_nSecParamBytes);
+	m_pKeyOps->XOR(outkey[kbit^1], outkey[kbit], m_vR.GetArr());
+
+	for(uint32_t i = 1, keyid; i < 4; i++, univ_table+=m_nSecParamBytes) {
+		keyid = ((ttable>>(ttid^i))&0x01) ^ ggate->gs.yinput.pi[pos];
+		assert(keyid < 2);
+		//cout << "Encrypting into outkey = " << outkey << ", " << (unsigned long) m_bOKeyBuf[0] << ", " <<  (unsigned long) m_bOKeyBuf[1] <<
+		//		", truthtable = " << (unsigned uint32_t) g_TruthTable[id^i] << ", mypermbit = " << (unsigned uint32_t) ggate->gs.yinput.pi[pos] << ", id = " << id << endl;
+		EncryptWireGRR3(univ_table, outkey[keyid], m_bLMaskBuf[i>>1], m_bRMaskBuf[i&0x01], i);
+#ifdef DEBUGYAOSERVER
+		cout << " encrypting : ";
+		PrintKey(m_bOKeyBuf[outkey]);
+		cout << " using: ";
+		PrintKey(m_bLMaskBuf[i>>1]);
+		cout << " (" << (uint32_t) gleft->gs.yinput.pi[pos] << ") and : ";
+		PrintKey(m_bRMaskBuf[i&0x01]);
+		cout << " (" << (uint32_t) gright->gs.yinput.pi[pos] << ") to : ";
+		PrintKey(table);
+		cout << endl;
+#endif
+	}
 }
 
 //Collect the permutation bits on the clients output gates and prepare them to be sent off
@@ -1102,6 +1194,8 @@ void YaoServerSharing::Reset() {
 	m_nGarbledTableCtr = 0;
 	m_nGarbledTableSndCtr = 0L;
 
+	m_vUniversalGateTable.delCBitVector();
+	m_nUniversalGateTableCtr = 0;
 
 	m_cBoolCircuit->Reset();
 }

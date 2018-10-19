@@ -336,6 +336,10 @@ public:
 		return m_nNumXORGates;
 	};
 
+	uint32_t GetNumUNIVGates() {
+		return m_nUNIVGates;
+	}
+
 	share* PutMULGate(share* ina, share* inb);
 	share* PutGTGate(share* ina, share* inb);
 	share* PutEQGate(share* ina, share* inb);
@@ -387,6 +391,10 @@ public:
 
 	uint32_t PutCallbackGate(std::vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
 	share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
+
+	uint32_t PutUniversalGate(uint32_t a, uint32_t b, uint32_t op_id);
+	std::vector<uint32_t> PutUniversalGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t op_id);
+	share* PutUniversalGate(share* a, share* b, uint32_t op_id);
 
 	uint32_t PutTruthTableGate(std::vector<uint32_t> in, uint32_t out_bits, uint64_t* ttable);
 	share* PutTruthTableGate(share* in, uint64_t* ttable);
@@ -457,6 +465,7 @@ public:
 	 * \return output wire IDs
 	 */
 	std::vector<uint32_t> PutGateFromFile(const std::string filename, std::vector<uint32_t> inputs, uint32_t nvals = 1);
+	std::vector<uint32_t> PutUniversalCircuitFromFile(const std::string filename, const std::string p1filename, std::vector<uint32_t> 	p2inputs, uint32_t nvals);
 
 	/**
 	 * \brief Get the number of input bits for both parties that a given circuit file expects
@@ -464,6 +473,8 @@ public:
 	 * \return the number of input bits for both parties
 	 */
 	uint32_t GetInputLengthFromFile(const std::string filename);
+
+	void GetInputLengthFromFile(const std::string filename, uint32_t& client_input, uint32_t& server_input);
 
 	void PutMinIdxGate(share** vals, share** ids, uint32_t nvals, share** minval_shr, share** minid_shr);
 	void PutMinIdxGate(std::vector<std::vector<uint32_t> > vals, std::vector<std::vector<uint32_t> > ids,
@@ -476,6 +487,7 @@ public:
 
 	void PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_t nshares, share** Sout);
 
+	uint32_t PutUniversalGateCircuit(uint32_t a, uint32_t b, uint32_t op_id);
 
         /**
          * Constructs optimal Hamming Weight Gate. Described by Boyar, Joan, and
@@ -725,6 +737,8 @@ private:
 	uint32_t m_nB2YGates;
 	uint32_t m_nA2YGates;
 	uint32_t m_nYSwitchGates;
+
+	uint32_t m_nUNIVGates;
 
 	uint32_t m_nNumXORVals;
 	uint32_t m_nNumXORGates;

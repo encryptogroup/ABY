@@ -64,9 +64,12 @@ void YaoClientSharing::InitNewLayer() {
 void YaoClientSharing::PrepareSetupPhase(ABYSetup* setup) {
 	BYTE* buf;
 	uint64_t gt_size;
+	uint64_t univ_size;
 	m_nANDGates = m_cBoolCircuit->GetNumANDGates();
+	m_nUNIVGates = m_cBoolCircuit->GetNumUNIVGates();
 
 	gt_size = ((uint64_t) m_nANDGates) * KEYS_PER_GATE_IN_TABLE * m_nSecParamBytes;
+	univ_size = ((uint64_t) m_nUNIVGates) * KEYS_PER_UNIV_GATE_IN_TABLE * m_nSecParamBytes;
 
 	if (m_cBoolCircuit->GetMaxDepth() == 0)
 		return;
@@ -79,6 +82,12 @@ void YaoClientSharing::PrepareSetupPhase(ABYSetup* setup) {
 
 	buf = (BYTE*) malloc(gt_size);
 	m_vGarbledCircuit.AttachBuf(buf, gt_size);
+
+	m_vUniversalGateTable.Create(0);
+	buf = (BYTE*) malloc(univ_size);
+	m_vUniversalGateTable.AttachBuf(buf, univ_size);
+
+	m_nUniversalGateTableCtr = 0;
 
 	m_vOutputShareRcvBuf.Create((uint32_t) m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT));
 	m_vOutputShareSndBuf.Create((uint32_t) m_cBoolCircuit->GetNumOutputBitsForParty(SERVER));
@@ -122,6 +131,8 @@ void YaoClientSharing::PrepareOnlinePhase() {
 void YaoClientSharing::ReceiveGarbledCircuitAndOutputShares(ABYSetup* setup) {
 	if (m_nANDGates > 0)
 		setup->AddReceiveTask(m_vGarbledCircuit.GetArr(), ((uint64_t) m_nANDGates) * m_nSecParamBytes * KEYS_PER_GATE_IN_TABLE);
+	if (m_nUNIVGates > 0)
+		setup->AddReceiveTask(m_vUniversalGateTable.GetArr(), ((uint64_t) m_nUNIVGates) * m_nSecParamBytes * KEYS_PER_UNIV_GATE_IN_TABLE);
 	if (m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT) > 0)
 		setup->AddReceiveTask(m_vOutputShareRcvBuf.GetArr(), ceil_divide(m_cBoolCircuit->GetNumOutputBitsForParty(CLIENT), 8));
 
@@ -188,6 +199,9 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 			EvaluatePrintValGate(localops[i], C_BOOLEAN);
 		} else if(gate->type == G_ASSERT) {
 			EvaluateAssertGate(localops[i], C_BOOLEAN);
+		} else if (gate->type == G_UNIV) {
+			//cout << "Client: Evaluating Universal Circuit gate" << endl;
+			EvaluateUNIVGate(gate);
 		} else {
 			std::cerr << "YaoClientSharing: Non-interactive operation not recognized: " <<
 					(uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << std::endl;
@@ -343,6 +357,62 @@ BOOL YaoClientSharing::EvaluateGarbledTable(GATE* gate, uint32_t pos, GATE* glef
 		std::cout << "; Table B: ";
 		PrintKey(gtptr+m_nSecParamBytes);
 		std::cout << std::endl;
+#endif
+
+	return true;
+}
+
+void YaoClientSharing::EvaluateUNIVGate(GATE* gate) {
+	uint32_t idleft = gate->ingates.inputs.twin.left; //gate->gs.ginput.left;
+	uint32_t idright = gate->ingates.inputs.twin.right; //gate->gs.ginput.right;
+	GATE* gleft = m_pGates + idleft;
+	GATE* gright = m_pGates + idright;
+
+	//evaluate univeral gate table
+	InstantiateGate(gate);
+	for (uint32_t g = 0; g < gate->nvals; g++) {
+		EvaluateUniversalGate(gate, g, gleft, gright);
+		m_nUniversalGateTableCtr++;
+	}
+	UsedGate(idleft);
+	UsedGate(idright);
+}
+
+
+BOOL YaoClientSharing::EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gleft, GATE* gright)
+{
+	BYTE *lkey, *rkey, *okey;
+	uint32_t id;
+	lkey = gleft->gs.yval + pos * m_nSecParamBytes;
+	rkey = gright->gs.yval + pos * m_nSecParamBytes;
+	okey = gate->gs.yval + pos * m_nSecParamBytes;
+
+	id = (lkey[m_nSecParamBytes-1] & 0x01)<<1;
+	id += (rkey[m_nSecParamBytes-1] & 0x01);
+
+	//encrypt_wire((BYTE*)gate->gs.val, m_vGarbledTables.GetArr() + BYTES_SSP * (4 * andctr + id), pleft, pright, id, m_kGarble, key_buf);
+	if(id == 0) {
+		EncryptWireGRR3(okey, m_bZeroBuf, lkey, rkey, id);
+#ifdef DEBUGYAOCLIENT
+		cout << " decrypted : ";
+		PrintKey(m_bZeroBuf);
+#endif
+	} else {
+#ifdef DEBUGYAOCLIENT
+		cout << " decrypted : ";
+		PrintKey(m_vUniversalGateTable.GetArr() + m_nSecParamBytes * (KEYS_PER_UNIV_GATE_IN_TABLE * m_nUniversalGateTableCtr + id-1));
+#endif
+		EncryptWireGRR3(okey, m_vUniversalGateTable.GetArr() + m_nSecParamBytes * (KEYS_PER_UNIV_GATE_IN_TABLE * m_nUniversalGateTableCtr + id-1), lkey, rkey, id);
+	}
+
+#ifdef DEBUGYAOCLIENT
+		cout << " using: ";
+		PrintKey(lkey);
+		cout << " and : ";
+		PrintKey(rkey);
+		cout << " to : ";
+		PrintKey(okey);
+		cout << endl;
 #endif
 
 	return true;
@@ -761,6 +831,9 @@ void YaoClientSharing::Reset() {
 
 	m_vGarbledCircuit.delCBitVector();
 	m_nGarbledTableCtr = 0;
+
+	m_vUniversalGateTable.delCBitVector();
+	m_nUniversalGateTableCtr = 0;
 
 	m_cBoolCircuit->Reset();
 }

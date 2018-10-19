@@ -140,6 +140,20 @@ private:
 	 */
 	BOOL EvaluateGarbledTable(GATE* gate, uint32_t pos, GATE* gleft, GATE* gright);
 	/**
+	 Method for evaluating UNIV gate for the inputted
+	 gate object.
+	 \param gate		Gate Object
+	 */
+	void EvaluateUNIVGate(GATE* gate);
+	/**
+	 Method for evaluating universal gates.
+	 \param gate	gate Object.
+	 \param pos 		Position of the object in the queue.
+	 \param gleft	left gate in the queue.
+	 \param gright	right gate in the queue.
+	 */
+	BOOL EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gleft, GATE* gright);	
+	/**
 	 Method for server output Gate for the inputted Gate.
 	 \param gate		Gate Object
 	 */

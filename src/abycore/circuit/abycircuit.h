@@ -138,6 +138,8 @@ union gate_specific {
 	const char* infostr;
 	//used for the ASSERT gate where the plaintext value of the gate is checked against the plaintext value in assertval
 	UGATE_T* assertval;
+	//truth-table for the universal gate that identifies the operation that is performed. The first 4 bits identify the result of the truth-table
+	uint32_t ttable;
 };
 typedef union gate_specific gs_t;
 
@@ -206,6 +208,7 @@ public:
 	uint32_t PutRepeaterGate(uint32_t input, uint32_t nvals);
         std::vector<uint32_t> PutRepeaterGate(std::vector<uint32_t> input, uint32_t nvals);
 	uint32_t PutPermutationGate(std::vector<uint32_t> input, uint32_t* positions);
+	uint32_t PutUniversalGate(uint32_t a, uint32_t b, uint32_t op_id, uint32_t nrounds);
 
 	uint32_t PutOUTGate(uint32_t in, e_role dst, uint32_t rounds);
         std::vector<uint32_t> PutOUTGate(std::vector<uint32_t> in, e_role dst, uint32_t rounds);

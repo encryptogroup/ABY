@@ -261,6 +261,17 @@ public:
 		std::cerr << "MUX not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);
 	}
+	share** PutCondSwapGate(share*, share*, share*, BOOL) {
+		share** s_out = (share**) malloc(sizeof(share*) *2);
+		s_out[0] = new arithshare(this);
+		s_out[1] = new arithshare(this);
+		std::cerr << "X not implemented in arithmetic sharing" << std::endl;
+		return s_out;
+	}
+	share* PutUniversalGate(share*, share*, uint32_t) {
+		std::cerr << "UNIV not implemented in arithmetic sharing" << std::endl;
+		return new arithshare(this);
+	}
 	share* PutY2BGate(share*) {
 		std::cerr << "Y2B not implemented in arithmetic sharing" << std::endl;
 		return new arithshare(this);

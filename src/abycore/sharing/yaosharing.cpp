@@ -71,6 +71,42 @@ BOOL YaoSharing::EncryptWire(BYTE* c, BYTE* p, uint32_t id)
 	return true;
 }
 
+BOOL YaoSharing::EncryptWireGRR3(BYTE* c, BYTE* p, BYTE* l, BYTE* r, uint32_t id)
+{
+	//cout << "Start with c = " << (unsigned long) c << ", p = " << (unsigned long) p << endl;
+	memset(m_bTempKeyBuf, 0, AES_BYTES);
+	memcpy(m_bTempKeyBuf, (BYTE*) (&id), sizeof(uint32_t));
+	//cout << "XOR left" << endl;
+	m_pKeyOps->XOR_DOUBLE_B(m_bTempKeyBuf, m_bTempKeyBuf, l);
+	//m_pKeyOps->XOR(m_bTempKeyBuf, m_bTempKeyBuf, l);//todo, this is a circular leftshift of l by one and an XOR
+	//cout << "XOR right " << endl;
+	m_pKeyOps->XOR_QUAD_B(m_bTempKeyBuf, m_bTempKeyBuf, r);
+	//m_pKeyOps->XOR(m_bTempKeyBuf, m_bTempKeyBuf, r);//todo, this is a circular leftshift of r by two and an XOR
+
+	//MPC_AES_ENCRYPT(m_kGarble, m_bResKeyBuf, m_bTempKeyBuf);
+	m_cCrypto->encrypt(m_kGarble, m_bResKeyBuf, m_bTempKeyBuf, AES_BYTES);
+
+	//cout << "XOR reskeybuf" << endl;
+	m_pKeyOps->XOR(m_bResKeyBuf, m_bResKeyBuf, m_bTempKeyBuf);
+	//cout << "Final XOR with c = " << (unsigned long) c << ", p = " << (unsigned long) p << endl;
+	m_pKeyOps->XOR(c, m_bResKeyBuf, p);
+
+
+#ifdef DEBUGYAO
+	cout << endl << " encrypting : ";
+	PrintKey(p);
+	cout << " using: ";
+	PrintKey(l);
+	cout << " and : ";
+	PrintKey(r);
+	cout << " to : ";
+	PrintKey(c);
+#endif
+
+	return true;
+}
+
+
 void YaoSharing::PrintKey(BYTE* key) {
 	for (uint32_t i = 0; i < m_nSecParamBytes; i++) {
 		std::cout << std::setw(2) << std::setfill('0') << (std::hex) << (uint32_t) key[i];

@@ -308,6 +308,8 @@ public:
 	virtual share* PutGTGate(share* ina, share* inb) = 0;
 	virtual share* PutEQGate(share* ina, share* inb) = 0;
 	virtual share* PutMUXGate(share* ina, share* inb, share* sel) = 0;
+	virtual share** PutCondSwapGate(share* ina, share* inb, share* sel, BOOL vectorized) = 0;
+	virtual share* PutUniversalGate(share* ina, share* inb, uint32_t op_id) = 0;
 	virtual share* PutY2BGate(share* ina) = 0;
 	virtual share* PutB2AGate(share* ina) = 0;
 	virtual share* PutB2YGate(share* ina) = 0;

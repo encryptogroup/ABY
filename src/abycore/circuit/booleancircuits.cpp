@@ -73,6 +73,7 @@ void BooleanCircuit::Init() {
 	m_nNumXORVals = 0;
 	m_nNumXORGates = 0;
 	m_nYSwitchGates = 0;
+	m_nUNIVGates = 0;
 
 }
 
@@ -635,6 +636,37 @@ share* BooleanCircuit::PutStructurizedCombinerGate(share* input, uint32_t pos_st
 	return out;
 }
 
+uint32_t BooleanCircuit::PutUniversalGate(uint32_t a, uint32_t b, uint32_t op_id) {
+	uint32_t gateid;
+
+	if(m_eContext == S_YAO) { //In case of Yao, put universal gate
+		gateid = m_cCircuit->PutUniversalGate(a, b, op_id, m_nRoundsAND);
+		UpdateLocalQueue(gateid);
+		m_nUNIVGates+=m_pGates[gateid].nvals;
+	} else if (m_eContext == S_BOOL) { //In case of GMW, replace universal gate by sub-circuit
+		gateid = PutUniversalGateCircuit(a, b, op_id);
+	} else {
+		std::cerr << "Context not recognized in PutUniversalGate" << std::endl;
+		exit(0);
+	}
+
+	return gateid;
+}
+
+std::vector<uint32_t> BooleanCircuit::PutUniversalGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t op_id) {
+	uint32_t niters = std::min(a.size(), b.size());
+	std::vector<uint32_t> output(niters);
+	for(uint32_t i = 0; i < niters; i++) {
+		output[i] = PutUniversalGate(a[i], b[i], op_id);
+	}
+	return output;
+}
+
+share* BooleanCircuit::PutUniversalGate(share* a, share* b, uint32_t op_id) {
+	return new boolshare(PutUniversalGate(a->get_wires(), b->get_wires(), op_id), this);
+
+}
+
 uint32_t BooleanCircuit::PutCallbackGate(std::vector<uint32_t> in, uint32_t rounds, void (*callback)(GATE*, void*),
 		void* infos, uint32_t nvals) {
 
@@ -854,6 +886,34 @@ std::vector<uint32_t> BooleanCircuit::PutLeftShifterGate(std::vector<uint32_t> v
 	out.reserve(newsize - extra_bits);
 	out.insert(out.end(), val.cbegin(), val.cend() - extra_bits);
 	return out;
+}
+
+// Builds a universal gate that output op_id depending on the circuit
+// Only works for nvals <= 32 due to the constant gate implementation in Bool
+// sharing.
+uint32_t BooleanCircuit::PutUniversalGateCircuit(uint32_t a, uint32_t b, uint32_t op_id) {
+	uint32_t nvals = std::max(m_pGates[a].nvals, m_pGates[b].nvals);
+	assert(nvals <= 32);
+
+	uint32_t mask = 0xFFFFFFFF;
+	uint32_t c0 = PutConstantGate((op_id & 0x01) * mask, nvals);
+	uint32_t c1 = PutConstantGate(((op_id>>1) & 0x01) * mask, nvals);
+	uint32_t c2 = PutConstantGate(((op_id>>2) & 0x01) * mask, nvals);
+	uint32_t c3 = PutConstantGate(((op_id>>3) & 0x01) * mask, nvals);
+
+	uint32_t c0c1 =	PutXORGate(c0, c1);
+	uint32_t c2c3 =	PutXORGate(c2, c3);
+
+	uint32_t bc0c1 = PutANDGate(b, c0c1);
+	uint32_t bc2c3 = PutANDGate(b, c2c3);
+
+	uint32_t o0 = PutXORGate(c0, bc0c1);
+	uint32_t o1 = PutXORGate(c2, bc2c3);
+
+	uint32_t o0o1 = PutXORGate(o0, o1);
+	uint32_t ao0o1 = PutANDGate(a, o0o1);
+
+	return	PutXORGate(o0, ao0o1);
 }
 
 share* BooleanCircuit::PutADDGate(share* ina, share* inb) {
@@ -1856,77 +1916,40 @@ share** BooleanCircuit::PutCondSwapGate(share* a, share* b, share* s, BOOL vecto
 
 //if s == 0: a stays a, else a becomes b
 std::vector<std::vector<uint32_t> > BooleanCircuit::PutCondSwapGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t s, BOOL vectorized) {
-	uint32_t rep = std::min(a.size(), b.size());
+	std::vector<std::vector<uint32_t> > out(2);
+	uint32_t rep = std::max(a.size(), b.size());
 	PadWithLeadingZeros(a, b);
 
-	std::vector<std::vector<uint32_t> > out(2);
 	out[0].resize(rep);
 	out[1].resize(rep);
 
-	//std::cout << "b.nvals = " << m_pGates[b[0]].nvals << ", b.size = " << b.size() <<  std::endl;
-
 	uint32_t ab, snab, svec;
 
-	if (m_eContext == S_BOOL) {
-		if (vectorized) {
-			out[0].resize(1);
-			out[1].resize(1);
+	if (m_eContext == S_BOOL && !vectorized) {
+		//Put combiner and splitter gates
+		uint32_t avec = PutCombinerGate(a);
+		uint32_t bvec = PutCombinerGate(b);
 
-			ab = PutXORGate(a[0], b[0]);
-			snab = PutVectorANDGate(s, ab);
-			//uint32_t svec = PutRepeaterGate(s, 32);
-			//snab = PutANDGate(svec, ab);
-			out[0][0] = PutXORGate(snab, a[0]);
-			out[1][0] = PutXORGate(snab, b[0]);
-		} else {
-			//Put combiner and splitter gates
-			uint32_t avec = PutCombinerGate(a);
-			uint32_t bvec = PutCombinerGate(b);
-
-			ab = PutXORGate(avec, bvec);
-			snab = PutVectorANDGate(s, ab);
-			out[0] = PutSplitterGate(PutXORGate(snab, avec));
-			out[1] = PutSplitterGate(PutXORGate(snab, bvec));
-		}
-
+		ab = PutXORGate(avec, bvec);
+		snab = PutVectorANDGate(s, ab);
+		out[0] = PutSplitterGate(PutXORGate(snab, avec));
+		out[1] = PutSplitterGate(PutXORGate(snab, bvec));
 	} else {
 		if (m_pGates[s].nvals < m_pGates[a[0]].nvals)
-				svec = PutRepeaterGate(s, m_pGates[a[0]].nvals);
-			else
-				svec = s;
-			//std::cout << "b.nvals = " << m_pGates[b[0]].nvals << ", b.size = " << b.size() <<  std::endl;
+			svec = PutRepeaterGate(s, m_pGates[a[0]].nvals);
+		else
+			svec = s;
 
-			for (uint32_t i = 0; i < rep; i++) {
-				ab = PutXORGate(a[i], b[i]);
-				//snab = PutVectorANDGate(ab, s);
+		for (uint32_t i = 0; i < rep; i++) {
+			ab = PutXORGate(a[i], b[i]);
+			snab = PutANDGate(svec, ab);
 
-				snab = PutANDGate(svec, ab);
-
-				//swap here to change swap-behavior of condswap
-				out[0][i] = PutXORGate(snab, a[i]);
-				out[1][i] = PutXORGate(snab, b[i]);
-			}
+			//swap here to change swap-behavior of condswap
+			out[0][i] = PutXORGate(snab, a[i]);
+			out[1][i] = PutXORGate(snab, b[i]);
+		}
 	}
 
-	/*uint32_t avec = m_cCircuit->PutCombinerGate(a);
-	 uint32_t bvec = m_cCircuit->PutCombinerGate(b);
-
-	 uint32_t abvec = PutXORGate(avec, bvec);
-	 uint32_t snabvec = PutVectorANDGate(s, abvec);
-
-	 out[0] = m_cCircuit->PutSplitterGate(PutXORGate(snabvec, avec));
-	 out[1] = m_cCircuit->PutSplitterGate(PutXORGate(snabvec, bvec));*/
-
-	/*for(uint32_t i=0; i<rep; i++)
-	 {
-	 ab = PutXORGate(a[i], b[i]);
-	 //snab = PutVectorANDGate(ab, s);
-	 snab = PutANDGate(s, ab);
-
-	 //swap here to change swap-behavior of condswap
-	 out[0][i] = PutXORGate(snab, a[i]);
-	 out[1][i] = PutXORGate(snab, b[i]);
-	 }*/
 	return out;
 }
 
@@ -2340,6 +2363,197 @@ std::vector<uint32_t> BooleanCircuit::PutGateFromFile(const std::string filename
 	return outputs;
 }
 
+std::vector<uint32_t> BooleanCircuit::PutUniversalCircuitFromFile(const std::string filename, const std::string p1filename, std::vector<uint32_t> p2inputs, uint32_t nvals){
+	std::string line;
+	std::string p1line;
+	std::vector<uint32_t> tokens, outputs, p1tokens;
+	std::map<uint32_t, uint32_t> wires;
+	std::vector<std::vector<uint32_t> > tmp;
+	std::vector<uint32_t> tmp_wire1;
+	std::vector<uint32_t> tmp_wire2;
+	std::vector<uint32_t> p1inputs, p1inputsgate;
+
+	std::ifstream p1file;
+
+	p1file.open(p1filename);
+
+	uint32_t p1file_input_size = 0;
+
+	if(!p1file.is_open()) {
+		std::cerr << "Error: Unable to open programming file " << p1filename << std::endl;
+	}
+	#ifdef DEBUG_UC
+	std::cout << "Server Input Control Bits " ;
+	#endif
+	while (getline(p1file, p1line)){
+		if (p1line != "") {
+			tokenize(p1line, p1tokens);
+			p1inputs.push_back(this->PutSIMDINGate(nvals, p1tokens[0], SERVER));
+			if(m_eMyRole == SERVER) {
+				p1inputsgate.push_back(p1tokens[0]);
+			}
+			else{
+				p1inputsgate.push_back(0);
+			}
+			#ifdef DEBUG_UC
+			std::cout << p1tokens[0] << std::endl;
+			#endif
+			p1file_input_size += 1;
+		}
+	}
+	#ifdef DEBUG_UC
+	std::cout << std::endl;
+	#endif
+	p1file.close();
+	#ifdef DEBUG_UC
+	std::cout << "P1file input size: " << p1file_input_size << std::endl;
+	#endif
+
+	if (p1file_input_size != p1inputs.size()) {
+		std::cerr << "Warning: Input sizes didn't match! Less inputs read from circuit file than passed to it!" << std::endl;
+	}
+
+	std::ifstream myfile;
+
+	myfile.open(filename);
+
+	uint32_t file_input_size = 0;
+	uint32_t p1_counter = 0;
+
+	if (!myfile.is_open()) {
+		std::cerr << "Error: Unable to open circuit file " << filename << std::endl;
+	}
+	while (getline(myfile, line)) {
+
+		if (line != "") {
+
+			tokenize_verilog(line, tokens);
+
+			switch (line.at(0)) {
+
+			case 'C': // Client input wire ids
+				assert(p2inputs.size() >= tokens.size() + file_input_size - 1);
+				#ifdef DEBUG_UC
+							std::cout << "Client Input Wire IDs " ;
+				#endif
+				for (uint32_t i = 0; i < tokens.size(); i++) {
+					wires[tokens[i]] = p2inputs[i + file_input_size];
+					#ifdef DEBUG_UC
+					std::cout << tokens[i] << " ";
+					#endif
+				}
+				file_input_size += tokens.size();
+				#ifdef DEBUG_UC
+				std::cout << "number of inputs" << file_input_size << std::endl;
+				#endif
+				break;
+
+			case 'Y': // MUX Gate
+			#ifdef DEBUG_UC
+					std::cout << "Y Gate " << tokens[2] << " = Y(" << tokens[0]
+					<< " , " << tokens[1] << ") c = " << p1inputs[p1_counter] << std::endl;
+			#endif
+				wires[tokens[2]] = PutVecANDMUXGate(wires[tokens[0]], wires[tokens[1]], p1inputs[p1_counter]);
+				p1_counter++;
+				break;
+
+			case 'U': // Universal Gate
+			#ifdef DEBUG_UC
+				std::cout << "Universal Gate " << tokens[2] << " = U(" << tokens[0]
+						<< " , " << tokens[1] << ") op = " << p1inputs[p1_counter] << std::endl;
+			#endif
+				wires[tokens[2]] =
+					PutUniversalGate(wires[tokens[0]], wires[tokens[1]], p1inputsgate[p1_counter]);
+				p1_counter++;
+				break;
+
+			case 'X': // X Gate
+			#ifdef DEBUG_UC
+					std::cout << "X Gate (" << tokens[2] << " , " << tokens[3] << ")"
+					<< "= X(" << tokens[0] << " , " << tokens[1] << ") c = "
+							<< p1inputs[p1_counter] << std::endl;
+			#endif
+				tmp_wire1.clear();
+				tmp_wire2.clear();
+				tmp_wire1.push_back(wires[tokens[0]]);
+				tmp_wire2.push_back(wires[tokens[1]]);
+				tmp = PutCondSwapGate( tmp_wire1, tmp_wire2, p1inputs[p1_counter], true );
+				wires[tokens[2]] = tmp[0][0];
+				wires[tokens[3]] = tmp[1][0];
+							p1_counter++;
+				break;
+
+			case 'O': // List of output wires
+			#ifdef DEBUG_UC
+				std::cout << "Output Wires ";
+			#endif
+				for (uint32_t i = 0; i < tokens.size(); i++) {
+					outputs.push_back(wires[tokens[i]]);
+					#ifdef DEBUG_UC
+					std::cout << tokens[i] << " ";
+					#endif
+				}
+				#ifdef DEBUG_UC
+				std::cout << std::endl;
+				#endif
+				break;
+			}
+		}
+	}
+
+	myfile.close();
+
+	if (file_input_size < p2inputs.size()) {
+		std::cerr << "Warning: Input sizes didn't match! Less inputs read from circuit file than passed to it! " << file_input_size << "  " << p2inputs.size() << std::endl;
+	}
+
+	return outputs;
+}
+
+void BooleanCircuit::GetInputLengthFromFile(const std::string filename, uint32_t& client_input, uint32_t& server_input){
+	std::string line;
+	std::vector<uint32_t> tokens;
+	std::ifstream myfile;
+
+	//std::cout << "opening " << filename <<  std::endl;
+	myfile.open(filename.c_str());
+
+	client_input = 0;
+	server_input = 0;
+
+	if (!myfile.is_open()) {
+		std::cerr << "Error: Unable to open circuit file " << filename << std::endl;
+	}
+	while (getline(myfile, line)) {
+
+		if (line != "") {
+
+			tokenize_verilog(line, tokens);
+
+			switch (line.at(0)) {
+
+			case 'C': // Client input wire ids
+				client_input += tokens.size();
+				#ifdef DEBUG_UC
+				std::cout << line << std::endl;
+				std::cout << client_input << std::endl;
+				#endif
+				break;
+			case 'X': // Server input wire ids
+				server_input += 1;
+				break;
+			case 'Y': // Server input wire ids
+				server_input += 1;
+				break;
+			case 'U': // Server input wire ids
+				server_input += 1;
+				break;
+			}
+		}
+	}
+	myfile.close();
+}
+
 share* BooleanCircuit::PutLUTGateFromFile(const std::string filename, share* input) {
 	return new boolshare(PutLUTGateFromFile(filename, input->get_wires()), this);
 }
@@ -2588,6 +2802,7 @@ void BooleanCircuit::Reset() {
 	m_nYSwitchGates = 0;
 	m_nNumXORVals = 0;
 	m_nNumXORGates = 0;
+	m_nUNIVGates = 0;
 
 	m_vTTlens.resize(1);
 	m_vTTlens[0].resize(1);

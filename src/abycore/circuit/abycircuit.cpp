@@ -334,6 +334,23 @@ uint32_t ABYCircuit::PutPermutationGate(std::vector<uint32_t> input, uint32_t* p
 	return m_nNextFreeGate++;
 }
 
+uint32_t ABYCircuit::PutUniversalGate(uint32_t inleft, uint32_t inright, uint32_t op_id, uint32_t nrounds) {
+	GATE* gate = m_pGates + m_nNextFreeGate;
+	InitGate(gate, G_UNIV, inleft, inright);
+
+	gate->nvals = std::min(m_pGates[inleft].nvals, m_pGates[inright].nvals);
+
+	gate->nrounds = nrounds;
+	gate->gs.ttable = op_id;
+
+#ifdef DEBUG_CIRCUIT_CONSTRUCTION
+	cout << "New Universal Gate with id: " << m_nNextFreeGate << ", left in = " << inleft << ", right in = " << inright << ", nvals = " << gate->nvals <<
+	", depth = " << gate->depth << ", sharingsize = " << gate->sharebitlen << ", nrounds = " << gate->nrounds << ", and operation_id = " << op_id << endl;
+#endif
+
+	return m_nNextFreeGate++;
+}
+
 uint32_t ABYCircuit::PutOUTGate(uint32_t in, e_role dst, uint32_t rounds) {
 	GATE* gate = m_pGates + m_nNextFreeGate;
 	InitGate(gate, G_OUT, in);

@@ -46,6 +46,12 @@ typedef struct {
 #define KEYS_PER_GATE_IN_TABLE 2
 
 /**
+ \def 	KEYS_PER_UNIV_GATE_IN_TABLE
+ \brief	____________________
+ */
+#define KEYS_PER_UNIV_GATE_IN_TABLE 3
+
+/**
  Yao Sharing class. <Detailed Description please.>
  */
 class YaoSharing: public Sharing {
@@ -112,6 +118,7 @@ protected:
 	YaoKey *m_pKeyOps; /**< A variable that points to inline functions for key xor.*/
 	uint32_t m_nANDGates; /**< AND Gates_____________*/
 	uint32_t m_nXORGates; /**< XOR Gates_____________*/
+	uint32_t m_nUNIVGates; /**< Universal Gates_____________*/
 
 	XORMasking *fMaskFct; /**< Mask ____________*/
 	std::vector<GATE*> m_vANDGates; /**< Vector of AND Gates. */
@@ -136,6 +143,9 @@ protected:
 	CBitVector m_vGarbledCircuit; /**< Garbled Circuit Vector.*/
 	uint64_t m_nGarbledTableCtr; /**< Garbled Table Counter. */
 
+	CBitVector m_vUniversalGateTable; /**< Table for the universal gates.*/
+	uint64_t m_nUniversalGateTableCtr; /**< Universal Gate Table Counter. */
+
 	BYTE* m_bZeroBuf; /**< Zero Buffer. */
 	BYTE* m_bTempKeyBuf; /**< Temporary Key Buffer. */
 
@@ -154,11 +164,21 @@ protected:
 
 	/**
 	 Encrypt Wire Function <DETAILED DESCRIPTION>
-	 \param  c 		________________
-	 \param  p 		________________
-	 \param  id 		________________
+	 \param  c 		output mask
+	 \param  p 		input key
+	 \param  id 		unique id
 	 */
 	BOOL EncryptWire(BYTE* c, BYTE* p, uint32_t id);
+
+	/**
+	 Encrypt Wire Function for GRR-3 used for universal gates
+	 \param  c 		output garbled row
+	 \param  p 		input key to be garbled
+	 \param  l 		input key on left wire
+	 \param  r 		input key on right wire
+	 \param  id 	unique id
+	 */
+	BOOL EncryptWireGRR3(BYTE* c, BYTE* p, BYTE* l, BYTE* r, uint32_t id);
 
 	/** Print the key. */
 	void PrintKey(BYTE* key);

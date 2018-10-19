@@ -23,6 +23,8 @@
 /* an interface to operations on yaos garbled circuits keys for pre-defined symmetric security sizes */
 
 #define _MSB_UINT64_T 0x80000000000000L
+#define _TWO_MSB_UINT64_T 0xC0000000000000L
+#define _TWO_MSB_DOWNSHIFT 62
 
 class YaoKey {
 public:
@@ -31,6 +33,7 @@ public:
 	;
 	virtual void XOR(BYTE* out, BYTE* ina, BYTE* inb) = 0;
 	virtual void XOR_DOUBLE_B(BYTE* out, BYTE* ina, BYTE* inb) = 0;
+	virtual void XOR_QUAD_B(BYTE* out, BYTE* ina, BYTE* inb) = 0;
 };
 
 class YaoKeyST: public YaoKey {
@@ -50,7 +53,11 @@ public:
 		(((UINT64_T*) (out))[0] = ((UINT64_T*) (ina))[0] ^ ((UINT64_T*) (inb))[0]<<1);
 		((UINT16_T*) (out))[4] = ((UINT16_T*) (ina))[4] ^ ((((UINT16_T*) (inb))[4]<<1) ^ (!!(((UINT64_T*) (inb))[0] & _MSB_UINT64_T)));
 	};
+	void XOR_QUAD_B(BYTE* out, BYTE* ina, BYTE* inb) {
 
+		(((UINT64_T*) (out))[0] = ((UINT64_T*) (ina))[0] ^ ((UINT64_T*) (inb))[0]<<2);
+		((UINT16_T*) (out))[4] = ((UINT16_T*) (ina))[4] ^ ((((UINT16_T*) (inb))[4]<<2) ^ ((((UINT64_T*) (inb))[0] & _TWO_MSB_UINT64_T))>>_TWO_MSB_DOWNSHIFT);
+	};
 
 };
 
@@ -71,6 +78,11 @@ public:
 		(((UINT32_T*) (out))[3] = ((UINT32_T*) (ina))[3] ^ ((UINT32_T*) (inb))[3]<<1);
 		(((UINT32_T*) (out))[3] = ((UINT32_T*) (ina))[3] ^ (((UINT32_T*) (inb))[3]<<1) ^ (!!(((UINT64_T*) (inb))[0] & _MSB_UINT64_T)));
 	};
+	void XOR_QUAD_B(BYTE* out, BYTE* ina, BYTE* inb) {
+		(((UINT64_T*) (out))[0] = ((UINT64_T*) (ina))[0] ^ ((UINT64_T*) (inb))[0]<<2);
+		//(((UINT32_T*) (out))[3] = ((UINT32_T*) (ina))[3] ^ ((UINT32_T*) (inb))[3]<<2);
+		(((UINT32_T*) (out))[3] = ((UINT32_T*) (ina))[3] ^ (((UINT32_T*) (inb))[3]<<2) ^ ((((UINT64_T*) (inb))[0] & _TWO_MSB_UINT64_T))>>_TWO_MSB_DOWNSHIFT);
+	};
 };
 class YaoKeyLT: public YaoKey {
 public:
@@ -85,6 +97,10 @@ public:
 	void XOR_DOUBLE_B(BYTE* out, BYTE* ina, BYTE* inb) {
 		(((UINT64_T*) (out))[0] = ((UINT64_T*) (ina))[0] ^ ((UINT64_T*) (inb))[0]<<1);
 		(((UINT64_T*) (out))[1] = ((UINT64_T*) (ina))[1] ^ (((UINT64_T*) (inb))[1]<<1) ^ (!!(((UINT64_T*) (inb))[0] & _MSB_UINT64_T)));
+	};
+	void XOR_QUAD_B(BYTE* out, BYTE* ina, BYTE* inb) {
+		(((UINT64_T*) (out))[0] = ((UINT64_T*) (ina))[0] ^ ((UINT64_T*) (inb))[0]<<2);
+		(((UINT64_T*) (out))[1] = ((UINT64_T*) (ina))[1] ^ (((UINT64_T*) (inb))[1]<<2) ^ ((((UINT64_T*) (inb))[0] & _TWO_MSB_UINT64_T))>>_TWO_MSB_DOWNSHIFT);
 	};
 };
 
@@ -106,6 +122,11 @@ public:
 		(((UINT64_T*) (out))[2] = ((UINT64_T*) (ina))[2] ^ (((UINT64_T*) (inb))[2]<<1) ^ (!!(((UINT64_T*) (inb))[1] & _MSB_UINT64_T)));
 
 	};
+	void XOR_QUAD_B(BYTE* out, BYTE* ina, BYTE* inb) {
+		(((UINT64_T*) (out))[0] = ((UINT64_T*) (ina))[0] ^ ((UINT64_T*) (inb))[0]<<2);
+		(((UINT64_T*) (out))[1] = ((UINT64_T*) (ina))[1] ^ (((UINT64_T*) (inb))[1]<<2) ^ ((((UINT64_T*) (inb))[0] & _TWO_MSB_UINT64_T))>>_TWO_MSB_DOWNSHIFT);
+		(((UINT64_T*) (out))[2] = ((UINT64_T*) (ina))[2] ^ (((UINT64_T*) (inb))[2]<<2) ^ ((((UINT64_T*) (inb))[1] & _TWO_MSB_UINT64_T))>>_TWO_MSB_DOWNSHIFT);
+	};
 };
 
 class YaoKeyXXLT: public YaoKey {
@@ -125,6 +146,12 @@ public:
 		(((UINT64_T*) (out))[1] = ((UINT64_T*) (ina))[1] ^ (((UINT64_T*) (inb))[1]<<1) ^ (!!(((UINT64_T*) (inb))[0] & _MSB_UINT64_T)));
 		(((UINT64_T*) (out))[2] = ((UINT64_T*) (ina))[2] ^ (((UINT64_T*) (inb))[2]<<1) ^ (!!(((UINT64_T*) (inb))[1] & _MSB_UINT64_T)));
 		(((UINT64_T*) (out))[3] = ((UINT64_T*) (ina))[3] ^ (((UINT64_T*) (inb))[3]<<1) ^ (!!(((UINT64_T*) (inb))[2] & _MSB_UINT64_T)));
+	};
+	void XOR_QUAD_B(BYTE* out, BYTE* ina, BYTE* inb) {
+		(((UINT64_T*) (out))[0] = ((UINT64_T*) (ina))[0] ^ ((UINT64_T*) (inb))[0]<<2);
+		(((UINT64_T*) (out))[1] = ((UINT64_T*) (ina))[1] ^ (((UINT64_T*) (inb))[1]<<2) ^ ((((UINT64_T*) (inb))[0] & _TWO_MSB_UINT64_T))>>_TWO_MSB_DOWNSHIFT);
+		(((UINT64_T*) (out))[2] = ((UINT64_T*) (ina))[2] ^ (((UINT64_T*) (inb))[2]<<2) ^ ((((UINT64_T*) (inb))[1] & _TWO_MSB_UINT64_T))>>_TWO_MSB_DOWNSHIFT);
+		(((UINT64_T*) (out))[3] = ((UINT64_T*) (ina))[3] ^ (((UINT64_T*) (inb))[3]<<2) ^ ((((UINT64_T*) (inb))[2] & _TWO_MSB_UINT64_T))>>_TWO_MSB_DOWNSHIFT);
 	};
 };
 
