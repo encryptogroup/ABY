@@ -174,8 +174,8 @@ private:
 	std::vector<std::vector<KK_OTTask*> > m_vKKOTTasks;
 
 	std::vector<PKMTGenVals*> m_vPKMTGenTasks;
-	DJNParty* m_cPaillierMTGen;
-	DGKParty** m_cDGKMTGen;
+	DJNParty* m_cPaillierMTGen = nullptr;
+	DGKParty** m_cDGKMTGen = nullptr;
 
 	uint32_t m_nNumOTThreads;
 	e_role m_eRole;
@@ -185,17 +185,17 @@ private:
 
 	e_mt_gen_alg m_eMTGenAlg;
 
-	crypto* m_cCrypt;
+	crypto* m_cCrypt = nullptr;
 
-	OTExtSnd *iknp_ot_sender;
-	OTExtRec *iknp_ot_receiver;
+	OTExtSnd *iknp_ot_sender = nullptr;
+	OTExtRec *iknp_ot_receiver = nullptr;
 
-	OTExtSnd *kk_ot_sender;
-	OTExtRec *kk_ot_receiver;
+	OTExtSnd *kk_ot_sender = nullptr;
+	OTExtRec *kk_ot_receiver = nullptr;
 
-	comm_ctx* m_tComm;
+	comm_ctx* m_tComm = nullptr;
 
-	channel* m_tSetupChan;
+	channel* m_tSetupChan = nullptr;
 	//SndThread *sndthread_otsnd, *sndthread_otrcv;
 	//RcvThread *rcvthread_otsnd, *rcvthread_otrcv;
 
