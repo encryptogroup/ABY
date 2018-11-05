@@ -148,6 +148,8 @@ enum e_operation {
 	OP_IN, /**< Enum for performing INPUT*/
 	OP_OUT, /**< Enum for performing OUTPUT*/
 	OP_INV, /**< Enum for performing INVERSION*/
+	OP_X,	/**<Enum for performing X SWITCHES>*/
+	OP_UNIV,	/**<Enum for performing universal gates>*/
 	OP_CONSTANT, /**< Enum for performing CONSTANT OPERATION*/
 	OP_CONV, /**< Enum for performing CONVERSION*/
 	OP_A2Y, /**< Enum for performing ARITHEMETIC TO YAO CONVERSION*/
@@ -305,6 +307,10 @@ static std::string get_op_name(e_operation op) {
 		return "EQ";
 	case OP_MUX:
 		return "MUX";
+	case OP_X:
+		return "X";
+	case OP_UNIV:
+		return "UNIV";
 	case OP_IN:
 		return "IN";
 	case OP_OUT:
@@ -447,6 +453,8 @@ static const aby_ops_t m_tAllOps[] = {
 	{OP_CMP, S_YAO, "cmpyao"},
 	{OP_EQ, S_YAO, "eqyao"},
 	{OP_MUX, S_YAO, "muxyao"},
+	{OP_X, S_YAO, "xyao"},
+	{OP_UNIV, S_YAO, "univyao"},
 	{OP_SUB, S_YAO, "subyao"},
 	{OP_ADD, S_ARITH, "addarith"},
 	{OP_MUL, S_ARITH, "mularith"},
@@ -465,6 +473,8 @@ static const aby_ops_t m_tAllOps[] = {
 	{OP_MUL, S_SPLUT, "mulsplut"},
 	{OP_EQ, S_SPLUT, "eqsplut"},
 	{OP_MUX, S_SPLUT, "muxsplut"},
+	{OP_X, S_BOOL, "xbool"},
+	{OP_UNIV, S_BOOL, "univbool"},
 	{OP_SUB, S_SPLUT, "subsplut"}
 };
 

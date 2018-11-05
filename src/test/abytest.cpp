@@ -19,6 +19,12 @@
 #include "abytest.h"
 
 
+static const uint32_t TTSIZE = 16;
+static const uint32_t TRUTH_TABLE[TTSIZE][4]={{0,0,0,0}, {1,0,0,0}, {0,1,0,0}, {1,1,0,0},
+		{0,0,1,0}, {1,0,1,0}, {0,1,1,0}, {1,1,1,0},
+		{0,0,0,1}, {1,0,0,1}, {0,1,0,1}, {1,1,0,1},
+		{0,0,1,1}, {1,0,1,1}, {0,1,1,1}, {1,1,1,1},
+};
 
 //static const aby_ops_t test_single_op [] {{OP_ADD, S_BOOL, "distinct_op"}};
 
@@ -130,8 +136,9 @@ bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_
 
 int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t num_test_runs, uint32_t nops,
 		e_role role, bool verbose) {
-	uint32_t a = 0, b = 0, c, verify, sa, sb;
+	uint32_t a = 0, b = 0, c, verify, sa, sb, sc, xbit, ybit, op;
 	share *shra, *shrb, *shrres, *shrout, *shrsel;
+	share **shrres_vec;
 	vector<Sharing*>& sharings = party->GetSharings();
 	Circuit *bc, *yc, *ac;
 
@@ -183,6 +190,30 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 				shrsel = circ->PutXORGate(circ->PutINGate(sa, 1, SERVER), circ->PutINGate(sb, 1, CLIENT));
 				shrres = circ->PutMUXGate(shra, shrb, shrsel);
 				verify = (sa ^ sb) == 0 ? b : a;
+				break;
+			case OP_X:
+				sa = rand() % 2;
+				sb = rand() % 2;
+				shrsel = circ->PutXORGate(circ->PutINGate(sa, 1, SERVER), circ->PutINGate(sb, 1, CLIENT));
+				shrres_vec = circ->PutCondSwapGate(shra, shrb, shrsel, false);
+				sc = rand() % 2;
+				shrres = shrres_vec[sc];
+				if(sc == 1){
+					verify = (sa ^ sb) == 0 ? b : a;
+				}
+				else{
+					verify = (sa ^ sb) == 0 ? a : b;
+				}
+				break;
+			case OP_UNIV:
+				op = rand() % TTSIZE;
+				shrres = circ->PutUniversalGate(shra, shrb, op);
+				verify = 0;
+				for(uint32_t j = 0; j < bitlen; j++) {
+					xbit = (a>>j) & 0x01;
+					ybit = (b>>j) & 0x01;
+					verify |= ((TRUTH_TABLE[op][(xbit << 1) | ybit]) << j);
+				}
 				break;
 			case OP_Y2B:
 				shrres = circ->PutADDGate(shra, shrb);
