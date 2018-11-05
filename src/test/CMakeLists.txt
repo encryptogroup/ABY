@@ -9,4 +9,5 @@ add_executable(abytest
     ../examples/psi_phasing/common/hashing/simple_hashing.cpp
     ../examples/psi_phasing/common/hashing/cuckoo.cpp
 )
+target_compile_options(abytest PRIVATE "-Wall" "-Wextra")
 target_link_libraries(abytest ABY::aby ENCRYPTO_utils::encrypto_utils)
