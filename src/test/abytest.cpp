@@ -35,7 +35,6 @@ int main(int argc, char** argv) {
 	bool randomseed = false;
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
-	double epsilon = 1.2;
 	uint32_t num_test_runs = 2;
 
 	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op, &num_test_runs, &mt_alg, &verbose, &randomseed);
@@ -96,14 +95,11 @@ bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_
 
 	uint32_t nops;
 
-
-	UGATE_T val;
-
 	aby_ops_t* test_ops;
 
 	if (test_op > -1) {
 		test_ops = new aby_ops_t;
-		assert(test_op < sizeof(m_tAllOps) / sizeof(aby_ops_t));
+		assert(static_cast<uint32_t>(test_op) < sizeof(m_tAllOps) / sizeof(aby_ops_t));
 		test_ops->op = m_tAllOps[test_op].op;
 		test_ops->opname = m_tAllOps[test_op].opname;
 		test_ops->sharing = m_tAllOps[test_op].sharing;
@@ -134,7 +130,7 @@ bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_
 
 int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t num_test_runs, uint32_t nops,
 		e_role role, bool verbose) {
-	uint32_t a = 0, b = 0, c, verify, sa, sb, *avec, *bvec;
+	uint32_t a = 0, b = 0, c, verify, sa, sb;
 	share *shra, *shrb, *shrres, *shrout, *shrsel;
 	vector<Sharing*>& sharings = party->GetSharings();
 	Circuit *bc, *yc, *ac;
@@ -490,7 +486,6 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 		string* address, uint16_t* port, int32_t* test_op, uint32_t* num_test_runs, e_mt_gen_alg *mt_alg, bool* verbose, bool* randomseed) {
 
 	uint32_t int_role = 0, int_port = 0, int_mtalg = 0;
-	bool useffc = false;
 
 	parsing_ctx options[] = {
 	{ (void*) &int_role, T_NUM, "r", "Role: 0/1", true, false },
