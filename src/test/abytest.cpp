@@ -294,9 +294,11 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 
 int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t nvals, uint32_t num_test_runs,
 		uint32_t nops, e_role role, bool verbose) {
-	uint32_t *avec, *bvec, *cvec, *verifyvec, tmpbitlen, tmpnvals;
+	uint32_t *avec, *bvec, *cvec, *verifyvec, tmpbitlen, tmpnvals, sc, op, xbit, ybit;
 	uint8_t *sa, *sb;
+	uint32_t nvals_orig = nvals;
 	share *shra, *shrb, *shrres, *shrout, *shrsel;
+	share **shrres_vec;
 	vector<Sharing*>& sharings = party->GetSharings();
 	Circuit *bc, *yc, *ac;
 
@@ -310,11 +312,17 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 	verifyvec = (uint32_t*) malloc(nvals * sizeof(uint32_t));
 
 
-
 	for (uint32_t r = 0; r < num_test_runs; r++) {
 		for (uint32_t i = 0; i < nops; i++) {
 			if (!verbose)
 				cout << "Running vector test no. " << i << " on operation " << test_ops[i].opname << endl;
+
+			if(test_ops[i].op == OP_UNIV && nvals > 32) {
+				nvals = 32; //max nvals for universal gates
+			}
+			else {
+				nvals = nvals_orig;
+			}
 
 			Circuit* circ = sharings[test_ops[i].sharing]->GetCircuitBuildRoutine();
 
@@ -399,6 +407,36 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 				shrres = circ->PutMUXGate(shra, shrb, shrsel);
 				for (uint32_t j = 0; j < nvals; j++)
 					verifyvec[j] = (sa[j] ^ sb[j]) == 0 ? bvec[j] : avec[j];
+				break;
+			case OP_X:
+				for(uint32_t j = 0; j < nvals; j++) {
+					sa[j] = (uint8_t) (rand() & 0x01);
+					sb[j] = (uint8_t) (rand() & 0x01);
+				}
+				shrsel = circ->PutXORGate(circ->PutSIMDINGate(nvals, sa, 1, SERVER), circ->PutSIMDINGate(nvals, sb, 1, CLIENT));
+				shrres_vec = circ->PutCondSwapGate(shra, shrb, shrsel, true);
+				sc = rand() % 2;
+				shrres = shrres_vec[sc];
+				for (uint32_t j = 0; j < nvals; j++){
+					if(sc == 1){
+						verifyvec[j] = (sa[j] ^ sb[j]) == 0 ? bvec[j] : avec[j];
+					}
+					else{
+						verifyvec[j] = (sa[j] ^ sb[j]) == 0 ? avec[j] : bvec[j];
+					}
+				}
+				break;
+			case OP_UNIV:
+				op = rand() % TTSIZE;
+				shrres = circ->PutUniversalGate(shra, shrb, op);
+				for (uint32_t j = 0; j < nvals; j++){
+					verifyvec[j] = 0;
+					for(uint32_t k = 0; k < bitlen; k++){
+						xbit = (avec[j]>>k) & 0x01;
+						ybit = (bvec[j]>>k) & 0x01;
+						verifyvec[j] |= ((TRUTH_TABLE[op][(xbit << 1) | ybit]) << k);
+					}
+				}
 				break;
 			 /*case OP_AND_VEC:
 				for(uint32_t j = 0; j < bitlen; j++) {
