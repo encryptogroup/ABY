@@ -561,10 +561,7 @@ BOOL ABYParty::EstablishConnection() {
 //Interface to the connection method
 BOOL ABYParty::ABYPartyConnect() {
 	//Will open m_vSockets.size new sockets to
-	for(uint32_t i = 0; i < m_vSockets.size(); i++) {
-		m_vSockets[i] = std::make_unique<CSocket>();
-	}
-	return Connect(m_cAddress, m_nPort, m_vSockets, (uint32_t) m_eRole);
+	return Connect(m_cAddress, m_nPort, m_vSockets, static_cast<uint32_t>(m_eRole));
 }
 
 //Interface to the listening method
@@ -573,13 +570,9 @@ BOOL ABYParty::ABYPartyListen() {
 
 	for(uint32_t i = 0; i < 2; i++) {
 		tempsocks[i].resize(m_vSockets.size());
-
-		for(uint32_t j = 0; j < m_vSockets.size(); j++) {
-			tempsocks[i][j] = std::make_unique<CSocket>();
-		}
 	}
 
-	bool success = Listen(m_cAddress, m_nPort, tempsocks, m_vSockets.size(), (uint32_t) m_eRole);
+	bool success = Listen(m_cAddress, m_nPort, tempsocks, m_vSockets.size(), static_cast<uint32_t>(m_eRole));
 	for(uint32_t i = 0; i < m_vSockets.size(); i++) {
 		m_vSockets[i] = std::move(tempsocks[1][i]);
 	}
