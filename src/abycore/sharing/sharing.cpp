@@ -218,7 +218,7 @@ void Sharing::EvaluatePrintValGate(uint32_t gateid, e_circuit circ_type) {
 	}
 
 	free(value);
-	free((char*) m_pGates[gateid].gs.infostr);
+	delete[] m_pGates[gateid].gs.infostr;
 }
 
 // Delete dynamically allocated gate contents depending on gate type

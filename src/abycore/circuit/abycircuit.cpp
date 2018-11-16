@@ -524,10 +524,11 @@ uint32_t ABYCircuit::PutPrintValGate(std::vector<uint32_t> in, std::string infos
 		assert(gate->nvals == m_pGates[in[i]].nvals);
 	}
 
-	char* tmp = (char*) malloc(sizeof(char*) * (infostr.size() + 1));
-	memcpy(tmp, infostr.c_str(), infostr.size());
-	tmp[infostr.size()]='\0';
-	gate->gs.infostr = (const char*) tmp;
+	// buffer is freed in Sharing::EvaluatePrintValGate
+	auto buffer = new char[infostr.size() + 1];
+	infostr.copy(buffer, infostr.size());
+	buffer[infostr.size()] = '\0';
+	gate->gs.infostr = buffer;
 
 	return m_nNextFreeGate++;
 }
