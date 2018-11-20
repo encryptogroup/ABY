@@ -46,6 +46,7 @@ This code is provided as a experimental implementation for testing purposes and 
   * [`cmake`](https://packages.debian.org/testing/cmake)
   * [`libgmp-dev`](https://packages.debian.org/testing/libgmp-dev)
   * [`libssl-dev`](https://packages.debian.org/testing/libssl-dev)
+  * [`libboost-all-dev`](https://packages.debian.org/testing/libboost-all-dev)
 
   Install these packages with your favorite package manager, e.g, `sudo apt-get install <package-name>`.
 
