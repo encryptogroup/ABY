@@ -544,6 +544,9 @@ BOOL ABYParty::EstablishConnection() {
 		success = ABYPartyConnect();
 
 	}
+	if (!success)
+		return false;
+
 	m_tComm->snd_std = std::make_unique<SndThread>(m_vSockets[0].get(), glock.get());
 	m_tComm->rcv_std = std::make_unique<RcvThread>(m_vSockets[0].get(), glock.get());
 
@@ -555,7 +558,7 @@ BOOL ABYParty::EstablishConnection() {
 
 	m_tComm->rcv_std->Start();
 	m_tComm->rcv_inv->Start();
-	return success;
+	return true;
 }
 
 //Interface to the connection method
