@@ -18,6 +18,7 @@
 
 #include "yaoserversharing.h"
 #include "../aby/abysetup.h"
+#include <cstdlib>
 
 void YaoServerSharing::InitServer() {
 
@@ -257,7 +258,7 @@ void YaoServerSharing::EvaluateInteractiveOperations(uint32_t depth) {
 			break;
 		default:
 			std::cerr << "Interactive Operation not recognized: " << (uint32_t) gate->type << " (" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
-			exit(0);
+			std::exit(EXIT_FAILURE);
 		}
 
 	}
@@ -428,7 +429,7 @@ void YaoServerSharing::PrecomputeGC(std::deque<uint32_t>& queue, ABYSetup* setup
 			//Do nothing since inputs are not known yet and hence no debugging can occur
 		} else {
 			std::cerr << "Operation not recognized: " << (uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << std::endl;
-			exit(0);
+			std::exit(EXIT_FAILURE);
 		}
 	}
 }
@@ -1022,7 +1023,7 @@ void YaoServerSharing::InstantiateGate(GATE* gate) {
 	gate->gs.yinput.pi = (BYTE*) malloc(sizeof(BYTE) * gate->nvals);
 	if (gate->gs.yinput.outKey == NULL) {
 		std::cerr << "Memory allocation not successful at Yao gate instantiation" << std::endl;
-		exit(0);
+		std::exit(EXIT_FAILURE);
 	}
 	gate->instantiated = true;
 }

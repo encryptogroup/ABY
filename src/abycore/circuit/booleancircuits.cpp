@@ -19,6 +19,7 @@
 #include "booleancircuits.h"
 #include <algorithm>
 #include <cstring>
+#include <cstdlib>
 #include <fstream>
 #include <map>
 #include <string>
@@ -65,7 +66,7 @@ void BooleanCircuit::Init() {
 		m_nRoundsOUT[1] = 0; //the client already holds the output bits from the start
 	} else {
 		std::cerr << "Sharing type not implemented for Boolean circuit" << std::endl;
-		exit(0);
+		std::exit(EXIT_FAILURE);
 	}
 
 	m_nB2YGates = 0;
@@ -647,7 +648,7 @@ uint32_t BooleanCircuit::PutUniversalGate(uint32_t a, uint32_t b, uint32_t op_id
 		gateid = PutUniversalGateCircuit(a, b, op_id);
 	} else {
 		std::cerr << "Context not recognized in PutUniversalGate" << std::endl;
-		exit(0);
+		std::exit(EXIT_FAILURE);
 	}
 
 	return gateid;
@@ -2999,7 +3000,7 @@ std::vector<uint32_t>  BooleanCircuit::PutConvTypeGate(std::vector<uint32_t> wir
             return PutFp2UintGate(wires, (FPType*)from , (UINTType*)to);
         default: 
             std::cout <<"Unknown data type in CONVType %zu" << to << std::endl;
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
     }
 }
 
@@ -3118,7 +3119,7 @@ std::vector<uint32_t> BooleanCircuit::PutFp2UintGate(std::vector<uint32_t> wires
     std::vector<uint32_t> out;
     // TODO implement PutFP2INTGate
     std::cout << "PutFP2INTGate is not implemented yet" << std::endl;
-    exit(EXIT_FAILURE);
+    std::exit(EXIT_FAILURE);
     return out;
 }
 
@@ -3130,7 +3131,7 @@ std::vector<uint32_t> BooleanCircuit::PutPreOrGate(std::vector<uint32_t> wires){
     //TODO optimize circuit
     if(!wires.size()){
         std::cout << "PreORGate wires of size 0. Exitting." << std::endl;
-        exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE);
     }
 	std::vector <uint32_t> out(wires.size());
     out[wires.size()-1] = wires[wires.size()-1];
@@ -3232,7 +3233,7 @@ share * BooleanCircuit::PutFPGate(share * in, op_t op, uint32_t nvals, fp_op_set
            break;
         default:
             std::cerr << "Wrong operation in floating point gate with one input.";
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
     }
     return new boolshare(PutFPGate(o, in->get_wires(),
         (uint8_t)in->get_bitlength(),
@@ -3259,7 +3260,7 @@ share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint32_t 
            break;
         default:
             std::cerr << "Wrong operation in floating point gate with two inputs.";
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
     }
     return new boolshare(PutFPGate(o, in_a->get_wires(),
                    in_b->get_wires(), (uint8_t)in_a->get_bitlength(),

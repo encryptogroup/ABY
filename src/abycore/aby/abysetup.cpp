@@ -17,6 +17,7 @@
  */
 
 #include "abysetup.h"
+#include <cstdlib>
 #include <iostream>
 #include <mutex>
 
@@ -28,7 +29,7 @@ ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg
 
 	if (!Init()) {
 		std::cerr << "Error in ABYSetup init" << std::endl;
-		exit(0);
+		std::exit(EXIT_FAILURE);
 	}
 }
 

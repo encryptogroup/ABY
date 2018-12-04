@@ -17,6 +17,7 @@
  */
 
 #include "arithmeticcircuits.h"
+#include <cstdlib>
 #include <cstring>
 
 
@@ -32,7 +33,7 @@ void ArithmeticCircuit::Init() {
 	} else { //m_tContext == S_YAO
 		//unknown
 		std::cerr << "Sharing type not implemented with arithmetic circuits" << std::endl;
-		exit(0);
+		std::exit(EXIT_FAILURE);
 	}
 }
 

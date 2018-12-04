@@ -21,6 +21,7 @@
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <cassert>
 #include <cstring>
+#include <cstdlib>
 
 #if __has_include(<filesystem>)
 #include <filesystem>
@@ -144,7 +145,7 @@ UGATE_T* Sharing::ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t
 			break;
 		default:
 			std::cerr << "Gate type in printer gate not recognized. Stopping" << std::endl;
-			exit(0);
+			std::exit(EXIT_FAILURE);
 	}
 
 	return value;

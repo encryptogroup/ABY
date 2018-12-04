@@ -17,6 +17,7 @@
  */
 #include "boolsharing.h"
 #include "../aby/abysetup.h"
+#include <cstdlib>
 
 #if __has_include(<filesystem>)
 #include <filesystem>
@@ -629,7 +630,7 @@ void BoolSharing::EvaluateLocalOperations(uint32_t depth) {
 			} else {
 				std::cerr << "Boolsharing: Non-interactive Operation not recognized: " << (uint32_t) gate->type
 						<< "(" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
-				exit(0);
+				std::exit(EXIT_FAILURE);
 			}
 			break;
 		}
@@ -681,7 +682,7 @@ void BoolSharing::EvaluateInteractiveOperations(uint32_t depth) {
 		default:
 			std::cerr << "Boolsharing: Interactive Operation not recognized: " << (uint32_t) gate->type
 				<< " (" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
-			exit(0);
+			std::exit(EXIT_FAILURE);
 		}
 	}
 }

@@ -17,6 +17,7 @@
  */
 #include "yaoclientsharing.h"
 #include "../aby/abysetup.h"
+#include <cstdlib>
 
 void YaoClientSharing::InitClient() {
 
@@ -205,7 +206,7 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 		} else {
 			std::cerr << "YaoClientSharing: Non-interactive operation not recognized: " <<
 					(uint32_t) gate->type << "(" << get_gate_type_name(gate->type) << ")" << std::endl;
-			exit(0);
+			std::exit(EXIT_FAILURE);
 		}
 	}
 }

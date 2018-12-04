@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <iostream>
@@ -742,7 +743,7 @@ void ABYCircuit::ExportGateInBristolFormat(uint32_t gateid, uint32_t& next_gate_
 	} else {
 		std::cerr << "Gate type not available in Bristol format: " << get_gate_type_name(m_pGates[gateid].type) << ". Program exits. " << std::endl;
 		outfile.close();
-		exit(0);
+		std::exit(EXIT_FAILURE);
 	}
 }
 

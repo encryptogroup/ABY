@@ -30,6 +30,7 @@
 #include <ENCRYPTO_utils/connection.h>
 #include <ENCRYPTO_utils/thread.h>
 
+#include <cstdlib>
 #include <mutex>
 #include <sstream>
 
@@ -95,7 +96,7 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 	StartWatch("Generating circuit", P_CIRCUIT);
 	if (!InitCircuit(bitlen, maxgates)) {
 		std::cout << "There was an while initializing the circuit, ending! " << std::endl;
-		exit(0);
+		std::exit(EXIT_FAILURE);
 	}
 	StopWatch("Time for circuit generation: ", P_CIRCUIT);
 }
@@ -109,7 +110,7 @@ void ABYParty::ConnectAndBaseOTs() {
 	StartWatch("Establishing network connection: ", P_NETWORK);
 	if (!EstablishConnection()) {
 		std::cout << "There was an error during establish connection, ending! " << std::endl;
-		exit(0);
+		std::exit(EXIT_FAILURE);
 	}
 	StopWatch("Time for network connect: ", P_NETWORK);
 

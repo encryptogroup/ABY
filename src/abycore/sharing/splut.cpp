@@ -472,7 +472,7 @@ void SetupLUT::EvaluateLocalOperations(uint32_t depth) {
 			} else {
 				std::cerr << "SP-LUT: Non-interactive Operation not recognized: " << (uint32_t) gate->type
 						<< "(" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
-				exit(0);
+				std::exit(EXIT_FAILURE);
 			}
 			break;
 		}
@@ -528,7 +528,7 @@ void SetupLUT::EvaluateInteractiveOperations(uint32_t depth) {
 		default:
 			std::cerr << "BoolNoMTSharing: Interactive Operation not recognized: " << (uint32_t) gate->type
 				<< " (" << get_gate_type_name(gate->type) << "), stopping execution" << std::endl;
-			exit(0);
+			std::exit(EXIT_FAILURE);
 		}
 	}
 }
@@ -1362,7 +1362,7 @@ void SetupLUT::GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<uint64_t>&
 			for(uint32_t j = 0; j < m_nMaskUpdateSndCtr[i].size(); j++) {
 				if(m_nChoiceUpdateSndCtr[i][j] > 0) {
 					std::cerr << "Choices should not be stashed; Something is wrong here. Exiting!" << std::endl;
-					exit(0);
+					std::exit(EXIT_FAILURE);
 				}
 				if(m_nMaskUpdateSndCtr[i][j] > 0) {
 					tmpbuf_bytes = ceil_divide(m_nMaskUpdateSndCtr[i][j], 8);
