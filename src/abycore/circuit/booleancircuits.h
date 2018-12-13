@@ -33,8 +33,11 @@
 /** BooleanCircuit class. */
 class BooleanCircuit: public Circuit {
 public:
-	BooleanCircuit(ABYCircuit* aby, e_role myrole, e_sharing context) :
-			Circuit(aby, context, myrole, 1, C_BOOLEAN) {
+	//TODO this default circdir works for now, but should be changed, if things move some place else
+	BooleanCircuit(ABYCircuit* aby, e_role myrole, e_sharing context, const std::string& circdir = "../../bin/circ/") :
+			Circuit(aby, context, myrole, 1, C_BOOLEAN),
+			m_cCircuitFileDir(circdir)
+			{
 		Init();
 	}
 	;
@@ -630,7 +633,7 @@ public:
          * @param s setting for operation
          * @return result of the operation
          */
-        share * PutFPGate(share * in, op_t op, uint32_t nvals = 1, fp_op_setting s = no_status);
+        share * PutFPGate(share * in, op_t op, uint8_t bitlen = 0, uint32_t nvals = 0, fp_op_setting s = no_status);
         
         /**
          * Put floating point gate with two inputs
@@ -640,7 +643,7 @@ public:
          * @param s setting for operation
          * @return result of the operation
          */
-        share * PutFPGate(share * in_a, share * in_b, op_t op, uint32_t nvals = 1, fp_op_setting s = no_status);
+        share * PutFPGate(share * in_a, share * in_b, op_t op, uint8_t bitlen = 0, uint32_t nvals = 0, fp_op_setting s = no_status);
 
 private:
 	/**
@@ -742,6 +745,8 @@ private:
 
 	uint32_t m_nNumXORVals;
 	uint32_t m_nNumXORGates;
+
+	const std::string m_cCircuitFileDir;
 
 };
 

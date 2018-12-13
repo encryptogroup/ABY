@@ -24,6 +24,7 @@
 #include <cassert>
 #include <iomanip>
 #include <iostream>
+#include <math.h>
 
 void read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 	uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
@@ -67,7 +68,7 @@ void read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 void test_verilog_add64_SIMD(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
 	e_mt_gen_alg mt_alg, e_sharing sharing, double afp, double bfp) {
 
-	// we operate on doubles, so set bitlen to 64 bits
+	// for addition we operate on doubles, so set bitlen to 64 bits
 	uint32_t bitlen = 64;
 
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
@@ -80,7 +81,11 @@ void test_verilog_add64_SIMD(e_role role, const std::string& address, uint16_t p
 	uint64_t *aptr = (uint64_t*) &afp;
 	uint64_t *bptr = (uint64_t*) &bfp;
 
-	// for this example we need at least 4 values
+	// use 32 bits for the sqrt example, so cast afp to float
+	float afloat = (float) afp;
+	uint32_t *afloatptr = (uint32_t*) &afloat;
+
+	// for this example we need at least 4 values, since we do at least 4 example operations (see lines 100-102)
 	assert(nvals > 3);
 
 	// array of 64 bit values
@@ -100,11 +105,18 @@ void test_verilog_add64_SIMD(e_role role, const std::string& address, uint16_t p
 	share* ain = circ->PutSIMDINGate(nvals, avals, bitlen, SERVER);
 	share* bin = circ->PutSIMDINGate(nvals, bvals, bitlen, CLIENT);
 
+	// 32 bit input gate (non SIMD)
+	share* asqrtin = circ->PutINGate(afloatptr, 32, SERVER);
+
 	// FP addition gate
-	share* sum = circ->PutFPGate(ain, bin, ADD, nvals, no_status);
+	share* sum = circ->PutFPGate(ain, bin, ADD, bitlen, nvals, no_status);
+	
+	// 32-bit FP addition gate (bitlen, nvals, no_status are omitted)
+	share* sqrt_share = circ->PutFPGate(asqrtin, SQRT);
 
 	// output gate
-	share* res_out = circ->PutOUTGate(sum, ALL);
+	share* add_out = circ->PutOUTGate(sum, ALL);
+	share* sqrt_out = circ->PutOUTGate(sqrt_share, ALL);
 
 	// run SMPC
 	party->ExecCircuit();
@@ -112,7 +124,8 @@ void test_verilog_add64_SIMD(e_role role, const std::string& address, uint16_t p
 	// retrieve plain text output
 	uint32_t out_bitlen, out_nvals;
 	uint64_t *out_vals;
-	res_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
+
+	add_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
 
 	// print every output
 	for (uint32_t i = 0; i < nvals; i++) {
@@ -120,9 +133,15 @@ void test_verilog_add64_SIMD(e_role role, const std::string& address, uint16_t p
 		// dereference output value as double without casting the content
 		double val = *((double*) &out_vals[i]);
 
-		std::cout << "RES: " << val << " = " << *(double*) &avals[i] << " + " << *(double*) &bvals[i] << " | nv: " << out_nvals
+		std::cout << "ADD RES: " << val << " = " << *(double*) &avals[i] << " + " << *(double*) &bvals[i] << " | nv: " << out_nvals
 		<< " bitlen: " << out_bitlen << std::endl;
 	}
+
+	uint32_t *sqrt_out_vals = (uint32_t*) sqrt_out->get_clear_value_ptr();
+
+	float val = *((float*) sqrt_out_vals);
+
+	std::cout << "SQRT RES: " << val << " = " << sqrt(afloat) << std::endl;
 }
 
 

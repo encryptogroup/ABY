@@ -2253,13 +2253,17 @@ void BooleanCircuit::PutMaxIdxGate(std::vector<std::vector<uint32_t> > vals, std
 
 
 std::vector<uint32_t> BooleanCircuit::PutFPGate(const std::string func, std::vector<uint32_t> inputs, uint8_t bitsize, uint32_t nvals){
-	std::string fn = "circ/fp_";
-	char bs[3];
+	std::string fn = m_cCircuitFileDir;
+
+	//if there is no "/" at the end, append it
+	if ((fn.size() > 0) && (fn.compare(fn.size()-1, 1, "/") != 0)) {
+		fn += "/";
+	}
+	fn += "fp_";
 	fn += func;
 	fn += "_";
 	//std::cout << "bs = " << (uint32_t) bitsize << std::endl;
-	sprintf(bs, "%d", bitsize);
-	fn += bs;
+	fn += std::to_string(bitsize);
 	fn += ".aby";
 	//std::cout << "opening " << fn.c_str() << std::endl;
 	return PutGateFromFile(fn.c_str(), inputs, nvals);
@@ -3202,9 +3206,14 @@ std::vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(std::vector<uint
     return res;
 }
 
-
-//TODO pass nvals from input gate
-share * BooleanCircuit::PutFPGate(share * in, op_t op, uint32_t nvals, fp_op_setting s){
+share * BooleanCircuit::PutFPGate(share * in, op_t op, uint8_t bitlen, uint32_t nvals, fp_op_setting s){
+	// if bitlen/nvals were not set manually, use values from input
+	if (bitlen == 0) {
+		bitlen = in->get_bitlength();
+	}
+	if (nvals == 0) {
+		nvals = in->get_nvals();
+	}
     const char * o;
     switch(op){
         case COS:
@@ -3229,18 +3238,25 @@ share * BooleanCircuit::PutFPGate(share * in, op_t op, uint32_t nvals, fp_op_set
                 o = s==no_status ? "nostatus_sqr" : "ieee_sqr";
            break;
         case SQRT:
-                o = "ieee_sqrt";
+        		o = s==no_status ? "nostatus_sqrt" : "ieee_sqrt";
            break;
         default:
             std::cerr << "Wrong operation in floating point gate with one input.";
             std::exit(EXIT_FAILURE);
     }
     return new boolshare(PutFPGate(o, in->get_wires(),
-        (uint8_t)in->get_bitlength(),
+        (uint8_t) bitlen,
         nvals), this);
 }
 
-share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint32_t nvals, fp_op_setting s){
+share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint8_t bitlen, uint32_t nvals, fp_op_setting s){
+	// if bitlen/nvals were not set manually, use values from input
+	if (bitlen == 0) {
+		bitlen = in_a->get_bitlength();
+	}
+	if (nvals == 0) {
+		nvals = in_a->get_nvals();
+	}
     const char * o;
     switch(op){
         case ADD:
@@ -3263,6 +3279,6 @@ share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint32_t 
             std::exit(EXIT_FAILURE);
     }
     return new boolshare(PutFPGate(o, in_a->get_wires(),
-                   in_b->get_wires(), (uint8_t)in_a->get_bitlength(),
+                   in_b->get_wires(), (uint8_t) bitlen,
                    nvals), this);
 }
