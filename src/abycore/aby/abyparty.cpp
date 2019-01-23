@@ -629,6 +629,14 @@ uint64_t ABYParty::GetReceivedData(ABYPHASE phase) {
 	return GetReceivedDataForPhase(phase);
 }
 
+uint32_t ABYParty::GetTotalGates() {
+	return m_pCircuit->GetGateHead();
+}
+
+uint32_t ABYParty::GetTotalDepth() {
+	return m_pCircuit->GetTotalDepth();
+}
+
 //===========================================================================
 // Thread Management
 BOOL ABYParty::WakeupWorkerThreads(EPartyJobType e) {
