@@ -167,7 +167,7 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 
 	//std::cout << "In total I have " <<  localops.size() << " local operations to evaluate on this level " << std::endl;
 	for (uint32_t i = 0; i < localops.size(); i++) {
-		GATE* gate = m_pGates + localops[i];
+		GATE* gate = &(m_vGates[localops[i]]);
 		//std::cout << "Evaluating gate " << localops[i] << " with context = " << gate->context << std::endl;
 		if (gate->type == G_LIN) {
 			EvaluateXORGate(gate);
@@ -183,10 +183,10 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 			//only copy values, SERVER did the inversion
 			uint32_t parentid = gate->ingates.inputs.parent; // gate->gs.invinput;
 			InstantiateGate(gate);
-			memcpy(gate->gs.yval, m_pGates[parentid].gs.yval, m_nSecParamBytes * gate->nvals);
+			memcpy(gate->gs.yval, m_vGates[parentid].gs.yval, m_nSecParamBytes * gate->nvals);
 			UsedGate(parentid);
 		} else if (gate->type == G_SHARED_OUT) {
-			GATE* parent = m_pGates + gate->ingates.inputs.parent;
+			GATE* parent = &(m_vGates[gate->ingates.inputs.parent]);
 			InstantiateGate(gate);
 			memcpy(gate->gs.yval, parent->gs.yval, gate->nvals * m_nSecParamBytes);
 			UsedGate(gate->ingates.inputs.parent);
@@ -216,7 +216,7 @@ void YaoClientSharing::EvaluateInteractiveOperations(uint32_t depth) {
 
 	//std::cout << "In total I have " <<  localops.size() << " local operations to evaluate on this level " << std::endl;
 	for (uint32_t i = 0; i < interactiveops.size(); i++) {
-		GATE* gate = m_pGates + interactiveops[i];
+		GATE* gate = &(m_vGates[interactiveops[i]]);
 #ifdef DEBUGYAOCLIENT
 		std::cout << "Evaluating interactive operation in Yao client sharing with type = " << get_gate_type_name(gate->type) << std::endl;
 #endif
@@ -231,7 +231,7 @@ void YaoClientSharing::EvaluateInteractiveOperations(uint32_t depth) {
 		} else if (gate->type == G_OUT) {
 #ifdef DEBUGYAOCLIENT
 			std::cout << "Obtained output gate with key = ";
-			PrintKey(m_pGates[gate->ingates.inputs.parent].gs.yval);
+			PrintKey(m_vGates[gate->ingates.inputs.parent].gs.yval);
 			std::cout << std::endl;
 #endif
 			if (gate->gs.oshare.dst == SERVER) {
@@ -265,20 +265,20 @@ void YaoClientSharing::EvaluateXORGate(GATE* gate) {
 	InstantiateGate(gate);
 	//TODO: optimize for UINT64_T pointers, there might be some problems here, code is untested
 	/*for(uint32_t i = 0; i < m_nSecParamBytes * nvals; i++) {
-	 gate->gs.yval[i] = m_pGates[idleft].gs.yval[i] ^ m_pGates[idright].gs.yval[i];
+	 gate->gs.yval[i] = m_vGates[idleft].gs.yval[i] ^ m_vGates[idright].gs.yval[i];
 	 }*/
 	//std::cout << "doing " << m_nSecParamIters << "iters on " << nvals << " vals " << std::endl;
 	for (uint32_t i = 0; i < m_nSecParamIters * nvals; i++) {
-		((UGATE_T*) gate->gs.yval)[i] = ((UGATE_T*) m_pGates[idleft].gs.yval)[i] ^ ((UGATE_T*) m_pGates[idright].gs.yval)[i];
+		((UGATE_T*) gate->gs.yval)[i] = ((UGATE_T*) m_vGates[idleft].gs.yval)[i] ^ ((UGATE_T*) m_vGates[idright].gs.yval)[i];
 	}
 	//std::cout << "Keyval (" << 0 << ")= " << (gate->gs.yval[m_nSecParamBytes-1] & 0x01)  << std::endl;
 	//std::cout << (gate->gs.yval[m_nSecParamBytes-1] & 0x01);
 #ifdef DEBUGYAOCLIENT
 	PrintKey(gate->gs.yval);
 	std::cout << " = ";
-	PrintKey(m_pGates[idleft].gs.yval);
+	PrintKey(m_vGates[idleft].gs.yval);
 	std::cout << " (" << idleft << ") ^ ";
-	PrintKey(m_pGates[idright].gs.yval);
+	PrintKey(m_vGates[idright].gs.yval);
 	std::cout << " (" << idright << ")" << std::endl;
 #endif
 
@@ -289,8 +289,8 @@ void YaoClientSharing::EvaluateXORGate(GATE* gate) {
 void YaoClientSharing::EvaluateANDGate(GATE* gate) {
 	uint32_t idleft = gate->ingates.inputs.twin.left; //gate->gs.ginput.left;
 	uint32_t idright = gate->ingates.inputs.twin.right; //gate->gs.ginput.right;
-	GATE* gleft = m_pGates + idleft;
-	GATE* gright = m_pGates + idright;
+	GATE* gleft = &(m_vGates[idleft]);
+	GATE* gright = &(m_vGates[idright]);
 
 	//evaluate garbled table
 	InstantiateGate(gate);
@@ -366,8 +366,8 @@ BOOL YaoClientSharing::EvaluateGarbledTable(GATE* gate, uint32_t pos, GATE* glef
 void YaoClientSharing::EvaluateUNIVGate(GATE* gate) {
 	uint32_t idleft = gate->ingates.inputs.twin.left; //gate->gs.ginput.left;
 	uint32_t idright = gate->ingates.inputs.twin.right; //gate->gs.ginput.right;
-	GATE* gleft = m_pGates + idleft;
-	GATE* gright = m_pGates + idright;
+	GATE* gleft = &(m_vGates[idleft]);
+	GATE* gright = &(m_vGates[idright]);
 
 	//evaluate univeral gate table
 	InstantiateGate(gate);
@@ -421,7 +421,7 @@ BOOL YaoClientSharing::EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gle
 
 /* Evaluate the gate and use the servers output permutation bits to compute the output */
 void YaoClientSharing::EvaluateClientOutputGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	uint32_t parentid = gate->ingates.inputs.parent; //gate->gs.oshare.parentgate;
 	uint32_t in;
 	InstantiateGate(gate);
@@ -430,8 +430,8 @@ void YaoClientSharing::EvaluateClientOutputGate(uint32_t gateid) {
 	std::cout << "ClientOutput: ";
 #endif
 	for (uint32_t i = 0; i < gate->nvals; i++) {
-		in = (m_pGates[parentid].gs.yval[(i + 1) * m_nSecParamBytes - 1] & 0x01);
-		gate->gs.val[i / GATE_T_BITS] ^= ((((UGATE_T) m_pGates[parentid].gs.yval[(i + 1) * m_nSecParamBytes - 1] & 0x01)
+		in = (m_vGates[parentid].gs.yval[(i + 1) * m_nSecParamBytes - 1] & 0x01);
+		gate->gs.val[i / GATE_T_BITS] ^= ((((UGATE_T) m_vGates[parentid].gs.yval[(i + 1) * m_nSecParamBytes - 1] & 0x01)
 				^ ((UGATE_T) m_vOutputShareRcvBuf.GetBit(m_nClientOUTBitCtr))) << (i % GATE_T_BITS));
 #ifdef DEBUGYAOCLIENT
 		std::cout << (uint32_t) gate->gs.val[i/GATE_T_BITS] << " = " << in << " ^ " << (uint32_t) m_vOutputShareRcvBuf.GetBit(m_nClientOUTBitCtr) << std::endl;
@@ -447,9 +447,9 @@ void YaoClientSharing::EvaluateServerOutputGate(GATE* gate) {
 	uint32_t parentid = gate->ingates.inputs.parent;	//gate->gs.oshare.parentgate;
 
 	for (uint32_t i = 0; i < gate->nvals; i++, m_nServerOutputShareCtr++) {
-		m_vOutputShareSndBuf.SetBit(m_nServerOutputShareCtr, m_pGates[parentid].gs.yval[((i + 1) * m_nSecParamBytes) - 1] & 0x01);
+		m_vOutputShareSndBuf.SetBit(m_nServerOutputShareCtr, m_vGates[parentid].gs.yval[((i + 1) * m_nSecParamBytes) - 1] & 0x01);
 #ifdef DEBUGYAOCLIENT
-		std::cout << "Setting ServerOutputShare to " << ((uint32_t) m_pGates[parentid].gs.yval[((i+1)*m_nSecParamBytes) - 1] & 0x01) << std::endl;
+		std::cout << "Setting ServerOutputShare to " << ((uint32_t) m_vGates[parentid].gs.yval[((i+1)*m_nSecParamBytes) - 1] & 0x01) << std::endl;
 #endif
 	}
 
@@ -459,7 +459,7 @@ void YaoClientSharing::EvaluateServerOutputGate(GATE* gate) {
 
 /* Store the input bits of my gates to send the correlation with the R-OTs later on */
 void YaoClientSharing::ReceiveClientKeys(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	UGATE_T* input = gate->gs.ishare.inval;
 	m_vROTSndBuf.SetBits((BYTE*) input, (int) m_nClientSndOTCtr, gate->nvals);
 	m_nClientSndOTCtr += gate->nvals;
@@ -468,15 +468,15 @@ void YaoClientSharing::ReceiveClientKeys(uint32_t gateid) {
 
 /* Add the servers input keys to the queue to receive them later on */
 void YaoClientSharing::ReceiveServerKeys(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 
 	m_vServerInputGates.push_back(gateid);
 	m_nServerInBitCtr += gate->nvals;
 }
 
 void YaoClientSharing::EvaluateConversionGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
-	GATE* parent = m_pGates + gate->ingates.inputs.parents[0];
+	GATE* gate = &(m_vGates[gateid]);
+	GATE* parent = &(m_vGates[gate->ingates.inputs.parents[0]]);
 	assert(parent->instantiated);
 	UGATE_T* val = parent->gs.val;
 
@@ -617,7 +617,7 @@ void YaoClientSharing::FinishCircuitLayer(uint32_t level) {
 void YaoClientSharing::AssignServerInputKeys() {
 	GATE* gate;
 	for (uint32_t i = 0, offset = 0; i < m_vServerInputGates.size(); i++) {
-		gate = m_pGates + m_vServerInputGates[i];
+		gate = &(m_vGates[m_vServerInputGates[i]]);
 		InstantiateGate(gate);
 		//Assign the keys to the gate
 		memcpy(gate->gs.yval, m_vServerInputKeys.GetArr() + offset, m_nSecParamBytes * gate->nvals);
@@ -637,7 +637,7 @@ void YaoClientSharing::AssignServerInputKeys() {
 void YaoClientSharing::AssignClientInputKeys() {
 	GATE* gate, *parent;
 	for (uint32_t i = 0, offset = 0; i < m_vClientRcvInputKeyGates.size(); i++) {
-		gate = m_pGates + m_vClientRcvInputKeyGates[i];
+		gate = &(m_vGates[m_vClientRcvInputKeyGates[i]]);
 		//input = ;
 
 		InstantiateGate(gate);
@@ -675,7 +675,7 @@ void YaoClientSharing::InstantiateGate(GATE* gate) {
 }
 
 void YaoClientSharing::EvaluateSIMDGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	if (gate->type == G_COMBINE) {
 		uint32_t* inptr = gate->ingates.inputs.parents; //gate->gs.cinput;
 		uint32_t nparents = gate->ingates.ningates;
@@ -684,8 +684,8 @@ void YaoClientSharing::EvaluateSIMDGate(uint32_t gateid) {
 		InstantiateGate(gate);
 		BYTE* keyptr = gate->gs.yval;
 		for (uint32_t g = 0; g < nparents; g++) {
-			parent_nvals = m_pGates[inptr[g]].nvals;
-			memcpy(keyptr, m_pGates[inptr[g]].gs.yval, m_nSecParamBytes * parent_nvals);
+			parent_nvals = m_vGates[inptr[g]].nvals;
+			memcpy(keyptr, m_vGates[inptr[g]].gs.yval, m_nSecParamBytes * parent_nvals);
 			keyptr += m_nSecParamBytes * parent_nvals;
 			UsedGate(inptr[g]);
 		}
@@ -694,14 +694,14 @@ void YaoClientSharing::EvaluateSIMDGate(uint32_t gateid) {
 		uint32_t pos = gate->gs.sinput.pos;
 		uint32_t idleft = gate->ingates.inputs.parent; // gate->gs.sinput.input;
 		InstantiateGate(gate);
-		memcpy(gate->gs.yval, m_pGates[idleft].gs.yval + pos * m_nSecParamBytes, m_nSecParamBytes * gate->nvals);
+		memcpy(gate->gs.yval, m_vGates[idleft].gs.yval + pos * m_nSecParamBytes, m_nSecParamBytes * gate->nvals);
 		UsedGate(idleft);
 	} else if (gate->type == G_REPEAT) {
 		uint32_t idleft = gate->ingates.inputs.parent; //gate->gs.rinput;
 		InstantiateGate(gate);
 		BYTE* keyptr = gate->gs.yval;
 		for (uint32_t g = 0; g < gate->nvals; g++, keyptr += m_nSecParamBytes) {
-			memcpy(keyptr, m_pGates[idleft].gs.yval, m_nSecParamBytes);
+			memcpy(keyptr, m_vGates[idleft].gs.yval, m_nSecParamBytes);
 		}
 		UsedGate(idleft);
 	} else if (gate->type == G_COMBINEPOS) {
@@ -711,7 +711,7 @@ void YaoClientSharing::EvaluateSIMDGate(uint32_t gateid) {
 		BYTE* keyptr = gate->gs.yval;
 		for (uint32_t g = 0; g < gate->nvals; g++, keyptr += m_nSecParamBytes) {
 			uint32_t idleft = combinepos[g];
-			memcpy(keyptr, m_pGates[idleft].gs.yval + pos * m_nSecParamBytes, m_nSecParamBytes);
+			memcpy(keyptr, m_vGates[idleft].gs.yval + pos * m_nSecParamBytes, m_nSecParamBytes);
 			UsedGate(idleft);
 		}
 		free(combinepos);
@@ -729,7 +729,7 @@ void YaoClientSharing::EvaluateSIMDGate(uint32_t gateid) {
 		InstantiateGate(gate);
 		BYTE* keyptr = gate->gs.yval;
 		for (uint32_t g = 0; g < gate->nvals; g++, keyptr += m_nSecParamBytes) {
-			memcpy(keyptr, m_pGates[idparent].gs.yval + positions[g] * m_nSecParamBytes, m_nSecParamBytes);
+			memcpy(keyptr, m_vGates[idparent].gs.yval + positions[g] * m_nSecParamBytes, m_nSecParamBytes);
 		}
 		UsedGate(idparent);
 		if(del_pos)
@@ -744,7 +744,7 @@ uint32_t YaoClientSharing::AssignInput(CBitVector& inputvals) {
 	GATE* gate;
 	uint32_t inbits = 0;
 	for (uint32_t i = 0, inbitstart = 0, bitstocopy, len, lim; i < myingates.size(); i++) {
-		gate = m_pGates + myingates[i];
+		gate = &(m_vGates[myingates[i]]);
 		if (!gate->instantiated) {
 			bitstocopy = gate->nvals * gate->sharebitlen;
 			inbits += bitstocopy;
@@ -770,7 +770,7 @@ uint32_t YaoClientSharing::GetOutput(CBitVector& out) {
 
 	GATE* gate;
 	for (uint32_t i = 0, outbitstart = 0, bitstocopy, len, lim; i < myoutgates.size(); i++) {
-		gate = m_pGates + myoutgates[i];
+		gate = &(m_vGates[myoutgates[i]]);
 		lim = gate->nvals * gate->sharebitlen;
 		std::cout << "outgate no " << i << " : " << myoutgates[i] << " with nvals = " << gate->nvals << " and sharebitlen = " << gate->sharebitlen << std::endl;
 

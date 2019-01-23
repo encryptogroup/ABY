@@ -155,8 +155,8 @@ BOOL ABYParty::Init() {
 void ABYParty::Cleanup() {
 	// free any gates that are still instantiated
 	for(size_t i = 0; i < m_pCircuit->GetGateHead(); i++) {
-		if(m_pGates[i].instantiated) {
-			m_vSharings[0]->FreeGate(&m_pGates[i]);
+		if((*m_vGates)[i].instantiated) {
+			m_vSharings[0]->FreeGate(&(*m_vGates)[i]);
 		}
 	}
 	for(uint32_t i = 0; i < S_LAST; i++) {
@@ -298,7 +298,7 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
 	}
 	m_vSharings[S_SPLUT] = new SetupLUT(S_SPLUT, m_eRole, 1, m_pCircuit, m_cCrypt.get());
 
-	m_pGates = m_pCircuit->Gates();
+	m_vGates = &(m_pCircuit->GatesVec());
 
 #ifndef BATCH
 	std::cout << " circuit initialized..." << std::endl;
@@ -586,15 +586,15 @@ BOOL ABYParty::ABYPartyListen() {
 // TODO: are InstantiateGate and UsedGate needed in ABYParty? They don't
 // seem to get used anywhere
 void ABYParty::InstantiateGate(uint32_t gateid) {
-	m_pGates[gateid].gs.val = (UGATE_T*) malloc(sizeof(UGATE_T) * (ceil_divide(m_pGates[gateid].nvals, GATE_T_BITS)));
+	(*m_vGates)[gateid].gs.val = (UGATE_T*) malloc(sizeof(UGATE_T) * (ceil_divide((*m_vGates)[gateid].nvals, GATE_T_BITS)));
 }
 
 void ABYParty::UsedGate(uint32_t gateid) {
 	//Decrease the number of further uses of the gate
-	m_pGates[gateid].nused--;
+	(*m_vGates)[gateid].nused--;
 	//If the gate is needed in another subsequent gate, delete it
-	if (!m_pGates[gateid].nused) {
-		free(m_pGates[gateid].gs.val);
+	if (!(*m_vGates)[gateid].nused) {
+		free((*m_vGates)[gateid].gs.val);
 
 	}
 }
@@ -606,8 +606,8 @@ void ABYParty::Reset() {
 
 	// free any gates that are still instantiated
 	for(size_t i = 0; i < m_pCircuit->GetGateHead(); i++) {
-		if(m_pGates[i].instantiated) {
-			m_vSharings[0]->FreeGate(&m_pGates[i]);
+		if((*m_vGates)[i].instantiated) {
+			m_vSharings[0]->FreeGate(&(*m_vGates)[i]);
 		}
 	}
 	for (uint32_t i = 0; i < m_vSharings.size(); i++) {

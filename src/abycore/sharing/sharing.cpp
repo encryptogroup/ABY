@@ -38,24 +38,25 @@ namespace filesystem = std::experimental::filesystem;
 #include <iterator>
 #include <boost/algorithm/hex.hpp>
 
-Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) {
-	m_eContext = context;
-	m_nShareBitLen = sharebitlen;
-	m_pCircuit = circuit;
-	m_pGates = m_pCircuit->Gates();
-	m_eRole = role;
-	m_cCrypto = crypt;
-	m_nSecParamBytes = ceil_divide(m_cCrypto->get_seclvl().symbits, 8);
-	m_ePhaseValue = ePreCompDefault;
-	m_nFilePos = -1;
-	m_nTypeBitLen = sharebitlen;
-}
+Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
+	m_eContext(context),
+	m_nShareBitLen(sharebitlen),
+	m_pCircuit(circuit),
+	m_vGates(m_pCircuit->GatesVec()),
+	m_eRole(role),
+	m_cCrypto(crypt),
+	m_nSecParamBytes(ceil_divide(m_cCrypto->get_seclvl().symbits, 8)),
+	m_nTypeBitLen(sharebitlen),
+	m_nFilePos(-1),
+	m_ePhaseValue(ePreCompDefault)
+{}
+
 
 Sharing::~Sharing() {
 }
 
 void Sharing::EvaluateCallbackGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	void (*callback)(GATE*, void*) = gate->gs.cbgate.callback;
 	void* infos = gate->gs.cbgate.infos;
 	InstantiateGate(gate);
@@ -112,7 +113,7 @@ UGATE_T* Sharing::ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t
 	UGATE_T* value;
 	GATE *parentgate, *gate;
 
-	gate = m_pGates + gateid;
+	gate = &(m_vGates[gateid]);
 	nvals = gate->nvals;
 
 	//in case the values are in Boolean form, reformat them.
@@ -123,7 +124,7 @@ UGATE_T* Sharing::ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t
 			value = (UGATE_T*) calloc(val_offset * nvals, sizeof(UGATE_T));
 
 			for (uint32_t i = 0; i < *bitlen; i++) {
-				parentgate = m_pGates + gate->ingates.inputs.parents[i];
+				parentgate = &(m_vGates[gate->ingates.inputs.parents[i]]);
 				assert(parentgate->nvals == nvals);
 				assert(parentgate->instantiated);
 
@@ -136,7 +137,7 @@ UGATE_T* Sharing::ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t
 			*bitlen = m_nTypeBitLen;
 			valbytelen = ceil_divide((*bitlen), 8);
 
-			parentgate = m_pGates + gate->ingates.inputs.parents[0];
+			parentgate = &(m_vGates[gate->ingates.inputs.parents[0]]);
 			value = (UGATE_T*) calloc(nvals, sizeof(UGATE_T));
 
 			for(uint32_t i = 0; i < nvals; i++) {
@@ -159,21 +160,21 @@ void Sharing::EvaluateAssertGate(uint32_t gateid, e_circuit circ_type) {
 	//get the gate value in a standardized form
 	UGATE_T* value = ReadOutputValue(gateid, circ_type, &bitlen);
 
-	nvals = m_pGates[gateid].nvals;
+	nvals = m_vGates[gateid].nvals;
 
 	uint32_t ugate_len = ceil_divide(bitlen, sizeof(UGATE_T) * 8) * nvals;
 
 	//check gate value against reference
 	for(uint32_t i = 0; i < ugate_len; i++) {
-		if(m_pGates[gateid].gs.assertval[i] != value[i]) {
+		if(m_vGates[gateid].gs.assertval[i] != value[i]) {
 			std::cout << "Data in Assert gate is not matching for nval = " << i << ": Circuit " << value[i] <<
-					" vs. Reference " << m_pGates[gateid].gs.assertval[i] << std::endl;
+					" vs. Reference " << m_vGates[gateid].gs.assertval[i] << std::endl;
 		}
-		assert(m_pGates[gateid].gs.assertval[i] == value[i]);
+		assert(m_vGates[gateid].gs.assertval[i] == value[i]);
 	}
 
 	free(value);
-	free(m_pGates[gateid].gs.assertval);
+	free(m_vGates[gateid].gs.assertval);
 }
 
 /*
@@ -184,9 +185,9 @@ void Sharing::EvaluatePrintValGate(uint32_t gateid, e_circuit circ_type) {
 	//get the gate value in a standardized form
 	UGATE_T* value = ReadOutputValue(gateid, circ_type, &bitlen);
 
-	nvals = m_pGates[gateid].nvals;
+	nvals = m_vGates[gateid].nvals;
 
-	std::cout << m_pGates[gateid].gs.infostr << ": ";
+	std::cout << m_vGates[gateid].gs.infostr << ": ";
 
 	//print the resulting value depending on its bitlength and nvals
 	if(bitlen <= 64) {//for bitlen <= 64 print numbers
@@ -219,7 +220,7 @@ void Sharing::EvaluatePrintValGate(uint32_t gateid, e_circuit circ_type) {
 	}
 
 	free(value);
-	delete[] m_pGates[gateid].gs.infostr;
+	delete[] m_vGates[gateid].gs.infostr;
 }
 
 // Delete dynamically allocated gate contents depending on gate type
@@ -252,7 +253,7 @@ void Sharing::FreeGate(GATE *gate) {
 
 // Mark gate as used. If it is no longer needed, free it.
 void Sharing::UsedGate(uint32_t gateid) {
-	GATE *gate = &m_pGates[gateid];
+	GATE *gate = &m_vGates[gateid];
 	if(!gate->instantiated) { return; }
 	gate->nused--;
 	if(!gate->nused && gate->type != G_CONV) {

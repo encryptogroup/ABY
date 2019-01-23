@@ -121,7 +121,7 @@ private:
 	uint32_t m_nMyNumInBits;
 	// Ciruit
 	ABYCircuit* m_pCircuit;
-	GATE* m_pGates;
+	std::vector<GATE>* m_vGates;
 
 	uint32_t m_nSizeOfVal;
 

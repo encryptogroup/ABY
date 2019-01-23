@@ -235,13 +235,13 @@ protected:
 	UGATE_T* ReadOutputValue(uint32_t gateid, e_circuit circ_type, uint32_t* bitlen);
 
 
-	uint32_t m_nShareBitLen; /**< Bit length of shared item. */
-	GATE* m_pGates; /**< Pointer to array of Logical Gates. */
-	ABYCircuit* m_pCircuit; /**< Circuit pointer. */
-	e_role m_eRole; /**< Role object. */
-	uint32_t m_nSecParamBytes; /**< Number of security param bytes. */
-	crypto* m_cCrypto; /**< Class that contains cryptographic routines */
 	e_sharing m_eContext; /** Which sharing is executed */
+	uint32_t m_nShareBitLen; /**< Bit length of shared item. */
+	ABYCircuit* m_pCircuit; /**< Circuit pointer. */
+	std::vector<GATE>& m_vGates; /**< Reference to vector of gates. */
+	e_role m_eRole; /**< Role object. */
+	crypto* m_cCrypto; /**< Class that contains cryptographic routines */
+	uint32_t m_nSecParamBytes; /**< Number of security param bytes. */
 	uint32_t m_nTypeBitLen; /** Bit-length of the arithmetic shares in arithsharing */
 	uint64_t m_nFilePos;/**< Variable which stores the position of the file pointer. */
 	ePreCompPhase m_ePhaseValue;/**< Variable storing the current Precomputation Mode */

@@ -110,8 +110,8 @@ uint32_t BooleanCircuit::PutANDGate(uint32_t inleft, uint32_t inright) {
 			std::cerr << "Context not recognized" << std::endl;
 		}
 
-		if (m_pGates[gateid].nvals != INT_MAX) {
-			m_vANDs[0].numgates += m_pGates[gateid].nvals;
+		if (m_vGates[gateid].nvals != INT_MAX) {
+			m_vANDs[0].numgates += m_vGates[gateid].nvals;
 		} else {
 			std::cerr << "INT_MAX not allowed as nvals" << std::endl;
 		}
@@ -149,15 +149,15 @@ uint32_t BooleanCircuit::PutVectorANDGate(uint32_t choiceinput, uint32_t vectori
 	uint32_t gateid = m_cCircuit->PutNonLinearVectorGate(G_NON_LIN_VEC, choiceinput, vectorinput, m_nRoundsAND);
 	UpdateInteractiveQueue(gateid);
 
-	//std::cout << "Putting a vector and gate between a gate with " << m_pGates[choiceinput].nvals << " and " <<
-	//		m_pGates[vectorinput].nvals << ", res gate has nvals = " << m_pGates[gateid].nvals << std::endl;
+	//std::cout << "Putting a vector and gate between a gate with " << m_vGates[choiceinput].nvals << " and " <<
+	//		m_vGates[vectorinput].nvals << ", res gate has nvals = " << m_vGates[gateid].nvals << std::endl;
 
 
-	if (m_pGates[gateid].nvals != INT_MAX) {
+	if (m_vGates[gateid].nvals != INT_MAX) {
 		//Update vector AND sizes
 		//find location of vector AND bitlength
-		//int pos = FindBitLenPositionInVec(m_pGates[gateid].nvals, m_vANDs, m_nNumANDSizes);
-		int pos = FindBitLenPositionInVec(m_pGates[gateid].gs.avs.bitlen, m_vANDs, m_nNumANDSizes);
+		//int pos = FindBitLenPositionInVec(m_vGates[gateid].nvals, m_vANDs, m_nNumANDSizes);
+		int pos = FindBitLenPositionInVec(m_vGates[gateid].gs.avs.bitlen, m_vANDs, m_nNumANDSizes);
 		if (pos == -1) {
 			//Create new entry for the bit-length
 			m_nNumANDSizes++;
@@ -165,12 +165,12 @@ uint32_t BooleanCircuit::PutVectorANDGate(uint32_t choiceinput, uint32_t vectori
 			memcpy(temp, m_vANDs, (m_nNumANDSizes - 1) * sizeof(non_lin_vec_ctx));
 			free(m_vANDs);
 			m_vANDs = temp;
-			//m_vANDs[m_nNumANDSizes - 1].bitlen = m_pGates[gateid].nvals;
-			m_vANDs[m_nNumANDSizes - 1].bitlen = m_pGates[gateid].gs.avs.bitlen;
-			m_vANDs[m_nNumANDSizes - 1].numgates = m_pGates[choiceinput].nvals; //1
+			//m_vANDs[m_nNumANDSizes - 1].bitlen = m_vGates[gateid].nvals;
+			m_vANDs[m_nNumANDSizes - 1].bitlen = m_vGates[gateid].gs.avs.bitlen;
+			m_vANDs[m_nNumANDSizes - 1].numgates = m_vGates[choiceinput].nvals; //1
 		} else {
 			//increase number of vector ANDs for this bitlength by one
-			m_vANDs[pos].numgates+=m_pGates[choiceinput].nvals;
+			m_vANDs[pos].numgates+=m_vGates[choiceinput].nvals;
 		}
 	}
 	return gateid;
@@ -184,7 +184,7 @@ uint32_t BooleanCircuit::PutXORGate(uint32_t inleft, uint32_t inright) {
 	//std::cout << "inleft = " << inleft << ", inright = " << inright << std::endl;
 	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_LIN, inleft, inright, m_nRoundsXOR);
 	UpdateLocalQueue(gateid);
-	m_nNumXORVals += m_pGates[gateid].nvals;
+	m_nNumXORVals += m_vGates[gateid].nvals;
 	m_nNumXORGates += 1;
 	return gateid;
 }
@@ -204,17 +204,17 @@ uint32_t BooleanCircuit::PutINGate(e_role src) {
 	switch (src) {
 	case SERVER:
 		m_vInputGates[0].push_back(gateid);
-		m_vInputBits[0] += m_pGates[gateid].nvals;
+		m_vInputBits[0] += m_vGates[gateid].nvals;
 		break;
 	case CLIENT:
 		m_vInputGates[1].push_back(gateid);
-		m_vInputBits[1] += m_pGates[gateid].nvals;
+		m_vInputBits[1] += m_vGates[gateid].nvals;
 		break;
 	case ALL:
 		m_vInputGates[0].push_back(gateid);
 		m_vInputGates[1].push_back(gateid);
-		m_vInputBits[0] += m_pGates[gateid].nvals;
-		m_vInputBits[1] += m_pGates[gateid].nvals;
+		m_vInputBits[0] += m_vGates[gateid].nvals;
+		m_vInputBits[1] += m_vGates[gateid].nvals;
 		break;
 	default:
 		std::cerr << "Role not recognized" << std::endl;
@@ -230,17 +230,17 @@ uint32_t BooleanCircuit::PutSIMDINGate(uint32_t ninvals, e_role src) {
 	switch (src) {
 	case SERVER:
 		m_vInputGates[0].push_back(gateid);
-		m_vInputBits[0] += m_pGates[gateid].nvals;
+		m_vInputBits[0] += m_vGates[gateid].nvals;
 		break;
 	case CLIENT:
 		m_vInputGates[1].push_back(gateid);
-		m_vInputBits[1] += m_pGates[gateid].nvals;
+		m_vInputBits[1] += m_vGates[gateid].nvals;
 		break;
 	case ALL:
 		m_vInputGates[0].push_back(gateid);
 		m_vInputGates[1].push_back(gateid);
-		m_vInputBits[0] += m_pGates[gateid].nvals;
-		m_vInputBits[1] += m_pGates[gateid].nvals;
+		m_vInputBits[0] += m_vGates[gateid].nvals;
+		m_vInputBits[1] += m_vGates[gateid].nvals;
 		break;
 	default:
 		std::cerr << "Role not recognized" << std::endl;
@@ -285,7 +285,7 @@ uint32_t BooleanCircuit::PutINGate(uint64_t val, e_role role) {
 	uint32_t gateid = PutINGate(role);
 	if (role == m_eMyRole) {
 		//assign value
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
 		memcpy(gate->gs.ishare.inval, &val, ceil_divide(1 * m_nShareBitLen, 8));
 
@@ -299,7 +299,7 @@ uint32_t BooleanCircuit::PutINGate(uint64_t val, e_role role) {
 uint32_t BooleanCircuit::PutSharedINGate(uint64_t val) {
 	uint32_t gateid = PutSharedINGate();
 	//assign value
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
 	memcpy(gate->gs.val, &val, ceil_divide(1 * m_nShareBitLen, 8));
 
@@ -312,7 +312,7 @@ uint32_t BooleanCircuit::PutSIMDINGate(uint32_t nvals, uint64_t val, e_role role
 	uint32_t gateid = PutSIMDINGate(nvals, role);
 	if (role == m_eMyRole) {
 		//assign value
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
 		memcpy(gate->gs.ishare.inval, &val, ceil_divide(nvals * m_nShareBitLen, 8));
 
@@ -327,7 +327,7 @@ uint32_t BooleanCircuit::PutSharedSIMDINGate(uint32_t nvals, uint64_t val) {
 	uint32_t gateid = PutSharedSIMDINGate(nvals);
 
 	//assign value
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	gate->gs.val = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
 	memcpy(gate->gs.val, &val, ceil_divide(nvals * m_nShareBitLen, 8));
 
@@ -339,7 +339,7 @@ uint32_t BooleanCircuit::PutSharedSIMDINGate(uint32_t nvals, uint64_t val) {
 uint32_t BooleanCircuit::PutYaoSharedSIMDINGate(uint32_t nvals, yao_fields keys) {
 	uint32_t gateid = PutSharedSIMDINGate(nvals);
 	//assign value
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	//TODO: fixed to 128-bit security atm. CHANGE
 	uint8_t keybytelen = ceil_divide(128, 8);
 	if(m_eMyRole == SERVER) {
@@ -374,17 +374,17 @@ uint32_t BooleanCircuit::PutOUTGate(uint32_t parentid, e_role dst) {
 	switch (dst) {
 	case SERVER:
 		m_vOutputGates[0].push_back(gateid);
-		m_vOutputBits[0] += m_pGates[gateid].nvals;
+		m_vOutputBits[0] += m_vGates[gateid].nvals;
 		break;
 	case CLIENT:
 		m_vOutputGates[1].push_back(gateid);
-		m_vOutputBits[1] += m_pGates[gateid].nvals;
+		m_vOutputBits[1] += m_vGates[gateid].nvals;
 		break;
 	case ALL:
 		m_vOutputGates[0].push_back(gateid);
 		m_vOutputGates[1].push_back(gateid);
-		m_vOutputBits[0] += m_pGates[gateid].nvals;
-		m_vOutputBits[1] += m_pGates[gateid].nvals;
+		m_vOutputBits[0] += m_vGates[gateid].nvals;
+		m_vOutputBits[1] += m_vGates[gateid].nvals;
 		break;
 	default:
 		std::cerr << "Role not recognized" << std::endl;
@@ -407,17 +407,17 @@ std::vector<uint32_t> BooleanCircuit::PutOUTGate(std::vector<uint32_t> parentids
 		switch (dst) {
 		case SERVER:
 			m_vOutputGates[0].push_back(gateid[i]);
-			m_vOutputBits[0] += m_pGates[gateid[i]].nvals;
+			m_vOutputBits[0] += m_vGates[gateid[i]].nvals;
 			break;
 		case CLIENT:
 			m_vOutputGates[1].push_back(gateid[i]);
-			m_vOutputBits[1] += m_pGates[gateid[i]].nvals;
+			m_vOutputBits[1] += m_vGates[gateid[i]].nvals;
 			break;
 		case ALL:
 			m_vOutputGates[0].push_back(gateid[i]);
 			m_vOutputGates[1].push_back(gateid[i]);
-			m_vOutputBits[0] += m_pGates[gateid[i]].nvals;
-			m_vOutputBits[1] += m_pGates[gateid[i]].nvals;
+			m_vOutputBits[0] += m_vGates[gateid[i]].nvals;
+			m_vOutputBits[1] += m_vGates[gateid[i]].nvals;
 			break;
 		default:
 			std::cerr << "Role not recognized" << std::endl;
@@ -525,10 +525,10 @@ share* BooleanCircuit::PutINVGate(share* parent) {
 uint32_t BooleanCircuit::PutY2BCONVGate(uint32_t parentid) {
 	std::vector<uint32_t> in(1, parentid);
 	uint32_t gateid = m_cCircuit->PutCONVGate(in, 1, S_BOOL, m_nShareBitLen);
-	m_pGates[gateid].depth++;
+	m_vGates[gateid].depth++;
 	UpdateLocalQueue(gateid);
 	//a Y input gate cannot be parent to a Y2B gate. Alternatively, put a Boolean input gate
-	assert(m_pGates[parentid].type != G_IN);
+	assert(m_vGates[parentid].type != G_IN);
 
 	return gateid;
 }
@@ -539,7 +539,7 @@ uint32_t BooleanCircuit::PutB2YCONVGate(uint32_t parentid) {
 	UpdateInteractiveQueue(gateid);
 
 	//treat similar to input gate of client and server
-	m_nB2YGates += m_pGates[gateid].nvals;
+	m_nB2YGates += m_vGates[gateid].nvals;
 
 	return gateid;
 }
@@ -547,12 +547,12 @@ uint32_t BooleanCircuit::PutB2YCONVGate(uint32_t parentid) {
 uint32_t BooleanCircuit::PutYSwitchRolesGate(uint32_t parentid) {
 	std::vector<uint32_t> in(1, parentid);
 	assert(m_eContext == S_YAO || m_eContext == S_YAO_REV);
-	assert(m_pGates[in[0]].context != m_eContext);
+	assert(m_vGates[in[0]].context != m_eContext);
 	uint32_t gateid = m_cCircuit->PutCONVGate(in, 2, m_eContext, m_nShareBitLen);
 	UpdateInteractiveQueue(gateid);
 
 	//treat similar to input gate of client and server
-	m_nYSwitchGates += m_pGates[gateid].nvals;
+	m_nYSwitchGates += m_vGates[gateid].nvals;
 
 	return gateid;
 }
@@ -597,22 +597,22 @@ share* BooleanCircuit::PutYSwitchRolesGate(share* ina) {
 }
 
 std::vector<uint32_t> BooleanCircuit::PutA2YCONVGate(std::vector<uint32_t> parentid) {
-	std::vector<uint32_t> srvshares(m_pGates[parentid[0]].sharebitlen);
-	std::vector<uint32_t> clishares(m_pGates[parentid[0]].sharebitlen);
+	std::vector<uint32_t> srvshares(m_vGates[parentid[0]].sharebitlen);
+	std::vector<uint32_t> clishares(m_vGates[parentid[0]].sharebitlen);
 
-	for (uint32_t i = 0; i < m_pGates[parentid[0]].sharebitlen; i++) {
+	for (uint32_t i = 0; i < m_vGates[parentid[0]].sharebitlen; i++) {
 		srvshares[i] = m_cCircuit->PutCONVGate(parentid, 1, S_YAO, m_nShareBitLen);
-		m_pGates[srvshares[i]].gs.pos = 2 * i;
-		m_pGates[srvshares[i]].depth++; //increase depth by 1 since yao is evaluated before arith
+		m_vGates[srvshares[i]].gs.pos = 2 * i;
+		m_vGates[srvshares[i]].depth++; //increase depth by 1 since yao is evaluated before arith
 		UpdateInteractiveQueue(srvshares[i]);
 
 		clishares[i] = m_cCircuit->PutCONVGate(parentid, 2, S_YAO, m_nShareBitLen);
-		m_pGates[clishares[i]].gs.pos = 2 * i + 1;
-		m_pGates[clishares[i]].depth++; //increase depth by 1 since yao is evaluated before arith
+		m_vGates[clishares[i]].gs.pos = 2 * i + 1;
+		m_vGates[clishares[i]].depth++; //increase depth by 1 since yao is evaluated before arith
 		UpdateInteractiveQueue(clishares[i]);
 	}
 
-	m_nA2YGates += m_pGates[parentid[0]].nvals * m_pGates[parentid[0]].sharebitlen;
+	m_nA2YGates += m_vGates[parentid[0]].nvals * m_vGates[parentid[0]].sharebitlen;
 
 
 	return PutAddGate(srvshares, clishares);
@@ -643,7 +643,7 @@ uint32_t BooleanCircuit::PutUniversalGate(uint32_t a, uint32_t b, uint32_t op_id
 	if(m_eContext == S_YAO) { //In case of Yao, put universal gate
 		gateid = m_cCircuit->PutUniversalGate(a, b, op_id, m_nRoundsAND);
 		UpdateLocalQueue(gateid);
-		m_nUNIVGates+=m_pGates[gateid].nvals;
+		m_nUNIVGates+=m_vGates[gateid].nvals;
 	} else if (m_eContext == S_BOOL) { //In case of GMW, replace universal gate by sub-circuit
 		gateid = PutUniversalGateCircuit(a, b, op_id);
 	} else {
@@ -724,7 +724,7 @@ std::vector<uint32_t> BooleanCircuit::PutTruthTableMultiOutputGate(std::vector<u
 	//Transpose truth table
 	//ttable = transposeTT(1<<in.size(), out_bits, ttable);
 	uint32_t tmpgate = PutTruthTableGate(in, out_bits, ttable);
-	std::vector<uint32_t> bitlens(out_bits, m_pGates[in[0]].nvals);
+	std::vector<uint32_t> bitlens(out_bits, m_vGates[in[0]].nvals);
 	//assert(out_bits <= 8);
 
 	std::vector<uint32_t> output = m_cCircuit->PutSplitterGate(tmpgate, bitlens);
@@ -760,8 +760,8 @@ share* BooleanCircuit::PutTruthTableGate(share* in, uint64_t* ttable) {
 //check if the len exists, otherwise allocate new and update
 void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t gateid, uint32_t out_bits) {
 	//check depth and resize if required
-	uint32_t depth = m_pGates[gateid].depth;
-	uint32_t nvals = m_pGates[gateid].nvals/out_bits;
+	uint32_t depth = m_vGates[gateid].depth;
+	uint32_t nvals = m_vGates[gateid].nvals/out_bits;
 	if(depth >= m_vTTlens.size()) {
 		uint32_t old_depth = m_vTTlens.size();
 		uint32_t nlens = m_vTTlens[0].size();
@@ -797,7 +797,7 @@ void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t gateid, uint32
 					//In case of OP-LUT, also save the truth table which is needed in the setup phase
 					if(m_eContext == S_BOOL) {
 						for(uint32_t n = 0; n < nvals; n++) {
-							m_vTTlens[depth][i][j].ttable_values.push_back(m_pGates[gateid].gs.tt.table);
+							m_vTTlens[depth][i][j].ttable_values.push_back(m_vGates[gateid].gs.tt.table);
 						}
 					}
 				}
@@ -819,7 +819,7 @@ void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t gateid, uint32
 		//In case of OP-LUT, also save the truth table which is needed in the setup phase
 		if(m_eContext == S_BOOL) {
 			for(uint32_t n = 0; n < nvals; n++) {
-				m_vTTlens[depth][old_in_lens][0].ttable_values.push_back(m_pGates[gateid].gs.tt.table);
+				m_vTTlens[depth][old_in_lens][0].ttable_values.push_back(m_vGates[gateid].gs.tt.table);
 			}
 		}
 		outs_exist = true;
@@ -839,7 +839,7 @@ void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t gateid, uint32
 		//In case of OP-LUT, also save the truth table which is needed in the setup phase
 		if(m_eContext == S_BOOL) {
 			for(uint32_t n = 0; n < nvals; n++) {
-				m_vTTlens[depth][id][old_out_lens].ttable_values.push_back(m_pGates[gateid].gs.tt.table);
+				m_vTTlens[depth][id][old_out_lens].ttable_values.push_back(m_vGates[gateid].gs.tt.table);
 			}
 		}
 		outs_exist = true;
@@ -849,26 +849,26 @@ void BooleanCircuit::UpdateTruthTableSizes(uint32_t len, uint32_t gateid, uint32
 
 //enqueue interactive gate queue
 void BooleanCircuit::UpdateInteractiveQueue(uint32_t gateid) {
-	if (m_pGates[gateid].depth + 1 > m_vInteractiveQueueOnLvl.size()) {
-		m_vInteractiveQueueOnLvl.resize(m_pGates[gateid].depth + 1);
-		if (m_pGates[gateid].depth + 1 > m_nMaxDepth) {
-			m_nMaxDepth = m_pGates[gateid].depth + 1;
+	if (m_vGates[gateid].depth + 1 > m_vInteractiveQueueOnLvl.size()) {
+		m_vInteractiveQueueOnLvl.resize(m_vGates[gateid].depth + 1);
+		if (m_vGates[gateid].depth + 1 > m_nMaxDepth) {
+			m_nMaxDepth = m_vGates[gateid].depth + 1;
 		}
 	}
-	m_vInteractiveQueueOnLvl[m_pGates[gateid].depth].push_back(gateid);
+	m_vInteractiveQueueOnLvl[m_vGates[gateid].depth].push_back(gateid);
 	m_nGates++;
 }
 
 //enqueue locally evaluated gate queue
 void BooleanCircuit::UpdateLocalQueue(uint32_t gateid) {
-	if (m_pGates[gateid].depth + 1 > m_vLocalQueueOnLvl.size()) {
+	if (m_vGates[gateid].depth + 1 > m_vLocalQueueOnLvl.size()) {
 		//std::cout << "increasing size of local queue" << std::endl;
-		m_vLocalQueueOnLvl.resize(m_pGates[gateid].depth + 1);
-		if (m_pGates[gateid].depth + 1 > m_nMaxDepth) {
-			m_nMaxDepth = m_pGates[gateid].depth + 1;
+		m_vLocalQueueOnLvl.resize(m_vGates[gateid].depth + 1);
+		if (m_vGates[gateid].depth + 1 > m_nMaxDepth) {
+			m_nMaxDepth = m_vGates[gateid].depth + 1;
 		}
 	}
-	m_vLocalQueueOnLvl[m_pGates[gateid].depth].push_back(gateid);
+	m_vLocalQueueOnLvl[m_vGates[gateid].depth].push_back(gateid);
 
 	m_nGates++;
 }
@@ -893,7 +893,7 @@ std::vector<uint32_t> BooleanCircuit::PutLeftShifterGate(std::vector<uint32_t> v
 // Only works for nvals <= 32 due to the constant gate implementation in Bool
 // sharing.
 uint32_t BooleanCircuit::PutUniversalGateCircuit(uint32_t a, uint32_t b, uint32_t op_id) {
-	uint32_t nvals = std::max(m_pGates[a].nvals, m_pGates[b].nvals);
+	uint32_t nvals = std::max(m_vGates[a].nvals, m_vGates[b].nvals);
 	assert(nvals <= 32);
 
 	uint32_t mask = 0xFFFFFFFF;
@@ -946,7 +946,7 @@ std::vector<uint32_t> BooleanCircuit::PutSizeOptimizedAddGate(std::vector<uint32
 	std::vector<uint32_t> C(rep);
 	uint32_t axc, bxc, acNbc;
 
-	C[0] = PutXORGate(a[0], a[0]);//PutConstantGate(0, m_pGates[a[0]].nvals); //the second parameter stands for the number of vals
+	C[0] = PutXORGate(a[0], a[0]);//PutConstantGate(0, m_vGates[a[0]].nvals); //the second parameter stands for the number of vals
 
 	uint32_t i = 0;
 	for (; i < rep - 1; i++) {
@@ -1022,7 +1022,7 @@ std::vector<uint32_t> BooleanCircuit::PutDepthOptimizedAddGate(std::vector<uint3
 	uint32_t id, rep = std::min(a.size(), b.size());
 	std::vector<uint32_t> out(a.size() + bCARRY);
 	std::vector<uint32_t> parity(a.size()), carry(rep), parity_zero(rep);
-	uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals);
+	uint32_t zerogate = PutConstantGate(0, m_vGates[a[0]].nvals);
 	uint32_t startid = zerogate;
 	share* zero_share = new boolshare(2, this);
 	share* ina = new boolshare(2, this);
@@ -1305,7 +1305,7 @@ std::vector<uint32_t> BooleanCircuit::PutMulGate(std::vector<uint32_t> a, std::v
 	}
 
 	std::vector<std::vector<uint32_t> > vAdds(rep);
-	uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals);
+	uint32_t zerogate = PutConstantGate(0, m_vGates[a[0]].nvals);
 
 	uint32_t lim = std::min(resbitlen, 2 * rep);
 
@@ -1502,11 +1502,11 @@ std::vector<std::vector<uint32_t> > BooleanCircuit::PutCSNNetwork(std::vector<st
 std::vector<uint32_t> BooleanCircuit::PutSUBGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t max_bitlength) {
 	//pad with leading zeros
 	if(a.size() < max_bitlength) {
-		uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals);
+		uint32_t zerogate = PutConstantGate(0, m_vGates[a[0]].nvals);
 		a.resize(max_bitlength, zerogate);
 	}
 	if(b.size() < max_bitlength) {
-		uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals);
+		uint32_t zerogate = PutConstantGate(0, m_vGates[a[0]].nvals);
 		b.resize(max_bitlength, zerogate);
 	}
 
@@ -1520,7 +1520,7 @@ std::vector<uint32_t> BooleanCircuit::PutSUBGate(std::vector<uint32_t> a, std::v
 		ainv[i] = PutINVGate(a[i]);
 	}
 
-	C[0] = PutConstantGate(0, m_pGates[a[0]].nvals);
+	C[0] = PutConstantGate(0, m_vGates[a[0]].nvals);
 
 	for (i = 0; i < bitlen - 1; i++) {
 		//===================
@@ -1571,7 +1571,7 @@ uint32_t BooleanCircuit::PutGTGate(std::vector<uint32_t> a, std::vector<uint32_t
 uint32_t BooleanCircuit::PutSizeOptimizedGTGate(std::vector<uint32_t> a, std::vector<uint32_t> b) {
 	PadWithLeadingZeros(a, b);
 	uint32_t ci = 0, ci1, ac, bc, acNbc;
-	ci = PutConstantGate((UGATE_T) 0, m_pGates[a[0]].nvals);
+	ci = PutConstantGate((UGATE_T) 0, m_vGates[a[0]].nvals);
 	for (uint32_t i = 0; i < a.size(); i++, ci = ci1) {
 		ac = PutXORGate(a[i], ci);
 		bc = PutXORGate(b[i], ci);
@@ -1746,7 +1746,7 @@ share* BooleanCircuit::PutANDVecGate(share* ina, share* inb) {
 	} else {
 		//std::cout << "Putting usual AND gate" << std::endl;
 		for (uint32_t i = 0; i < rep; i++) {
-			uint32_t bvec = PutRepeaterGate(inb->get_wire_id(i), m_pGates[ina->get_wire_id(i)].nvals);
+			uint32_t bvec = PutRepeaterGate(inb->get_wire_id(i), m_vGates[ina->get_wire_id(i)].nvals);
 			out->set_wire_id(i, PutANDGate(ina->get_wire_id(i), bvec));
 		}
 	}
@@ -1765,12 +1765,12 @@ std::vector<uint32_t> BooleanCircuit::PutMUXGate(std::vector<uint32_t> a, std::v
 
 	uint32_t nvals=1;
 	for(uint32_t i = 0; i < a.size(); i++) {
-		if(m_pGates[a[i]].nvals > nvals)
-			nvals = m_pGates[a[i]].nvals;
+		if(m_vGates[a[i]].nvals > nvals)
+			nvals = m_vGates[a[i]].nvals;
 	}
 	for(uint32_t i = 0; i < b.size(); i++)
-		if(m_pGates[b[i]].nvals > nvals)
-			nvals = m_pGates[b[i]].nvals;
+		if(m_vGates[b[i]].nvals > nvals)
+			nvals = m_vGates[b[i]].nvals;
 
 	if (m_eContext == S_BOOL && vecand && nvals == 1) {
 		uint32_t avec = PutCombinerGate(a);
@@ -1819,7 +1819,7 @@ uint32_t BooleanCircuit::PutVecANDMUXGate(uint32_t a, uint32_t b, uint32_t s) {
 	if (m_eContext == S_BOOL) {
 		sab = PutVectorANDGate(s, ab);
 	} else {
-		uint32_t svec = PutRepeaterGate(s, m_pGates[ab].nvals);
+		uint32_t svec = PutRepeaterGate(s, m_vGates[ab].nvals);
 		sab = PutANDGate(svec, ab);
 	}
 	return PutXORGate(b, sab);
@@ -1936,8 +1936,8 @@ std::vector<std::vector<uint32_t> > BooleanCircuit::PutCondSwapGate(std::vector<
 		out[0] = PutSplitterGate(PutXORGate(snab, avec));
 		out[1] = PutSplitterGate(PutXORGate(snab, bvec));
 	} else {
-		if (m_pGates[s].nvals < m_pGates[a[0]].nvals)
-			svec = PutRepeaterGate(s, m_pGates[a[0]].nvals);
+		if (m_vGates[s].nvals < m_vGates[a[0]].nvals)
+			svec = PutRepeaterGate(s, m_vGates[a[0]].nvals);
 		else
 			svec = s;
 
@@ -2750,7 +2750,7 @@ void BooleanCircuit::PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_
 	std::vector<uint32_t> inputsa, inputsb;
 	uint32_t *posids;
 	uint32_t bitlen = 0;
-	uint32_t nvals = m_pGates[sel->get_wire_id(0)].nvals;
+	uint32_t nvals = m_vGates[sel->get_wire_id(0)].nvals;
 
 	//Yao not allowed, if so just put standard muxes
 	assert(m_eContext == S_BOOL);
@@ -2821,7 +2821,7 @@ void BooleanCircuit::Reset() {
 void BooleanCircuit::PadWithLeadingZeros(std::vector<uint32_t> &a, std::vector<uint32_t> &b) {
 	uint32_t maxlen = std::max(a.size(), b.size());
 	if(a.size() != b.size()) {
-		uint32_t zerogate = PutConstantGate(0, m_pGates[a[0]].nvals);
+		uint32_t zerogate = PutConstantGate(0, m_vGates[a[0]].nvals);
 		a.resize(maxlen, zerogate);
 		b.resize(maxlen, zerogate);
 	}

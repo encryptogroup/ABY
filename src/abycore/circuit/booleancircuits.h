@@ -69,7 +69,7 @@ public:
 
 		uint32_t gateid = PutINGate(m_eMyRole);
 		//assign value
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.ishare.inval = (UGATE_T*) calloc(1 * m_nShareBitLen, sizeof(UGATE_T));
 
 		*gate->gs.ishare.inval = (UGATE_T) val;
@@ -84,7 +84,7 @@ public:
 		uint32_t gateid = PutINGate(role);
 		if (role == m_eMyRole) {
 			//assign value
-			GATE* gate = m_pGates + gateid;
+			GATE* gate = &(m_vGates[gateid]);
 			gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 			memcpy(gate->gs.ishare.inval, val, ceil_divide(1 * m_nShareBitLen, 8));
 
@@ -98,7 +98,7 @@ public:
 
 		uint32_t gateid = PutSIMDINGate(ninvals, m_eMyRole);
 		//assign value
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.ishare.inval = (UGATE_T*) calloc(ninvals * m_nShareBitLen, sizeof(UGATE_T));
 
 		*gate->gs.ishare.inval = (UGATE_T) val;
@@ -111,7 +111,7 @@ public:
 		uint32_t gateid = PutSIMDINGate(ninvals, role);
 		if (role == m_eMyRole) {
 			//assign value
-			GATE* gate = m_pGates + gateid;
+			GATE* gate = &(m_vGates[gateid]);
 			gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(ninvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 			memcpy(gate->gs.ishare.inval, val, ceil_divide(ninvals * m_nShareBitLen, 8));
 			gate->instantiated = true;
@@ -125,7 +125,7 @@ public:
 
 		uint32_t gateid = PutSharedINGate();
 		//assign value
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.val = (UGATE_T*) calloc(1 * m_nShareBitLen, sizeof(UGATE_T));
 
 		*gate->gs.val = (UGATE_T) val;
@@ -138,7 +138,7 @@ public:
 		uint32_t gateid = PutSharedINGate();
 
 			//assign value
-			GATE* gate = m_pGates + gateid;
+			GATE* gate = &(m_vGates[gateid]);
 			gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 			memcpy(gate->gs.val, val, ceil_divide(1 * m_nShareBitLen, 8));
 
@@ -153,7 +153,7 @@ public:
 
 		uint32_t gateid = PutSharedSIMDINGate(ninvals);
 		//assign value
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.val = (UGATE_T*) calloc(ninvals * m_nShareBitLen, sizeof(UGATE_T));
 
 		*gate->gs.val = (UGATE_T) val;
@@ -165,7 +165,7 @@ public:
 	template<class T> uint32_t PutSharedSIMDINGate(uint32_t ninvals, T* val) {
 		uint32_t gateid = PutSharedSIMDINGate(ninvals);
 		//assign value
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.val = (UGATE_T*) calloc(ceil_divide(ninvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 		memcpy(gate->gs.val, val, ceil_divide(ninvals * m_nShareBitLen, 8));
 		gate->instantiated = true;
