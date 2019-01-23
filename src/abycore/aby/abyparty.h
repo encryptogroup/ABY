@@ -59,7 +59,8 @@ public:
 	double GetTiming(ABYPHASE phase);
 	uint64_t GetSentData(ABYPHASE phase);
 	uint64_t GetReceivedData(ABYPHASE phase);
-
+	uint32_t GetTotalGates();
+	uint32_t GetTotalDepth();
 
 private:
 	BOOL Init();
