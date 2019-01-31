@@ -186,7 +186,7 @@ uint32_t FindBitLenPositionInVec(uint32_t bitlen, non_lin_vec_ctx* list, uint32_
 
 class ABYCircuit {
 public:
-	ABYCircuit(uint32_t maxgates);
+	ABYCircuit(uint32_t reservegates);
 	virtual ~ABYCircuit() {
 		Cleanup();
 	}

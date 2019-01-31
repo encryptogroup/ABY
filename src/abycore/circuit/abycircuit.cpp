@@ -31,9 +31,11 @@ void ABYCircuit::Cleanup() {
 	Reset();
 }
 
-ABYCircuit::ABYCircuit(uint32_t maxgates) {
-	m_nMaxVectorSize = 1;
-	m_nMaxDepth = 0;
+ABYCircuit::ABYCircuit(uint32_t reservegates) :
+	m_nMaxVectorSize{1},
+	m_nMaxDepth{0}
+{
+	m_vGates.reserve(reservegates);
 }
 
 /**

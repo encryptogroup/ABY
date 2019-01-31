@@ -29,13 +29,13 @@ int32_t test_lowmc_circuit(e_role role, const std::string& address, uint16_t por
 }
 
 int32_t test_lowmc_circuit(e_role role, const std::string& address, uint16_t port, uint32_t nvals, uint32_t nthreads,
-		e_mt_gen_alg mt_alg, e_sharing sharing, LowMCParams* param, uint32_t maxgates, crypto* crypt) {
+		e_mt_gen_alg mt_alg, e_sharing sharing, LowMCParams* param, uint32_t reservegates, crypto* crypt) {
 
 	uint32_t bitlen = 32, ctr = 0, exp_key_bitlen = param->blocksize * (param->nrounds+1), zero_gate;
 
 	ABYParty* party;
-	if(maxgates > 0)
-		party = new ABYParty(role, address, port, crypt->get_seclvl(), bitlen, nthreads, mt_alg, maxgates);
+	if(reservegates > 0)
+		party = new ABYParty(role, address, port, crypt->get_seclvl(), bitlen, nthreads, mt_alg, reservegates);
 	else
 		party = new ABYParty(role, address, port, crypt->get_seclvl(), bitlen, nthreads, mt_alg);
 

@@ -62,7 +62,7 @@ private:
 
 ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl seclvl,
 	uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo,
-	uint32_t maxgates)
+	uint32_t reservegates)
 	: m_cCrypt(std::make_unique<crypto>(seclvl.symbits)), glock(std::make_unique<CLock>()),
 	m_eMTGenAlg(mg_algo), m_eRole(pid), m_nNumOTThreads(nthreads),
 	m_tComm(std::make_unique<comm_ctx>()),
@@ -94,7 +94,7 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 	std::cout << "Generating circuit" << std::endl;
 #endif
 	StartWatch("Generating circuit", P_CIRCUIT);
-	if (!InitCircuit(bitlen, maxgates)) {
+	if (!InitCircuit(bitlen, reservegates)) {
 		std::cout << "There was an while initializing the circuit, ending! " << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
@@ -265,9 +265,9 @@ void ABYParty::ExecCircuit() {
 }
 
 
-BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t maxgates) {
-	// Specification of maximum amount of gates in constructor in abyparty.h
-	m_pCircuit = new ABYCircuit(maxgates);
+BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t reservegates) {
+	// Default reserved gates in abyparty.h constructur
+	m_pCircuit = new ABYCircuit(reservegates);
 
 	m_vSharings.resize(S_LAST);
 	m_vSharings[S_BOOL] = new BoolSharing(S_BOOL, m_eRole, 1, m_pCircuit, m_cCrypt.get());
