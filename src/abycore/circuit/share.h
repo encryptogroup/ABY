@@ -45,7 +45,7 @@ public:
 	}
 	;
 
-        std::vector<uint32_t> get_wires() {
+        std::vector<uint32_t> & get_wires() {
 		return m_ngateids;
 	}
 	;
