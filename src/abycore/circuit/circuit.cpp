@@ -22,9 +22,6 @@
 
 
 void Circuit::Init() {
-
-	m_pGates = m_cCircuit->Gates();
-
 	m_nMaxDepth = 0;
 	m_vInputGates.resize(2);
 	m_vOutputGates.resize(2);
@@ -94,19 +91,19 @@ void Circuit::Reset() {
 }
 
 gate_specific Circuit::GetGateSpecificOutput(uint32_t gateid) {
-	assert(m_pGates[gateid].instantiated);
-	return m_pGates[gateid].gs;
+	assert(m_vGates[gateid].instantiated);
+	return m_vGates[gateid].gs;
 }
 
 uint32_t Circuit::GetOutputGateValue(uint32_t gateid, UGATE_T*& outval) {
-	assert(m_pGates[gateid].instantiated);
-	outval = m_pGates[gateid].gs.val;
-	return m_pGates[gateid].nvals;
+	assert(m_vGates[gateid].instantiated);
+	outval = m_vGates[gateid].gs.val;
+	return m_vGates[gateid].nvals;
 }
 
 UGATE_T* Circuit::GetOutputGateValue(uint32_t gateid) {
-	assert(m_pGates[gateid].instantiated);
-	return m_pGates[gateid].gs.val;
+	assert(m_vGates[gateid].instantiated);
+	return m_vGates[gateid].gs.val;
 }
 
 /* Converts a Yao share to an Arithmetic share. The boolsharing circuit needs to be from type S_BOOL! */
@@ -210,8 +207,8 @@ share* Circuit::PutCombinerGate(share* input) {
 share* Circuit::PutCombinerGate(share* ina, share* inb) {
 	assert(ina->get_circuit_type() == inb->get_circuit_type());
 	std::vector<uint32_t> wires(ina->get_bitlength() + inb->get_bitlength());
-//	std::cout << "Size on left = " << ina->get_bitlength() << " (" << m_pGates[ina->get_wire_id(0)].nvals << ") on right = " << inb->get_bitlength()
-//			<< " ("<< m_pGates[inb->get_wire_id(0)].nvals << ")" << std::endl;
+//	std::cout << "Size on left = " << ina->get_bitlength() << " (" << m_vGates[ina->get_wire_id(0)].nvals << ") on right = " << inb->get_bitlength()
+//			<< " ("<< m_vGates[inb->get_wire_id(0)].nvals << ")" << std::endl;
 
 	for(uint32_t i = 0; i < ina->get_bitlength(); i++) {
 		wires[i] = ina->get_wire_id(i);
@@ -266,7 +263,7 @@ void Circuit::UpdateLocalQueue(share* gateids) {
 share* Circuit::EnsureOutputGate(share* in) {
 	bool is_output = true;
 	for (uint32_t i = 0; i < in->get_bitlength(); i++) {
-		is_output &= (m_pGates[in->get_wire_id(i)].type == G_OUT);
+		is_output &= (m_vGates[in->get_wire_id(i)].type == G_OUT);
 	}
 
 	share* outgates = in;
@@ -329,7 +326,7 @@ share* Circuit::PutSIMDAssertGate(share* in, uint32_t nvals, uint64_t* assert_va
 
 	assert(bitlen == in->get_bitlength());
 	for (uint32_t i = 0; i < in->get_bitlength(); i++) {
-		assert(m_pGates[in->get_wire_id(i)].nvals == nvals);
+		assert(m_vGates[in->get_wire_id(i)].nvals == nvals);
 	}
 
 	uint32_t tmp = m_cCircuit->PutAssertGate(outgates->get_wires(), bitlen, (UGATE_T*) assert_val);

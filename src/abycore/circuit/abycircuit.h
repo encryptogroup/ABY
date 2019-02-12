@@ -186,15 +186,15 @@ uint32_t FindBitLenPositionInVec(uint32_t bitlen, non_lin_vec_ctx* list, uint32_
 
 class ABYCircuit {
 public:
-	ABYCircuit(uint32_t maxgates);
+	ABYCircuit(uint32_t reservegates);
 	virtual ~ABYCircuit() {
 		Cleanup();
 	}
 
 	void Cleanup();
 	void Reset();
-	GATE* Gates() {
-		return m_pGates;
+	inline std::vector<GATE>& GatesVec() {
+		return m_vGates;
 	}
 
 	uint32_t PutPrimitiveGate(e_gatetype type, uint32_t inleft, uint32_t inright, uint32_t rounds);
@@ -232,7 +232,7 @@ public:
 	uint32_t PutAssertGate(std::vector<uint32_t> in, uint32_t bitlen, UGATE_T* assert_val);
 
 	uint32_t GetGateHead() {
-		return m_nNextFreeGate;
+		return m_vGates.size();
 	}
 
 	uint32_t GetTotalDepth() {
@@ -248,11 +248,11 @@ public:
 			std::vector<uint32_t> outgates, const char* filename);
 
 private:
-
-	inline void InitGate(GATE* gate, e_gatetype type);
-	inline void InitGate(GATE* gate, e_gatetype type, uint32_t ina);
-	inline void InitGate(GATE* gate, e_gatetype type, uint32_t ina, uint32_t inb);
-	inline void InitGate(GATE* gate, e_gatetype type, std::vector<uint32_t>& inputs);
+	inline uint32_t currentGateId();
+	inline GATE* InitGate(e_gatetype type);
+	inline GATE* InitGate(e_gatetype type, uint32_t ina);
+	inline GATE* InitGate(e_gatetype type, uint32_t ina, uint32_t inb);
+	inline GATE* InitGate(e_gatetype type, std::vector<uint32_t>& inputs);
 
 	inline uint32_t GetNumRounds(e_gatetype type, e_sharing context);
 	inline void MarkGateAsUsed(uint32_t gateid, uint32_t uses = 1);
@@ -262,10 +262,8 @@ private:
 	void CheckAndPropagateConstant(uint32_t gateid, uint32_t& next_gate_id, std::vector<int>& gate_id_map,
 			std::vector<int>& constant_map, std::ofstream& outfile);
 
-	GATE* m_pGates;
-	uint32_t m_nNextFreeGate;	// points to the current first unused gate
+	std::vector<GATE> m_vGates;
 	uint32_t m_nMaxVectorSize; 	// The maximum vector size in bits, required for correctly instantiating the 0 and 1 gates
-	uint32_t m_nMaxGates; 		// Maximal number of gates that is allowed
 	uint32_t m_nMaxDepth;	// maximum depth encountered in the circuit
 };
 

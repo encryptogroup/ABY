@@ -74,7 +74,8 @@ class Circuit {
 
 public:
 	Circuit(ABYCircuit* aby, e_sharing context, e_role myrole, uint32_t bitlen, e_circuit circ) :
-			m_cCircuit(aby), m_eContext(context), m_eMyRole(myrole), m_nShareBitLen(bitlen), m_eCirctype(circ) {
+			m_cCircuit(aby), m_eContext(context), m_eMyRole(myrole),
+			m_nShareBitLen(bitlen), m_eCirctype(circ), m_vGates(aby->GatesVec()) {
 		Init();
 	}
 
@@ -218,13 +219,13 @@ public:
 	UGATE_T* GetOutputGateValue(uint32_t gateid);
 	uint32_t GetOutputGateValue(uint32_t gateid, UGATE_T*& outval);
 	template<class T> void GetOutputGateValueT(uint32_t gateid, T& val) {
-		assert(sizeof(T) * 8 >= m_pGates[gateid].nvals * m_nShareBitLen);
-		val = *((T*) m_pGates[gateid].gs.val);
+		assert(sizeof(T) * 8 >= m_vGates[gateid].nvals * m_nShareBitLen);
+		val = *((T*) m_vGates[gateid].gs.val);
 	}
 
 	uint32_t GetNumVals(uint32_t gateid) {
 		assert(gateid < m_cCircuit->GetGateHead());
-		return m_pGates[gateid].nvals;
+		return m_vGates[gateid].nvals;
 	}
 
 	/* Common gate-building routines */
@@ -495,7 +496,7 @@ protected:
 	share* EnsureOutputGate(share* in);
 
 	ABYCircuit* m_cCircuit; /** ABYCircuit Object  */
-	GATE* m_pGates;			/** Gates vector which stores the */
+	std::vector<GATE>& m_vGates;
 	e_sharing m_eContext;
 	e_role m_eMyRole;
 	uint32_t m_nShareBitLen;

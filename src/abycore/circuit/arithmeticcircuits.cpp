@@ -50,7 +50,7 @@ share* ArithmeticCircuit::PutMULGate(share* ina, share* inb) {
 uint32_t ArithmeticCircuit::PutMULGate(uint32_t inleft, uint32_t inright) {
 	// check if one of the inputs is a const gate and then use a MULCONST gate
 	// instead.
-	if (m_pGates[inleft].type == G_CONSTANT || m_pGates[inright].type == G_CONSTANT) {
+	if (m_vGates[inleft].type == G_CONSTANT || m_vGates[inright].type == G_CONSTANT) {
 #ifdef DEBUGARITH
 		std::cout << "MUL(" << inleft << ", " << inright <<
 			"): Constant factor present, putting a MULCONST gate instead." << std::endl;
@@ -61,9 +61,9 @@ uint32_t ArithmeticCircuit::PutMULGate(uint32_t inleft, uint32_t inright) {
 	uint32_t gateid = m_cCircuit->PutPrimitiveGate(G_NON_LIN, inleft, inright, m_nRoundsAND);
 	UpdateInteractiveQueue(gateid);
 
-	if (m_pGates[gateid].nvals != INT_MAX) {
+	if (m_vGates[gateid].nvals != INT_MAX) {
 		//TODO implement for NON_LIN_VEC
-		m_nMULs += m_pGates[gateid].nvals;
+		m_nMULs += m_vGates[gateid].nvals;
 	}
 	return gateid;
 }
@@ -76,8 +76,8 @@ share* ArithmeticCircuit::PutMULCONSTGate(share* ina, share* inb) {
 
 uint32_t ArithmeticCircuit::PutMULCONSTGate(uint32_t inleft, uint32_t inright) {
 	// One of the gates needs to be a constant gate
-	assert (m_pGates[inleft].type == G_CONSTANT || m_pGates[inright].type == G_CONSTANT);
-	if (m_pGates[inleft].type == G_CONSTANT && m_pGates[inright].type == G_CONSTANT) {
+	assert (m_vGates[inleft].type == G_CONSTANT || m_vGates[inright].type == G_CONSTANT);
+	if (m_vGates[inleft].type == G_CONSTANT && m_vGates[inright].type == G_CONSTANT) {
 		std::cerr << "MULCONST(" << inleft << "," << inright <<
 			"): Both sides are constants, consider just multiplying their values before adding them as CONST gates.\n";
 	}
@@ -119,17 +119,17 @@ uint32_t ArithmeticCircuit::PutINGate(e_role src) {
 	switch (src) {
 	case SERVER:
 		m_vInputGates[0].push_back(gateid);
-		m_vInputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vInputBits[0] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case CLIENT:
 		m_vInputGates[1].push_back(gateid);
-		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vInputBits[1] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case ALL:
 		m_vInputGates[0].push_back(gateid);
 		m_vInputGates[1].push_back(gateid);
-		m_vInputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
-		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vInputBits[0] += (m_vGates[gateid].nvals * m_nShareBitLen);
+		m_vInputBits[1] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	default:
 		std::cerr << "Role not recognized" << std::endl;
@@ -151,17 +151,17 @@ uint32_t ArithmeticCircuit::PutSIMDINGate(uint32_t ninvals, e_role src) {
 	switch (src) {
 	case SERVER:
 		m_vInputGates[0].push_back(gateid);
-		m_vInputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vInputBits[0] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case CLIENT:
 		m_vInputGates[1].push_back(gateid);
-		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vInputBits[1] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case ALL:
 		m_vInputGates[0].push_back(gateid);
 		m_vInputGates[1].push_back(gateid);
-		m_vInputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
-		m_vInputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vInputBits[0] += (m_vGates[gateid].nvals * m_nShareBitLen);
+		m_vInputBits[1] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	default:
 		std::cerr << "Role not recognized" << std::endl;
@@ -199,17 +199,17 @@ uint32_t ArithmeticCircuit::PutOUTGate(uint32_t parentid, e_role dst) {
 	switch (dst) {
 	case SERVER:
 		m_vOutputGates[0].push_back(gateid);
-		m_vOutputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vOutputBits[0] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case CLIENT:
 		m_vOutputGates[1].push_back(gateid);
-		m_vOutputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vOutputBits[1] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	case ALL:
 		m_vOutputGates[0].push_back(gateid);
 		m_vOutputGates[1].push_back(gateid);
-		m_vOutputBits[0] += (m_pGates[gateid].nvals * m_nShareBitLen);
-		m_vOutputBits[1] += (m_pGates[gateid].nvals * m_nShareBitLen);
+		m_vOutputBits[0] += (m_vGates[gateid].nvals * m_nShareBitLen);
+		m_vOutputBits[1] += (m_vGates[gateid].nvals * m_nShareBitLen);
 		break;
 	default:
 		std::cerr << "Role not recognized" << std::endl;
@@ -251,7 +251,7 @@ uint32_t ArithmeticCircuit::PutINVGate(uint32_t parentid) {
 uint32_t ArithmeticCircuit::PutCONVGate(std::vector<uint32_t> parentids) {
 	uint32_t gateid = m_cCircuit->PutCONVGate(parentids, 2, S_ARITH, m_nShareBitLen);
 	UpdateInteractiveQueue(gateid);
-	m_nCONVGates += m_pGates[gateid].nvals * parentids.size();
+	m_nCONVGates += m_vGates[gateid].nvals * parentids.size();
 	return gateid;
 }
 
@@ -336,24 +336,24 @@ share* ArithmeticCircuit::PutB2AGate(share* ina) {
 
 //enqueue interactive gate queue
 void ArithmeticCircuit::UpdateInteractiveQueue(uint32_t gateid) {
-	if (m_pGates[gateid].depth + 1 > m_vInteractiveQueueOnLvl.size()) {
-		m_vInteractiveQueueOnLvl.resize(m_pGates[gateid].depth + 1);
-		if (m_pGates[gateid].depth + 1 > m_nMaxDepth) {
-			m_nMaxDepth = m_pGates[gateid].depth + 1;
+	if (m_vGates[gateid].depth + 1 > m_vInteractiveQueueOnLvl.size()) {
+		m_vInteractiveQueueOnLvl.resize(m_vGates[gateid].depth + 1);
+		if (m_vGates[gateid].depth + 1 > m_nMaxDepth) {
+			m_nMaxDepth = m_vGates[gateid].depth + 1;
 		}
 	}
-	m_vInteractiveQueueOnLvl[m_pGates[gateid].depth].push_back(gateid);
+	m_vInteractiveQueueOnLvl[m_vGates[gateid].depth].push_back(gateid);
 }
 
 //enqueue locally evaluated gate queue
 void ArithmeticCircuit::UpdateLocalQueue(uint32_t gateid) {
-	if (m_pGates[gateid].depth + 1 > m_vLocalQueueOnLvl.size()) {
-		m_vLocalQueueOnLvl.resize(m_pGates[gateid].depth + 1);
-		if (m_pGates[gateid].depth + 1 > m_nMaxDepth) {
-			m_nMaxDepth = m_pGates[gateid].depth + 1;
+	if (m_vGates[gateid].depth + 1 > m_vLocalQueueOnLvl.size()) {
+		m_vLocalQueueOnLvl.resize(m_vGates[gateid].depth + 1);
+		if (m_vGates[gateid].depth + 1 > m_nMaxDepth) {
+			m_nMaxDepth = m_vGates[gateid].depth + 1;
 		}
 	}
-	m_vLocalQueueOnLvl[m_pGates[gateid].depth].push_back(gateid);
+	m_vLocalQueueOnLvl[m_vGates[gateid].depth].push_back(gateid);
 }
 
 void ArithmeticCircuit::Reset() {

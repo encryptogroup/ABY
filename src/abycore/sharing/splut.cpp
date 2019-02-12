@@ -426,7 +426,7 @@ void SetupLUT::EvaluateLocalOperations(uint32_t depth) {
 	timeval tstart, tend;
 #endif
 	for (uint32_t i = 0; i < localops.size(); i++) {
-		gate = m_pGates + localops[i];
+		gate = &(m_vGates[localops[i]]);
 #ifdef DEBUGBOOL_NO_MT
 		std::cout << "Evaluating local gate with id = " << localops[i] << " and type " << get_gate_type_name(gate->type) << std::endl;
 #endif
@@ -461,7 +461,7 @@ void SetupLUT::EvaluateLocalOperations(uint32_t depth) {
 			break;
 		case G_SHARED_OUT:
 			InstantiateGate(gate);
-			memcpy(gate->gs.val, ((GATE*) m_pGates + gate->ingates.inputs.parent)->gs.val, bits_in_bytes(gate->nvals));
+			memcpy(gate->gs.val, m_vGates[gate->ingates.inputs.parent].gs.val, bits_in_bytes(gate->nvals));
 			UsedGate(gate->ingates.inputs.parent);
 			break;
 		case G_SHARED_IN:
@@ -486,7 +486,7 @@ void SetupLUT::EvaluateInteractiveOperations(uint32_t depth) {
 	std::deque<uint32_t> interactiveops = m_cBoolCircuit->GetInteractiveQueueOnLvl(depth);
 
 	for (uint32_t i = 0; i < interactiveops.size(); i++) {
-		GATE* gate = m_pGates + interactiveops[i];
+		GATE* gate = &(m_vGates[interactiveops[i]]);
 
 #ifdef DEBUG_SPLUT
 		std::cout << "Evaluating interactive gate with id = " << interactiveops[i] << " and type " << get_gate_type_name(gate->type) << std::endl;
@@ -535,10 +535,10 @@ void SetupLUT::EvaluateInteractiveOperations(uint32_t depth) {
 
 inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 	//Evaluate Truth Table gate
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	uint32_t* input = gate->ingates.inputs.parents;
 	uint32_t nparents = gate->ingates.ningates;
-	uint32_t nvals = m_pGates[input[0]].nvals;
+	uint32_t nvals = m_vGates[input[0]].nvals;
 
 	assert(nparents >= 0 && nparents < 32);
 
@@ -568,7 +568,7 @@ inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 			uint32_t ctr = m_nChoiceUpdateSndCtr[nparents][outbit_id];
 			//iterate over all parent wires and construct the input gate value
 			for(uint32_t j = 0; j < nparents; j++) {
-				ingate = m_pGates + input[j];
+				ingate = &(m_vGates[input[j]]);
 				gate_shares |= (((ingate->gs.val[(i/typebitlen)] >> (i%typebitlen)) & 0x01)<<j);
 			}
 
@@ -604,23 +604,23 @@ inline void SetupLUT::EvaluateTTGate(uint32_t gateid) {
 
 
 inline void SetupLUT::EvaluateXORGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	uint32_t nvals = gate->nvals;
 	uint32_t idleft = gate->ingates.inputs.twin.left;
 	uint32_t idright = gate->ingates.inputs.twin.right;
 	InstantiateGate(gate);
 
 	for (uint32_t i = 0; i < ceil_divide(nvals, GATE_T_BITS); i++) {
-		gate->gs.val[i] = m_pGates[idleft].gs.val[i] ^ m_pGates[idright].gs.val[i];
+		gate->gs.val[i] = m_vGates[idleft].gs.val[i] ^ m_vGates[idright].gs.val[i];
 	}
-	//std::cout << "value = " << gate->gs.val[0] << " = " << m_pGates[idleft].gs.val[0] << " ^ " << m_pGates[idright].gs.val[0] << std::endl;
+	//std::cout << "value = " << gate->gs.val[0] << " = " << m_vGates[idleft].gs.val[0] << " ^ " << m_vGates[idright].gs.val[0] << std::endl;
 
 	UsedGate(idleft);
 	UsedGate(idright);
 }
 
 inline void SetupLUT::EvaluateConstantGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	UGATE_T value = gate->gs.constval;
 	InstantiateGate(gate);
 	value = value * (m_eRole != CLIENT);
@@ -635,7 +635,7 @@ inline void SetupLUT::EvaluateConstantGate(uint32_t gateid) {
 
 
 inline void SetupLUT::ShareValues(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	UGATE_T* input = gate->gs.ishare.inval;
 	InstantiateGate(gate);
 
@@ -653,7 +653,7 @@ inline void SetupLUT::ShareValues(uint32_t gateid) {
 }
 
 inline void SetupLUT::EvaluateINVGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	uint32_t parentid = gate->ingates.inputs.parent;
 	uint32_t i;
 	InstantiateGate(gate);
@@ -664,34 +664,34 @@ inline void SetupLUT::EvaluateINVGate(uint32_t gateid) {
 		memset(&tmpval, 0x00, sizeof(UGATE_T));
 	}
 	for (i = 0; i < ceil_divide((gate->nvals+1), GATE_T_BITS) - 1; i++) {
-		gate->gs.val[i] = m_pGates[parentid].gs.val[i] ^ tmpval;
+		gate->gs.val[i] = m_vGates[parentid].gs.val[i] ^ tmpval;
 	}
 	//set only the remaining nvals%GATE_T_BITS
 	if(gate->nvals % GATE_T_BITS != 0) {
-		gate->gs.val[i] = (m_pGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
+		gate->gs.val[i] = (m_vGates[parentid].gs.val[i] ^ tmpval) & (((UGATE_T) 1) << ((gate->nvals % GATE_T_BITS))) - 1;
 	}
 #ifdef DEBUG_SPLUT
 	std::cout << "Evaluated INV gate " << gateid << " with result: " << (hex) << gate->gs.val[0] <<
-	" and input: " << m_pGates[parentid].gs.val[0]<< (dec) << std::endl;
+	" and input: " << m_vGates[parentid].gs.val[0]<< (dec) << std::endl;
 #endif
 	UsedGate(parentid);
 }
 
 inline void SetupLUT::EvaluateCONVGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	uint32_t parentid = gate->ingates.inputs.parents[0];
-	if (m_pGates[parentid].context == S_ARITH)
+	if (m_vGates[parentid].context == S_ARITH)
 		std::cerr << "can't convert from arithmetic representation directly into Boolean" << std::endl;
 	InstantiateGate(gate);
 
 	memset(gate->gs.val, 0, ceil_divide(gate->nvals, 8));
 	if (m_eRole == SERVER) {
 		for (uint32_t i = 0; i < gate->nvals; i++) {
-			gate->gs.val[i / GATE_T_BITS] |= ((uint64_t) m_pGates[parentid].gs.yinput.pi[i]) << (i % GATE_T_BITS);
+			gate->gs.val[i / GATE_T_BITS] |= ((uint64_t) m_vGates[parentid].gs.yinput.pi[i]) << (i % GATE_T_BITS);
 		}
 	} else {
 		for (uint32_t i = 0; i < gate->nvals; i++) {
-			gate->gs.val[i / GATE_T_BITS] |= ((uint64_t) (m_pGates[parentid].gs.yval[((i + 1) * m_nSecParamBytes) - 1] & 0x01) << (i % GATE_T_BITS));
+			gate->gs.val[i / GATE_T_BITS] |= ((uint64_t) (m_vGates[parentid].gs.yval[((i + 1) * m_nSecParamBytes) - 1] & 0x01) << (i % GATE_T_BITS));
 		}
 	}
 #ifdef DEBUG_SPLUT
@@ -702,16 +702,16 @@ inline void SetupLUT::EvaluateCONVGate(uint32_t gateid) {
 }
 
 inline void SetupLUT::ReconstructValue(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	uint32_t parentid = gate->ingates.inputs.parent;
-	assert(m_pGates[parentid].instantiated);
+	assert(m_vGates[parentid].instantiated);
 	for (uint32_t i = 0, bitstocopy = gate->nvals, len; i < ceil_divide(gate->nvals, GATE_T_BITS); i++, bitstocopy -= GATE_T_BITS) {
 		len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
 #ifdef DEBUG_SPLUT
 		std::cout << "m_vOutputShareSndBuf.size = " << m_vOutputShareSndBuf.GetSize() << ", ctr = " <<m_nOutputShareSndSize << ", len = " << len << ", gate->parent = " << parentid
-		<< " and val = " << (hex) << m_pGates[parentid].gs.val[i] << (dec) << std::endl;
+		<< " and val = " << (hex) << m_vGates[parentid].gs.val[i] << (dec) << std::endl;
 #endif
-		m_vOutputShareSndBuf.Set<UGATE_T>(m_pGates[parentid].gs.val[i], m_nOutputShareSndSize, len);	//gate->gs.val[i], len);
+		m_vOutputShareSndBuf.Set<UGATE_T>(m_vGates[parentid].gs.val[i], m_nOutputShareSndSize, len);	//gate->gs.val[i], len);
 		m_nOutputShareSndSize += len;
 	}
 	if (gate->gs.oshare.dst != ALL)
@@ -777,7 +777,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 		std::vector<uint32_t> ctr_idx(m_vOutBitMapping[i].size(), 0);
 
 		for(uint32_t g = 0; g < m_vTTGates[i].size(); g++) {
-			GATE* gate = m_pGates + m_vTTGates[i][g];
+			GATE* gate = &(m_vGates[m_vTTGates[i][g]]);
 			ttable = gate->gs.tt.table;
 
 
@@ -819,7 +819,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 				parents_value = 0;
 				//std::cout << "Sender getting mask " << tmpmaskidx << std::endl;
 				for(uint32_t j = 0; j < nparents; j++) {
-					parents_value ^= (((m_pGates[input[j]].gs.val[n/typebitlen] >> (n%typebitlen)) & 0x01) << j);
+					parents_value ^= (((m_vGates[input[j]].gs.val[n/typebitlen] >> (n%typebitlen)) & 0x01) << j);
 				}
 
 				//get the correct random mask bits that were assigned to the gate
@@ -939,7 +939,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 		uint8_t* mytable_tmp = (uint8_t*) calloc(512, sizeof(uint8_t));//TODO: static at the moment!, replace by (uint8_t*) calloc(2*len, sizeof(uint8_t));
 
 		for(uint32_t g = 0; g < m_vTTGates[i].size(); g++) {
-			GATE* gate = m_pGates + m_vTTGates[i][g];
+			GATE* gate = &(m_vGates[m_vTTGates[i][g]]);
 			ttable = gate->gs.tt.table;
 
 			//assert(gate->nvals < 65);
@@ -983,7 +983,7 @@ void SetupLUT::SenderEvaluateTTGates() {
 				tmp_val = 0;
 				//std::cout << "Sender getting mask " << tmpmaskidx << std::endl;
 				for(uint32_t j = 0; j < nparents; j++) {
-					tmp_val ^= (((m_pGates[input[j]].gs.val[n/typebitlen] >> (n%typebitlen)) & 0x01) << j);
+					tmp_val ^= (((m_vGates[input[j]].gs.val[n/typebitlen] >> (n%typebitlen)) & 0x01) << j);
 				}
 
 				//TODO: extend to arbitrary length outbits. currently capped to 64 outbits
@@ -1134,7 +1134,7 @@ void SetupLUT::ReceiverEvaluateTTGates() {
 		std::vector<uint32_t> rcvbufaddr(m_vOutBitMapping[i].size(), 0);
 
 		for(uint32_t g = 0; g < m_vTTGates[i].size(); g++) {
-			GATE* gate = m_pGates + m_vTTGates[i][g];
+			GATE* gate = &(m_vGates[m_vTTGates[i][g]]);
 			uint32_t* input = gate->ingates.inputs.parents;
 			uint32_t nparents = gate->ingates.ningates;
 
@@ -1211,7 +1211,7 @@ void SetupLUT::ReceiverEvaluateTTGates() {
 void SetupLUT::AssignInputShares() {
 	GATE* gate;
 	for (uint32_t i = 0, j, rcvshareidx = 0, bitstocopy, len; i < m_vInputShareGates.size(); i++) {
-		gate = m_pGates + m_vInputShareGates[i];
+		gate = &(m_vGates[m_vInputShareGates[i]]);
 		InstantiateGate(gate);
 
 		bitstocopy = gate->nvals;
@@ -1229,16 +1229,16 @@ void SetupLUT::AssignInputShares() {
 void SetupLUT::AssignOutputShares() {
 	GATE* gate;
 	for (uint32_t i = 0, j, rcvshareidx = 0, bitstocopy, len, parentid; i < m_vOutputShareGates.size(); i++) {
-		gate = m_pGates + m_vOutputShareGates[i];
+		gate = &(m_vGates[m_vOutputShareGates[i]]);
 		parentid = gate->ingates.inputs.parent;
 		InstantiateGate(gate);
 
 		bitstocopy = gate->nvals;
 		for (j = 0; j < ceil_divide(gate->nvals, GATE_T_BITS); j++, bitstocopy -= GATE_T_BITS) {
 			len = std::min(bitstocopy, (uint32_t) GATE_T_BITS);
-			gate->gs.val[j] = m_pGates[parentid].gs.val[j] ^ m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len);
+			gate->gs.val[j] = m_vGates[parentid].gs.val[j] ^ m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len);
 #ifdef DEBUG_SPLUT
-			std::cout << "Outshare: " << (hex) << gate->gs.val[j] << " = " << m_pGates[parentid].gs.val[j] << " (mine) ^ " <<
+			std::cout << "Outshare: " << (hex) << gate->gs.val[j] << " = " << m_vGates[parentid].gs.val[j] << " (mine) ^ " <<
 					m_vOutputShareRcvBuf.Get<UGATE_T>(rcvshareidx, len) << " (others)" << (dec) << std::endl;
 #endif
 			rcvshareidx += len;
@@ -1442,7 +1442,7 @@ inline void SetupLUT::InstantiateGate(GATE* gate) {
 }
 
 void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
-	GATE* gate = m_pGates + gateid;
+	GATE* gate = &(m_vGates[gateid]);
 	uint32_t vsize = gate->nvals;
 
 #ifdef BENCHBOOLTIME
@@ -1463,9 +1463,9 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		tmp.AttachBuf((uint8_t*) gate->gs.val, (int) ceil_divide(vsize, 8));
 
 		for(uint64_t i = 0, bit_ctr = 0, ctr=0; i < nparents; i++) {
-			uint64_t in_size = m_pGates[input[i]].nvals;
+			uint64_t in_size = m_vGates[input[i]].nvals;
 
-			tmp.SetBits((uint8_t*) m_pGates[input[i]].gs.val, bit_ctr, in_size);
+			tmp.SetBits((uint8_t*) m_vGates[input[i]].gs.val, bit_ctr, in_size);
 			bit_ctr += in_size;
 		}
 
@@ -1485,7 +1485,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		InstantiateGate(gate);
 		//TODO: optimize
 		for (uint32_t i = 0; i < vsize; i++) {
-			gate->gs.val[i / GATE_T_BITS] |= ((m_pGates[idparent].gs.val[(pos + i) / GATE_T_BITS] >> ((pos + i) % GATE_T_BITS)) & 0x1) << (i % GATE_T_BITS);
+			gate->gs.val[i / GATE_T_BITS] |= ((m_vGates[idparent].gs.val[(pos + i) / GATE_T_BITS] >> ((pos + i) % GATE_T_BITS)) & 0x1) << (i % GATE_T_BITS);
 		}
 		UsedGate(idparent);
 	} else if (gate->type == G_REPEAT) //TODO only meant for single bit values, update
@@ -1496,7 +1496,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		uint32_t idparent = gate->ingates.inputs.parent;
 		InstantiateGate(gate);
 
-		BYTE byte_val = m_pGates[idparent].gs.val[0] ? MAX_BYTE : ZERO_BYTE;
+		BYTE byte_val = m_vGates[idparent].gs.val[0] ? MAX_BYTE : ZERO_BYTE;
 		memset(gate->gs.val, byte_val, sizeof(UGATE_T) * ceil_divide(vsize, GATE_T_BITS));
 		UsedGate(idparent);
 	} else if (gate->type == G_PERM) {
@@ -1514,7 +1514,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 
 		//TODO: Optimize
 		for (uint32_t i = 0; i < vsize; i++) {
-			gate->gs.val[i / GATE_T_BITS] |= (((m_pGates[inputs[i]].gs.val[posids[i] / GATE_T_BITS] >> (posids[i] % GATE_T_BITS)) & 0x1) << (i % GATE_T_BITS));
+			gate->gs.val[i / GATE_T_BITS] |= (((m_vGates[inputs[i]].gs.val[posids[i] / GATE_T_BITS] >> (posids[i] % GATE_T_BITS)) & 0x1) << (i % GATE_T_BITS));
 			UsedGate(inputs[i]);
 		}
 		free(inputs);
@@ -1532,7 +1532,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		//TODO: Optimize
 		for (uint32_t i = 0; i < vsize; i++) {
 			uint32_t idparent = combinepos[i];
-			gate->gs.val[i / GATE_T_BITS] |= (((m_pGates[idparent].gs.val[arraypos] >> bitpos) & 0x1) << (i % GATE_T_BITS));
+			gate->gs.val[i / GATE_T_BITS] |= (((m_vGates[idparent].gs.val[arraypos] >> bitpos) & 0x1) << (i % GATE_T_BITS));
 			UsedGate(idparent);
 		}
 		free(combinepos);
@@ -1547,11 +1547,11 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 		uint32_t bitpos;
 		InstantiateGate(gate);
 		memset(gate->gs.val, 0x00, ceil_divide(vsize, 8));
-		UGATE_T* valptr = m_pGates[idparent].gs.val;
+		UGATE_T* valptr = m_vGates[idparent].gs.val;
 		for (uint32_t i = 0; i < vsize; i++) {
 			//arraypos = positions[i] / GATE_T_BITS;
 			//bitpos = positions[i] % GATE_T_BITS;
-			//gate->gs.val[i / GATE_T_BITS] |= (((m_pGates[idparent].gs.val[arraypos] >> bitpos) & 0x1) << (i % GATE_T_BITS));
+			//gate->gs.val[i / GATE_T_BITS] |= (((m_vGates[idparent].gs.val[arraypos] >> bitpos) & 0x1) << (i % GATE_T_BITS));
 			arraypos = positions[i] >> 6;
 			bitpos = positions[i] & 0x3F;
 			gate->gs.val[i >> 6] |= (((valptr[arraypos] >> bitpos) & 0x1) << (i & 0x3F));
@@ -1584,13 +1584,13 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 			p_tmp_idx = pos_ctr / GATE_T_BITS;
 			p_tmp_pos = pos_ctr % GATE_T_BITS;
 			for(uint32_t in_ctr = 0; in_ctr<ninputs; in_ctr++, ctr++) {
-				gate->gs.val[ctr / GATE_T_BITS] |= (((m_pGates[inputs[in_ctr]].gs.val[p_tmp_idx] >> p_tmp_pos) & 0x1) << (ctr % GATE_T_BITS));
-				//gate->gs.val[ctr / GATE_T_BITS] |= (((m_pGates[inputs[in_ctr]].gs.val[pos_ctr / GATE_T_BITS] >> (pos_ctr % GATE_T_BITS)) & 0x1) << (ctr % GATE_T_BITS));
+				gate->gs.val[ctr / GATE_T_BITS] |= (((m_vGates[inputs[in_ctr]].gs.val[p_tmp_idx] >> p_tmp_pos) & 0x1) << (ctr % GATE_T_BITS));
+				//gate->gs.val[ctr / GATE_T_BITS] |= (((m_vGates[inputs[in_ctr]].gs.val[pos_ctr / GATE_T_BITS] >> (pos_ctr % GATE_T_BITS)) & 0x1) << (ctr % GATE_T_BITS));
 			}
 		}
 
 		//for (uint32_t i = 0, in_ctr=0, pos_ctr=pos_start; i < vsize; i++, in_ctr=(in_ctr+1)%ninputs, pos_ctr+=pos_incr ) {
-		//	gate->gs.val[i / GATE_T_BITS] |= (((m_pGates[inputs[in_ctr]].gs.val[pos_ctr / GATE_T_BITS] >> (pos_ctr % GATE_T_BITS)) & 0x1) << (i % GATE_T_BITS));
+		//	gate->gs.val[i / GATE_T_BITS] |= (((m_vGates[inputs[in_ctr]].gs.val[pos_ctr / GATE_T_BITS] >> (pos_ctr % GATE_T_BITS)) & 0x1) << (i % GATE_T_BITS));
 		//}
 
 		for(uint32_t i = 0; i < ninputs; i++) {
@@ -1620,7 +1620,7 @@ uint32_t SetupLUT::AssignInput(CBitVector& inputvals) {
 	GATE* gate;
 	uint32_t inbits = 0;
 	for (uint32_t i = 0, inbitstart = 0, bitstocopy, len, lim; i < myingates.size(); i++) {
-		gate = m_pGates + myingates[i];
+		gate = &(m_vGates[myingates[i]]);
 		if (!gate->instantiated) {
 			bitstocopy = gate->nvals * gate->sharebitlen;
 			inbits += bitstocopy;
@@ -1646,7 +1646,7 @@ uint32_t SetupLUT::GetOutput(CBitVector& out) {
 
 	GATE* gate;
 	for (uint32_t i = 0, outbitstart = 0, bitstocopy, len, lim; i < myoutgates.size(); i++) {
-		gate = m_pGates + myoutgates[i];
+		gate = &(m_vGates[myoutgates[i]]);
 		lim = gate->nvals * gate->sharebitlen;
 
 		for (uint32_t j = 0; j < lim; j++, outbitstart++) {

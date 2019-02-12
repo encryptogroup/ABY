@@ -51,7 +51,7 @@ public:
 	template<class T> uint32_t PutINGate(T val, e_role role){
 		uint32_t gateid = PutINGate(role);
 		if (role == m_eMyRole) {
-			GATE* gate = m_pGates + gateid;
+			GATE* gate = &(m_vGates[gateid]);
 			gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, sizeof(UGATE_T) * 8), sizeof(UGATE_T));
 
 			*gate->gs.ishare.inval = (UGATE_T) val;
@@ -65,7 +65,7 @@ public:
 	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val, e_role role) {
 		uint32_t gateid = PutSIMDINGate(nvals, role);
 		if (role == m_eMyRole) {
-			GATE* gate = m_pGates + gateid;
+			GATE* gate = &(m_vGates[gateid]);
 			gate->gs.ishare.inval = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 
 			*gate->gs.ishare.inval = (UGATE_T) val;
@@ -80,7 +80,7 @@ public:
 
 	template<class T> uint32_t PutSharedINGate(T val) {
 		uint32_t gateid = PutSharedINGate();
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.val = (UGATE_T*) calloc(ceil_divide(1 * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 
 		*gate->gs.val = (UGATE_T) val;
@@ -92,7 +92,7 @@ public:
 
 	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val) {
 		uint32_t gateid = PutSharedSIMDINGate(nvals);
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		gate->gs.val = (UGATE_T*) calloc(ceil_divide(nvals * m_nShareBitLen, GATE_T_BITS), sizeof(UGATE_T));
 
 		*gate->gs.val = (UGATE_T) val;
@@ -332,7 +332,7 @@ private:
 		assert(iters > 0);
 		shr->set_wire_id(0, gateid);
 
-		GATE* gate = m_pGates + gateid;
+		GATE* gate = &(m_vGates[gateid]);
 		uint32_t sharebytelen = ceil_divide(m_nShareBitLen, 8);
 		uint32_t inbytelen = ceil_divide(bitlen, 8);
 		gate->gs.val = (UGATE_T*) calloc(nvals, PadToMultiple(sharebytelen, sizeof(UGATE_T)));
@@ -358,7 +358,7 @@ private:
 		shr->set_wire_id(0, gateid);
 
 		if (role == m_eMyRole) {
-			GATE* gate = m_pGates + gateid;
+			GATE* gate = &(m_vGates[gateid]);
 			uint32_t sharebytelen = ceil_divide(m_nShareBitLen, 8);
 			uint32_t inbytelen = ceil_divide(bitlen, 8);
 			gate->gs.ishare.inval = (UGATE_T*) calloc(nvals, PadToMultiple(sharebytelen, sizeof(UGATE_T)));
