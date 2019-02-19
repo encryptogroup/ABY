@@ -45,12 +45,16 @@ int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port,
 	verify.Create(AES_BITS * nvals);
 	key.CreateBytes(AES_EXP_KEY_BYTES);
 
-
-
-	//TODO create random key and perform key schedule, right now a static (expanded) key is used
-	key.Copy((uint8_t*) AES_TEST_EXPANDED_KEY, 0, AES_EXP_KEY_BYTES);
+	uint8_t aes_test_key[AES_KEY_BYTES];
+	srand(7438);
+	for(uint32_t i = 0; i < AES_KEY_BYTES; i++) {
+		aes_test_key[i] = (uint8_t) (rand() % 256);
+	}
+	uint8_t expanded_key[AES_EXP_KEY_BYTES];
+	//TODO create mode which expands the key during the SFE
+	ExpandKey(expanded_key, aes_test_key);
+	key.Copy(expanded_key, 0, AES_EXP_KEY_BYTES);
 	uint8_t* output;
-
 
 	CBitVector out(nvals * AES_BITS);
 
@@ -700,4 +704,78 @@ void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t
 		crypt->encrypt(aes_key, out + i * AES_BYTES, input + i * AES_BYTES, AES_BYTES);
 	}
 	free(aes_key);
+}
+
+//Forked from the tiny-AES-c project, https://github.com/kokke/tiny-AES-c, original license is public domain
+// This function produces AES_STATE_COLS(AES_ROUNDS+1) round keys.
+// The round keys are used in each round to decrypt the states. 
+void ExpandKey(uint8_t* roundKey, const uint8_t* key) {
+//static void KeyExpansion(uint8_t* RoundKey, const uint8_t* Key)
+//{
+	unsigned i, j, k;
+	uint8_t tempa[4]; // Used for the column/row operations
+	uint8_t Nk = AES_BITS / 32; //The number of 32 bits needed to get the AES key size
+
+	// The first round key is the key itself.
+	for (i = 0; i < Nk; ++i) {
+    	roundKey[(i * 4) + 0] = key[(i * 4) + 0];
+    	roundKey[(i * 4) + 1] = key[(i * 4) + 1];
+    	roundKey[(i * 4) + 2] = key[(i * 4) + 2];
+    	roundKey[(i * 4) + 3] = key[(i * 4) + 3];
+	}
+
+  // All other round keys are found from the previous round keys.
+  for (i = Nk; i < AES_STATE_COLS * (AES_ROUNDS + 1); ++i) {
+    {
+      k = (i - 1) * 4;
+      tempa[0] = roundKey[k + 0];
+      tempa[1] = roundKey[k + 1];
+      tempa[2] = roundKey[k + 2];
+      tempa[3] = roundKey[k + 3];
+
+    }
+
+    if (i % Nk == 0) {
+      // This function shifts the 4 bytes in a word to the left once.
+      // [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
+
+      // Function RotWord()
+      {
+        const uint8_t u8tmp = tempa[0];
+        tempa[0] = tempa[1];
+        tempa[1] = tempa[2];
+        tempa[2] = tempa[3];
+        tempa[3] = u8tmp;
+      }
+
+      // SubWord() is a function that takes a four-byte input word and 
+      // applies the S-box to each of the four bytes to produce an output word.
+
+      // Function Subword()
+      {
+        tempa[0] = plaintext_aes_sbox[tempa[0]];
+        tempa[1] = plaintext_aes_sbox[tempa[1]];
+        tempa[2] = plaintext_aes_sbox[tempa[2]];
+        tempa[3] = plaintext_aes_sbox[tempa[3]];
+      }
+
+      tempa[0] = tempa[0] ^ Rcon[i/Nk];
+    }
+#if AES_STATE_KEY_BITS == 256
+    if (i % Nk == 4) {
+      // Function Subword()
+      {
+        tempa[0] = plaintext_aes_sbox[tempa[0]];
+        tempa[1] = plaintext_aes_sbox[tempa[1]];
+        tempa[2] = plaintext_aes_sbox[tempa[2]];
+        tempa[3] = plaintext_aes_sbox[tempa[3]];
+      }
+    }
+#endif
+    j = i * 4; k = (i - Nk) * 4;
+    roundKey[j + 0] = roundKey[k + 0] ^ tempa[0];
+    roundKey[j + 1] = roundKey[k + 1] ^ tempa[1];
+    roundKey[j + 2] = roundKey[k + 2] ^ tempa[2];
+    roundKey[j + 3] = roundKey[k + 3] ^ tempa[3];
+  }
 }
