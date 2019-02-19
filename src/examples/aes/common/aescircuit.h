@@ -134,6 +134,13 @@ const uint32_t do_wire_mapping[140][2] = { { 7, 4 }, { 7, 2 }, { 7, 1 }, { 4, 2 
 static uint32_t* pos_even;
 static uint32_t* pos_odd;
 
+/**
+ \param		key the key to be expanded
+ \param		roundKey the result as the expansion of the small key. WARNING: This function uses call by reference,
+				therefore you must preallocate AES_EXP_KEY_BYTES bytes before calling this function.
+ \brief		This function precalculates the expansion of the given (small) key into the expanded key for the AES encryption.
+ */
+void ExpandKey(uint8_t* roundKey, const uint8_t* key);
 void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t* out, crypto* crypt);
 int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose = false, bool use_vec_ands=false);
 share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ, bool use_vec_ands=false);
@@ -146,6 +153,5 @@ std::vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(std::vector<uint32_t> in
 std::vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(std::vector<uint32_t> input, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
 std::vector<uint32_t> AESSBox_Forward_SPLUT(std::vector<uint32_t> input, BooleanCircuit* circ);
 std::vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
-void ExpandKey(uint8_t* roundKey, const uint8_t* key);
 
 #endif /* __AESCIRCUIT_H_ */
