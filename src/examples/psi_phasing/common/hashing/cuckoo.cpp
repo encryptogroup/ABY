@@ -174,6 +174,7 @@ void *gen_cuckoo_entries(void *ctx_void) {
 	for(i = ctx->startpos; i < ctx->endpos; i++, eleptr+=inbytelen) {
 		gen_cuckoo_entry(eleptr, ctx->cuckoo_entries + i, hs, i);
 	}
+	return nullptr;
 }
 
 
