@@ -129,7 +129,11 @@ int32_t test_phasing_circuit(e_role role, const std::string& address, uint16_t p
 	}
 
 	shr_stash_out = BuildPhasingStashCircuit(shr_srv_set, shr_cli_stash, server_neles, bitlen, maxstashsize, circ);
-	shr_stash_out = circ->PutOUTGate(shr_stash_out, CLIENT);
+	{
+		auto tmp = shr_stash_out;
+		shr_stash_out = circ->PutOUTGate(shr_stash_out, CLIENT);
+		delete tmp;
+	}
 	party->ExecCircuit();
 
 	//Only the client obtains the outputs and performs the checks
@@ -189,6 +193,7 @@ int32_t test_phasing_circuit(e_role role, const std::string& address, uint16_t p
 		for(uint32_t i = 0; i < circ_inter_ctr; i++) {
 			assert(ver_intersect[i] == circ_intersect[i]);
 		}
+		free(output);
 	}
 
 #ifdef BATCH
@@ -200,12 +205,18 @@ int32_t test_phasing_circuit(e_role role, const std::string& address, uint16_t p
 	free(srv_set);
 	free(cli_set);
 	free(shr_srv_hash_table);
+	free(shr_cli_stash);
 	delete shr_cli_hash_table;
 	delete shr_out;
+	delete shr_stash_out;
 	free(ver_intersect);
 	free(circ_intersect);
 	free(inv_perm);
 	free(stash);
+	free(client_hash_table);
+	free(server_hash_table);
+	free(stashperm);
+	delete crypt;
 
 	return 0;
 }
