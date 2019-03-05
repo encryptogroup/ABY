@@ -200,8 +200,8 @@ int32_t test_phasing_circuit(e_role role, const std::string& address, uint16_t p
 	free(srv_set);
 	free(cli_set);
 	free(shr_srv_hash_table);
-	free(shr_cli_hash_table);
-	free(shr_out);
+	delete shr_cli_hash_table;
+	delete shr_out;
 	free(ver_intersect);
 	free(circ_intersect);
 	free(inv_perm);
