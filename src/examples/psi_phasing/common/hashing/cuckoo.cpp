@@ -6,6 +6,8 @@
  */
 
 #include <iostream>
+#include <thread>
+#include <vector>
 #include "cuckoo.h"
 
 //returns a cuckoo hash table with the first dimension being the bins and the second dimension being the pointer to the elements
@@ -22,11 +24,8 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 	uint8_t* hash_table;
 	cuckoo_entry_ctx** cuckoo_table;
 	cuckoo_entry_ctx** cuckoo_stash;
-	cuckoo_entry_ctx* cuckoo_entries;
 	uint32_t i, j, stashctr=0, elebytelen;
 	uint32_t *perm_ptr;
-	pthread_t* entry_gen_tasks;
-	cuckoo_entry_gen_ctx* ctx;
 	hs_t hs;
 	elebytelen = ceil_divide(bitlen, 8);
 
@@ -42,28 +41,34 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 	cuckoo_table = (cuckoo_entry_ctx**) calloc(nbins, sizeof(cuckoo_entry_ctx*));
 	cuckoo_stash = (cuckoo_entry_ctx**) calloc(maxstashsize, sizeof(cuckoo_entry_ctx*));
 
-	cuckoo_entries = (cuckoo_entry_ctx*) malloc(neles * sizeof(cuckoo_entry_ctx));
-	entry_gen_tasks = (pthread_t*) malloc(sizeof(pthread_t) * ntasks);
-	ctx = (cuckoo_entry_gen_ctx*) malloc(sizeof(cuckoo_entry_gen_ctx) * ntasks);
+	std::vector<cuckoo_entry_ctx> cuckoo_entries(neles);
+	std::vector<std::thread> entry_gen_tasks(ntasks);
+	std::vector<cuckoo_entry_gen_ctx> ctx(ntasks);
 
 #ifndef TEST_UTILIZATION
 	for(i = 0; i < ntasks; i++) {
 		ctx[i].elements = elements;
-		ctx[i].cuckoo_entries = cuckoo_entries;
+		ctx[i].cuckoo_entries = cuckoo_entries.data();
 		ctx[i].hs = &hs;
 		ctx[i].startpos = i * ceil_divide(neles, ntasks);
 		ctx[i].endpos = std::min(ctx[i].startpos + ceil_divide(neles, ntasks), neles);
 		//std::cout << "Thread " << i << " starting from " << ctx[i].startpos << " going to " << ctx[i].endpos << " for " << neles << " elements" << std::endl;
-		if(pthread_create(entry_gen_tasks+i, NULL, gen_cuckoo_entries, (void*) (ctx+i))) {
-			std::cerr << "Error in creating new pthread at cuckoo hashing!" << std::endl;
-			exit(0);
+		try {
+			entry_gen_tasks[i] = std::thread(gen_cuckoo_entries, &ctx[i]);
+		} catch (const std::system_error& e) {
+			std::cerr << "Error in creating new thread at cuckoo hashing!\n"
+				<< e.what() << std::endl;
+			exit(1);
 		}
 	}
 
 	for(i = 0; i < ntasks; i++) {
-		if(pthread_join(entry_gen_tasks[i], NULL)) {
-			std::cerr << "Error in joining pthread at cuckoo hashing!" << std::endl;
-			exit(0);
+		try {
+			entry_gen_tasks[i].join();
+		} catch (const std::system_error& e) {
+			std::cerr << "Error in joining thread at cuckoo hashing!\n"
+				<< e.what() << std::endl;
+			exit(1);
 		}
 	}
 #else
@@ -79,7 +84,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 	//}
 	//insert all elements into the cuckoo hash table
 	for(i = 0; i < neles; i++) {
-		if(!(insert_element(cuckoo_table, cuckoo_entries + i, neles, hs.nhashfuns))) {
+		if(!(insert_element(cuckoo_table, &cuckoo_entries[i], neles, hs.nhashfuns))) {
 #ifdef COUNT_FAILS
 			fails++;
 			/*std::cout << "insertion failed for element " << (hex) << (*(((uint32_t*) elements)+i)) << ", inserting to address: ";
@@ -90,7 +95,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 #else
 			if(stashctr < maxstashsize) {
 				std::cout << "Insertion not successful for element " << i <<", putting it on the stash" << std::endl;
-				cuckoo_stash[stashctr] = cuckoo_entries+i;
+				cuckoo_stash[stashctr] = &cuckoo_entries[i];
 				stashctr++;
 			} else {
 				std::cerr << "Stash exceeded maximum stash size of " << maxstashsize << ", terminating program" << std::endl;
@@ -147,11 +152,8 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 		free(cuckoo_entries[i].address);
 	}
 #endif
-	free(cuckoo_entries);
 	free(cuckoo_table);
 	free(cuckoo_stash);
-	free(entry_gen_tasks);
-	free(ctx);
 
 	free_hashing_state(&hs);
 
@@ -163,8 +165,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 }
 
 
-void *gen_cuckoo_entries(void *ctx_void) {
-	cuckoo_entry_gen_ctx* ctx  = (cuckoo_entry_gen_ctx*) ctx_void;
+void gen_cuckoo_entries(cuckoo_entry_gen_ctx* ctx) {
 	hs_t* hs = ctx->hs;
 	uint32_t i, inbytelen = ceil_divide(hs->inbitlen, 8);
 	uint8_t* eleptr = ctx->elements + inbytelen * ctx->startpos;
@@ -174,7 +175,6 @@ void *gen_cuckoo_entries(void *ctx_void) {
 	for(i = ctx->startpos; i < ctx->endpos; i++, eleptr+=inbytelen) {
 		gen_cuckoo_entry(eleptr, ctx->cuckoo_entries + i, hs, i);
 	}
-	return nullptr;
 }
 
 
