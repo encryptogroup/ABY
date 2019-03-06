@@ -29,31 +29,31 @@
 
 class DGKParty {
 public:
-	DGKParty(UINT DGKbits, UINT sharelen, UINT readkey);
-	DGKParty(UINT DGKbits, UINT sharelen, channel* chan, UINT readkey);
+	DGKParty(uint32_t DGKbits, uint32_t sharelen, uint32_t readkey);
+	DGKParty(uint32_t DGKbits, uint32_t sharelen, channel* chan, uint32_t readkey);
 	~DGKParty();
 
 	void keyExchange(channel* chan);
 
-	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan);
+	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan);
 
 	void readKey();
 
 	void generateKey();
 
-	void loadNewKey(UINT DGKbits, UINT sharelen);
+	void loadNewKey(uint32_t DGKbits, uint32_t sharelen);
 
 private:
-	USHORT m_nNumMTThreads;
-	USHORT m_nShareLength;
-	UINT m_nDGKbits;
-	UINT m_nBuflen;
+	uint16_t m_nNumMTThreads;
+	uint16_t m_nShareLength;
+	uint32_t m_nDGKbits;
+	uint32_t m_nBuflen;
 
 	// Crypto and GMP PRNG
 	dgk_pubkey_t *m_localpub, *m_remotepub;
 	dgk_prvkey_t *m_prv;
 
-	void benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
+	void benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen, uint32_t numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
 			mpz_t y, mpz_t z);
 
 	void sendmpz_t(mpz_t t, channel* chan, BYTE * buf);
@@ -62,7 +62,7 @@ private:
 	void sendmpz_t(mpz_t t, channel* chan);
 	void receivempz_t(mpz_t t, channel* chan);
 
-	void printBuf(BYTE* b, UINT l);
+	void printBuf(BYTE* b, uint32_t l);
 
 };
 

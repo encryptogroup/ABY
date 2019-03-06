@@ -56,16 +56,16 @@ BOOL ABYSetup::Init() {
 #ifndef BATCH
 		std::cout << "Creating new DJNPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << std::endl;
 #endif
-		m_cPaillierMTGen = new DJNParty(m_cCrypt->get_seclvl().ifcbits, sizeof(UINT16_T) * 8);
+		m_cPaillierMTGen = new DJNParty(m_cCrypt->get_seclvl().ifcbits, sizeof(uint16_t) * 8);
 	} else if (m_eMTGenAlg == MT_DGK) {
 #ifndef BATCH
 		std::cout << "Creating new DGKPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << std::endl;
 #endif
 #ifdef BENCH_PRECOMP
 		m_cDGKMTGen = (DGKParty**) malloc(sizeof(DGKParty*));
-		m_cDGKMTGen[0] = new DGKParty(m_sSecLvl.ifcbits, sizeof(UINT64_T) * 8, 0);
+		m_cDGKMTGen[0] = new DGKParty(m_sSecLvl.ifcbits, sizeof(uint64_t) * 8, 0);
 #endif
-		//m_cDGKMTGen = new DGKParty(m_cCrypt->get_seclvl().ifcbits, sizeof(UINT16_T) * 8);
+		//m_cDGKMTGen = new DGKParty(m_cCrypt->get_seclvl().ifcbits, sizeof(uint16_t) * 8);
 	}
 
 	return true;
@@ -409,7 +409,7 @@ BOOL ABYSetup::ThreadRunPaillierMTGen(uint32_t threadid) {
 		uint32_t mystartpos = nummtsperthread * threadid * sharebytelen;
 		m_cPaillierMTGen->setSharelLength(ptask->sharebitlen);
 
-		UINT32_T roleoffset = mystartpos + sharebytelen * (mynummts / 2);
+		uint32_t roleoffset = mystartpos + sharebytelen * (mynummts / 2);
 		if (m_eRole == SERVER) {
 			m_cPaillierMTGen->preCompBench(ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, ptask->A->GetArr() + roleoffset,
 					ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, mynummts, djnchan);
@@ -447,7 +447,7 @@ BOOL ABYSetup::ThreadRunDGKMTGen(uint32_t threadid) {
 		uint32_t mystartpos = nummtsperthread * threadid * sharebytelen;
 
 		//add an offset depending on the role of the party
-		UINT32_T roleoffset = mystartpos + sharebytelen * (mynummts / 2);
+		uint32_t roleoffset = mystartpos + sharebytelen * (mynummts / 2);
 
 		if (m_eRole == SERVER) {
 			m_cDGKMTGen[i]->preCompBench(ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, ptask->A->GetArr() + roleoffset,

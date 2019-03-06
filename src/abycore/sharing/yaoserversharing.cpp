@@ -548,7 +548,7 @@ void YaoServerSharing::EvaluateConversionGate(uint32_t gateid) {
 	// is called in YaoServerSharing::FinishCircuitLayer()
 }
 
-//TODO: optimize for UINT64_T pointers
+//TODO: optimize for uint64_t pointers
 void YaoServerSharing::EvaluateXORGate(GATE* gate) {
 	uint32_t idleft = gate->ingates.inputs.twin.left; //gate->gs.ginput.left;
 	uint32_t idright = gate->ingates.inputs.twin.right; //gate->gs.ginput.right;

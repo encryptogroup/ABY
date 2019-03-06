@@ -29,28 +29,28 @@
 
 class DJNParty {
 public:
-	DJNParty(UINT DJNbits, UINT sharelen);
-	DJNParty(UINT DJNbits, UINT sharelen, channel* chan);
+	DJNParty(uint32_t DJNbits, uint32_t sharelen);
+	DJNParty(uint32_t DJNbits, uint32_t sharelen, channel* chan);
 	~DJNParty();
 
 	void keyExchange(channel* chan);
-	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan);
+	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan);
 
-	void setSharelLength(UINT sharelen);
+	void setSharelLength(uint32_t sharelen);
 
 	void keyGen();
 
 private:
-	USHORT m_nNumMTThreads;
-	USHORT m_nShareLength;
-	UINT m_nDJNbits;
-	UINT m_nBuflen;
+	uint16_t m_nNumMTThreads;
+	uint16_t m_nShareLength;
+	uint32_t m_nDJNbits;
+	uint32_t m_nBuflen;
 
 	// Crypto and GMP PRNG
 	djn_pubkey_t *m_localpub, *m_remotepub;
 	djn_prvkey_t *m_prv;
 
-	void benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
+	void benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen, uint32_t numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
 			mpz_t y, mpz_t z);
 
 	void sendmpz_t(mpz_t t, channel* chan, BYTE * buf);
@@ -59,7 +59,7 @@ private:
 	void sendmpz_t(mpz_t t, channel* chan);
 	void receivempz_t(mpz_t t, channel* chan);
 
-	void printBuf(BYTE* b, UINT l);
+	void printBuf(BYTE* b, uint32_t l);
 
 };
 
