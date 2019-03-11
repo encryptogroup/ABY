@@ -263,7 +263,7 @@ void YaoClientSharing::EvaluateXORGate(GATE* gate) {
 	uint32_t idright = gate->ingates.inputs.twin.right; //gate->gs.ginput.right;
 
 	InstantiateGate(gate);
-	//TODO: optimize for UINT64_T pointers, there might be some problems here, code is untested
+	//TODO: optimize for uint64_t pointers, there might be some problems here, code is untested
 	/*for(uint32_t i = 0; i < m_nSecParamBytes * nvals; i++) {
 	 gate->gs.yval[i] = m_vGates[idleft].gs.yval[i] ^ m_vGates[idright].gs.yval[i];
 	 }*/

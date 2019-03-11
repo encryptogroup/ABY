@@ -29,7 +29,7 @@
  * initializes a DGK_Party with the asymmetric security parameter and the sharelength and exchanges public keys.
  * @param mode - 0 = generate new key; 1 = read key
  */
-DGKParty::DGKParty(UINT DGKbits, UINT sharelen, channel* chan, UINT readkey) {
+DGKParty::DGKParty(uint32_t DGKbits, uint32_t sharelen, channel* chan, uint32_t readkey) {
 
 	m_nShareLength = sharelen;
 	m_nDGKbits = DGKbits;
@@ -53,7 +53,7 @@ DGKParty::DGKParty(UINT DGKbits, UINT sharelen, channel* chan, UINT readkey) {
  * @param mode - 0 = generate new key; 1 = read key
  * Public keys must be exchanged manually when using this constructor!
  */
-DGKParty::DGKParty(UINT DGKbits, UINT sharelen, UINT readkey) {
+DGKParty::DGKParty(uint32_t DGKbits, uint32_t sharelen, uint32_t readkey) {
 
 	m_nShareLength = sharelen;
 	m_nDGKbits = DGKbits;
@@ -107,13 +107,13 @@ DGKParty::~DGKParty() {
  * inputs pre-allocates byte buffers for aMT calculation.
  * numMTs must be the total number of MTs and divisible by 2
  */
-void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan) {
+void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan) {
 	struct timespec start, end;
 
 	numMTs = numMTs / 2; // We can be both sender and receiver at the same time.
 
-	UINT shareBytes = m_nShareLength / 8;
-	UINT offset = 0;
+	uint32_t shareBytes = m_nShareLength / 8;
+	uint32_t offset = 0;
 
 #if DGK_DEBUG
 	cout << "dgkbits: " << m_nDGKbits << " sharelen: " << m_nShareLength << endl;
@@ -132,7 +132,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	mpz_t b1[numMTs];
 	mpz_t c1[numMTs];
 
-	for (UINT i = 0; i < numMTs; i++) {
+	for (uint32_t i = 0; i < numMTs; i++) {
 		mpz_inits(a[i], b[i], c[i], a1[i], b1[i], c1[i], NULL);
 	}
 
@@ -144,7 +144,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	// read server a,b shares and encrypt them into buffer
-	for (UINT i = 0; i < numMTs; i++) {
+	for (uint32_t i = 0; i < numMTs; i++) {
 		mpz_import(x, 1, 1, shareBytes, 0, 0, bA + i * shareBytes);
 		mpz_import(y, 1, 1, shareBytes, 0, 0, bB + i * shareBytes);
 
@@ -180,7 +180,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	offset = 0;
 
 	//read shares from client byte arrays
-	for (UINT j = 0; j < numMTs; j++) {
+	for (uint32_t j = 0; j < numMTs; j++) {
 		mpz_import(a1[j], 1, 1, shareBytes, 0, 0, bA1 + offset);
 		mpz_import(b1[j], 1, 1, shareBytes, 0, 0, bB1 + offset);
 
@@ -229,7 +229,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 
 	offset = 0;
 
-	for (UINT i = 0; i < numMTs; i++) {
+	for (uint32_t i = 0; i < numMTs; i++) {
 
 		mpz_import(r, m_nBuflen, -1, 1, 1, 0, zbuf + i * m_nBuflen);
 		dgk_decrypt(r, m_localpub, m_prv, r);
@@ -258,7 +258,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	chan->send(bC, numMTs * shareBytes);
 	chan->blocking_receive(bC, numMTs * shareBytes);
 
-	for (UINT i = 0; i < numMTs; i++) {
+	for (uint32_t i = 0; i < numMTs; i++) {
 
 		mpz_import(ai, 1, 1, shareBytes, 0, 0, bA + i * shareBytes);
 		mpz_import(bi, 1, 1, shareBytes, 0, 0, bB + i * shareBytes);
@@ -290,7 +290,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	printf("generating 2x %u MTs took %f\n", numMTs, getMillies(start, end));
 
 //clean up after ourselves
-	for (UINT i = 0; i < numMTs; i++) {
+	for (uint32_t i = 0; i < numMTs; i++) {
 		mpz_clears(a[i], b[i], c[i], a1[i], b1[i], c1[i], NULL);
 	}
 
@@ -419,8 +419,8 @@ void DGKParty::receivempz_t(mpz_t t, channel* chan) {
 }
 
 #if DEBUG
-void DGKParty::printBuf(BYTE* b, UINT len) {
-	for (UINT i = 0; i < len; i++) {
+void DGKParty::printBuf(BYTE* b, uint32_t len) {
+	for (uint32_t i = 0; i < len; i++) {
 		printf("%02x.", *(b + i));
 	}
 	cout << endl;
@@ -430,7 +430,7 @@ void DGKParty::printBuf(BYTE* b, UINT len) {
 /**
  * reads a new key from disk (to be used when parameters change)
  */
-void DGKParty::loadNewKey(UINT DGKbits, UINT sharelen) {
+void DGKParty::loadNewKey(uint32_t DGKbits, uint32_t sharelen) {
 	m_nDGKbits = DGKbits;
 	m_nShareLength = sharelen;
 	dgk_readkey(m_nDGKbits, m_nShareLength, &m_localpub, &m_prv);

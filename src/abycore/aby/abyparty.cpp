@@ -281,19 +281,19 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t reservegates) {
 	}
 	switch (bitlen) {
 	case 8:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT8_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<uint8_t>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	case 16:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT16_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<uint16_t>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	case 32:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<uint32_t>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	case 64:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT64_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<uint64_t>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	default:
-		m_vSharings[S_ARITH] = new ArithSharing<UINT32_T>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
+		m_vSharings[S_ARITH] = new ArithSharing<uint32_t>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	}
 	m_vSharings[S_SPLUT] = new SetupLUT(S_SPLUT, m_eRole, 1, m_pCircuit, m_cCrypt.get());

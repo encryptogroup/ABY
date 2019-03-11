@@ -31,7 +31,7 @@
  * Generates DJN key.
  * Key Exchange must be done manually after calling this constructor!
  */
-DJNParty::DJNParty(UINT DJNbits, UINT sharelen, channel* chan) {
+DJNParty::DJNParty(uint32_t DJNbits, uint32_t sharelen, channel* chan) {
 
 	m_nShareLength = sharelen;
 	m_nDJNbits = DJNbits;
@@ -45,7 +45,7 @@ DJNParty::DJNParty(UINT DJNbits, UINT sharelen, channel* chan) {
 	keyExchange(chan);
 }
 
-DJNParty::DJNParty(UINT DJNbits, UINT sharelen) {
+DJNParty::DJNParty(uint32_t DJNbits, uint32_t sharelen) {
 
 	m_nShareLength = sharelen;
 	m_nDJNbits = DJNbits;
@@ -65,7 +65,7 @@ void DJNParty::keyGen() {
 	djn_keygen(m_nDJNbits, &m_localpub, &m_prv);
 }
 
-void DJNParty::setSharelLength(UINT sharelen) {
+void DJNParty::setSharelLength(uint32_t sharelen) {
 	m_nShareLength = sharelen;
 }
 
@@ -86,18 +86,18 @@ DJNParty::~DJNParty() {
  * inputs pre-allocates byte buffers for aMT calculation.
  * numMTs must be the total number of MTs and divisible by 2
  */
-void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, UINT numMTs, channel* chan) {
+void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan) {
 	struct timespec start, end;
 
 	numMTs = numMTs / 2; // We can be both sender and receiver at the same time.
 
-	UINT maxShareLen = 2 * m_nShareLength + 41; // length of one share in the packet, sigma = 40
-	UINT packshares = m_nDJNbits / maxShareLen; // number of shares in one packet
-	UINT numpacks = (numMTs + packshares - 1) / packshares; // total number of packets to send in order to generate numMTs = CEIL(numMTs/2*numshares)
+	uint32_t maxShareLen = 2 * m_nShareLength + 41; // length of one share in the packet, sigma = 40
+	uint32_t packshares = m_nDJNbits / maxShareLen; // number of shares in one packet
+	uint32_t numpacks = (numMTs + packshares - 1) / packshares; // total number of packets to send in order to generate numMTs = CEIL(numMTs/2*numshares)
 
-	UINT shareBytes = m_nShareLength / 8;
-	UINT offset = 0;
-	UINT limit = packshares; // upper bound for a package shares, used to handle non-full last packages / alignment
+	uint32_t shareBytes = m_nShareLength / 8;
+	uint32_t offset = 0;
+	uint32_t limit = packshares; // upper bound for a package shares, used to handle non-full last packages / alignment
 
 #if DJN_DEBUG
 	std::cout << "djnbits: " << m_nDJNbits << " sharelen: " << m_nShareLength << " packlen: " << maxShareLen << " numshares: " << packshares << " numpacks: " << numpacks << std::endl;
@@ -116,7 +116,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	mpz_t b1[packshares];
 	mpz_t c1[packshares];
 
-	for (UINT i = 0; i < packshares; i++) {
+	for (uint32_t i = 0; i < packshares; i++) {
 		mpz_inits(a[i], b[i], c[i], a1[i], b1[i], c1[i], NULL);
 	}
 
@@ -128,7 +128,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	clock_gettime(CLOCK_MONOTONIC, &start);
 
 	// read server a,b shares and encrypt them into buffer
-	for (UINT i = 0; i < numMTs; i++) {
+	for (uint32_t i = 0; i < numMTs; i++) {
 		mpz_import(x, 1, 1, shareBytes, 0, 0, bA + i * shareBytes);
 		mpz_import(y, 1, 1, shareBytes, 0, 0, bB + i * shareBytes);
 
@@ -162,14 +162,14 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	// pack ALL the packets
 
 	offset = 0;
-	for (UINT i = 0; i < numpacks; i++) {
+	for (uint32_t i = 0; i < numpacks; i++) {
 
 		if (i == numpacks - 1) {
 			limit = numMTs % packshares; // if last package, only fill buffers to requested size and discard remaining shares
 		}
 
 		//read shares from client byte arrays
-		for (UINT j = 0; j < limit; j++) {
+		for (uint32_t j = 0; j < limit; j++) {
 			mpz_import(a1[j], 1, 1, shareBytes, 0, 0, bA1 + offset);
 			mpz_import(b1[j], 1, 1, shareBytes, 0, 0, bB1 + offset);
 
@@ -206,7 +206,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		offset -= shareBytes * limit;
 
 		// calculate c shares for client part
-		for (UINT j = 0; j < limit; j++) {
+		for (uint32_t j = 0; j < limit; j++) {
 			mpz_mod_2exp(y, x, m_nShareLength); // y = r mod 2^shareLength == read the share from least significant bits
 			mpz_div_2exp(x, x, maxShareLen); // r = r >> maxShareLen
 
@@ -241,7 +241,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	limit = packshares;
 	offset = 0;
 
-	for (UINT i = 0; i < numpacks; i++) {
+	for (uint32_t i = 0; i < numpacks; i++) {
 
 		if (i == numpacks - 1) {
 			limit = numMTs % packshares; // if last package, only fill buffers to requested size and discard remaining shares
@@ -251,7 +251,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 
 		djn_decrypt(r, m_localpub, m_prv, r);
 
-		for (UINT j = 0; j < limit; j++) {
+		for (uint32_t j = 0; j < limit; j++) {
 			mpz_import(a[j], 1, 1, shareBytes, 0, 0, bA + offset);
 			mpz_import(b[j], 1, 1, shareBytes, 0, 0, bB + offset);
 
@@ -277,7 +277,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	chan->send(bC, numMTs * shareBytes);
 	chan->blocking_receive(bC, numMTs * shareBytes);
 
-	for (UINT i = 0; i < numMTs; i++) {
+	for (uint32_t i = 0; i < numMTs; i++) {
 
 		mpz_import(ai, 1, 1, shareBytes, 0, 0, bA + i * shareBytes);
 		mpz_import(bi, 1, 1, shareBytes, 0, 0, bB + i * shareBytes);
@@ -309,7 +309,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	printf("generating 2x %u MTs took %f\n", numMTs, getMillies(start, end));
 
 //clean up after ourselves
-	for (UINT i = 0; i < packshares; i++) {
+	for (uint32_t i = 0; i < packshares; i++) {
 		mpz_clears(a[i], b[i], c[i], a1[i], b1[i], c1[i], NULL);
 	}
 
@@ -325,13 +325,13 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
  * a,b,c are server shares. a1,b1,c1 are client shares.
  * All mpz_t values must be pre-initialized.
  */
-void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UINT numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
+void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen, uint32_t numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
 		mpz_t y, mpz_t z) {
 #if DJN_DEBUG
 	std::cout << "packlen: " << packlen << " numshares: " << numshares << std::endl;
 #endif
 
-	for (UINT i = 0; i < numshares; i++) {
+	for (uint32_t i = 0; i < numshares; i++) {
 		djn_encrypt_crt(r, m_localpub, m_prv, a[i]);
 		mpz_export(buf + 2 * i * m_nBuflen, NULL, -1, 1, 1, 0, r);
 		djn_encrypt_crt(r, m_localpub, m_prv, b[i]);
@@ -342,7 +342,7 @@ void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UIN
 
 #if NETDEBUG
 	std::cout << " SEND " << std::endl;
-	for (UINT xx=0; xx < m_nBuflen * numshares * 2; xx++) {
+	for (uint32_t xx=0; xx < m_nBuflen * numshares * 2; xx++) {
 		printf("%02x.", *(buf + xx));
 	}
 #endif
@@ -351,12 +351,12 @@ void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UIN
 
 #if NETDEBUG
 	std::cout << " RECV " << std::endl;
-	for (UINT xx=0; xx < m_nBuflen * numshares * 2; xx++) {
+	for (uint32_t xx=0; xx < m_nBuflen * numshares * 2; xx++) {
 		printf("%02x.", *(buf + xx));
 	}
 #endif
 
-	for (UINT i = 0; i < numshares; i++) {
+	for (uint32_t i = 0; i < numshares; i++) {
 		mpz_import(x, m_nBuflen, -1, 1, 1, 0, buf + 2 * i * m_nBuflen);
 		mpz_import(y, m_nBuflen, -1, 1, 1, 0, buf + (2 * i + 1) * m_nBuflen);
 
@@ -384,7 +384,7 @@ void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, UINT packlen, UIN
 	mpz_mod(z, z, m_remotepub->n_squared);
 
 // calculate c shares for client part
-	for (UINT i = 0; i < numshares; i++) {
+	for (uint32_t i = 0; i < numshares; i++) {
 		mpz_mod_2exp(y, x, m_nShareLength); // y = r mod 2^shareLength == read the share from least significant bits
 		mpz_div_2exp(x, x, packlen); // r = r >> packlen
 
@@ -509,8 +509,8 @@ void DJNParty::receivempz_t(mpz_t t, channel* chan) {
 }
 
 #if DJN_DEBUG
-void DJNParty::printBuf(BYTE* b, UINT len) {
-	for (UINT i = 0; i < len; i++) {
+void DJNParty::printBuf(BYTE* b, uint32_t len) {
+	for (uint32_t i = 0; i < len; i++) {
 		printf("%02x.", *(b + i));
 	}
 	std::cout << std::endl;

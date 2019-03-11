@@ -243,7 +243,7 @@ std::vector<uint32_t> Mul2(std::vector<uint32_t>& element, BooleanCircuit* circ)
 }
 
 std::vector<std::vector<uint32_t> > PutAESMixColumnGate(std::vector<std::vector<uint32_t> >& rows, BooleanCircuit* circ) {
-	UINT i, j, temp;
+	uint32_t i, j, temp;
 	std::vector<std::vector<uint32_t> > out(4);
 	std::vector<std::vector<uint32_t> > temp_mul2(4);
 
