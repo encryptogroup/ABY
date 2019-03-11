@@ -714,7 +714,9 @@ inline void BoolSharing::EvaluateConstantGate(uint32_t gateid) {
 			gate->gs.val[i] = ~(0L);
 		}
 	}
-	gate->gs.val[ceil_divide(gate->nvals, GATE_T_BITS)-1] &= ((1L<<(gate->nvals%64)) -1L);
+	if(gate->nvals % GATE_T_BITS != 0) {
+		gate->gs.val[ceil_divide(gate->nvals, GATE_T_BITS)-1] &= ((1L<<(gate->nvals%64)) -1L);
+	}
 #ifdef DEBUGBOOL
 		std::cout << "Constant gate value: "<< value << std::endl;
 #endif
