@@ -26,7 +26,7 @@
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* bitlen, uint32_t* nvals,
 		uint32_t* secparam, std::string* address, uint16_t* port, e_sharing* sharing, bool* verbose, uint32_t* nthreads,
-		bool* use_vec_ands) {
+		bool* use_vec_ands, bool* expand_in_sfe, bool* client_only) {
 
 	uint32_t int_role = 0, int_port = 0, int_sharing = 0;
 	bool useffc = false;
@@ -40,7 +40,9 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 			{ (void*) &int_sharing, T_NUM, "g", "Sharing in which the AES circuit should be evaluated [0: BOOL, 1: YAO, 4: SP_LUT], default: BOOL", false, false },
 			{ (void*) verbose, T_FLAG, "v", "Do not print the result of the evaluation, default: off", false, false },
 			{ (void*) nthreads, T_NUM, "t", "Number of threads, default: 1", false, false },
-			{ (void*) use_vec_ands, T_FLAG, "u", "Use vector AND optimization for AES circuit for Bool sharing, default: off", false, false } };
+			{ (void*) use_vec_ands, T_FLAG, "u", "Use vector AND optimization for AES circuit for Bool sharing, default: off", false, false },
+			{ (void*) expand_in_sfe, T_FLAG, "x", "Calculate the key expansion during the SFE, default: false", false, false },
+			{ (void*) client_only, T_FLAG, "c", "Both the key and the value are inputted by the client, default: false", false, false } };
 
 	if (!parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
@@ -72,15 +74,17 @@ int main(int argc, char** argv) {
 	std::string address = "127.0.0.1";
 	bool verbose = false;
 	bool use_vec_ands = false;
+	bool expand_in_sfe = false;
+	bool client_only = false;
 	e_mt_gen_alg mt_alg = MT_OT;
 
 	e_sharing sharing = S_BOOL;
 
-	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &sharing, &verbose, &nthreads, &use_vec_ands);
+	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &sharing, &verbose, &nthreads, &use_vec_ands, &expand_in_sfe, &client_only);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	test_aes_circuit(role, address, port, seclvl, nvals, nthreads, mt_alg, sharing, verbose, use_vec_ands);
+	test_aes_circuit(role, address, port, seclvl, nvals, nthreads, mt_alg, sharing, verbose, use_vec_ands, expand_in_sfe, client_only);
 
 	return 0;
 }

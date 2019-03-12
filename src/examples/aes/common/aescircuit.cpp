@@ -21,7 +21,7 @@
 #include <ENCRYPTO_utils/cbitvector.h>
 
 int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
-		e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose, bool use_vec_ands) {
+		e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose, bool use_vec_ands, bool expand_in_sfe, bool client_only) {
 	uint32_t bitlen = 32;
 	uint32_t aes_key_bits;
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg, 4000000);
@@ -45,16 +45,22 @@ int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port,
 	verify.Create(AES_BITS * nvals);
 	key.CreateBytes(AES_EXP_KEY_BYTES);
 
-
-
-	//TODO create random key and perform key schedule, right now a static (expanded) key is used
-	key.Copy((uint8_t*) AES_TEST_EXPANDED_KEY, 0, AES_EXP_KEY_BYTES);
+	uint8_t aes_test_key[AES_KEY_BYTES];
+	srand(7438);
+	for(uint32_t i = 0; i < AES_KEY_BYTES; i++) {
+		aes_test_key[i] = (uint8_t) (rand() % 256);
+	}
+	uint8_t expanded_key[AES_EXP_KEY_BYTES];
+	ExpandKey(expanded_key, aes_test_key);
+	key.Copy(expanded_key, 0, AES_EXP_KEY_BYTES);
 	uint8_t* output;
-
 
 	CBitVector out(nvals * AES_BITS);
 
 	if(sharing == S_YAO_REV) {
+		//Currently the expand_in_sfe and client_only features are not supported in S_YAO_REV
+		assert(expand_in_sfe == false && client_only == false);
+
 		Circuit* yao_circ = sharings[S_YAO]->GetCircuitBuildRoutine();
 		Circuit* yao_rev_circ = sharings[S_YAO_REV]->GetCircuitBuildRoutine();
 
@@ -98,7 +104,18 @@ int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port,
 
 		share *s_in, *s_key, *s_ciphertext;
 		s_in = circ->PutSIMDINGate(nvals, input.GetArr(), aes_key_bits, CLIENT);
-		s_key = circ->PutINGate(key.GetArr(), aes_key_bits * (AES_ROUNDS + 1), SERVER);
+		e_role key_inputter;
+		if(client_only) {
+			key_inputter = CLIENT;
+		} else {
+			key_inputter = SERVER;
+		}
+		if(expand_in_sfe) {
+			s_key = circ->PutINGate(aes_test_key, AES_KEY_BITS, key_inputter);
+			s_key = BuildKeyExpansion(s_key, (BooleanCircuit*) circ, use_vec_ands);
+		} else {
+			s_key = circ->PutINGate(key.GetArr(), aes_key_bits * (AES_ROUNDS + 1), key_inputter);
+		}
 		s_key = circ->PutRepeaterGate(nvals,s_key);
 
 		s_ciphertext = BuildAESCircuit(s_in, s_key, (BooleanCircuit*) circ, use_vec_ands);
@@ -692,6 +709,99 @@ std::vector<uint32_t> AESSBox_Forward_SPLUT(std::vector<uint32_t> input, Boolean
 	return out;
 }
 
+// The basic construction was partally taken from the KeyExpansion function of the
+// tiny-AES-c project, https://github.com/kokke/tiny-AES-c
+// This function produces NB_CONSTANT(AES_ROUNDS+1) round keys in SFE.
+// The round keys are used in each round to decrypt the states. 
+share* BuildKeyExpansion(share* key, BooleanCircuit* circ, bool use_vec_ands) {
+
+	//TODO make the function SIMD-able if multiple keys are needed
+	assert(key->get_nvals() == 1);
+
+	//During the function the representation of the extended key is bytewise
+	std::vector<std::vector<uint32_t>> ex_key_vec(AES_EXP_KEY_BYTES, std::vector<uint32_t>(8));
+
+	uint32_t i, j, k;
+
+	// The first round key is the key itself.
+	{
+		std::vector<uint32_t> key_vec = key->get_wires();
+		for (i = 0; i < key_vec.size(); i++) {
+			ex_key_vec[i / 8][i % 8] = key_vec[i];
+		} 
+	}
+
+	std::vector<uint32_t> s_rc[RCON_SIZE];
+
+	for(i = 0; i < RCON_SIZE; i++) {
+		uint8_t rc_temp = Rcon[i];
+		s_rc[i] = circ->PutCONSGate(rc_temp, 8)->get_wires();
+	}
+	
+	std::vector<std::vector<uint32_t>> tempa(4); // Used for the column/row operations
+
+	// All other round keys are found from the previous round keys.
+	for (i = AES_STATE_COLS; i < NB_CONSTANT * (AES_ROUNDS + 1); ++i) {
+		{
+			k = (i - 1) * 4;
+			tempa[0] = ex_key_vec[k];
+			tempa[1] = ex_key_vec[k + 1];
+			tempa[2] = ex_key_vec[k + 2];
+			tempa[3] = ex_key_vec[k + 3];
+		}
+
+		if (i % AES_STATE_COLS == 0) {
+			// This function shifts the 4 bytes in a word to the left once.
+			// [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
+
+			// Function RotWord()
+			{
+				const std::vector<uint32_t> u8tmp = tempa[0];
+				tempa[0] = tempa[1];
+				tempa[1] = tempa[2];
+				tempa[2] = tempa[3];
+				tempa[3] = u8tmp;
+			}
+
+			// SubWord() is a function that takes a four-byte input word and 
+			// applies the S-box to each of the four bytes to produce an output word.
+
+			// Function Subword()
+			{
+				tempa[0] = PutAESSBoxGate(tempa[0], circ, use_vec_ands);
+				tempa[1] = PutAESSBoxGate(tempa[1], circ, use_vec_ands);
+				tempa[2] = PutAESSBoxGate(tempa[2], circ, use_vec_ands);
+				tempa[3] = PutAESSBoxGate(tempa[3], circ, use_vec_ands);
+			}
+			tempa[0] = circ->PutXORGate(tempa[0], s_rc[i/AES_STATE_COLS]);
+		}
+#if AES_STATE_KEY_BITS == 256
+		if (i % AES_STATE_COLS == 4) {
+			// Function Subword()
+			{
+				tempa[0] = PutAESSBoxGate(tempa[0], circ, use_vec_ands);
+				tempa[1] = PutAESSBoxGate(tempa[1], circ, use_vec_ands);
+				tempa[2] = PutAESSBoxGate(tempa[2], circ, use_vec_ands);
+				tempa[3] = PutAESSBoxGate(tempa[3], circ, use_vec_ands);
+			}
+		}
+#endif
+		k = (i - AES_STATE_COLS) * 4;
+		j = i * 4;
+		ex_key_vec[j] = circ->PutXORGate(ex_key_vec[k], tempa[0]);
+		ex_key_vec[j + 1] = circ->PutXORGate(ex_key_vec[k + 1], tempa[1]);
+		ex_key_vec[j + 2] = circ->PutXORGate(ex_key_vec[k + 2], tempa[2]);
+		ex_key_vec[j + 3] = circ->PutXORGate(ex_key_vec[k + 3], tempa[3]);
+	}
+
+	std::vector<uint32_t> result(AES_EXP_KEY_BITS);
+	for(uint32_t i = 0; i < AES_EXP_KEY_BYTES; i++) {
+		for(uint32_t j = 0; j < 8; j++) {
+			result[i * 8 + j] = ex_key_vec[i][j];
+		}
+	}
+	return new boolshare(result, circ);
+}
 
 void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t* out, crypto* crypt) {
 	AES_KEY_CTX* aes_key = (AES_KEY_CTX*) malloc(sizeof(AES_KEY_CTX));
@@ -700,4 +810,78 @@ void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t
 		crypt->encrypt(aes_key, out + i * AES_BYTES, input + i * AES_BYTES, AES_BYTES);
 	}
 	free(aes_key);
+}
+
+// Copied from the KeyExpansion function of the
+// tiny-AES-c project, https://github.com/kokke/tiny-AES-c, original license is public domain
+// This function produces NB_CONSTANT(AES_ROUNDS+1) round keys.
+// The round keys are used in each round to decrypt the states. 
+void ExpandKey(uint8_t* roundKey, const uint8_t* key) {
+//static void KeyExpansion(uint8_t* RoundKey, const uint8_t* Key)
+//{
+	unsigned i, j, k;
+	uint8_t tempa[4]; // Used for the column/row operations
+
+	// The first round key is the key itself.
+	for (i = 0; i < AES_STATE_COLS; ++i) {
+			roundKey[(i * 4) + 0] = key[(i * 4) + 0];
+			roundKey[(i * 4) + 1] = key[(i * 4) + 1];
+			roundKey[(i * 4) + 2] = key[(i * 4) + 2];
+			roundKey[(i * 4) + 3] = key[(i * 4) + 3];
+	}
+
+	// All other round keys are found from the previous round keys.
+	for (i = AES_STATE_COLS; i < NB_CONSTANT * (AES_ROUNDS + 1); ++i) {
+		{
+			k = (i - 1) * 4;
+			tempa[0] = roundKey[k + 0];
+			tempa[1] = roundKey[k + 1];
+			tempa[2] = roundKey[k + 2];
+			tempa[3] = roundKey[k + 3];
+		}
+
+		if (i % AES_STATE_COLS == 0) {
+			// This function shifts the 4 bytes in a word to the left once.
+			// [a0,a1,a2,a3] becomes [a1,a2,a3,a0]
+
+			// Function RotWord()
+			{
+				const uint8_t u8tmp = tempa[0];
+				tempa[0] = tempa[1];
+				tempa[1] = tempa[2];
+				tempa[2] = tempa[3];
+				tempa[3] = u8tmp;
+			}
+
+			// SubWord() is a function that takes a four-byte input word and 
+			// applies the S-box to each of the four bytes to produce an output word.
+
+			// Function Subword()
+			{
+				tempa[0] = plaintext_aes_sbox[tempa[0]];
+				tempa[1] = plaintext_aes_sbox[tempa[1]];
+				tempa[2] = plaintext_aes_sbox[tempa[2]];
+				tempa[3] = plaintext_aes_sbox[tempa[3]];
+			}
+
+			tempa[0] = tempa[0] ^ Rcon[i/AES_STATE_COLS];
+		}
+#if AES_STATE_KEY_BITS == 256
+			if (i % AES_STATE_COLS == 4) {
+			// Function Subword()
+			{
+				tempa[0] = plaintext_aes_sbox[tempa[0]];
+				tempa[1] = plaintext_aes_sbox[tempa[1]];
+				tempa[2] = plaintext_aes_sbox[tempa[2]];
+				tempa[3] = plaintext_aes_sbox[tempa[3]];
+			}
+		}
+#endif
+		j = i * 4;
+		k = (i - AES_STATE_COLS) * 4;
+		roundKey[j + 0] = roundKey[k + 0] ^ tempa[0];
+		roundKey[j + 1] = roundKey[k + 1] ^ tempa[1];
+		roundKey[j + 2] = roundKey[k + 2] ^ tempa[2];
+		roundKey[j + 3] = roundKey[k + 3] ^ tempa[3];
+	}
 }
