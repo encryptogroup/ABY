@@ -29,6 +29,8 @@ class BooleanCircuit;
 // If you change these values and want to test the functionallity with test_aes_circuit,
 // you will have to change the AES_BITS, AES_BYTES, AES_KEY_BITS and AES_KEY_BYTES definitions
 // on the constant.h definition on the encrypto utils as well.
+// WARNING: Currently a correct running of the algorithms cannot be guaranteed if these values are changed.
+// There might be some work to do.
 #define AES_STATE_KEY_BITS 128
 #define AES_STATE_SIZE_BITS 128
 
@@ -41,6 +43,10 @@ const uint8_t Rcon[RCON_SIZE] = {
   0x8d, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
 };
 
+#define NB_CONSTANT 4
+
+#define INV_GATE_ID 666
+
 // Derived constants or constants to AES
 #if (AES_STATE_KEY_BITS == 192)
 	#define AES_ROUNDS 12
@@ -48,10 +54,10 @@ const uint8_t Rcon[RCON_SIZE] = {
 #elif (AES_STATE_KEY_BITS == 256)
 	#define AES_ROUNDS 14
 	#define AES_STATE_COLS 8
-#else
+#else //AES_STATE_KEY__BITS == 128
 	#define AES_ROUNDS 10
 	#define AES_STATE_COLS 4
-#endif //AES_STATE_KEY__BITS == 192
+#endif
 
 #define AES_STATE_SIZE (AES_STATE_SIZE_BITS/8)
 
@@ -63,9 +69,6 @@ const uint8_t Rcon[RCON_SIZE] = {
 #define AES_EXP_KEY_BITS (AES_EXP_KEY_BYTES*8)
 
 #define AES_STATE_ROWS (AES_STATE_SIZE/AES_STATE_COLS)
-#define INV_GATE_ID 666
-
-#define NB_CONSTANT 4
 
 const uint64_t aes_sbox_ttables[8][4] =
 		{{ 0xb14ede67096c6eedL, 0x68ab4bfa8acb7a13L, 0x10bdb210c006eab5L, 0x4f1ead396f247a04L},
@@ -150,6 +153,25 @@ const uint32_t do_wire_mapping[140][2] = { { 7, 4 }, { 7, 2 }, { 7, 1 }, { 4, 2 
 static uint32_t* pos_even;
 static uint32_t* pos_odd;
 
+
+//Testing functions
+void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t* out, crypto* crypt);
+/**
+ \param		role the role of the user; possible roles: "CLIENT" and "SERVER"
+ \param		adress the adress of the server the client connects to
+ \param 	port the port of the server the client connects to
+ \param		seclvl	the definition of the security level the SFE should be using, see on <ENCRYPTO_utils/crypto/crypto.h>
+				to get more information
+ \param		nvals the amount of concurrent encryptions to be calculated
+ \param		nthreads the amount of threads used
+ \param 		mt_alg the Oblivious Extension algorithm to be used; see e_mt_gen_alg in the ABYConstants.h for possible algorithms
+ \param		sharing the sharing algorithm to be used; see e_sharing in the ABYConstants.h for possible algorithms
+ \param		verbose if true some output values will be suppressed for printing; default is false
+ \param		use_vec_ands if true the vector AND optimization for AES circuit for Bool sharing will be usedM default is false
+ \param		extend_in_sfe if true the key will be expanded in the SFE, otherwise the key will be expanded before the SFE; default is false
+ \param		client_only if true both the key and the values will be inputted by the client; default is false
+*/
+int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose = false, bool use_vec_ands = false, bool extend_in_sfe = false, bool client_only = false);
 /**
  \param		key the key to be expanded
  \param		roundKey the result as the expansion of the small key. WARNING: This function uses call by reference,
@@ -157,9 +179,25 @@ static uint32_t* pos_odd;
  \brief		This function precalculates the expansion of the given (small) key into the expanded key for the AES encryption.
  */
 void ExpandKey(uint8_t* roundKey, const uint8_t* key);
-void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t* out, crypto* crypt);
-int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose = false, bool use_vec_ands = false, bool ex_calc = false, bool client_only = false);
+
+//SFE functions
+/**
+ \param		val the value to be encrypted
+ \param		key the expanded key which encrypts the value
+ \param		circ the circuit which generates and evaluates the SFE
+ \param 	use_vec_ands if true the vector optimaziation will be used during the SBox replacement, default is false
+ \brief		This function calculates a ciphertext using AES given the val to be enctypted and the keyin SFE.
+ */
 share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ, bool use_vec_ands=false);
+/**
+ \param		key the key to be expanded during SFE, the key must not be a SIMD share with nvals > 1
+ \param		circ the circuit which generates and evaluates the SFE
+ \param 	use_vec_ands if true the vector optimaziation will be used during the SBox replacement, default is false
+ \brief		This function calculates the expansion of the given (small) key into the expanded key for the AES encryption during SFE.
+ */
+share* BuildKeyExpansion(share* key, BooleanCircuit* circ, bool use_vec_ands = false);
+
+//Helper functions used for the implementation of the SFE functions above;
 std::vector<uint32_t> AddAESRoundKey(std::vector<uint32_t>& val, std::vector<uint32_t> key, uint32_t keyaddr, BooleanCircuit* circ);
 std::vector<uint32_t> Mul2(std::vector<uint32_t>& element, BooleanCircuit* circ);
 std::vector<std::vector<uint32_t> > PutAESMixColumnGate(std::vector<std::vector<uint32_t> >& rows, BooleanCircuit* circ);
@@ -169,12 +207,5 @@ std::vector<uint32_t> AESSBox_Forward_BP_Size_Optimized(std::vector<uint32_t> in
 std::vector<uint32_t> AESSBox_Forward_BP_VecMTs_Optimized(std::vector<uint32_t> input, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
 std::vector<uint32_t> AESSBox_Forward_SPLUT(std::vector<uint32_t> input, BooleanCircuit* circ);
 std::vector<uint32_t> Two_In_AND_Vec_Gate(uint32_t s, uint32_t a, uint32_t b, BooleanCircuit* circ, uint32_t* buf_pos_even, uint32_t* buf_pos_odd);
-/**
- \param		key the key to be expanded during SFE, the key must not be a SIMD share with nvals > 1
- \param		circ the circuit which generates and evaluates the SFE
- \param 	use_vec_ands if true the vector optimaziation will be used during the SBox replacement, default is false
- \brief		This function calculates the expansion of the given (small) key into the expanded key for the AES encryption during SFE.
- */
-share* BuildKeyExpansion(share* key, BooleanCircuit* circ, bool use_vec_ands = false);
 
 #endif /* __AESCIRCUIT_H_ */

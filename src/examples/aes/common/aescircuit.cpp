@@ -21,7 +21,7 @@
 #include <ENCRYPTO_utils/cbitvector.h>
 
 int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
-		e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose, bool use_vec_ands, bool ex_calc, bool client_only) {
+		e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose, bool use_vec_ands, bool extend_in_sfe, bool client_only) {
 	uint32_t bitlen = 32;
 	uint32_t aes_key_bits;
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg, 4000000);
@@ -51,7 +51,6 @@ int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port,
 		aes_test_key[i] = (uint8_t) (rand() % 256);
 	}
 	uint8_t expanded_key[AES_EXP_KEY_BYTES];
-	//TODO create mode which expands the key during the SFE
 	ExpandKey(expanded_key, aes_test_key);
 	key.Copy(expanded_key, 0, AES_EXP_KEY_BYTES);
 	uint8_t* output;
@@ -59,6 +58,9 @@ int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port,
 	CBitVector out(nvals * AES_BITS);
 
 	if(sharing == S_YAO_REV) {
+		//Currently the extend_in_sfe and client_only features are not supported in S_YAO_REV
+		assert(extend_in_sfe == false && client_only == false);
+
 		Circuit* yao_circ = sharings[S_YAO]->GetCircuitBuildRoutine();
 		Circuit* yao_rev_circ = sharings[S_YAO_REV]->GetCircuitBuildRoutine();
 
@@ -108,7 +110,7 @@ int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port,
 		} else {
 			key_inputter = SERVER;
 		}
-		if(ex_calc) {
+		if(extend_in_sfe) {
 			s_key = circ->PutINGate(aes_test_key, AES_KEY_BITS, key_inputter);
 			s_key = BuildKeyExpansion(s_key, (BooleanCircuit*) circ, use_vec_ands);
 		} else {
