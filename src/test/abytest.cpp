@@ -55,6 +55,8 @@ int main(int argc, char** argv) {
 		test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_BOOL);
 		cout << "Testing AES circuit in Yao sharing" << endl;
 		test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_YAO);
+		cout << "Testing AES circuit in Yao sharing, key expansion during SFE and client only input" << endl;
+		test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_YAO, false, true, true);
 		//	cout << "Testing AES circuit in Setup-LUT sharing" << endl;
 		//	test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_SPLUT);
 
