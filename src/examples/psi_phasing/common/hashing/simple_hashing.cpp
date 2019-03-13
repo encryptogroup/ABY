@@ -6,25 +6,24 @@
  */
 
 #include <iostream>
+#include <thread>
+#include <vector>
 #include "simple_hashing.h"
 
 uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint32_t *outbitlen, uint32_t* nelesinbin, uint32_t nbins,
 		uint32_t* maxbinsize, uint32_t ntasks, uint32_t nhashfuns, prf_state_ctx* prf_state) {
-	sht_ctx* table;
 	//uint8_t** bin_content;
 	uint8_t *eleptr, *bin_ptr, *result, *res_bins;
 	uint32_t i, j, tmpneles;
-	sheg_ctx* ctx;
-	pthread_t* entry_gen_tasks;
 	hs_t hs;
 
 	init_hashing_state(&hs, neles, bitlen, nbins, nhashfuns, prf_state);
 	//Set the output bit-length of the hashed elements
 	*outbitlen = hs.outbitlen;
 
-	entry_gen_tasks = (pthread_t*) malloc(sizeof(pthread_t) * ntasks);
-	ctx = (sheg_ctx*) malloc(sizeof(sheg_ctx) * ntasks);
-	table = (sht_ctx*) malloc(sizeof(sht_ctx) * ntasks);
+	std::vector<std::thread> entry_gen_tasks(ntasks);
+	std::vector<sheg_ctx> ctx(ntasks);
+	std::vector<sht_ctx> table(ntasks);
 
 
 	//in case no maxbinsize is specified, compute based on Eq3 in eprint 2016/930
@@ -35,7 +34,7 @@ uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint
 	}
 
 	for(i = 0; i < ntasks; i++) {
-		init_hash_table(table + i, ceil_divide(neles, ntasks), &hs, *maxbinsize);
+		init_hash_table(&table[i], ceil_divide(neles, ntasks), &hs, *maxbinsize);
 	}
 
 	//for(i = 0; i < nbins; i++)
@@ -45,26 +44,32 @@ uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint
 
 	for(i = 0; i < ntasks; i++) {
 		ctx[i].elements = elements;
-		ctx[i].table = table + i;
+		ctx[i].table = &table[i];
 		ctx[i].startpos = i * ceil_divide(neles, ntasks);
 		ctx[i].endpos = std::min(ctx[i].startpos + ceil_divide(neles, ntasks), neles);
 		ctx[i].hs = &hs;
 
 		//std::cout << "Thread " << i << " starting from " << ctx[i].startpos << " going to " << ctx[i].endpos << " for " << neles << " elements" << std::endl;
-		if(pthread_create(entry_gen_tasks+i, NULL, gen_entries, (void*) (ctx+i))) {
-			std::cerr << "Error in creating new pthread at simple hashing!" << std::endl;
-			exit(0);
+		try {
+			entry_gen_tasks[i] = std::thread(gen_entries, &ctx[i]);
+		} catch (const std::system_error& e) {
+			std::cerr << "Error in creating new thread at simple hashing!\n"
+				<< e.what() << std::endl;
+			exit(1);
 		}
 	}
 
 	for(i = 0; i < ntasks; i++) {
-		if(pthread_join(entry_gen_tasks[i], NULL)) {
-			std::cerr << "Error in joining pthread at simple hashing!" << std::endl;
-			exit(0);
+		try {
+			entry_gen_tasks[i].join();
+		} catch (const std::system_error& e) {
+			std::cerr << "Error in joining thread at simple hashing!\n"
+				<< e.what() << std::endl;
+			exit(1);
 		}
 	}
 
-	*maxbinsize = table->maxbinsize;
+	*maxbinsize = table[0].maxbinsize;
 
 	//for(i = 0, eleptr=elements; i < neles; i++, eleptr+=inbytelen) {
 	//	insert_element(table, eleptr, tmpbuf);
@@ -81,20 +86,17 @@ uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint
 	for(i = 0; i < hs.nbins; i++) {
 		nelesinbin[i] = 0;
 		for(j = 0; j < ntasks; j++) {
-			tmpneles = (table +j)->bins[i].nvals;
+			tmpneles = table[j].bins[i].nvals;
 			nelesinbin[i] += tmpneles;
 			//bin_content[i] = (uint8_t*) malloc(nelesinbin[i] * table->outbytelen);
-			memcpy(bin_ptr, (table + j)->bins[i].values, tmpneles * hs.outbytelen);
+			memcpy(bin_ptr, table[j].bins[i].values, tmpneles * hs.outbytelen);
 			bin_ptr += (tmpneles * hs.outbytelen);
 		}
 		//right now only the number of elements in each bin is copied instead of the max bin size
 	}
 
 	for(j = 0; j < ntasks; j++)
-		free_hash_table(table + j);
-	free(table);
-	free(entry_gen_tasks);
-	free(ctx);
+		free_hash_table(&table[j]);
 
 	//for(i = 0; i < nbins; i++)
 	//	pthread_mutex_destroy(locks+i);
@@ -105,23 +107,20 @@ uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint
 	return res_bins;
 }
 
-void *gen_entries(void *ctx_tmp) {
+void gen_entries(sheg_ctx* ctx) {
 	//Insert elements in parallel, use lock to communicate
-	uint8_t *tmpbuf, *eleptr;
-	sheg_ctx* ctx = (sheg_ctx*) ctx_tmp;
-	uint32_t i, inbytelen, *address;
+	uint8_t *eleptr;
+	uint32_t i, inbytelen;
 
-	address = (uint32_t*) malloc(ctx->hs->nhashfuns * sizeof(uint32_t));
-	tmpbuf = (uint8_t*) calloc(ceil_divide(ctx->hs->outbitlen, 8), sizeof(uint8_t));	//for(i = 0; i < NUM_HASH_FUNCTIONS; i++) {
+	std::vector<uint32_t> address(ctx->hs->nhashfuns);
+	std::vector<uint8_t> tmpbuf(ceil_divide(ctx->hs->outbitlen, 8), 0);
+	//for(i = 0; i < NUM_HASH_FUNCTIONS; i++) {
 	//	tmpbuf[i] = (uint8_t*) malloc(ceil_divide(ctx->hs->outbitlen, 8));
 	//}
 
 	for(i = ctx->startpos, eleptr=ctx->elements, inbytelen=ctx->hs->inbytelen; i < ctx->endpos; i++, eleptr+=inbytelen) {
-		insert_element(ctx->table, eleptr, address, tmpbuf, ctx->hs);
+		insert_element(ctx->table, eleptr, address.data(), tmpbuf.data(), ctx->hs);
 	}
-	free(tmpbuf);
-	free(address);
-	return nullptr;
 }
 
 inline void insert_element(sht_ctx* table, uint8_t* element, uint32_t* address, uint8_t* tmpbuf, hs_t* hs) {

@@ -46,7 +46,7 @@ typedef struct simple_hash_entry_gen_ctx {
 uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint32_t* outbitlen, uint32_t* nelesinbin, uint32_t nbins,
 		uint32_t* maxbinsize, uint32_t ntasks, uint32_t nhashfuns, prf_state_ctx* prf_state);
 //routine for generating the entries, is invoked by the threads
-void *gen_entries(void *ctx);
+void gen_entries(sheg_ctx *ctx);
 void init_hash_table(sht_ctx* table, uint32_t nelements, hs_t* hs, uint32_t maxbinsize);
 void increase_max_bin_size(sht_ctx* table, uint32_t valbytelen);
 void free_hash_table(sht_ctx* table);

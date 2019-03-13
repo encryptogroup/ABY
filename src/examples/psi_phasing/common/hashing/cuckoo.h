@@ -67,7 +67,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 		uint32_t* perm,	uint32_t ntasks, uint8_t** stash_elements, uint32_t maxstashsize, uint32_t** stashperm, uint32_t nhashfuns,
 		prf_state_ctx* prf_state);
 //routine for generating the entries, is invoked by the threads
-void *gen_cuckoo_entries(void *ctx);
+void gen_cuckoo_entries(cuckoo_entry_gen_ctx* ctx);
 inline void gen_cuckoo_entry(uint8_t* in, cuckoo_entry_ctx* out, hs_t* hs, uint32_t ele_id);
 inline bool insert_element(cuckoo_entry_ctx** ctable, cuckoo_entry_ctx* element, uint32_t max_iterations, uint32_t nhashfuns);
 inline uint32_t compute_stash_size(uint32_t nbins, uint32_t neles);
