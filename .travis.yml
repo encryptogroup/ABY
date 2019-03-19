@@ -17,7 +17,7 @@ before_install:
   # Install a recent CMake
   - mkdir $HOME/prefix
   - export PATH="$HOME/prefix/bin:$PATH"
-  - wget https://cmake.org/files/v3.12/cmake-3.12.4-Linux-x86_64.sh -O cmake_install.sh
+  - wget https://cmake.org/files/v3.14/cmake-3.14.0-Linux-x86_64.sh -O cmake_install.sh
   - chmod +x cmake_install.sh
   - ./cmake_install.sh --prefix=$HOME/prefix --exclude-subdir --skip-license
 

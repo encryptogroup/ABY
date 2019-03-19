@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project(ABY LANGUAGES CXX)
+
+if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
+    message(FATAL_ERROR "ABY requires at least g++-8")
+endif()
 
 option(ABY_BUILD_EXE "Build executables" OFF)
 
@@ -54,7 +58,7 @@ endif()
 
 find_package(GMP REQUIRED)
 find_package(Threads REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost 1.66.0 REQUIRED)
 
 add_subdirectory(src/abycore)
 
