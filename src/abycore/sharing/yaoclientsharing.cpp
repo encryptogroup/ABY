@@ -423,14 +423,16 @@ BOOL YaoClientSharing::EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gle
 void YaoClientSharing::EvaluateClientOutputGate(uint32_t gateid) {
 	GATE* gate = &(m_vGates[gateid]);
 	uint32_t parentid = gate->ingates.inputs.parent; //gate->gs.oshare.parentgate;
-	uint32_t in;
 	InstantiateGate(gate);
 
 #ifdef DEBUGYAOCLIENT
+	uint32_t in;
 	std::cout << "ClientOutput: ";
 #endif
 	for (uint32_t i = 0; i < gate->nvals; i++) {
+#ifdef DEBUGYAOCLIENT
 		in = (m_vGates[parentid].gs.yval[(i + 1) * m_nSecParamBytes - 1] & 0x01);
+#endif
 		gate->gs.val[i / GATE_T_BITS] ^= ((((UGATE_T) m_vGates[parentid].gs.yval[(i + 1) * m_nSecParamBytes - 1] & 0x01)
 				^ ((UGATE_T) m_vOutputShareRcvBuf.GetBit(m_nClientOUTBitCtr))) << (i % GATE_T_BITS));
 #ifdef DEBUGYAOCLIENT
@@ -588,7 +590,7 @@ void YaoClientSharing::GetBuffersToReceive(std::vector<BYTE*>& rcvbuf, std::vect
 	}
 }
 
-void YaoClientSharing::FinishCircuitLayer(uint32_t level) {
+void YaoClientSharing::FinishCircuitLayer() {
 	//Assign the servers input keys that were received this round
 	if (m_nServerInBitCtr > 0)
 		AssignServerInputKeys();
@@ -635,7 +637,7 @@ void YaoClientSharing::AssignServerInputKeys() {
 
 /* Assign the received server input keys to the pushed back gates in this round */
 void YaoClientSharing::AssignClientInputKeys() {
-	GATE* gate, *parent;
+	GATE* gate;
 	for (uint32_t i = 0, offset = 0; i < m_vClientRcvInputKeyGates.size(); i++) {
 		gate = &(m_vGates[m_vClientRcvInputKeyGates[i]]);
 		//input = ;
@@ -769,7 +771,7 @@ uint32_t YaoClientSharing::GetOutput(CBitVector& out) {
 	out.Create(outbits);
 
 	GATE* gate;
-	for (uint32_t i = 0, outbitstart = 0, bitstocopy, len, lim; i < myoutgates.size(); i++) {
+	for (uint32_t i = 0, outbitstart = 0, lim; i < myoutgates.size(); i++) {
 		gate = &(m_vGates[myoutgates[i]]);
 		lim = gate->nvals * gate->sharebitlen;
 		std::cout << "outgate no " << i << " : " << myoutgates[i] << " with nvals = " << gate->nvals << " and sharebitlen = " << gate->sharebitlen << std::endl;

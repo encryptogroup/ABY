@@ -281,7 +281,7 @@ void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
 				//The server initializes the possible values for the OT and pre-compute the rotated truth-tables
 				//TODO: Optimize with rotation instead of Set Bits! Also change loop order to make it more efficient!
 				if(m_eRole == SERVER) {
-					uint32_t tab_ele_bits = sizeof(uint64_t) * 8;
+					// uint32_t tab_ele_bits = sizeof(uint64_t) * 8;
 					uint32_t tt_len = 1<<lut_data->n_inbits;
 					lut_data->rot_OT_vals = (CBitVector**) malloc(sizeof(CBitVector*) * tt_len);
 
@@ -907,7 +907,7 @@ inline void BoolSharing::SelectiveOpenOPLUT(uint32_t gateid) {
 #endif
 }
 
-void BoolSharing::FinishCircuitLayer(uint32_t level) {
+void BoolSharing::FinishCircuitLayer() {
 	//Compute the values of the AND gates
 #ifdef DEBUGBOOL
 	if(m_nInputShareRcvSize > 0) {
@@ -1307,7 +1307,7 @@ void BoolSharing::EvaluateSIMDGate(uint32_t gateid) {
 
 		tmp.AttachBuf((uint8_t*) gate->gs.val, (int) ceil_divide(vsize, 8));
 
-		for(uint64_t i = 0, bit_ctr = 0, ctr=0; i < nparents; i++) {
+		for(uint64_t i = 0, bit_ctr = 0; i < nparents; i++) {
 			uint64_t in_size = m_vGates[input[i]].nvals;
 
 			tmp.SetBits((uint8_t*) m_vGates[input[i]].gs.val, bit_ctr, in_size);
@@ -1500,7 +1500,7 @@ uint32_t BoolSharing::GetOutput(CBitVector& out) {
 	out.Create(outbits);
 
 	GATE* gate;
-	for (uint32_t i = 0, outbitstart = 0, bitstocopy, len, lim; i < myoutgates.size(); i++) {
+	for (uint32_t i = 0, outbitstart = 0, lim; i < myoutgates.size(); i++) {
 		gate = &(m_vGates[myoutgates[i]]);
 		lim = gate->nvals * gate->sharebitlen;
 
@@ -1693,7 +1693,7 @@ void BoolSharing::StoreMTsToFile(const char *filename) {
 	/**Writing the MTs and bytelen of the MTs o the file.*/
 	for (uint32_t i = 0; i < m_nNumANDSizes; i++) {
 		uint32_t andbytelen = ceil_divide(m_nNumMTs[i], 8);
-		uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
+		// uint32_t stringbytelen = ceil_divide(m_nNumMTs[i] * m_vANDs[i].bitlen, 8);
 		fwrite(&andbytelen, sizeof(uint32_t), 1, fp);
 		fwrite(m_vA[i].GetArr(), andbytelen, 1, fp);
 		fwrite(m_vB[i].GetArr(), andbytelen, 1, fp);
@@ -1707,8 +1707,8 @@ void BoolSharing::StoreMTsToFile(const char *filename) {
 void BoolSharing::ReadMTsFromFile(const char *filename) {
 
 	FILE *fp;
-	/**Calculate the file size*/
-	uint64_t file_size = filesystem::file_size(filename);
+	// /**Calculate the file size*/
+	// uint64_t file_size = filesystem::file_size(filename);
 
 	/**Variable for the storing the NUMANDSizes value from the file.*/
 	uint32_t num_and_sizes;

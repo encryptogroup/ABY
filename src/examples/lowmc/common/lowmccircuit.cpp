@@ -19,6 +19,10 @@
 #include "../../../abycore/sharing/sharing.h"
 #include <ENCRYPTO_utils/crypto/crypto.h>
 
+static uint32_t m_nRndCtr;
+static code* m_tGrayCode;
+static uint32_t m_nZeroGate;
+
 //sboxes (m), key-length (k), statesize (n), data (d), rounds (r)
 int32_t test_lowmc_circuit(e_role role, const std::string& address, uint16_t port, uint32_t nvals, uint32_t nthreads,
 		e_mt_gen_alg mt_alg, e_sharing sharing, uint32_t statesize, uint32_t keysize,

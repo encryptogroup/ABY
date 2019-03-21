@@ -12,8 +12,9 @@
 
 uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint32_t *outbitlen, uint32_t* nelesinbin, uint32_t nbins,
 		uint32_t* maxbinsize, uint32_t ntasks, uint32_t nhashfuns, prf_state_ctx* prf_state) {
-	//uint8_t** bin_content;
-	uint8_t *eleptr, *bin_ptr, *result, *res_bins;
+	// uint8_t** bin_content;
+	// uint8_t *eleptr;
+	uint8_t *bin_ptr, *res_bins;
 	uint32_t i, j, tmpneles;
 	hs_t hs;
 
@@ -34,7 +35,10 @@ uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint
 	}
 
 	for(i = 0; i < ntasks; i++) {
-		init_hash_table(&table[i], ceil_divide(neles, ntasks), &hs, *maxbinsize);
+		// old call, but init_hash_table does not use #elements 
+		// init_hash_table(&table[i], ceil_divide(neles, ntasks), &hs, *maxbinsize);
+		
+		init_hash_table(&table[i], &hs, *maxbinsize);
 	}
 
 	//for(i = 0; i < nbins; i++)
@@ -124,13 +128,12 @@ void gen_entries(sheg_ctx* ctx) {
 }
 
 inline void insert_element(sht_ctx* table, uint8_t* element, uint32_t* address, uint8_t* tmpbuf, hs_t* hs) {
-	uint32_t i, j;
 	bin_ctx* tmp_bin;
 
 	hashElement(element, address, tmpbuf, hs);
 
 	//std::cout << "Element " <<
-	for(i = 0; i < hs->nhashfuns; i++) {
+	for(uint32_t i = 0; i < hs->nhashfuns; i++) {
 
 		tmp_bin=table->bins + address[i];
 		//pthread_mutex_lock(locks + address[i]);
@@ -158,15 +161,13 @@ inline void insert_element(sht_ctx* table, uint8_t* element, uint32_t* address, 
 	}
 }
 
-void init_hash_table(sht_ctx* table, uint32_t nelements, hs_t* hs, uint32_t maxbinsize) {
-	uint32_t i;
-
+void init_hash_table(sht_ctx* table, hs_t* hs, uint32_t maxbinsize) {
 	table->nbins = hs->nbins;
 	table->maxbinsize = maxbinsize;
 
 	table->bins = (bin_ctx*) calloc(hs->nbins, sizeof(bin_ctx));
 
-	for(i = 0; i < hs->nbins; i++) {
+	for(uint32_t i = 0; i < hs->nbins; i++) {
 		table->bins[i].values = (uint8_t*) malloc(table->maxbinsize * hs->outbytelen);
 	}
 }
@@ -185,7 +186,6 @@ void free_hash_table(sht_ctx* table) {
 }
 
 inline uint32_t get_max_bin_size(uint32_t nbins, uint32_t neles) {
-	double n = neles;
 	if(ceil_divide(neles, nbins) < 3) {
 		if(neles >= (1<<24))
 			return 27;

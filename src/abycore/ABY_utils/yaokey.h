@@ -155,7 +155,7 @@ public:
 	};
 };
 
-static void InitYaoKey(YaoKey** key, int symbits) {
+inline void InitYaoKey(YaoKey** key, uint32_t symbits) {
 	if (symbits == ST.symbits)
 		*key = new YaoKeyST();
 	else if (symbits == MT.symbits)

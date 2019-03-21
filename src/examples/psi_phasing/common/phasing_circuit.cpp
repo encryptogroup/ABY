@@ -62,7 +62,7 @@ int32_t test_phasing_circuit(e_role role, const std::string& address, uint16_t p
 	//sample random server and client sets
 	//sample_random_elements(neles, bitlen, srv_set, cli_set);
 	//sample fixed server and client sets (is faster than random sets for larger sets)
-	set_fixed_elements(server_neles, client_neles, bitlen, srv_set, cli_set);
+	set_fixed_elements(server_neles, client_neles, srv_set, cli_set);
 	/*for(uint32_t i = 0; i < neles; i++) {
 		std::cout << i << ": " << srv_set[i] << " , " << cli_set[i] << std::endl;
 	}*/
@@ -252,8 +252,7 @@ void sample_random_elements(uint32_t neles, uint32_t bitlen, uint32_t* srv_set, 
 }
 
 //generate client and server set such that half of the elements overlap
-void set_fixed_elements(uint32_t server_neles, uint32_t client_neles, uint32_t bitlen,
-		uint32_t* srv_set, uint32_t* cli_set) {
+void set_fixed_elements(uint32_t server_neles, uint32_t client_neles, uint32_t* srv_set, uint32_t* cli_set) {
 	uint32_t incr = 15875162;
 	uint32_t offset = (server_neles+client_neles)/2;
 	for(uint32_t i = 0; i < server_neles; i++) {
@@ -367,7 +366,7 @@ void ClientHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen,
 
 	uint32_t outbytelen;
 	prf_state_ctx prf_state;
-	uint8_t *tmphashtable, *client_dummy;
+	uint8_t *tmphashtable;
 	uint32_t *nelesinbin = (uint32_t*) calloc(nbins, sizeof(uint32_t));
 	uint32_t* perm = (uint32_t*) malloc(sizeof(uint32_t) * nbins);
 

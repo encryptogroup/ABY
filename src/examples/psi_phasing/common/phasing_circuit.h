@@ -33,7 +33,7 @@ int32_t test_phasing_circuit(e_role role, const std::string& address, uint16_t p
 		uint32_t maxbinsize, uint32_t mhashfuns);
 
 void 	sample_random_elements(uint32_t neles, uint32_t bitlen, uint32_t* srv_set, uint32_t* cli_set);
-void 	set_fixed_elements(uint32_t server_neles, uint32_t client_neles, uint32_t bitlen, uint32_t* srv_set, uint32_t* cli_set);
+void 	set_fixed_elements(uint32_t server_neles, uint32_t client_neles, uint32_t* srv_set, uint32_t* cli_set);
 
 share* 	BuildPhasingCircuit(share** shr_srv_set, share* shr_cli_set, uint32_t binsize,
 		BooleanCircuit* circ);

@@ -37,16 +37,16 @@
 #include "../examples/min-euclidean-dist/common/min-euclidean-dist-circuit.h"
 
 bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t bitlen, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg,
-		int32_t testop, uint32_t num_test_runs, bool verbose, bool randomseed);
+		int32_t testop, uint32_t num_test_runs, bool quiet, bool ignore_verification, bool randomseed);
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* bitlen, uint32_t* nreps, uint32_t* secparam,
-		string* address, uint16_t* port, int32_t* test_op, uint32_t* num_test_runs, e_mt_gen_alg *mt_alg, bool* verbose, bool* randomseed);
+		string* address, uint16_t* port, int32_t* test_op, uint32_t* num_test_runs, e_mt_gen_alg *mt_alg, bool* quiet, bool* ignore_verification, bool* randomseed);
 
 int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t num_test_runs, uint32_t nops,
-		e_role role, bool verbose);
+		e_role role, bool quiet, bool ignore_verification);
 
 int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t nvals, uint32_t num_test_runs,
-		uint32_t nops, e_role role, bool verbose);
+		uint32_t nops, e_role role, bool quiet, bool ignore_verification);
 
 string get_op_name(e_operation op);
 

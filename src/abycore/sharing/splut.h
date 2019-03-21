@@ -72,7 +72,7 @@ public:
 	void EvaluateLocalOperations(uint32_t level);
 	void EvaluateInteractiveOperations(uint32_t level);
 
-	void FinishCircuitLayer(uint32_t level);
+	void FinishCircuitLayer();
 
 	void PrepareOnlinePhase();
 

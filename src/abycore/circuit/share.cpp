@@ -137,7 +137,7 @@ uint8_t* boolshare::get_clear_value_ptr() {
 void boolshare::get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals) {
 	assert(m_ngateids.size() <= sizeof(uint32_t) * 8);
 	UGATE_T* outvalptr;
-	uint32_t gnvals = 1;
+	uint32_t gnvals;
 
 	*nvals = 1;
 	*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], outvalptr);
@@ -165,7 +165,7 @@ void boolshare::get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *
 void boolshare::get_clear_value_vec(uint64_t** vec, uint32_t *bitlen, uint32_t *nvals) {
 	assert(m_ngateids.size() <= sizeof(uint64_t) * 8);
 	UGATE_T* outvalptr;
-	uint32_t gnvals = 1;
+	uint32_t gnvals;
 
 	*nvals = 1;
 	*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], outvalptr);

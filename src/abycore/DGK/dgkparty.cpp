@@ -338,7 +338,7 @@ void DGKParty::keyExchange(channel* chan) {
 void DGKParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 
 //clear upper bytes of the buffer, so tailing bytes are zero
-	for (int i = mpz_sizeinbase(t, 256); i < m_nBuflen; i++) {
+	for (uint32_t i = mpz_sizeinbase(t, 256); i < m_nBuflen; i++) {
 		*(buf + i) = 0;
 	}
 
@@ -353,7 +353,7 @@ void DGKParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 
 #if NETDEBUG
 	cout << endl << "SEND" << endl;
-	for (int i = 0; i < m_nBuflen; i++) {
+	for (uint32_t i = 0; i < m_nBuflen; i++) {
 		printf("%02x.", *(buf + i));
 	}
 
@@ -370,7 +370,7 @@ void DGKParty::receivempz_t(mpz_t t, channel* chan, BYTE * buf) {
 
 #if NETDEBUG
 	cout << endl << "RECEIVE" << endl;
-	for (int i = 0; i < m_nBuflen; i++) {
+	for (uint32_t i = 0; i < m_nBuflen; i++) {
 		printf("%02x.", *(buf + i));
 	}
 

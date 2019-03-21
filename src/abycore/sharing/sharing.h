@@ -101,7 +101,7 @@ public:
 	/**
 	 Method for finishing the circuit layer <Better description please>
 	 */
-	virtual void FinishCircuitLayer(uint32_t level) = 0;
+	virtual void FinishCircuitLayer() = 0;
 
 	/**
 	 Method for sending the data.

@@ -60,7 +60,7 @@ static const uint32_t SELECT_BITS_INV[33] = \
 static const uint8_t BYTE_SELECT_BITS_INV[8] = {0xFF, 0x7F, 0x3F, 0x1F, 0x0F, 0x07, 0x03, 0x01};
 
 //Init the values for the hash function
-static void init_hashing_state(hs_t* hs, uint32_t nelements, uint32_t inbitlen, uint32_t nbins,
+inline void init_hashing_state(hs_t* hs, uint32_t nelements, uint32_t inbitlen, uint32_t nbins,
 		uint32_t nhashfuns, prf_state_ctx* prf_state) {
 	uint32_t i, j, nrndbytes;
 	hs->nhashfuns = nhashfuns;
@@ -112,7 +112,7 @@ static void init_hashing_state(hs_t* hs, uint32_t nelements, uint32_t inbitlen, 
 	}
 }
 
-static void free_hashing_state(hs_t* hs) {
+inline void free_hashing_state(hs_t* hs) {
 	uint32_t i, j;
 	for(i = 0; i < hs->nhashfuns; i++) {
 		for(j = 0; j  < hs->nhfvals; j++) {

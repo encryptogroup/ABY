@@ -30,7 +30,7 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 		uint32_t prot_version, bool verify) {
 
 	uint32_t *srv_set, *cli_set, *circ_intersect, *ver_intersect;
-	uint32_t seqsize = 2* neles, ver_inter_ctr = 0, circ_inter_ctr = 0;
+	uint32_t ver_inter_ctr = 0, circ_inter_ctr = 0;
 	uint32_t nswapgates = estimateGates(neles);
 	share **shr_server_set, **shr_client_set, **shr_out;
 	assert(bitlen <= 32);
@@ -325,16 +325,16 @@ vector<uint32_t> PutVectorBitonicSortGate(share** srv_set, share** cli_set, uint
 
 		//TODO: Introduce specific gate that allows the permutation of vector gates from different input gates + bit positions
 
-		for (j = 0; j < bitlen; j++) {
-			//cout << "j = " << j << endl;
+		for (uint32_t l = 0; l < bitlen; l++) {
+			//cout << "l = " << l << endl;
 			for (k = 0; k < ctr; k++) {
 				parenta[k] = c[compa[k]];
 				parentb[k] = c[compb[k]];
-				posa[k] = j;
-				posb[k] = j;
+				posa[k] = l;
+				posb[k] = l;
 			}
-			tempcmpveca[j] = circ->PutCombineAtPosGate(parenta, j);
-			tempcmpvecb[j] = circ->PutCombineAtPosGate(parentb, j);
+			tempcmpveca[l] = circ->PutCombineAtPosGate(parenta, l);
+			tempcmpvecb[l] = circ->PutCombineAtPosGate(parentb, l);
 		}
 
 

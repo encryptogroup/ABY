@@ -221,7 +221,6 @@ void YaoServerSharing::EvaluateLocalOperations(uint32_t depth) {
 void YaoServerSharing::EvaluateInteractiveOperations(uint32_t depth) {
 	std::deque<uint32_t> interactivequeue = m_cBoolCircuit->GetInteractiveQueueOnLvl(depth);
 	GATE *gate, *parent;
-	e_role dst;
 
 	for (uint32_t i = 0; i < interactivequeue.size(); i++) {
 		gate = &(m_vGates[interactivequeue[i]]);
@@ -617,9 +616,6 @@ void YaoServerSharing::EvaluateANDGate(GATE* gate, ABYSetup* setup) {
 
 
 void YaoServerSharing::CreateGarbledTable(GATE* ggate, uint32_t pos, GATE* gleft, GATE* gright){
-
-	uint32_t outkey;
-
 	uint8_t *table, *lkey, *rkey, *outwire_key;
 	uint8_t lpbit = gleft->gs.yinput.pi[pos];
 	uint8_t rpbit = gright->gs.yinput.pi[pos];
@@ -856,7 +852,7 @@ void YaoServerSharing::GetDataToSend(std::vector<BYTE*>& sendbuf, std::vector<ui
 	}
 }
 
-void YaoServerSharing::FinishCircuitLayer(uint32_t level) {
+void YaoServerSharing::FinishCircuitLayer() {
 	//Use OT bits from the client to determine the send bits that are supposed to go out next round
 	if (m_nClientInBitCtr > 0) {
 		for (uint32_t i = 0, linbitctr = 0; i < m_vClientInputGate.size() && linbitctr < m_nClientInBitCtr; i++) {
@@ -1128,7 +1124,7 @@ uint32_t YaoServerSharing::GetOutput(CBitVector& out) {
 	out.Create(outbits);
 
 	GATE* gate;
-	for (uint32_t i = 0, outbitstart = 0, bitstocopy, len, lim; i < myoutgates.size(); i++) {
+	for (uint32_t i = 0, outbitstart = 0, lim; i < myoutgates.size(); i++) {
 		gate = &(m_vGates[myoutgates[i]]);
 		lim = gate->nvals * gate->sharebitlen;
 

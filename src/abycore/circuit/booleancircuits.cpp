@@ -1023,7 +1023,6 @@ std::vector<uint32_t> BooleanCircuit::PutDepthOptimizedAddGate(std::vector<uint3
 	std::vector<uint32_t> out(a.size() + bCARRY);
 	std::vector<uint32_t> parity(a.size()), carry(rep), parity_zero(rep);
 	uint32_t zerogate = PutConstantGate(0, m_vGates[a[0]].nvals);
-	uint32_t startid = zerogate;
 	share* zero_share = new boolshare(2, this);
 	share* ina = new boolshare(2, this);
 	share* sel = new boolshare(1, this);
@@ -1119,13 +1118,12 @@ std::vector<std::vector<uint32_t> > BooleanCircuit::PutCarrySaveGate(std::vector
  * 1) for the inputs, 2) for intermediate carry-forwarding, 3) for critical path on inputs, 4) for the critical path, 5) for the inverse carry tree.
  */
 std::vector<uint32_t> BooleanCircuit::PutLUTAddGate(std::vector<uint32_t> a, std::vector<uint32_t> b, BOOL bCARRY) {
-	uint32_t id, rep = std::max(a.size(), b.size());
+	uint32_t rep = std::max(a.size(), b.size());
 	PadWithLeadingZeros(a, b);
 	std::vector<uint32_t> out(a.size() + bCARRY);
 	std::vector<uint32_t> parity(rep), carry(rep), parity_zero(rep), tmp;
 	std::vector<uint32_t> lut_in(2*rep);
 	uint32_t max_ins = 4, processed_ins;
-	uint32_t max_invs = 7;
 
 	uint32_t n_crit_ins = std::min(rep, (uint32_t) max_ins);
 	std::vector<uint32_t> tmpout;
@@ -1428,7 +1426,7 @@ std::vector<std::vector<uint32_t> > BooleanCircuit::PutCSNNetwork(std::vector<st
 	std::vector<std::vector<uint32_t> > carry_lines(wires-2);
 	std::vector<std::vector<uint32_t> > rem(8);
 	std::vector<std::vector<uint32_t> > out(2);
-	int p_head=wires, p_tail = 0, c_head = 0, c_tail = 0, temp_gates;
+	int p_head=wires, p_tail = 0, c_head = 0, c_tail = 0;//, temp_gates;
 	std::vector<uint32_t> dummy(rep);
 
 	for(uint32_t i = 0; i < ins.size(); i++) {
@@ -2174,7 +2172,6 @@ void BooleanCircuit::PutMaxIdxGate(std::vector<std::vector<uint32_t> > vals, std
 		std::vector<uint32_t>& maxval, std::vector<uint32_t>& maxid) {
 	// build a balanced binary tree
 	uint32_t cmp;
-	uint32_t avec, bvec;
 	std::vector<std::vector<uint32_t> > m_vELMs = vals;
 #ifdef USE_MULTI_MUX_GATES
 	uint32_t nvariables = 2;
@@ -2748,7 +2745,6 @@ uint32_t BooleanCircuit::PutIdxGate(uint32_t r, uint32_t maxidx) {
 void BooleanCircuit::PutMultiMUXGate(share** Sa, share** Sb, share* sel, uint32_t nshares, share** Sout) {
 
 	std::vector<uint32_t> inputsa, inputsb;
-	uint32_t *posids;
 	uint32_t bitlen = 0;
 	uint32_t nvals = m_vGates[sel->get_wire_id(0)].nvals;
 
@@ -2829,7 +2825,6 @@ void BooleanCircuit::PadWithLeadingZeros(std::vector<uint32_t> &a, std::vector<u
 
 share* BooleanCircuit::PutFullAdderGate(uint32_t a, uint32_t b, uint32_t carry_in) {
     std::vector<uint32_t> out(2);
-    uint32_t sum, carry_out;
 
 #ifdef FA_DEBUG
     std::vector<uint32_t> v_a(1); v_a[0]=a;
@@ -2877,10 +2872,10 @@ share* BooleanCircuit::PutADDChainGate(std::vector<uint32_t> a, std::vector<uint
     PadWithLeadingZeros(a, b);
     std::vector<uint32_t> out(a.size());
     std::vector<uint32_t> v_c_in(1); v_c_in[0] = carry_in;
-    share * s_c_in = new boolshare(v_c_in, this);
     share * last = PutFullAdderGate(a[0], b[0], carry_in);
     out[0] = last->get_wires()[0];
 #ifdef AC_DEBUG
+    share * s_c_in = new boolshare(v_c_in, this);
     PutPrintValueGate(s_c_in, "carry in");
     PutPrintValueGate(last, "last");
 #endif
@@ -2996,7 +2991,6 @@ share*  BooleanCircuit::PutConvTypeGate(share * value, ConvType* from, ConvType*
 }
 
 std::vector<uint32_t>  BooleanCircuit::PutConvTypeGate(std::vector<uint32_t> wires, ConvType* from, ConvType* to, uint32_t nvals){
-    uint32_t out;
     switch(to->getType()){
         case ENUM_FP_TYPE:
             return PutUint2FpGate(wires, (UINTType*)from , (FPType*)to, nvals);
@@ -3163,7 +3157,7 @@ share * BooleanCircuit::PutBarrelLeftShifterGate(share * input, share * n){
 std::vector<uint32_t> BooleanCircuit::PutBarrelLeftShifterGate(std::vector<uint32_t> wires, 
         std::vector<uint32_t> n, uint32_t nvals){
     uint n_size = (uint)(log(wires.size())/log(2));
-    uint step = pow(2, (double)n_size);
+    auto step = pow(2, (double)n_size);
     auto out_size = step*2;
     
     std::vector<uint32_t> res(out_size);

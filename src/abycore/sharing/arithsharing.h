@@ -54,7 +54,7 @@ public:
 	void EvaluateLocalOperations(uint32_t depth);
 	void EvaluateInteractiveOperations(uint32_t depth);
 
-	void FinishCircuitLayer(uint32_t depth);
+	void FinishCircuitLayer();
 
 	void PrepareOnlinePhase();
 

@@ -208,7 +208,7 @@ typedef struct {
 	std::string opname;
 } aby_ops_t;
 
-static std::string get_circuit_type_name(e_circuit c) {
+inline std::string get_circuit_type_name(e_circuit c) {
 	switch(c) {
 	case C_BOOLEAN:
 		return "BOOLEAN";
@@ -219,7 +219,7 @@ static std::string get_circuit_type_name(e_circuit c) {
 	}
 }
 
-static std::string get_role_name(e_role r) {
+inline std::string get_role_name(e_role r) {
 	switch(r) {
 	case SERVER:
 		return "SERVER";
@@ -232,7 +232,7 @@ static std::string get_role_name(e_role r) {
 	}
 }
 
-static std::string get_sharing_name(e_sharing s) {
+inline std::string get_sharing_name(e_sharing s) {
 	switch (s) {
 	case S_BOOL:
 		return "Bool";
@@ -249,7 +249,7 @@ static std::string get_sharing_name(e_sharing s) {
 	}
 }
 
-static std::string get_gate_type_name(e_gatetype g) {
+inline std::string get_gate_type_name(e_gatetype g) {
 	switch (g) {
 	case G_LIN: return "Linear";
 	case G_NON_LIN: return "Non-Linear";
@@ -285,7 +285,7 @@ typedef enum fp_op_setting{
 }fp_op_setting;
 
 
-static std::string get_op_name(e_operation op) {
+inline std::string get_op_name(e_operation op) {
 	switch (op) {
 	case OP_XOR:
 		return "XOR";

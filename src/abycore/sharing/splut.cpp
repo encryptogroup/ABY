@@ -719,7 +719,7 @@ inline void SetupLUT::ReconstructValue(uint32_t gateid) {
 }
 
 
-void SetupLUT::FinishCircuitLayer(uint32_t level) {
+void SetupLUT::FinishCircuitLayer() {
 	//Compute the values of the AND gates
 #ifdef DEBUGBOOL_NO_MT
 	if(m_nInputShareRcvSize > 0) {
@@ -763,7 +763,8 @@ void SetupLUT::FinishCircuitLayer(uint32_t level) {
 void SetupLUT::SenderEvaluateTTGates() {
 	uint64_t* ttable;
 	uint32_t len, choicelen, nvals;
-	uint64_t gate_mask, updated_choice, tmpmaskidx, tmp_table, parents_value, tmp_pre_mask;
+	uint64_t gate_mask, updated_choice, tmp_table, parents_value, tmp_pre_mask;
+	//uint64_t tmpmaskidx;
 	uint32_t typebitlen = sizeof(uint64_t) * 8;
 	timespec t_start, t_end;
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
@@ -1119,9 +1120,8 @@ void SetupLUT::SenderEvaluateTTGates() {
  */
 void SetupLUT::ReceiverEvaluateTTGates() {
 	uint32_t len, choicelen;
-	uint64_t tmp_mask, tmp_choice, tmp_rcv;
+	uint64_t tmp_choice, tmp_rcv;
 	uint32_t typebitlen = sizeof(uint64_t) * 8;
-	GATE* ingate;
 	timespec t_start, t_end;
 	clock_gettime(CLOCK_MONOTONIC, &t_start);
 
@@ -1462,7 +1462,7 @@ void SetupLUT::EvaluateSIMDGate(uint32_t gateid) {
 
 		tmp.AttachBuf((uint8_t*) gate->gs.val, (int) ceil_divide(vsize, 8));
 
-		for(uint64_t i = 0, bit_ctr = 0, ctr=0; i < nparents; i++) {
+		for(uint64_t i = 0, bit_ctr = 0; i < nparents; i++) {
 			uint64_t in_size = m_vGates[input[i]].nvals;
 
 			tmp.SetBits((uint8_t*) m_vGates[input[i]].gs.val, bit_ctr, in_size);
@@ -1645,7 +1645,7 @@ uint32_t SetupLUT::GetOutput(CBitVector& out) {
 	out.Create(outbits);
 
 	GATE* gate;
-	for (uint32_t i = 0, outbitstart = 0, bitstocopy, len, lim; i < myoutgates.size(); i++) {
+	for (uint32_t i = 0, outbitstart = 0, lim; i < myoutgates.size(); i++) {
 		gate = &(m_vGates[myoutgates[i]]);
 		lim = gate->nvals * gate->sharebitlen;
 
@@ -1703,7 +1703,7 @@ void SetupLUT::Reset() {
 	//Delete the pre-computed OT values
 	for (uint32_t i = 0; i < m_vPreCompOTX.size(); i++) {
 		for(uint32_t k = 0; k < m_vPreCompOTX[i].size(); k++) {
-			for(uint32_t j = 0; j < (1<<i); j++) {
+			for(uint32_t j = 0; j < (uint32_t) (1<<i); j++) {
 				delete m_vPreCompOTX[i][k][j];
 			}
 			free(m_vPreCompOTX[i][k]);

@@ -211,8 +211,6 @@ void ArithSharing<T>::InitMTs() {
 
 template<typename T>
 void ArithSharing<T>::ComputeMTsFromOTs() {
-	uint32_t bytesMTs = ceil_divide(m_nMTs * m_nTypeBitLen, 8);
-
 	CBitVector temp(m_nMTs);
 
 	T tmp;
@@ -545,7 +543,7 @@ void ArithSharing<T>::SelectiveOpen(GATE* gate) {
 }
 
 template<typename T>
-void ArithSharing<T>::FinishCircuitLayer(uint32_t depth) {
+void ArithSharing<T>::FinishCircuitLayer() {
 #ifdef DEBUGARITH
 	if(m_nInputShareRcvCtr > 0) {
 		std::cout << "Received "<< m_nInputShareRcvCtr << " input shares: ";
@@ -646,7 +644,7 @@ void ArithSharing<T>::AssignOutputShares() {
 		InstantiateGate(gate);
 
 		for (uint32_t j = 0; j < gate->nvals; j++, rcvshareidx++) {
-			((T*) gate->gs.val)[j] = ((T*) m_vGates[parentid].gs.aval)[j] + m_vOutputShareRcvBuf.template Get<T>(rcvshareidx)
+			((T*) gate->gs.val)[j] = (((T*) m_vGates[parentid].gs.aval)[j] + m_vOutputShareRcvBuf.template Get<T>(rcvshareidx))
 					& m_nTypeBitMask;
 #ifdef DEBUGARITH
 			std::cout << "Received output share: " << m_vOutputShareRcvBuf.template Get<T>(rcvshareidx) << std::endl;

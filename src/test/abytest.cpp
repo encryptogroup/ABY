@@ -37,53 +37,60 @@ int main(int argc, char** argv) {
 	uint32_t bitlen = 32, nvals = 65, secparam = 128, nthreads = 1, nelements=1024;
 	uint16_t port = 7766;
 	string address = "127.0.0.1";
-	bool verbose = false;
+	bool quiet = false;
 	bool randomseed = false;
+	bool ignore_verification = false;
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 	uint32_t num_test_runs = 2;
 
-	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op, &num_test_runs, &mt_alg, &verbose, &randomseed);
+	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op, &num_test_runs, &mt_alg, &quiet, &ignore_verification, &randomseed);
+
+	// FIXME: fix verification for different bitlengths
+	if (!ignore_verification && bitlen != 32){
+		bitlen = 32;
+		std::cerr << "Verification currenlty only works for 32-bit values. Changing bitlen to 32." << std::endl;
+	}
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	run_tests(role, (char*) address.c_str(), port, seclvl, bitlen, nvals, nthreads, mt_alg, test_op, num_test_runs, verbose, randomseed);
+	run_tests(role, (char*) address.c_str(), port, seclvl, bitlen, nvals, nthreads, mt_alg, test_op, num_test_runs, quiet, ignore_verification, randomseed);
 
 	if (test_op == -1) {
 		//Test the AES circuit
-		cout << "Testing AES circuit in Boolean sharing" << endl;
+		std::cout << "Testing AES circuit in Boolean sharing" << std::endl;
 		test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_BOOL);
-		cout << "Testing AES circuit in Yao sharing" << endl;
+		std::cout << "Testing AES circuit in Yao sharing" << std::endl;
 		test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_YAO);
-		cout << "Testing AES circuit in Yao sharing, key expansion during SFE and client only input" << endl;
+		std::cout << "Testing AES circuit in Yao sharing, key expansion during SFE and client only input" << std::endl;
 		test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_YAO, false, true, true);
-		//	cout << "Testing AES circuit in Setup-LUT sharing" << endl;
+		//	std::cout << "Testing AES circuit in Setup-LUT sharing" << std::endl;
 		//	test_aes_circuit(role, (char*) address.c_str(), port, seclvl, nvals, nthreads, mt_alg, S_SPLUT);
 
 		//Test the SHA1 circuit TODO: Constant gates are limited to nvals < 64. Fix!
-		cout << "Testing SHA1 circuit in Boolean sharing" << endl;
+		std::cout << "Testing SHA1 circuit in Boolean sharing" << std::endl;
 		test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, 63, nthreads, mt_alg, S_BOOL);
-		cout << "Testing SHA1 circuit in Yao sharing" << endl;
+		std::cout << "Testing SHA1 circuit in Yao sharing" << std::endl;
 		test_sha1_circuit(role, (char*) address.c_str(), port, seclvl, 63, nthreads, mt_alg, S_YAO);
-		//cout << "Testing SHA1 circuit in Setup-LUT sharing" << endl;
+		//std::cout << "Testing SHA1 circuit in Setup-LUT sharing" << std::endl;
 		//test_sha1_circuit(role, (char*) address.c_str(), seclvl, 63, nthreads, mt_alg, S_SPLUT);
 
 		//Test the Sort-Compare-Shuffle PSI circuit
-		cout << "Testing SCS PSI circuit in Boolean sharing" << endl;
+		std::cout << "Testing SCS PSI circuit in Boolean sharing" << std::endl;
 		test_psi_scs_circuit(role, (char*) address.c_str(), port, seclvl, nelements, bitlen, nthreads, mt_alg, 0, true);
-		cout << "Testing SCS PSI circuit in Yao sharing" << endl;
+		std::cout << "Testing SCS PSI circuit in Yao sharing" << std::endl;
 		test_psi_scs_circuit(role, (char*) address.c_str(), port, seclvl, nelements, bitlen, nthreads, mt_alg, 1, true);
-		//cout << "Testing SCS PSI circuit in Setup-LUT sharing" << endl;
+		//std::cout << "Testing SCS PSI circuit in Setup-LUT sharing" << std::endl;
 		//test_psi_scs_circuit(role, (char*) address.c_str(), seclvl, nelements, bitlen,	nthreads, mt_alg, S_SPLUT);
 
 		//Test the Phasing PSI circuit
-		// cout << "Testing PSI Phasing circuit in Boolean sharing" << endl;
+		// std::cout << "Testing PSI Phasing circuit in Boolean sharing" << std::endl;
 		// test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen, epsilon, nthreads, mt_alg,
 		// 		S_BOOL, 1, 0, 3);
-		// cout << "Testing PSI Phasing circuit in Yao sharing" << endl;
+		// std::cout << "Testing PSI Phasing circuit in Yao sharing" << std::endl;
 		// test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen, epsilon, nthreads, mt_alg,
 		// 		S_YAO, 1, 0, 3);
-		//	cout << "Testing PSI Phasing circuit in Setup-LUT sharing" << endl;
+		//	std::cout << "Testing PSI Phasing circuit in Setup-LUT sharing" << std::endl;
 		//	test_phasing_circuit(role, (char*) address.c_str(), port, seclvl, nelements, nelements, bitlen,	epsilon, nthreads, mt_alg, S_SPLUT, 1, 0, 3);
 
 		//test_lowmc_circuit(role, (char*) address.c_str(), seclvl, nvals, nthreads, mt_alg, S_BOOL, (LowMCParams*) &stp);
@@ -92,13 +99,13 @@ int main(int argc, char** argv) {
 	}
 
 
-	cout << "All tests successfully passed." << endl;
+	std::cout << "All tests successfully passed." << std::endl;
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_t bitlen, uint32_t nvals, uint32_t nthreads,
-		e_mt_gen_alg mt_alg, int32_t test_op, uint32_t num_test_runs, bool verbose, bool randomseed) {
+		e_mt_gen_alg mt_alg, int32_t test_op, uint32_t num_test_runs, bool quiet, bool ignore_verification, bool randomseed) {
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
 
 	uint32_t nops;
@@ -126,8 +133,8 @@ bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_
 		srand(seed);
 	}
 
-	test_standard_ops(test_ops, party, bitlen, num_test_runs, nops, role, verbose);
-	test_vector_ops(test_ops, party, bitlen, nvals, num_test_runs, nops, role, verbose);
+	test_standard_ops(test_ops, party, bitlen, num_test_runs, nops, role, quiet, ignore_verification);
+	test_vector_ops(test_ops, party, bitlen, nvals, num_test_runs, nops, role, quiet, ignore_verification);
 
 	delete party;
 	if (test_ops != m_tAllOps)
@@ -137,7 +144,7 @@ bool run_tests(e_role role, char* address, uint16_t port, seclvl seclvl, uint32_
 }
 
 int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t num_test_runs, uint32_t nops,
-		e_role role, bool verbose) {
+		e_role role, bool quiet, bool ignore_verification) {
 	uint32_t a = 0, b = 0, c, verify, sa, sb, sc, xbit, ybit, op;
 	share *shra, *shrb, *shrres, *shrout, *shrsel;
 	share **shrres_vec;
@@ -278,24 +285,30 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 			}
 			shrout = circ->PutOUTGate(shrres, ALL);
 
-			if (!verbose)
-				cout << "Running test no. " << i << " on operation " << test_ops[i].opname;
-			cout << endl;
+			if (!quiet){
+				std::cout << "Running test no. " << i << " on operation " << test_ops[i].opname;
+				std::cout << std::endl;
+			}
+
 			party->ExecCircuit();
 
 			c = shrout->get_clear_value<uint32_t>();
-			if (!verbose)
-				cout << get_role_name(role) << " " << test_ops[i].opname << ": values: a = " <<
-				a << ", b = " << b << ", c = " << c << ", verify = " << verify << endl;
+			if (!quiet){
+				std::cout << get_role_name(role) << " " << test_ops[i].opname << ": values: a = " <<
+				a << ", b = " << b << ", c = " << c << ", verify = " << verify << std::endl;
+			}
 			party->Reset();
-			assert(verify == c);
+
+			if(!ignore_verification){
+				assert(verify == c);
+			}
 		}
 	}
-	return 1;
+	return EXIT_SUCCESS;
 }
 
 int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, uint32_t nvals, uint32_t num_test_runs,
-		uint32_t nops, e_role role, bool verbose) {
+		uint32_t nops, e_role role, bool quiet, bool ignore_verification) {
 	uint32_t *avec, *bvec, *cvec, *verifyvec, tmpbitlen, tmpnvals, sc, op, xbit, ybit;
 	uint8_t *sa, *sb;
 	uint32_t nvals_orig = nvals;
@@ -316,8 +329,8 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 
 	for (uint32_t r = 0; r < num_test_runs; r++) {
 		for (uint32_t i = 0; i < nops; i++) {
-			if (!verbose)
-				cout << "Running vector test no. " << i << " on operation " << test_ops[i].opname << endl;
+			if (!quiet)
+				std::cout << "Running vector test no. " << i << " on operation " << test_ops[i].opname << std::endl;
 
 			if(test_ops[i].op == OP_UNIV && nvals > 32) {
 				nvals = 32; //max nvals for universal gates
@@ -342,11 +355,11 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 			share* tmp;
 			if(circ->GetCircuitType() == C_BOOLEAN) {
 				tmp = new boolshare(2, circ);
-				cout << "Boolean, max share len = " << tmp->max_size() << endl;
+				std::cout << "Boolean, max share len = " << tmp->max_size() << std::endl;
 			}
 			else {
 				tmp = new arithshare(2, circ);
-				cout << "Arithmetic" << endl;
+				std::cout << "Arithmetic" << std::endl;
 			}
 
 			for(uint32_t j = 0; j < bitlen; j++) {
@@ -526,18 +539,25 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 
 			party->ExecCircuit();
 
-			//cout << "Size of output: " << shrout->size() << endl;
+			//std::cout << "Size of output: " << shrout->size() << std::endl;
 
 			// this allocates buffer put into cvec with calloc
 			shrout->get_clear_value_vec(&cvec, &tmpbitlen, &tmpnvals);
-			assert(tmpnvals == nvals);
+
+			if(!ignore_verification){
+				assert(tmpnvals == nvals);
+			}
+
 			party->Reset();
 			for (uint32_t j = 0; j < nvals; j++) {
-				if (!verbose)
-					cout << "\t" << get_role_name(role) << " " << test_ops[i].opname << ": values[" << j <<
+				if (!quiet)
+					std::cout << "\t" << get_role_name(role) << " " << test_ops[i].opname << ": values[" << j <<
 					"]: a = " << avec[j] <<	", b = " << bvec[j] << ", c = " << cvec[j] << ", verify = " <<
-					verifyvec[j] << endl;
-				assert(verifyvec[j] == cvec[j]);
+					verifyvec[j] << std::endl;
+				if(!ignore_verification){
+					assert(verifyvec[j] == cvec[j]);
+				}
+				
 			}
 			free(cvec);
 		}
@@ -549,12 +569,12 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 	free(bvec);
 	free(verifyvec);
 
-	return 1;
+	return EXIT_SUCCESS;
 
 }
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam,
-		string* address, uint16_t* port, int32_t* test_op, uint32_t* num_test_runs, e_mt_gen_alg *mt_alg, bool* verbose, bool* randomseed) {
+		string* address, uint16_t* port, int32_t* test_op, uint32_t* num_test_runs, e_mt_gen_alg *mt_alg, bool* quiet, bool* ignore_verification, bool* randomseed) {
 
 	uint32_t int_role = 0, int_port = 0, int_mtalg = 0;
 
@@ -566,7 +586,8 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 	{ (void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
 	{ (void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false },
 	{ (void*) test_op, T_NUM, "t", "Single test (leave out for all operations), default: off", false, false },
-	{ (void*) verbose, T_FLAG, "v", "Do not print computation results, default: off", false, false },
+	{ (void*) quiet, T_FLAG, "q", "Do not print computation results, default: off", false, false },
+	{ (void*) ignore_verification, T_FLAG, "v", "Do not abort on failed verification, default: off", false, false },
 	{ (void*) randomseed, T_FLAG, "R", "Use random seed (likely breaks verification when not on localhost), default: off", false, false },
 	{ (void*) num_test_runs, T_NUM, "i", "Number of test runs for operation tests, default: 5", false, false },
 	{ (void*) &int_mtalg, T_NUM, "m", "Arithmetic MT gen algo [0: OT, 1: Paillier, 2: DGK], default: 0", false, false }
@@ -574,7 +595,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 
 	if (!parse_options(argcp, argvp, options, sizeof(options) / sizeof(parsing_ctx))) {
 		print_usage(*argvp[0], options, sizeof(options) / sizeof(parsing_ctx));
-		cout << "Exiting" << endl;
+		std::cout << "Exiting" << std::endl;
 		exit(0);
 	}
 
@@ -591,7 +612,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 
 	//delete options;
 
-	return 1;
+	return EXIT_SUCCESS;
 }
 
 

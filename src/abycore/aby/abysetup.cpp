@@ -484,12 +484,12 @@ void ABYSetup::AddReceiveTask(BYTE* rcvbuf, uint64_t rcvbytes) {
 	WakeupWorkerThreads(e_Receive);
 }
 
-BOOL ABYSetup::ThreadSendData(uint32_t threadid) {
+BOOL ABYSetup::ThreadSendData() {
 	m_tSetupChan->send(m_tsndtask.sndbuf, m_tsndtask.sndbytes);
 	return true;
 }
 
-BOOL ABYSetup::ThreadReceiveData(uint32_t threadid) {
+BOOL ABYSetup::ThreadReceiveData() {
 	 m_tSetupChan->blocking_receive(m_trcvtask.rcvbuf, m_trcvtask.rcvbytes);
 	return true;
 }
@@ -584,10 +584,10 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 			bSuccess = m_pCallback->ThreadRunDGKMTGen(threadid);
 			break;
 		case e_Send:
-			bSuccess = m_pCallback->ThreadSendData(threadid);
+			bSuccess = m_pCallback->ThreadSendData();
 			break;
 		case e_Receive:
-			bSuccess = m_pCallback->ThreadReceiveData(threadid);
+			bSuccess = m_pCallback->ThreadReceiveData();
 			break;
 		case e_Transmit:
 		case e_Undefined:

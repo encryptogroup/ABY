@@ -328,8 +328,7 @@ private:
 		assert(bitlen <= m_nShareBitLen);
 		share* shr = new arithshare(this);
 		uint32_t gateid = PutSharedSIMDINGate(nvals);
-		uint32_t iters = sizeof(UGATE_T) / sizeof(T);
-		assert(iters > 0);
+		assert((sizeof(UGATE_T) / sizeof(T)) > 0);
 		shr->set_wire_id(0, gateid);
 
 		GATE* gate = &(m_vGates[gateid]);
@@ -353,8 +352,7 @@ private:
 		assert(bitlen <= m_nShareBitLen);
 		share* shr = new arithshare(this);
 		uint32_t gateid = PutSIMDINGate(nvals, role);
-		uint32_t iters = sizeof(UGATE_T) / sizeof(T);
-		assert(iters > 0);
+		assert((sizeof(UGATE_T) / sizeof(T)) > 0);
 		shr->set_wire_id(0, gateid);
 
 		if (role == m_eMyRole) {
