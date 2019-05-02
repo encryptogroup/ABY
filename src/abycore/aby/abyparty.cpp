@@ -51,6 +51,9 @@ public:
 		m_evt.Set();
 	}
 
+	CEvent* GetEvent() {
+		return &m_evt;
+	}
 private:
 	void ThreadMain();
 	uint32_t threadid;
@@ -211,7 +214,7 @@ void ABYParty::ExecCircuit() {
 		std::cout << "Performing setup phase for " << m_vSharings[i]->sharing_type() << " sharing" << std::endl;
 #endif
 		if(i == S_YAO) {
-			StartWatch("Starting Circuit Garbling", P_GARBLE);
+			StartRecording("Starting Circuit Garbling", P_GARBLE, m_vSockets);
 			if(m_eRole == SERVER) {
 				m_vSharings[S_YAO]->PerformSetupPhase(m_pSetup.get());
 				m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup.get());
@@ -223,7 +226,7 @@ void ABYParty::ExecCircuit() {
 			m_vSharings[S_YAO_REV]->PerformSetupPhase(m_pSetup.get());*/
 			m_vSharings[S_YAO]->FinishSetupPhase(m_pSetup.get());
 			m_vSharings[S_YAO_REV]->FinishSetupPhase(m_pSetup.get());
-			StopWatch("Time for Circuit garbling: ", P_GARBLE);
+			StopRecording("Time for Circuit garbling: ", P_GARBLE, m_vSockets);
 		} else if (i == S_YAO_REV) {
 			//Do nothing, was done in parallel to Yao
 		} else {
@@ -409,7 +412,7 @@ BOOL ABYParty::PerformInteraction() {
 	return success;
 }
 
-BOOL ABYParty::ThreadSendValues() {
+BOOL ABYParty::ThreadSendValues(uint32_t id) {
 	std::vector<std::vector<BYTE*> >sendbuf(m_vSharings.size());
 	std::vector<std::vector<uint64_t> >sndbytes(m_vSharings.size());
 
@@ -440,7 +443,7 @@ BOOL ABYParty::ThreadSendValues() {
 	//gettimeofday(&tstart, NULL);
 	if(snd_buf_size_total > 0) {
 		//m_vSockets[2]->Send(snd_buf_total, snd_buf_size_total);
-		m_tPartyChan->send(snd_buf_total, snd_buf_size_total);
+		m_tPartyChan->blocking_send(m_vThreads[id]->GetEvent(), snd_buf_total, snd_buf_size_total);
 	}
 	free(snd_buf_total);
 
@@ -697,7 +700,7 @@ void ABYParty::CPartyWorkerThread::ThreadMain() {
 			return;
 		case e_Party_Comm:
 			if (threadid == 0){
-				bSuccess = m_pCallback->ThreadSendValues();
+				bSuccess = m_pCallback->ThreadSendValues(threadid);
 			}
 			else{
 				bSuccess = m_pCallback->ThreadReceiveValues();

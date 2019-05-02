@@ -485,7 +485,7 @@ void ABYSetup::AddReceiveTask(BYTE* rcvbuf, uint64_t rcvbytes) {
 }
 
 BOOL ABYSetup::ThreadSendData(uint32_t threadid) {
-	m_tSetupChan->send(m_tsndtask.sndbuf, m_tsndtask.sndbytes);
+	m_tSetupChan->blocking_send(m_vThreads[threadid]->GetEvent(), m_tsndtask.sndbuf, m_tsndtask.sndbytes);
 	return true;
 }
 
