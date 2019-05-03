@@ -758,15 +758,15 @@ void YaoServerSharing::GarbleUniversalGate(GATE* ggate, uint32_t pos, GATE* glef
 	ggate->gs.yinput.pi[pos] = ((ttable>>ttid)&0x01) ^ kbit;//((kbit^1) & (ttid == 3)) | (kbit & (ttid != 3));
 
 #ifdef DEBUGYAOSERVER
-		cout << " encrypting : ";
+		std::cout << " encrypting : ";
 		PrintKey(m_bZeroBuf);
-		cout << " using: ";
+		std::cout << " using: ";
 		PrintKey(m_bLMaskBuf[0]);
-		cout << " (" << (uint32_t) gleft->gs.yinput.pi[pos] << ") and : ";
+		std::cout << " (" << (uint32_t) gleft->gs.yinput.pi[pos] << ") and : ";
 		PrintKey(m_bRMaskBuf[0]);
-		cout << " (" << (uint32_t) gright->gs.yinput.pi[pos] << ") to : ";
+		std::cout << " (" << (uint32_t) gright->gs.yinput.pi[pos] << ") to : ";
 		PrintKey(m_bOKeyBuf[0]);
-		cout << endl;
+		std::cout << std::endl;
 #endif
 	memcpy(outkey[kbit], outkey[0], m_nSecParamBytes);
 	m_pKeyOps->XOR(outkey[kbit^1], outkey[kbit], m_vR.GetArr());
@@ -778,15 +778,15 @@ void YaoServerSharing::GarbleUniversalGate(GATE* ggate, uint32_t pos, GATE* glef
 		//		", truthtable = " << (unsigned uint32_t) g_TruthTable[id^i] << ", mypermbit = " << (unsigned uint32_t) ggate->gs.yinput.pi[pos] << ", id = " << id << endl;
 		EncryptWireGRR3(univ_table, outkey[keyid], m_bLMaskBuf[i>>1], m_bRMaskBuf[i&0x01], i);
 #ifdef DEBUGYAOSERVER
-		cout << " encrypting : ";
-		PrintKey(m_bOKeyBuf[outkey]);
-		cout << " using: ";
+		std::cout << " encrypting : ";
+		PrintKey(m_bOKeyBuf[0]); // TODO: check that we print the right value
+		std::cout << " using: ";
 		PrintKey(m_bLMaskBuf[i>>1]);
-		cout << " (" << (uint32_t) gleft->gs.yinput.pi[pos] << ") and : ";
+		std::cout << " (" << (uint32_t) gleft->gs.yinput.pi[pos] << ") and : ";
 		PrintKey(m_bRMaskBuf[i&0x01]);
-		cout << " (" << (uint32_t) gright->gs.yinput.pi[pos] << ") to : ";
-		PrintKey(table);
-		cout << endl;
+		std::cout << " (" << (uint32_t) gright->gs.yinput.pi[pos] << ") to : ";
+		PrintKey(univ_table); // TODO: check that we print the right value
+		std::cout << std::endl;
 #endif
 	}
 }

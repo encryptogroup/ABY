@@ -201,7 +201,7 @@ void YaoClientSharing::EvaluateLocalOperations(uint32_t depth) {
 		} else if(gate->type == G_ASSERT) {
 			EvaluateAssertGate(localops[i], C_BOOLEAN);
 		} else if (gate->type == G_UNIV) {
-			//cout << "Client: Evaluating Universal Circuit gate" << endl;
+			//cout << "Client: Evaluating Universal Circuit gate" << std::endl;
 			EvaluateUNIVGate(gate);
 		} else {
 			std::cerr << "YaoClientSharing: Non-interactive operation not recognized: " <<
@@ -395,25 +395,25 @@ BOOL YaoClientSharing::EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gle
 	if(id == 0) {
 		EncryptWireGRR3(okey, m_bZeroBuf, lkey, rkey, id);
 #ifdef DEBUGYAOCLIENT
-		cout << " decrypted : ";
+		std::cout << " decrypted : ";
 		PrintKey(m_bZeroBuf);
 #endif
 	} else {
 #ifdef DEBUGYAOCLIENT
-		cout << " decrypted : ";
+		std::cout << " decrypted : ";
 		PrintKey(m_vUniversalGateTable.GetArr() + m_nSecParamBytes * (KEYS_PER_UNIV_GATE_IN_TABLE * m_nUniversalGateTableCtr + id-1));
 #endif
 		EncryptWireGRR3(okey, m_vUniversalGateTable.GetArr() + m_nSecParamBytes * (KEYS_PER_UNIV_GATE_IN_TABLE * m_nUniversalGateTableCtr + id-1), lkey, rkey, id);
 	}
 
 #ifdef DEBUGYAOCLIENT
-		cout << " using: ";
+		std::cout << " using: ";
 		PrintKey(lkey);
-		cout << " and : ";
+		std::cout << " and : ";
 		PrintKey(rkey);
-		cout << " to : ";
+		std::cout << " to : ";
 		PrintKey(okey);
-		cout << endl;
+		std::cout << std::endl;
 #endif
 
 	return true;
