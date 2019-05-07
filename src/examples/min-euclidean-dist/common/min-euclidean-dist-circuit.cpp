@@ -41,9 +41,9 @@ int32_t test_min_eucliden_dist_circuit(e_role role, const std::string& address, 
 	uint64_t verify;
 
 	Circuit *distcirc, *mincirc;
-	
+
 	share ***Sshr, **Cshr, **Ssqr, *Csqr, *mindst;
-	
+
 	srand(time(NULL));
 
 	//generate dbsize * dim * bitlen random bits as server db
@@ -74,7 +74,7 @@ int32_t test_min_eucliden_dist_circuit(e_role role, const std::string& address, 
 
 	Ssqr = (share**) malloc(sizeof(share*) * dbsize);
 	for (i = 0; i < dbsize; i++) {
-		tempsum = 0; 
+		tempsum = 0;
 		for (j = 0; j < dim; j++) {
 			temp = serverdb[i][j];
 			tempsum += (temp * temp);
@@ -161,7 +161,7 @@ share* build_min_euclidean_dist_circuit(share*** S, share** C, uint32_t n, uint3
 			distance[i] = mincirc->PutA2YGate(distance[i]);
 		}
 	}
-  
+
 	mindist = mincirc->PutMinGate(distance, n);
 	free(distance);
 	return mindist;
@@ -171,7 +171,7 @@ uint64_t verify_min_euclidean_dist(uint32_t** serverdb, uint32_t* clientquery, u
 	uint32_t i, j;
 	uint64_t mindist, tmpdist;
 
-	mindist = MAX_UINT;
+	mindist = ULLONG_MAX;
 	for(i=0; i < dbsize; i++) {
 		tmpdist = 0;
 		for(j=0; j < dim; j++) {
