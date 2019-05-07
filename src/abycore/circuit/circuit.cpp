@@ -58,24 +58,24 @@ void Circuit::Reset() {
 	m_nMaxDepth = 0;
 	m_nGates = 0;
 
-	for (int i = 0; i < m_vLocalQueueOnLvl.size(); i++) {
+	for (size_t i = 0; i < m_vLocalQueueOnLvl.size(); i++) {
 		m_vLocalQueueOnLvl[i].clear();
 	}
 	m_vLocalQueueOnLvl.resize(0);
-	for (int i = 0; i < m_vInteractiveQueueOnLvl.size(); i++) {
+	for (size_t i = 0; i < m_vInteractiveQueueOnLvl.size(); i++) {
 		m_vInteractiveQueueOnLvl[i].clear();
 	}
 	m_vInteractiveQueueOnLvl.resize(0);
-	for (int i = 0; i < m_vInputGates.size(); i++) {
+	for (size_t i = 0; i < m_vInputGates.size(); i++) {
 		m_vInputGates[i].clear();
 	}
-	for (int i = 0; i < m_vOutputGates.size(); i++) {
+	for (size_t i = 0; i < m_vOutputGates.size(); i++) {
 		m_vOutputGates[i].clear();
 	}
 
-	for (int i = 0; i < m_vInputBits.size(); i++)
+	for (size_t i = 0; i < m_vInputBits.size(); i++)
 		m_vInputBits[i] = 0;
-	for (int i = 0; i < m_vOutputBits.size(); i++)
+	for (size_t i = 0; i < m_vOutputBits.size(); i++)
 		m_vOutputBits[i] = 0;
 
 	// reset number of SIMD gates

@@ -381,7 +381,7 @@ BOOL ABYParty::EvaluateCircuit() {
 			clock_gettime(CLOCK_MONOTONIC, &tstart);
 #endif
 			//std::cout << "Finishing circuit layer for sharing "<< i << std::endl;
-			m_vSharings[i]->FinishCircuitLayer(depth);
+			m_vSharings[i]->FinishCircuitLayer();
 #if BENCHONLINEPHASE
 			clock_gettime(CLOCK_MONOTONIC, &tend);
 			fincirclayer[i] += getMillies(tstart, tend);

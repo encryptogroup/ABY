@@ -51,10 +51,7 @@ static const LowMCParams ltp = { 63, 128, 256, 128, 14 };
 
 static const LowMCParams lowmcparamlookup[] = { stp, ltp};
 
-static uint32_t m_nRndCtr;
 static CBitVector m_vRandomBits;
-static code* m_tGrayCode;
-static uint32_t m_nZeroGate;
 
 int32_t test_lowmc_circuit(e_role role, const std::string& address, uint16_t port, uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, uint32_t statesize, uint32_t keysize,
 		uint32_t sboxes, uint32_t rounds, uint32_t maxnumgates, crypto* crypt);

@@ -247,6 +247,8 @@ void Sharing::FreeGate(GATE *gate) {
 			free(gate->gs.yval);
 		}
 		break;
+	default:
+		std::cerr << "Error: unhandled sharing in FreeGate(). context: " << get_sharing_name(context) << std::endl;
 	}
 	gate->instantiated = false;
 }

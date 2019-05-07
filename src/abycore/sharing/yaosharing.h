@@ -74,7 +74,7 @@ public:
 	virtual void FinishSetupPhase(ABYSetup* setup) = 0;
 	virtual void EvaluateLocalOperations(uint32_t gateid) = 0;
 
-	virtual void FinishCircuitLayer(uint32_t level) = 0;
+	virtual void FinishCircuitLayer() = 0;
 
 	virtual void PrepareOnlinePhase() = 0;
 

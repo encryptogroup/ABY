@@ -496,12 +496,13 @@ protected:
 	share* EnsureOutputGate(share* in);
 
 	ABYCircuit* m_cCircuit; /** ABYCircuit Object  */
-	std::vector<GATE>& m_vGates;
+
 	e_sharing m_eContext;
 	e_role m_eMyRole;
 	uint32_t m_nShareBitLen;
 	e_circuit m_eCirctype;
 	uint32_t m_nMaxDepth;
+	std::vector<GATE>& m_vGates;
 
 	std::vector<std::deque<uint32_t> > m_vLocalQueueOnLvl; //for locally evaluatable gates, first dimension is the level of the gates, second dimension presents the queue on which the gateids are put
 	std::vector<std::deque<uint32_t> > m_vInteractiveQueueOnLvl; //for gates that need interaction, first dimension is the level of the gates, second dimension presents the queue on which the gateids are put

@@ -20,6 +20,10 @@
 #include "../../../abycore/sharing/sharing.h"
 #include <ENCRYPTO_utils/cbitvector.h>
 
+static uint32_t* pos_even;
+static uint32_t* pos_odd;
+
+
 int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
 		e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose, bool use_vec_ands, bool expand_in_sfe, bool client_only) {
 	uint32_t bitlen = 32;
@@ -171,7 +175,7 @@ int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port,
 }
 
 share* BuildAESCircuit(share* val, share* key, BooleanCircuit* circ, bool use_vec_ands) {
-	uint32_t round, byte, i, j, k;
+	uint32_t round, i, j, k;
 	std::vector<std::vector<std::vector<uint32_t> > > state(AES_STATE_COLS); //the state is treated as a matrix
 	std::vector<std::vector<std::vector<uint32_t> > > state_temp(AES_STATE_COLS); //the state is treated as a matrix
 	std::vector<uint32_t> out(128);

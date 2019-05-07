@@ -48,7 +48,7 @@ public:
 	void EvaluateInteractiveOperations(uint32_t gateid);
 	void EvaluateConversionGate(uint32_t gateid);
 
-	void FinishCircuitLayer(uint32_t level);
+	void FinishCircuitLayer();
 
 	void PrepareOnlinePhase();
 

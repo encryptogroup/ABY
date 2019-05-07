@@ -137,7 +137,6 @@ public:
 		uint32_t startpos = progress / (m_nMTBitLen * m_nElements);
 
 		T* masks = (T*) tmpmask->GetArr();
-		T* rcvedvals = (T*) rcv_buf->GetArr();
 		T* outvals = ((T*) output->GetArr()) + startpos * m_nElements;
 
 		for (uint32_t mtid = startpos, i = progress, mtbit, j, maskctr = 0; i < lim; mtid++) {
@@ -190,7 +189,7 @@ public:
 			}
 		} else {
 			uint32_t* counter = reinterpret_cast<uint32_t*>(m_bCtrBuf.data());
-			for (uint32_t i = 0, rem; i < processedOTs; i++, sbp += AES_KEY_BYTES) {
+			for (uint32_t i = 0; i < processedOTs; i++, sbp += AES_KEY_BYTES) {
 				//Generate sufficient random bits
 				crypt->init_aes_key(&tkey, sbp);
 				for (counter[0] = 0; counter[0] < ceil_divide(m_nOTByteLen, AES_BYTES); counter[0]++) {

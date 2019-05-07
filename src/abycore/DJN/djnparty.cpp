@@ -325,7 +325,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
  * a,b,c are server shares. a1,b1,c1 are client shares.
  * All mpz_t values must be pre-initialized.
  */
-void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen, uint32_t numshares, mpz_t * a, mpz_t * b, mpz_t * c, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
+void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen, uint32_t numshares, mpz_t * a, mpz_t * b, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
 		mpz_t y, mpz_t z) {
 #if DJN_DEBUG
 	std::cout << "packlen: " << packlen << " numshares: " << numshares << std::endl;
@@ -428,7 +428,7 @@ void DJNParty::keyExchange(channel* chan) {
 void DJNParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 
 //clear upper bytes of the buffer, so tailing bytes are zero
-	for (int i = mpz_sizeinbase(t, 256); i < m_nBuflen; i++) {
+	for (uint32_t i = mpz_sizeinbase(t, 256); i < m_nBuflen; i++) {
 		*(buf + i) = 0;
 	}
 
@@ -443,7 +443,7 @@ void DJNParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 
 #if NETDEBUG
 	std::cout << std::endl << "SEND" << std::endl;
-	for (int i = 0; i < m_nBuflen; i++) {
+	for (uint32_t i = 0; i < m_nBuflen; i++) {
 		printf("%02x.", *(m_sendbuf + i));
 	}
 
@@ -460,7 +460,7 @@ void DJNParty::receivempz_t(mpz_t t, channel* chan, BYTE * buf) {
 
 #if NETDEBUG
 	std::cout << std::endl << "RECEIVE" << std::endl;
-	for (int i = 0; i < m_nBuflen; i++) {
+	for (uint32_t i = 0; i < m_nBuflen; i++) {
 		printf("%02x.", *(m_recbuf + i));
 	}
 

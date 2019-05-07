@@ -24,7 +24,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 	uint8_t* hash_table;
 	cuckoo_entry_ctx** cuckoo_table;
 	cuckoo_entry_ctx** cuckoo_stash;
-	uint32_t i, j, stashctr=0, elebytelen;
+	uint32_t stashctr=0, elebytelen;
 	uint32_t *perm_ptr;
 	hs_t hs;
 	elebytelen = ceil_divide(bitlen, 8);
@@ -46,7 +46,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 	std::vector<cuckoo_entry_gen_ctx> ctx(ntasks);
 
 #ifndef TEST_UTILIZATION
-	for(i = 0; i < ntasks; i++) {
+	for(uint32_t i = 0; i < ntasks; i++) {
 		ctx[i].elements = elements;
 		ctx[i].cuckoo_entries = cuckoo_entries.data();
 		ctx[i].hs = &hs;
@@ -62,7 +62,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 		}
 	}
 
-	for(i = 0; i < ntasks; i++) {
+	for(uint32_t i = 0; i < ntasks; i++) {
 		try {
 			entry_gen_tasks[i].join();
 		} catch (const std::system_error& e) {
@@ -83,7 +83,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 	//	std::cout << "Address " << i << " mapped to " << hs.address_used[i] << " times" << std::endl;
 	//}
 	//insert all elements into the cuckoo hash table
-	for(i = 0; i < neles; i++) {
+	for(uint32_t i = 0; i < neles; i++) {
 		if(!(insert_element(cuckoo_table, &cuckoo_entries[i], neles, hs.nhashfuns))) {
 #ifdef COUNT_FAILS
 			fails++;
@@ -112,7 +112,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 #ifndef TEST_UTILIZATION
 	hash_table = (uint8_t*) calloc(nbins, hs.outbytelen);
 
-	for(i = 0; i < nbins; i++) {
+	for(uint32_t i = 0; i < nbins; i++) {
 		if(cuckoo_table[i] != NULL) {
 			//std::cout << "Element: " << ((uint32_t*) cuckoo_table[i]->val)[0] << ", position = " << (cuckoo_table[i]->pos & 0x03) << ", in bin " << i << std::endl;
 			cuckoo_table[i]->val[0] ^= (cuckoo_table[i]->pos & 0x03);
@@ -133,7 +133,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 
 	*stash_elements = (uint8_t*) malloc(maxstashsize * elebytelen);
 	*stashperm = (uint32_t*) malloc(sizeof(uint32_t) * maxstashsize);
-	for(i = 0; i < maxstashsize; i++) {
+	for(uint32_t i = 0; i < maxstashsize; i++) {
 		if(cuckoo_stash[i] != NULL) {
 			memcpy(*stash_elements + i * elebytelen, elements + cuckoo_stash[i]->eleid * elebytelen, elebytelen);
 			(*stashperm)[i] = cuckoo_stash[i]->eleid;
@@ -147,7 +147,7 @@ cuckoo_hashing(uint8_t* elements, uint32_t neles, uint32_t nbins, uint32_t bitle
 #ifndef TEST_UTILIZATION
 
 	//Cleanup
-	for(i = 0; i < neles; i++) {
+	for(uint32_t i = 0; i < neles; i++) {
 		free(cuckoo_entries[i].val);
 		free(cuckoo_entries[i].address);
 	}
@@ -179,8 +179,6 @@ void gen_cuckoo_entries(cuckoo_entry_gen_ctx* ctx) {
 
 
 inline void gen_cuckoo_entry(uint8_t* in, cuckoo_entry_ctx* out, hs_t* hs, uint32_t ele_id) {
-	uint32_t i;
-
 	out->pos = 0;
 	out->eleid = ele_id;
 
@@ -194,7 +192,7 @@ inline void gen_cuckoo_entry(uint8_t* in, cuckoo_entry_ctx* out, hs_t* hs, uint3
 
 inline bool insert_element(cuckoo_entry_ctx** ctable, cuckoo_entry_ctx* element, uint32_t max_iterations, uint32_t nhashfuns) {
 	cuckoo_entry_ctx *evicted, *tmp_evicted;
-	uint32_t i, ev_pos, iter_cnt;
+	uint32_t ev_pos, iter_cnt;
 #ifdef DEBUG_CUCKOO
 	std::cout << "iter_cnt = " << iter_cnt << " for element " << (hex) << (*((uint32_t*) element->element)) << (dec) << ", inserting to address: "
 			<< element->address[element->pos] << " or " << element->address[element->pos^1] << std::endl;
@@ -202,7 +200,7 @@ inline bool insert_element(cuckoo_entry_ctx** ctable, cuckoo_entry_ctx* element,
 
 	for(iter_cnt = 0, evicted = element; iter_cnt < max_iterations; iter_cnt++) {
 		//TODO: assert(addr < MAX_TAB_ENTRIES)
-		for(i = 0; i < nhashfuns; i++) {//, ele_pos=(ele_pos+1)%NUM_HASH_FUNCTIONS) {
+		for(uint32_t i = 0; i < nhashfuns; i++) {//, ele_pos=(ele_pos+1)%NUM_HASH_FUNCTIONS) {
 			if(ctable[evicted->address[i]] == NULL) {
 				ctable[evicted->address[i]] = evicted;
 				evicted->pos = i;
@@ -233,7 +231,7 @@ inline bool insert_element(cuckoo_entry_ctx** ctable, cuckoo_entry_ctx* element,
 	return false;
 }
 
-inline uint32_t compute_stash_size(uint32_t nbins, uint32_t neles) {
+inline uint32_t compute_stash_size([[maybe_unused]] uint32_t nbins, [[maybe_unused]] uint32_t neles) {
 	return 4;
 }
 
