@@ -162,7 +162,7 @@ private:
 	BOOL ThreadRunKKRcv(uint32_t exec);
 
 	BOOL ThreadSendData(uint32_t id);
-	BOOL ThreadReceiveData(uint32_t id);
+	BOOL ThreadReceiveData();
 
 	BOOL ThreadRunPaillierMTGen(uint32_t exec);
 	BOOL ThreadRunDGKMTGen(uint32_t threadid);

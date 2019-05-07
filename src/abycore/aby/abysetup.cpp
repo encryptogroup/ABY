@@ -586,7 +586,7 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 			bSuccess = m_pCallback->ThreadRunDGKMTGen(threadid);
 			break;
 		case e_Send:
-			bSuccess = m_pCallback->ThreadSendData();
+			bSuccess = m_pCallback->ThreadSendData(threadid);
 			break;
 		case e_Receive:
 			bSuccess = m_pCallback->ThreadReceiveData();
