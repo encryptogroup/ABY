@@ -161,8 +161,8 @@ private:
 	BOOL ThreadRunKKSnd(uint32_t exec);
 	BOOL ThreadRunKKRcv(uint32_t exec);
 
-	BOOL ThreadSendData();
-	BOOL ThreadReceiveData();
+	BOOL ThreadSendData(uint32_t id);
+	BOOL ThreadReceiveData(uint32_t id);
 
 	BOOL ThreadRunPaillierMTGen(uint32_t exec);
 	BOOL ThreadRunDGKMTGen(uint32_t threadid);
@@ -219,6 +219,9 @@ private:
 			std::lock_guard<std::mutex> lock(m_eJob_mutex_);
 			m_eJob = e;
 			m_evt.Set();
+		}
+		CEvent* GetEvent() {
+			return &m_evt;
 		}
 	private:
 		void ThreadMain();

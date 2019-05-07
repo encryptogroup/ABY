@@ -484,10 +484,12 @@ void ABYSetup::AddReceiveTask(BYTE* rcvbuf, uint64_t rcvbytes) {
 	WakeupWorkerThreads(e_Receive);
 }
 
-BOOL ABYSetup::ThreadSendData() {
-	m_tSetupChan->send(m_tsndtask.sndbuf, m_tsndtask.sndbytes);
+
+BOOL ABYSetup::ThreadSendData(uint32_t threadid) {
+	m_tSetupChan->blocking_send(m_vThreads[threadid]->GetEvent(), m_tsndtask.sndbuf, m_tsndtask.sndbytes);
 	return true;
 }
+
 
 BOOL ABYSetup::ThreadReceiveData() {
 	 m_tSetupChan->blocking_receive(m_trcvtask.rcvbuf, m_trcvtask.rcvbytes);

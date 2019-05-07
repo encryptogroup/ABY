@@ -83,7 +83,7 @@ private:
 	void UsedGate(uint32_t gateid);
 
 	BOOL PerformInteraction();
-	BOOL ThreadSendValues();
+	BOOL ThreadSendValues(uint32_t id);
 	BOOL ThreadReceiveValues();
 
 	void PrintPerformanceStatistics();
