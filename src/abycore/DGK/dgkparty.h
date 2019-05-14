@@ -19,6 +19,12 @@
 #ifndef __DGKPARTY_H__
 #define __DGKPARTY_H__
 
+#define DGK_CHECKMT 0
+#define DGK_DEBUG 0
+#define DGK_BENCH 0
+#define DGK_NETDEBUG 0
+#define DGK_WINDOWSIZE 65536 //maximum size of a network packet in Byte
+
 #include <gmp.h>
 #include <vector>
 #include <ENCRYPTO_utils/typedefs.h>
@@ -26,27 +32,32 @@
 #include <ENCRYPTO_utils/crypto/dgk.h>
 #include <ENCRYPTO_utils/powmod.h>
 #include <ENCRYPTO_utils/channel.h>
+#include <ENCRYPTO_utils/timer.h>
+#include <ENCRYPTO_utils/utils.h>
+#if DGK_DEBUG || DGK_BENCH
+#include <iostream>
+#endif
 
 class DGKParty {
 public:
-	DGKParty(uint32_t DGKbits, uint32_t sharelen, uint32_t readkey);
-	DGKParty(uint32_t DGKbits, uint32_t sharelen, channel* chan, uint32_t readkey);
+	DGKParty(uint32_t DGKModulusBits, uint32_t shareBitLength, uint32_t readkey);
+	DGKParty(uint32_t DGKModulusBits, uint32_t shareBitLength, channel* chan, uint32_t readkey);
 	~DGKParty();
 
 	void keyExchange(channel* chan);
 
-	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan);
+	void computeArithmeticMTs(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan);
 
 	void readKey();
 
 	void generateKey();
 
-	void loadNewKey(uint32_t DGKbits, uint32_t sharelen);
+	void loadNewKey(uint32_t DGKModulusBits, uint32_t shareBitLength);
 
 private:
 	uint16_t m_nNumMTThreads;
-	uint16_t m_nShareLength;
-	uint32_t m_nDGKbits;
+	uint16_t m_nShareBitLength;
+	uint32_t m_nDGKModulusBits;
 	uint32_t m_nBuflen;
 
 	// Crypto and GMP PRNG
@@ -63,7 +74,6 @@ private:
 	void receivempz_t(mpz_t t, channel* chan);
 
 	void printBuf(BYTE* b, uint32_t l);
-
 };
 
 #endif //__DGK_PARTY_H__

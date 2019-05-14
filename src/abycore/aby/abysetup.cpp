@@ -19,7 +19,6 @@
 #include "abysetup.h"
 #include <cstdlib>
 #include <iostream>
-#include <mutex>
 
 ABYSetup::ABYSetup(crypto* crypt, uint32_t numThreads, e_role role, e_mt_gen_alg mtalgo) {
 	m_nNumOTThreads = numThreads;
@@ -51,22 +50,26 @@ BOOL ABYSetup::Init() {
 		m_vThreads[i]->Start();
 	}
 
-	//the bit length of the DJN and DGK party is irrelevant here, since it is set for each MT Gen task independently
+	//the bit length of the DJN party is irrelevant here, since it is set for each MT Gen task independently
 	if (m_eMTGenAlg == MT_PAILLIER) {
 #ifndef BATCH
 		std::cout << "Creating new DJNPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << std::endl;
 #endif
 		m_cPaillierMTGen = new DJNParty(m_cCrypt->get_seclvl().ifcbits, sizeof(uint16_t) * 8);
-	} else if (m_eMTGenAlg == MT_DGK) {
-#ifndef BATCH
-		std::cout << "Creating new DGKPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << std::endl;
-#endif
-#ifdef BENCH_PRECOMP
-		m_cDGKMTGen = (DGKParty**) malloc(sizeof(DGKParty*));
-		m_cDGKMTGen[0] = new DGKParty(m_sSecLvl.ifcbits, sizeof(uint64_t) * 8, 0);
-#endif
-		//m_cDGKMTGen = new DGKParty(m_cCrypt->get_seclvl().ifcbits, sizeof(uint16_t) * 8);
 	}
+// we cannot create a DGKParty here, since we do not know the share bit length yet.
+// for DGK this will be done in PerformSetupPhase()
+
+// 	else if (m_eMTGenAlg == MT_DGK) {
+// #ifndef BATCH
+// 		std::cout << "Creating new DGKPart with key bitlen = " << m_cCrypt->get_seclvl().ifcbits << std::endl;
+// #endif
+// #ifdef BENCH_PRECOMP
+// 		m_cDGKMTGen = (DGKParty**) malloc(sizeof(DGKParty*));
+// 		m_cDGKMTGen[0] = new DGKParty(m_sSecLvl.ifcbits, sizeof(uint64_t) * 8, 0);
+// #endif
+// 		//m_cDGKMTGen = new DGKParty(m_cCrypt->get_seclvl().ifcbits, sizeof(uint16_t) * 8);
+// 	}
 
 	return true;
 }
@@ -87,6 +90,10 @@ void ABYSetup::Cleanup() {
 	if(iknp_ot_receiver) {
 		delete iknp_ot_receiver;
 	}
+	if(m_cPaillierMTGen){
+		delete m_cPaillierMTGen;
+	}
+
 
 #ifdef USE_KK_OT
 	//FIXME: deleting kk_ot_receiver or sender causes a SegFault in AES with Yao
@@ -205,7 +212,10 @@ BOOL ABYSetup::PerformSetupPhase() {
 		//Start Paillier MT generation
 		WakeupWorkerThreads(e_MTPaillier);
 		success &= WaitWorkerThreads();
-	} else if (m_eMTGenAlg == MT_DGK) {
+	}
+	else if (m_eMTGenAlg == MT_DGK) {
+	// we cannot create the DGK parties earlier
+	// since share length in m_vPKMTGenTasks[i]->sharebitlen is required and only known from here on
 #ifndef BENCH_PRECOMP
 		m_cDGKMTGen = (DGKParty**) malloc(sizeof(DGKParty*) * m_vPKMTGenTasks.size());
 #endif
@@ -388,36 +398,46 @@ BOOL ABYSetup::ThreadRunKKRcv(uint32_t exec) {
 	return success;
 }
 
-
 BOOL ABYSetup::ThreadRunPaillierMTGen(uint32_t threadid) {
-
 	uint32_t nthreads = 2 * m_nNumOTThreads;
 
-	channel* djnchan = new channel(DJN_CHANNEL+threadid, m_tComm->rcv_std.get(), m_tComm->snd_std.get());
-	for (uint32_t i = 0; i < m_vPKMTGenTasks.size(); i++) {
+	channel* djnchan = new channel(DJN_CHANNEL + threadid, m_tComm->rcv_std.get(), m_tComm->snd_std.get());
 
+	for (uint32_t i = 0; i < m_vPKMTGenTasks.size(); i++) {
 		PKMTGenVals* ptask = m_vPKMTGenTasks[i];
 
-		uint32_t nummtsperthread = ceil_divide(ptask->numMTs, nthreads);
+		// equally distribute MTs to threads. Number of MTs per thread must be multiple of 2.
+		uint32_t nummtsperthread = ptask->numMTs / (nthreads * 2);
+		uint32_t threadmod = ptask->numMTs % (nthreads * 2);
+		uint32_t mynummts = (nummtsperthread + ((threadid * 2) < threadmod)) * 2;
 
-		uint32_t mynummts = nummtsperthread; //times two since we need the number of MTs to be a multiple of 2 internally
 		uint32_t sharebytelen = ceil_divide(ptask->sharebitlen, 8);
-		if (threadid == nthreads - 1) {
-			mynummts = ptask->numMTs - (nthreads-1 ) * nummtsperthread;
-		}
+		if (mynummts > 0) {
+			uint32_t mystartpos = 0;
 
-		uint32_t mystartpos = nummtsperthread * threadid * sharebytelen;
-		m_cPaillierMTGen->setSharelLength(ptask->sharebitlen);
+			// add up previous threads numMTs to find start index for this thread
+			for (uint32_t t = 0; t < threadid; ++t) {
+				mystartpos += (nummtsperthread + ((t * 2) < threadmod)) * 2;
+			}
+			mystartpos *= sharebytelen;
 
-		uint32_t roleoffset = mystartpos + sharebytelen * (mynummts / 2);
-		if (m_eRole == SERVER) {
-			m_cPaillierMTGen->preCompBench(ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, ptask->A->GetArr() + roleoffset,
-					ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, mynummts, djnchan);
-		} else {
-			m_cPaillierMTGen->preCompBench(ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, ptask->A->GetArr() + mystartpos,
-					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, djnchan);
+			//add an offset depending on the role of the party
+			uint32_t roleoffset = mystartpos + sharebytelen * (mynummts / 2);
+
+			m_cPaillierMTGen->setShareBitLength(ptask->sharebitlen);
+
+			if (m_eRole == SERVER) {
+				m_cPaillierMTGen->computeArithmeticMTs(
+					ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos,
+					ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset,
+					mynummts, djnchan);
+			} else {
+				m_cPaillierMTGen->computeArithmeticMTs(
+					ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset,
+					ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos,
+					mynummts, djnchan);
+			}
 		}
-		free(ptask);
 	}
 	djnchan->synchronize_end();
 	delete djnchan;
@@ -426,37 +446,44 @@ BOOL ABYSetup::ThreadRunPaillierMTGen(uint32_t threadid) {
 }
 
 BOOL ABYSetup::ThreadRunDGKMTGen(uint32_t threadid) {
-
 	uint32_t nthreads = 2 * m_nNumOTThreads;
 
-	channel* dgkchan = new channel(DGK_CHANNEL+threadid, m_tComm->rcv_std.get(), m_tComm->snd_std.get());
+	channel* dgkchan = new channel(DGK_CHANNEL + threadid, m_tComm->rcv_std.get(), m_tComm->snd_std.get());
 
 	for (uint32_t i = 0; i < m_vPKMTGenTasks.size(); i++) {
 		PKMTGenVals* ptask = m_vPKMTGenTasks[i];
 
-		//times two since we need the number of MTs to be a multiple of 2 internally
-		uint32_t nummtsperthread = ceil_divide(ptask->numMTs, nthreads);
-		uint32_t mynummts = nummtsperthread;
+		// equally distribute MTs to threads. Number of MTs per thread must be multiple of 2.
+		uint32_t nummtsperthread = ptask->numMTs / (nthreads * 2);
+		uint32_t threadmod = ptask->numMTs % (nthreads * 2);
+		uint32_t mynummts = (nummtsperthread + ((threadid * 2) < threadmod)) * 2;
+
 		uint32_t sharebytelen = ceil_divide(ptask->sharebitlen, 8);
 
-		//if the number of MTs is not evenly divisible among all threads
-		if (threadid == nthreads - 1) {
-			mynummts = ptask->numMTs - (nthreads-1 ) * nummtsperthread;
+		if (mynummts > 0) {
+			uint32_t mystartpos = 0;
+
+			// add up previous threads numMTs to find start index for this thread
+			for (uint32_t t = 0; t < threadid; ++t) {
+				mystartpos += (nummtsperthread + ((t * 2) < threadmod)) * 2;
+			}
+			mystartpos *= sharebytelen;
+
+			//add an offset depending on the role of the party
+			uint32_t roleoffset = mystartpos + sharebytelen * (mynummts / 2);
+
+			if (m_eRole == SERVER) {
+				m_cDGKMTGen[i]->computeArithmeticMTs(
+					ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos,
+					ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset,
+					mynummts, dgkchan);
+			} else {
+				m_cDGKMTGen[i]->computeArithmeticMTs(
+					ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset,
+					ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos,
+					mynummts, dgkchan);
+			}
 		}
-
-		uint32_t mystartpos = nummtsperthread * threadid * sharebytelen;
-
-		//add an offset depending on the role of the party
-		uint32_t roleoffset = mystartpos + sharebytelen * (mynummts / 2);
-
-		if (m_eRole == SERVER) {
-			m_cDGKMTGen[i]->preCompBench(ptask->A->GetArr() + mystartpos, ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, ptask->A->GetArr() + roleoffset,
-					ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, mynummts, dgkchan);
-		} else {
-			m_cDGKMTGen[i]->preCompBench(ptask->A->GetArr() + roleoffset, ptask->B->GetArr() + roleoffset, ptask->C->GetArr() + roleoffset, ptask->A->GetArr() + mystartpos,
-					ptask->B->GetArr() + mystartpos, ptask->C->GetArr() + mystartpos, mynummts, dgkchan);
-		}
-		free(ptask);
 	}
 	dgkchan->synchronize_end();
 	delete dgkchan;
@@ -503,15 +530,17 @@ BOOL ABYSetup::WakeupWorkerThreads(EJobType e) {
 
 	m_nWorkingThreads = 2;
 
-	if (e == e_MTPaillier || e == e_MTDGK)
+	if (e == e_MTPaillier || e == e_MTDGK) {
 		m_nWorkingThreads = 2 * m_nNumOTThreads;
-	else if (e == e_Send || e == e_Receive)
+	} else if (e == e_Send || e == e_Receive) {
 		m_nWorkingThreads = 1;
+	}
 
 	uint32_t n = m_nWorkingThreads;
 
-	for (uint32_t i = 0; i < n; i++)
+	for (uint32_t i = 0; i < n; i++){
 		m_vThreads[i]->PutJob(e);
+	}
 
 	return TRUE;
 }
@@ -601,12 +630,18 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 }
 
 void ABYSetup::Reset() {
-	/* Clear any remaining OT tasks */
+	/* Clear any remaining IKNP OT tasks */
 	for (uint32_t i = 0; i < m_vIKNPOTTasks.size(); i++) {
 		m_vIKNPOTTasks[i].clear();
 	}
-	/* Clear any remaining OT tasks */
+	/* Clear any remaining KK OT tasks */
 	for (uint32_t i = 0; i < m_vKKOTTasks.size(); i++) {
 		m_vKKOTTasks[i].clear();
 	}
+
+	/* Clear any remaining MTGen tasks */
+	for (uint32_t i = 0; i < m_vPKMTGenTasks.size(); i++) {
+		free(m_vPKMTGenTasks[i]);
+	}
+	m_vPKMTGenTasks.clear();
 }

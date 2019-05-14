@@ -17,26 +17,19 @@
  */
 
 #include "dgkparty.h"
-#include <ENCRYPTO_utils/timer.h>
-#include <ENCRYPTO_utils/utils.h>
-
-#define CHECKMT 0
-#define DGK_DEBUG 0
-#define NETDEBUG 0
-#define WINDOWSIZE 65536 //maximum size of a network packet in Byte
 
 /**
  * initializes a DGK_Party with the asymmetric security parameter and the sharelength and exchanges public keys.
  * @param mode - 0 = generate new key; 1 = read key
  */
-DGKParty::DGKParty(uint32_t DGKbits, uint32_t sharelen, channel* chan, uint32_t readkey) {
+DGKParty::DGKParty(uint32_t DGKModulusBits, uint32_t shareBitLength, channel* chan, uint32_t readkey) {
 
-	m_nShareLength = sharelen;
-	m_nDGKbits = DGKbits;
-	m_nBuflen = DGKbits / 8 + 1; //size of one ciphertext to send via network. DGK uses n bits == n/8 bytes
+	m_nShareBitLength = shareBitLength;
+	m_nDGKModulusBits = DGKModulusBits;
+	m_nBuflen = DGKModulusBits / 8 + 1; //size of one ciphertext to send via network. DGK uses n bits == n/8 bytes
 
-#if DEBUG
-	cout << "Created party with " << DGKbits << " key bits and" << sharelen << " bit shares" << endl;
+#if DGK_DEBUG
+	std::cout << "Created party with " << DGKModulusBits << " key bits and " << shareBitLength << " bit shares" << std::endl;
 #endif
 
 	if (readkey) {
@@ -53,14 +46,14 @@ DGKParty::DGKParty(uint32_t DGKbits, uint32_t sharelen, channel* chan, uint32_t 
  * @param mode - 0 = generate new key; 1 = read key
  * Public keys must be exchanged manually when using this constructor!
  */
-DGKParty::DGKParty(uint32_t DGKbits, uint32_t sharelen, uint32_t readkey) {
+DGKParty::DGKParty(uint32_t DGKModulusBits, uint32_t shareBitLength, uint32_t readkey) {
 
-	m_nShareLength = sharelen;
-	m_nDGKbits = DGKbits;
-	m_nBuflen = DGKbits / 8 + 1; //size of one ciphertext to send via network. DGK uses n bits == n/8 bytes
+	m_nShareBitLength = shareBitLength;
+	m_nDGKModulusBits = DGKModulusBits;
+	m_nBuflen = DGKModulusBits / 8 + 1; //size of one ciphertext to send via network. DGK uses n bits == n/8 bytes
 
 #if DGK_DEBUG
-	cout << "Created party with " << DGKbits << " key bits and" << sharelen << " bit shares" << endl;
+	std::cout << "Created party with " << DGKModulusBits << " key bits and " << shareBitLength << " bit shares" << std::endl;
 #endif
 
 	if (readkey) {
@@ -72,21 +65,21 @@ DGKParty::DGKParty(uint32_t DGKbits, uint32_t sharelen, uint32_t readkey) {
 
 void DGKParty::readKey() {
 #if DGK_DEBUG
-	cout << "KeyGen" << endl;
+	std::cout << "Reading DGK key…" << std::endl;
 #endif
-	dgk_readkey(m_nDGKbits, m_nShareLength, &m_localpub, &m_prv);
+	dgk_readkey(m_nDGKModulusBits, m_nShareBitLength, &m_localpub, &m_prv);
 #if DGK_DEBUG
-	cout << "key read." << endl;
+	std::cout << "key read." << std::endl;
 #endif
 }
 
 void DGKParty::generateKey() {
-#if DEBUG
-	cout << "KeyGen" << endl;
+#if DGK_DEBUG
+	std::cout << "Generating DKG key…" << std::endl;
 #endif
-	dgk_keygen(m_nDGKbits, m_nShareLength, &m_localpub, &m_prv);
-#if DEBUG
-	cout << "key generated." << endl;
+	dgk_keygen(m_nDGKModulusBits, m_nShareBitLength, &m_localpub, &m_prv);
+#if DGK_DEBUG
+	std::cout << "key generated." << std::endl;
 #endif
 }
 
@@ -95,28 +88,27 @@ void DGKParty::generateKey() {
  */
 DGKParty::~DGKParty() {
 #if DGK_DEBUG
-	cout << "Deleting DGKParty..." << endl;
+	std::cout << "Deleting DGKParty…" << std::endl;
 #endif
 	dgk_freeprvkey(m_prv);
 	dgk_freepubkey(m_localpub);
 	dgk_freepubkey(m_remotepub);
-
 }
 
 /**
- * inputs pre-allocates byte buffers for aMT calculation.
- * numMTs must be the total number of MTs and divisible by 2
+ * inputs: pre-allocates byte buffers for aMT calculation.
+ * numMTs is the total number of MTs
  */
-void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan) {
+void DGKParty::computeArithmeticMTs(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan) {
 	struct timespec start, end;
 
-	numMTs = numMTs / 2; // We can be both sender and receiver at the same time.
+	numMTs = ceil_divide(numMTs, 2); // We can be both sender and receiver at the same time.
 
-	uint32_t shareBytes = m_nShareLength / 8;
+	uint32_t shareBytes = m_nShareBitLength / 8;
 	uint32_t offset = 0;
 
 #if DGK_DEBUG
-	cout << "dgkbits: " << m_nDGKbits << " sharelen: " << m_nShareLength << endl;
+	std::cout << "DGKModulusBits: " << m_nDGKModulusBits << " shareBitLength: " << m_nShareBitLength << std::endl;
 #endif
 
 	mpz_t r, x, y, z;
@@ -156,7 +148,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	}
 
 	// send & receive encrypted values
-	int window = WINDOWSIZE;
+	int window = DGK_WINDOWSIZE;
 	int tosend = m_nBuflen * numMTs;
 	offset = 0;
 
@@ -190,7 +182,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		dbpowmod(c1[j], x, b1[j], y, a1[j], m_remotepub->n);
 
 		// pick random r for masking
-		aby_prng(x, 2 * m_nShareLength + 1);
+		aby_prng(x, 2 * m_nShareBitLength + 1);
 
 		dgk_encrypt_fb(y, m_remotepub, x);
 
@@ -201,7 +193,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 
 		mpz_mul(c1[j], a1[j], b1[j]); //c = a * b
 		mpz_sub(c1[j], c1[j], x); // c = c - x
-		mpz_mod_2exp(c1[j], c1[j], m_nShareLength); // c = c mod 2^shareLength
+		mpz_mod_2exp(c1[j], c1[j], m_nShareBitLength); // c = c mod 2^shareLength
 
 		mpz_export(bC1 + offset, NULL, 1, shareBytes, 0, 0, c1[j]);
 
@@ -211,7 +203,7 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 // ----------------#############   ###############-----------------------
 // all packets packed. exchange these packets
 
-	window = WINDOWSIZE;
+	window = DGK_WINDOWSIZE;
 	tosend = m_nBuflen * numMTs;
 	offset = 0;
 
@@ -237,16 +229,17 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		mpz_import(a[i], 1, 1, shareBytes, 0, 0, bA + offset);
 		mpz_import(b[i], 1, 1, shareBytes, 0, 0, bB + offset);
 
-		mpz_mod_2exp(c[i], r, m_nShareLength); // c = x mod 2^shareLength == read the share from least significant bits
+		mpz_mod_2exp(c[i], r, m_nShareBitLength); // c = x mod 2^shareLength == read the share from least significant bits
 		mpz_addmul(c[i], a[i], b[i]); //c = a*b + c
-		mpz_mod_2exp(c[i], c[i], m_nShareLength); // c = c mod 2^shareLength
+		mpz_mod_2exp(c[i], c[i], m_nShareBitLength); // c = c mod 2^shareLength
 		mpz_export(bC + offset, NULL, 1, shareBytes, 0, 0, c[i]);
 		offset += shareBytes;
 
 	}
 
-#if CHECKMT
-	cout << "Checking MT validity with values from other party:" << endl;
+#if DGK_CHECKMT
+	//TODO: This overwrites generated MTs and should be put in a separate function.
+	std::cout << "Checking MT validity with values from other party:" << std::endl;
 
 	mpz_t ai, bi, ci, ai1, bi1, ci1, ta, tb;
 	mpz_inits(ai, bi, ci, ai1, bi1, ci1, ta, tb, NULL);
@@ -272,22 +265,24 @@ void DGKParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		mpz_add(tb, bi, bi1);
 		mpz_mul(ta, ta, tb);
 		mpz_add(tb, ci, ci1);
-		mpz_mod_2exp(ta, ta, m_nShareLength);
-		mpz_mod_2exp(tb, tb, m_nShareLength);
+		mpz_mod_2exp(ta, ta, m_nShareBitLength);
+		mpz_mod_2exp(tb, tb, m_nShareBitLength);
 
 		if (mpz_cmp(ta, tb) == 0) {
-			cout << "MT is fine - i:" << i << "| " << ai << " " << bi << " " << ci << " . " << ai1 << " " << bi1 << " " << ci1 << endl;
+			std::cout << "MT is fine - i:" << i << "| " << ai << " " << bi << " " << ci << " . " << ai1 << " " << bi1 << " " << ci1 << std::endl;
 		} else {
-			cout << "Error in MT - i:" << i << "| " << ai << " " << bi << " " << ci << " . " << ai1 << " " << bi1 << " " << ci1 << endl;
+			std::cout << "Error in MT - i:" << i << "| " << ai << " " << bi << " " << ci << " . " << ai1 << " " << bi1 << " " << ci1 << std::endl;
 		}
-
-		//cout << (mpz_cmp(c1[i], a1[i]) == 0 ? "MT is fine." : "Error in MT!") << endl;
+		//cout << (mpz_cmp(c1[i], a1[i]) == 0 ? "MT is fine." : "Error in MT!") << std::endl;
 	}
 	mpz_clears(ai, bi, ci, ai1, bi1, ci1, ta, tb, NULL);
 #endif
 
 	clock_gettime(CLOCK_MONOTONIC, &end);
+
+#if DGK_BENCH
 	printf("generating 2x %u MTs took %f\n", numMTs, getMillies(start, end));
+#endif
 
 //clean up after ourselves
 	for (uint32_t i = 0; i < numMTs; i++) {
@@ -318,17 +313,17 @@ void DGKParty::keyExchange(channel* chan) {
 	receivempz_t(g, chan); //g
 	receivempz_t(h, chan); //h
 
-	dgk_complete_pubkey(m_nDGKbits, m_nShareLength, &m_remotepub, n, g, h);
+	dgk_complete_pubkey(m_nDGKModulusBits, m_nShareBitLength, &m_remotepub, n, g, h);
 
 	// pre calculate table for fixed-base exponentiation for client
-	fbpowmod_init_g(m_remotepub->g, m_remotepub->n, 2 * m_nShareLength + 2);
+	fbpowmod_init_g(m_remotepub->g, m_remotepub->n, 2 * m_nShareBitLength + 2);
 	fbpowmod_init_h(m_remotepub->h, m_remotepub->n, 400); // 2.5 * t = 2.5 * 160 = 400 bit
 
 	//free a and b
 	mpz_clears(n, g, h, NULL);
 
-#if DEBUG
-	cout << "KX done. This pubkey: " << m_localpub->n << " remotekey: " << m_remotepub->n << endl;
+#if DGK_DEBUG
+	std::cout << "KX done. Local pubkey: " << m_localpub->n << " remote pubkey: " << m_remotepub->n << std::endl;
 #endif
 }
 
@@ -342,8 +337,8 @@ void DGKParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 		*(buf + i) = 0;
 	}
 
-#if NETDEBUG
-	cout << mpz_sizeinbase(t, 256) << " vs. " << m_nBuflen << endl;
+#if DGK_NETDEBUG
+	std::cout << mpz_sizeinbase(t, 256) << " vs. " << m_nBuflen << std::endl;
 #endif
 
 	mpz_export(buf, NULL, -1, 1, 1, 0, t);
@@ -351,13 +346,13 @@ void DGKParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 //send bytes of t
 	chan->send(buf, (uint64_t) m_nBuflen);
 
-#if NETDEBUG
-	cout << endl << "SEND" << endl;
+#if DGK_NETDEBUG
+	std::cout << std::endl << "SEND" << std::endl;
 	for (uint32_t i = 0; i < m_nBuflen; i++) {
 		printf("%02x.", *(buf + i));
 	}
 
-	cout << endl << "sent: " << t << " with len: " << m_nBuflen << " should have been " << mpz_sizeinbase(t, 256) << endl;
+	std::cout << std::endl << "sent: " << t << " with len: " << m_nBuflen << " should have been " << mpz_sizeinbase(t, 256) << std::endl;
 #endif
 }
 
@@ -368,13 +363,13 @@ void DGKParty::receivempz_t(mpz_t t, channel* chan, BYTE * buf) {
 	chan->blocking_receive(buf, (uint64_t) m_nBuflen);
 	mpz_import(t, m_nBuflen, -1, 1, 1, 0, buf);
 
-#if NETDEBUG
-	cout << endl << "RECEIVE" << endl;
+#if DGK_NETDEBUG
+	std::cout << std::endl << "RECEIVE" << std::endl;
 	for (uint32_t i = 0; i < m_nBuflen; i++) {
 		printf("%02x.", *(buf + i));
 	}
 
-	cout << "received: " << t << " with len: " << m_nBuflen << endl;
+	std::cout << "received: " << t << " with len: " << m_nBuflen << std::endl;
 #endif
 }
 
@@ -393,8 +388,8 @@ void DGKParty::sendmpz_t(mpz_t t, channel* chan) {
 	chan->send(arr, (uint64_t) bytelen);
 
 	free(arr);
-#if NETDEBUG
-	cout << "sent: " << t << " with len: " << bytelen << endl;
+#if DGK_NETDEBUG
+	std::cout << "sent: " << t << " with len: " << bytelen << std::endl;
 #endif
 }
 
@@ -413,8 +408,8 @@ void DGKParty::receivempz_t(mpz_t t, channel* chan) {
 	mpz_import(t, bytelen, 1, 1, 1, 0, arr);
 
 	free(arr);
-#if NETDEBUG
-	cout << "received: " << t << " with len: " << bytelen << endl;
+#if DGK_NETDEBUG
+	std::cout << "received: " << t << " with len: " << bytelen << std::endl;
 #endif
 }
 
@@ -423,15 +418,15 @@ void DGKParty::printBuf(BYTE* b, uint32_t len) {
 	for (uint32_t i = 0; i < len; i++) {
 		printf("%02x.", *(b + i));
 	}
-	cout << endl;
+	std::cout << std::endl;
 }
 #endif
 
 /**
  * reads a new key from disk (to be used when parameters change)
  */
-void DGKParty::loadNewKey(uint32_t DGKbits, uint32_t sharelen) {
-	m_nDGKbits = DGKbits;
-	m_nShareLength = sharelen;
-	dgk_readkey(m_nDGKbits, m_nShareLength, &m_localpub, &m_prv);
+void DGKParty::loadNewKey(uint32_t DGKModulusBits, uint32_t shareBitLength) {
+	m_nDGKModulusBits = DGKModulusBits;
+	m_nShareBitLength = shareBitLength;
+	dgk_readkey(m_nDGKModulusBits, m_nShareBitLength, &m_localpub, &m_prv);
 }

@@ -19,6 +19,13 @@
 #ifndef __DJNPARTY_H__
 #define __DJNPARTY_H__
 
+#define DJN_CHECKMT 0
+#define DJN_DEBUG 0
+#define DJN_BENCH 0
+#define DJN_NETDEBUG 0
+#define DJN_NETDEBUG2 0
+#define DJN_WINDOWSIZE 65536//maximum size of a network packet in Byte
+
 #include <gmp.h>
 #include <vector>
 #include <ENCRYPTO_utils/typedefs.h>
@@ -26,32 +33,37 @@
 #include <ENCRYPTO_utils/crypto/djn.h>
 #include <ENCRYPTO_utils/powmod.h>
 #include <ENCRYPTO_utils/channel.h>
+#include <ENCRYPTO_utils/timer.h>
+#include <ENCRYPTO_utils/utils.h>
+#if DJN_DEBUG || DJN_BENCH
+#include <iostream>
+#endif
 
 class DJNParty {
 public:
-	DJNParty(uint32_t DJNbits, uint32_t sharelen);
-	DJNParty(uint32_t DJNbits, uint32_t sharelen, channel* chan);
+	DJNParty(uint32_t DJNModulusBits, uint32_t shareBitLength);
+	DJNParty(uint32_t DJNModulusBits, uint32_t shareBitLength, channel* chan);
 	~DJNParty();
 
 	void keyExchange(channel* chan);
-	void preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan);
+	void computeArithmeticMTs(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan);
 
-	void setSharelLength(uint32_t sharelen);
+	void setShareBitLength(uint32_t shareBitLength);
 
 	void keyGen();
 
 private:
 	uint16_t m_nNumMTThreads;
-	uint16_t m_nShareLength;
-	uint32_t m_nDJNbits;
+	uint16_t m_nShareBitLength;
+	uint32_t m_nDJNModulusBits;
 	uint32_t m_nBuflen;
 
 	// Crypto and GMP PRNG
 	djn_pubkey_t *m_localpub, *m_remotepub;
 	djn_prvkey_t *m_prv;
 
-	void benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen, uint32_t numshares, mpz_t * a, mpz_t * b, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x,
-			mpz_t y, mpz_t z);
+	void benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen, uint32_t numshares,
+	mpz_t * a, mpz_t * b, mpz_t * a1, mpz_t * b1, mpz_t * c1, mpz_t r, mpz_t x, mpz_t y, mpz_t z);
 
 	void sendmpz_t(mpz_t t, channel* chan, BYTE * buf);
 	void receivempz_t(mpz_t t, channel* chan, BYTE * buf);

@@ -188,16 +188,14 @@ template<typename T>
 void ArithSharing<T>::InitMTs() {
 	m_vMTIdx.resize(1, 0);
 	m_vMTStartIdx.resize(1, 0);
+	m_vA.resize(1);
 	m_vC.resize(1);
 	m_vB.resize(1);
-
-	m_vC[0].Create(m_nMTs, m_nTypeBitLen);
-	m_vB[0].Create(m_nMTs, m_nTypeBitLen, m_cCrypto);
-
-	m_vA.resize(1);
 	m_vS.resize(1);
 
 	m_vA[0].Create(m_nMTs, m_nTypeBitLen, m_cCrypto);
+	m_vB[0].Create(m_nMTs, m_nTypeBitLen, m_cCrypto);
+	m_vC[0].Create(m_nMTs, m_nTypeBitLen);
 	m_vS[0].Create(m_nMTs, m_nTypeBitLen);
 
 	m_vD_snd.resize(1);

@@ -17,42 +17,34 @@
  */
 
 #include "djnparty.h"
-#include <ENCRYPTO_utils/timer.h>
-#include <ENCRYPTO_utils/utils.h>
-
-#define CHECKMT 0
-#define DJN_DEBUG 0
-#define NETDEBUG 0
-#define NETDEBUG2 0
-#define WINDOWSIZE 65536//maximum size of a network packet in Byte
 
 /**
- * initializes a DJN_Party with the asymmetric security parameter and the sharelength.
+ * initializes a DJN_Party with the asymmetric security parameter and the shareBitLength.
  * Generates DJN key.
  * Key Exchange must be done manually after calling this constructor!
  */
-DJNParty::DJNParty(uint32_t DJNbits, uint32_t sharelen, channel* chan) {
+DJNParty::DJNParty(uint32_t DJNModulusBits, uint32_t shareBitLength, channel* chan) {
 
-	m_nShareLength = sharelen;
-	m_nDJNbits = DJNbits;
-	m_nBuflen = DJNbits / 4 + 1;
+	m_nShareBitLength = shareBitLength;
+	m_nDJNModulusBits = DJNModulusBits;
+	m_nBuflen = DJNModulusBits / 4 + 1;
 
 #if DJN_DEBUG
-	std::cout << "(sock) Created party with " << DJNbits << " bits and" << m_nBuflen << std::endl;
+	std::cout << "(sock) Created party with " << DJNModulusBits << " bits and" << m_nBuflen << std::endl;
 #endif
 
 	keyGen();
 	keyExchange(chan);
 }
 
-DJNParty::DJNParty(uint32_t DJNbits, uint32_t sharelen) {
+DJNParty::DJNParty(uint32_t DJNModulusBits, uint32_t shareBitLength) {
 
-	m_nShareLength = sharelen;
-	m_nDJNbits = DJNbits;
-	m_nBuflen = DJNbits / 4 + 1;
+	m_nShareBitLength = shareBitLength;
+	m_nDJNModulusBits = DJNModulusBits;
+	m_nBuflen = DJNModulusBits / 4 + 1;
 
 #if DJN_DEBUG
-	std::cout << "(nosock) Created party with " << DJNbits << " bits and" << m_nBuflen << std::endl;
+	std::cout << "(nosock) Created party with " << DJNModulusBits << " bits and" << m_nBuflen << std::endl;
 #endif
 
 	keyGen();
@@ -62,11 +54,11 @@ void DJNParty::keyGen() {
 #if DJN_DEBUG
 	std::cout << "KG" << std::endl;
 #endif
-	djn_keygen(m_nDJNbits, &m_localpub, &m_prv);
+	djn_keygen(m_nDJNModulusBits, &m_localpub, &m_prv);
 }
 
-void DJNParty::setSharelLength(uint32_t sharelen) {
-	m_nShareLength = sharelen;
+void DJNParty::setShareBitLength(uint32_t shareBitLength) {
+	m_nShareBitLength = shareBitLength;
 }
 
 /**
@@ -79,28 +71,26 @@ DJNParty::~DJNParty() {
 	djn_freeprvkey(m_prv);
 	djn_freepubkey(m_localpub);
 	djn_freepubkey(m_remotepub);
-
 }
 
 /**
- * inputs pre-allocates byte buffers for aMT calculation.
- * numMTs must be the total number of MTs and divisible by 2
+ * inputs: pre-allocates byte buffers for aMT calculation.
+ * numMTs is total number of MTs
  */
-void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan) {
+void DJNParty::computeArithmeticMTs(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * bB1, BYTE * bC1, uint32_t numMTs, channel* chan) {
 	struct timespec start, end;
+	numMTs = ceil_divide(numMTs, 2); // We can be both sender and receiver at the same time.
 
-	numMTs = numMTs / 2; // We can be both sender and receiver at the same time.
+	uint32_t maxShareBitLength = 2 * m_nShareBitLength + 41; // length of one share in the packet, sigma = 40
+	uint32_t packshares = m_nDJNModulusBits / maxShareBitLength; // number of shares in one packet
+	uint32_t numpacks = ceil_divide(numMTs, packshares); // total number of packets to send in order to generate numMTs
 
-	uint32_t maxShareLen = 2 * m_nShareLength + 41; // length of one share in the packet, sigma = 40
-	uint32_t packshares = m_nDJNbits / maxShareLen; // number of shares in one packet
-	uint32_t numpacks = (numMTs + packshares - 1) / packshares; // total number of packets to send in order to generate numMTs = CEIL(numMTs/2*numshares)
-
-	uint32_t shareBytes = m_nShareLength / 8;
+	uint32_t shareBytes = m_nShareBitLength / 8;
 	uint32_t offset = 0;
 	uint32_t limit = packshares; // upper bound for a package shares, used to handle non-full last packages / alignment
 
 #if DJN_DEBUG
-	std::cout << "djnbits: " << m_nDJNbits << " sharelen: " << m_nShareLength << " packlen: " << maxShareLen << " numshares: " << packshares << " numpacks: " << numpacks << std::endl;
+	std::cout << "DJNModulusBits: " << m_nDJNModulusBits << " ShareBitLength: " << m_nShareBitLength << " packlen: " << maxShareBitLength << " numshares: " << packshares << " numpacks: " << numpacks << std::endl;
 #endif
 
 	mpz_t r, x, y, z;
@@ -140,7 +130,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	}
 
 	// send & receive encrypted values
-	int window = WINDOWSIZE;
+	int window = DJN_WINDOWSIZE;
 	int tosend = m_nBuflen * numMTs;
 	offset = 0;
 
@@ -183,7 +173,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		// horner packing of shares into 1 ciphertext
 		mpz_set(z, c1[limit - 1]);
 		mpz_set_ui(y, 0);
-		mpz_setbit(y, maxShareLen); // y = 2^shareLength, for shifting ciphertext
+		mpz_setbit(y, maxShareBitLength); // y = 2^ShareBitLength, for shifting ciphertext
 
 		for (int j = limit - 2; j >= 0; j--) {
 			mpz_powm(z, z, y, m_remotepub->n_squared);
@@ -207,13 +197,13 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 
 		// calculate c shares for client part
 		for (uint32_t j = 0; j < limit; j++) {
-			mpz_mod_2exp(y, x, m_nShareLength); // y = r mod 2^shareLength == read the share from least significant bits
-			mpz_div_2exp(x, x, maxShareLen); // r = r >> maxShareLen
+			mpz_mod_2exp(y, x, m_nShareBitLength); // y = r mod 2^ShareBitLength == read the share from least significant bits
+			mpz_div_2exp(x, x, maxShareBitLength); // r = r >> maxShareBitLength
 
 			mpz_mul(c1[j], a1[j], b1[j]); //c = a * b
 			mpz_sub(c1[j], c1[j], y); // c = c - y
 
-			mpz_mod_2exp(c1[j], c1[j], m_nShareLength); // c = c mod 2^shareLength
+			mpz_mod_2exp(c1[j], c1[j], m_nShareBitLength); // c = c mod 2^ShareBitLength
 			mpz_export(bC1 + offset, NULL, 1, shareBytes, 0, 0, c1[j]);
 
 			offset += shareBytes;
@@ -223,7 +213,7 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 	// ----------------#############   ###############-----------------------
 	// all packets packed. exchange these packets
 
-	window = WINDOWSIZE;
+	window = DJN_WINDOWSIZE;
 	tosend = m_nBuflen * numpacks;
 	offset = 0;
 
@@ -255,16 +245,16 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 			mpz_import(a[j], 1, 1, shareBytes, 0, 0, bA + offset);
 			mpz_import(b[j], 1, 1, shareBytes, 0, 0, bB + offset);
 
-			mpz_mod_2exp(c[j], r, m_nShareLength); // c = x mod 2^shareLength == read the share from least significant bits
-			mpz_div_2exp(r, r, maxShareLen); // x = x >> maxShareLen
+			mpz_mod_2exp(c[j], r, m_nShareBitLength); // c = x mod 2^ShareBitLength == read the share from least significant bits
+			mpz_div_2exp(r, r, maxShareBitLength); // x = x >> maxShareBitLength
 			mpz_addmul(c[j], a[j], b[j]); //c = a*b + c
-			mpz_mod_2exp(c[j], c[j], m_nShareLength); // c = c mod 2^shareLength
+			mpz_mod_2exp(c[j], c[j], m_nShareBitLength); // c = c mod 2^ShareBitLength
 			mpz_export(bC + offset, NULL, 1, shareBytes, 0, 0, c[j]);
 			offset += shareBytes;
 		}
 	}
 
-#if CHECKMT
+#if DJN_CHECKMT
 	std::cout << "Checking MT validity with values from other party:" << std::endl;
 
 	mpz_t ai, bi, ci, ai1, bi1, ci1, ta, tb;
@@ -291,8 +281,8 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 		mpz_add(tb, bi, bi1);
 		mpz_mul(ta, ta, tb);
 		mpz_add(tb, ci, ci1);
-		mpz_mod_2exp(ta, ta, m_nShareLength);
-		mpz_mod_2exp(tb, tb, m_nShareLength);
+		mpz_mod_2exp(ta, ta, m_nShareBitLength);
+		mpz_mod_2exp(tb, tb, m_nShareBitLength);
 
 		if (mpz_cmp(ta, tb) == 0) {
 			std::cout << "MT is fine - i:" << i << "| " << ai << " " << bi << " " << ci << " . " << ai1 << " " << bi1 << " " << ci1 << std::endl;
@@ -306,7 +296,10 @@ void DJNParty::preCompBench(BYTE * bA, BYTE * bB, BYTE * bC, BYTE * bA1, BYTE * 
 #endif
 
 	clock_gettime(CLOCK_MONOTONIC, &end);
+
+#if DJN_BENCH
 	printf("generating 2x %u MTs took %f\n", numMTs, getMillies(start, end));
+#endif
 
 //clean up after ourselves
 	for (uint32_t i = 0; i < packshares; i++) {
@@ -340,7 +333,7 @@ void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen,
 
 	chan->send(buf, (uint64_t) m_nBuflen * numshares * 2);
 
-#if NETDEBUG
+#if DJN_NETDEBUG
 	std::cout << " SEND " << std::endl;
 	for (uint32_t xx=0; xx < m_nBuflen * numshares * 2; xx++) {
 		printf("%02x.", *(buf + xx));
@@ -349,7 +342,7 @@ void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen,
 
 	chan->blocking_receive(buf, (uint64_t) m_nBuflen * numshares * 2);
 
-#if NETDEBUG
+#if DJN_NETDEBUG
 	std::cout << " RECV " << std::endl;
 	for (uint32_t xx=0; xx < m_nBuflen * numshares * 2; xx++) {
 		printf("%02x.", *(buf + xx));
@@ -366,7 +359,7 @@ void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen,
 // horner packing of shares into 1 ciphertext
 	mpz_set(z, c1[numshares - 1]);
 	mpz_set_ui(y, 0);
-	mpz_setbit(y, packlen); // y = 2^shareLength, for shifting ciphertext
+	mpz_setbit(y, packlen); // y = 2^ShareBitLength, for shifting ciphertext
 
 	for (int i = numshares - 2; i >= 0; i--) {
 		mpz_powm(z, z, y, m_remotepub->n_squared);
@@ -385,13 +378,13 @@ void DJNParty::benchPreCompPacking1(channel* chan, BYTE * buf, uint32_t packlen,
 
 // calculate c shares for client part
 	for (uint32_t i = 0; i < numshares; i++) {
-		mpz_mod_2exp(y, x, m_nShareLength); // y = r mod 2^shareLength == read the share from least significant bits
+		mpz_mod_2exp(y, x, m_nShareBitLength); // y = r mod 2^ShareBitLength == read the share from least significant bits
 		mpz_div_2exp(x, x, packlen); // r = r >> packlen
 
 		mpz_mul(c1[i], a1[i], b1[i]); //c = a * b
 		mpz_sub(c1[i], c1[i], y); // c = c - y
 
-		mpz_mod_2exp(c1[i], c1[i], m_nShareLength); // c = c mod 2^shareLength
+		mpz_mod_2exp(c1[i], c1[i], m_nShareBitLength); // c = c mod 2^ShareBitLength
 	}
 }
 
@@ -409,10 +402,10 @@ void DJNParty::keyExchange(channel* chan) {
 	mpz_inits(a, b, NULL);
 	receivempz_t(a, chan); //n
 	receivempz_t(b, chan); //h
-	djn_complete_pubkey(m_nDJNbits, &m_remotepub, a, b);
+	djn_complete_pubkey(m_nDJNModulusBits, &m_remotepub, a, b);
 
 // pre calculate table for fixed-base exponentiation for client
-	fbpowmod_init_g(m_remotepub->h_s, m_remotepub->n_squared, 2 * m_nDJNbits);
+	fbpowmod_init_g(m_remotepub->h_s, m_remotepub->n_squared, 2 * m_nDJNModulusBits);
 
 //free a and b
 	mpz_clears(a, b, NULL);
@@ -432,7 +425,7 @@ void DJNParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 		*(buf + i) = 0;
 	}
 
-#if NETDEBUG2
+#if DJN_NETDEBUG2
 	std::cout << mpz_sizeinbase(t, 256) << " vs. " << m_nBuflen << std::endl;
 #endif
 
@@ -441,7 +434,7 @@ void DJNParty::sendmpz_t(mpz_t t, channel* chan, BYTE * buf) {
 	//send Bytes of t
 	chan->send(buf, (uint64_t) m_nBuflen);
 
-#if NETDEBUG
+#if DJN_NETDEBUG
 	std::cout << std::endl << "SEND" << std::endl;
 	for (uint32_t i = 0; i < m_nBuflen; i++) {
 		printf("%02x.", *(m_sendbuf + i));
@@ -458,7 +451,7 @@ void DJNParty::receivempz_t(mpz_t t, channel* chan, BYTE * buf) {
 	chan->blocking_receive(buf, (uint64_t) m_nBuflen);
 	mpz_import(t, m_nBuflen, -1, 1, 1, 0, buf);
 
-#if NETDEBUG
+#if DJN_NETDEBUG
 	std::cout << std::endl << "RECEIVE" << std::endl;
 	for (uint32_t i = 0; i < m_nBuflen; i++) {
 		printf("%02x.", *(m_recbuf + i));
@@ -483,7 +476,7 @@ void DJNParty::sendmpz_t(mpz_t t, channel* chan) {
 	chan->send(arr, (uint64_t) bytelen);
 
 	free(arr);
-#if NETDEBUG
+#if DJN_NETDEBUG
 	std::cout << "sent: " << t << " with len: " << bytelen << std::endl;
 #endif
 }
@@ -503,7 +496,7 @@ void DJNParty::receivempz_t(mpz_t t, channel* chan) {
 	mpz_import(t, bytelen, 1, 1, 1, 0, arr);
 
 	free(arr);
-#if NETDEBUG
+#if DJN_NETDEBUG
 	std::cout << "received: " << t << " with len: " << bytelen << std::endl;
 #endif
 }
