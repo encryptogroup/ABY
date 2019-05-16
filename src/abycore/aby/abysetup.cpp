@@ -242,7 +242,7 @@ BOOL ABYSetup::FinishSetupPhase() {
 	return true;
 }
 
-BOOL ABYSetup::ThreadRunNPSnd(uint32_t exec) {
+BOOL ABYSetup::ThreadRunNPSnd() {
 	BOOL success = true;
 	iknp_ot_sender->ComputeBaseOTs(P_FIELD);
 #ifdef USE_KK_OT
@@ -251,7 +251,7 @@ BOOL ABYSetup::ThreadRunNPSnd(uint32_t exec) {
 	return success;
 }
 
-BOOL ABYSetup::ThreadRunNPRcv(uint32_t exec) {
+BOOL ABYSetup::ThreadRunNPRcv() {
 	BOOL success = true;
 	iknp_ot_receiver->ComputeBaseOTs(P_FIELD);
 #ifdef USE_KK_OT
@@ -261,10 +261,10 @@ BOOL ABYSetup::ThreadRunNPRcv(uint32_t exec) {
 }
 
 //Receiver and Sender switch roles in the beginning of the OT extension protocol to obliviously transfer a matrix T
-BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
+BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t threadid) {
 	bool success = true;
 
-	uint32_t inverse = exec ^ m_eRole;
+	uint32_t inverse = threadid ^ m_eRole;
 	uint32_t nsndvals = 2;
 
 	CBitVector** X = (CBitVector**) malloc(sizeof(CBitVector*) * nsndvals);
@@ -295,10 +295,10 @@ BOOL ABYSetup::ThreadRunIKNPSnd(uint32_t exec) {
 	return success;
 }
 
-BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
+BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t threadid) {
 	bool success = true;
 
-	uint32_t inverse = exec ^ m_eRole;
+	uint32_t inverse = threadid ^ m_eRole;
 //	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
 	uint32_t nsndvals = 2;
 
@@ -329,10 +329,10 @@ BOOL ABYSetup::ThreadRunIKNPRcv(uint32_t exec) {
 
 
 //KK13 OT extension sender and receiver routine outsourced in separate threads
-BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
+BOOL ABYSetup::ThreadRunKKSnd(uint32_t threadid) {
 	bool success = true;
 
-	uint32_t inverse = exec ^ m_eRole;
+	uint32_t inverse = threadid ^ m_eRole;
 
 	for (uint32_t i = 0; i < m_vKKOTTasks[inverse].size(); i++) {
 		KK_OTTask* task = m_vKKOTTasks[inverse][i];
@@ -366,10 +366,10 @@ BOOL ABYSetup::ThreadRunKKSnd(uint32_t exec) {
 	return success;
 }
 
-BOOL ABYSetup::ThreadRunKKRcv(uint32_t exec) {
+BOOL ABYSetup::ThreadRunKKRcv(uint32_t threadid) {
 	bool success = true;
 
-	uint32_t inverse = exec ^ m_eRole;
+	uint32_t inverse = threadid ^ m_eRole;
 //	uint32_t symbits = m_cCrypt->get_seclvl().symbits;
 //	uint32_t nsndvals = 2;
 
@@ -604,9 +604,9 @@ void ABYSetup::CWorkerThread::ThreadMain() {
 			break;
 		case e_NP:
 			if (threadid == SERVER)
-				bSuccess = m_pCallback->ThreadRunNPSnd(threadid);
+				bSuccess = m_pCallback->ThreadRunNPSnd();
 			else
-				bSuccess = m_pCallback->ThreadRunNPRcv(threadid);
+				bSuccess = m_pCallback->ThreadRunNPRcv();
 			break;
 		case e_MTPaillier:
 			bSuccess = m_pCallback->ThreadRunPaillierMTGen(threadid);

@@ -152,19 +152,19 @@ private:
 	BOOL Init();
 	void Cleanup();
 
-	BOOL ThreadRunNPSnd(uint32_t exec);
-	BOOL ThreadRunNPRcv(uint32_t exec);
+	BOOL ThreadRunNPSnd();
+	BOOL ThreadRunNPRcv();
 
-	BOOL ThreadRunIKNPSnd(uint32_t exec);
-	BOOL ThreadRunIKNPRcv(uint32_t exec);
+	BOOL ThreadRunIKNPSnd(uint32_t threadid);
+	BOOL ThreadRunIKNPRcv(uint32_t threadid);
 
-	BOOL ThreadRunKKSnd(uint32_t exec);
-	BOOL ThreadRunKKRcv(uint32_t exec);
+	BOOL ThreadRunKKSnd(uint32_t threadid);
+	BOOL ThreadRunKKRcv(uint32_t threadid);
 
-	BOOL ThreadSendData(uint32_t id);
+	BOOL ThreadSendData(uint32_t threadid);
 	BOOL ThreadReceiveData();
 
-	BOOL ThreadRunPaillierMTGen(uint32_t exec);
+	BOOL ThreadRunPaillierMTGen(uint32_t threadid);
 	BOOL ThreadRunDGKMTGen(uint32_t threadid);
 
 	// IKNP OTTask values
