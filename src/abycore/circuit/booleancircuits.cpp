@@ -2823,380 +2823,383 @@ void BooleanCircuit::PadWithLeadingZeros(std::vector<uint32_t> &a, std::vector<u
 }
 
 share* BooleanCircuit::PutFullAdderGate(uint32_t a, uint32_t b, uint32_t carry_in) {
-    std::vector<uint32_t> out(2);
+	std::vector<uint32_t> out(2);
 
 #ifdef FA_DEBUG
-    std::vector<uint32_t> v_a(1); v_a[0]=a;
-    std::vector<uint32_t> v_b(1); v_b[0]=b;
-    std::vector<uint32_t> v_c_in(1); v_c_in[0]=carry_in;
-    share * s_a = new boolshare(v_a, this);
-    share * s_b = new boolshare(v_b, this);
-    share * s_c_in = new boolshare(v_c_in, this);
+	std::vector<uint32_t> v_a(1); v_a[0]=a;
+	std::vector<uint32_t> v_b(1); v_b[0]=b;
+	std::vector<uint32_t> v_c_in(1); v_c_in[0]=carry_in;
+	share * s_a = new boolshare(v_a, this);
+	share * s_b = new boolshare(v_b, this);
+	share * s_c_in = new boolshare(v_c_in, this);
 
-    PutPrintValueGate(s_a, "a");
-    PutPrintValueGate(s_b, "b");
-    PutPrintValueGate(s_c_in, "carry_in");
+	PutPrintValueGate(s_a, "a");
+	PutPrintValueGate(s_b, "b");
+	PutPrintValueGate(s_c_in, "carry_in");
 
-    share * s_a_xor_b = PutXORGate(s_a, s_b);
-    share * s_b_xor_c_in = PutXORGate(s_b, s_c_in);
-    share * s_and = PutANDGate(s_a_xor_b, s_b_xor_c_in);
+	share * s_a_xor_b = PutXORGate(s_a, s_b);
+	share * s_b_xor_c_in = PutXORGate(s_b, s_c_in);
+	share * s_and = PutANDGate(s_a_xor_b, s_b_xor_c_in);
 
 
-    PutPrintValueGate(s_a_xor_b, "a^b");
-    PutPrintValueGate(s_b_xor_c_in, "b^c_in");
-    PutPrintValueGate(s_and, "(a^b)&(b^c_in)");
+	PutPrintValueGate(s_a_xor_b, "a^b");
+	PutPrintValueGate(s_b_xor_c_in, "b^c_in");
+	PutPrintValueGate(s_and, "(a^b)&(b^c_in)");
 #endif
 
-    uint32_t a_xor_b = PutXORGate(a,b);
-    out[1] = PutXORGate(PutANDGate(a_xor_b, PutXORGate(b, carry_in)),b);
-    out[0] = PutXORGate(a_xor_b, carry_in);
+	uint32_t a_xor_b = PutXORGate(a,b);
+	out[1] = PutXORGate(PutANDGate(a_xor_b, PutXORGate(b, carry_in)),b);
+	out[0] = PutXORGate(a_xor_b, carry_in);
 
-    share* s_out = new boolshare(out, this);
+	share* s_out = new boolshare(out, this);
 
 #ifdef FA_DEBUG
-    std::vector<uint32_t> in(3);
-    in[2] = a;
-    in[1] = b;
-    in[0] = carry_in;
-    share* s_in = new boolshare(in, this);
+	std::vector<uint32_t> in(3);
+	in[2] = a;
+	in[1] = b;
+	in[0] = carry_in;
+	share* s_in = new boolshare(in, this);
 
-    PutPrintValueGate(s_in, "Full Adder Input");
-    PutPrintValueGate(s_out, "Full Adder Output");
+	PutPrintValueGate(s_in, "Full Adder Input");
+	PutPrintValueGate(s_out, "Full Adder Output");
 #endif
 
-    return s_out;
+	return s_out;
 }
 
 share* BooleanCircuit::PutADDChainGate(std::vector<uint32_t> a, std::vector<uint32_t> b, uint32_t carry_in) {
-    PadWithLeadingZeros(a, b);
-    std::vector<uint32_t> out(a.size());
-    std::vector<uint32_t> v_c_in(1); v_c_in[0] = carry_in;
-    share * last = PutFullAdderGate(a[0], b[0], carry_in);
-    out[0] = last->get_wires()[0];
+	PadWithLeadingZeros(a, b);
+	std::vector<uint32_t> out(a.size());
+	std::vector<uint32_t> v_c_in(1); v_c_in[0] = carry_in;
+	share * last = PutFullAdderGate(a[0], b[0], carry_in);
+	out[0] = last->get_wires()[0];
 #ifdef AC_DEBUG
-    share * s_c_in = new boolshare(v_c_in, this);
-    PutPrintValueGate(s_c_in, "carry in");
-    PutPrintValueGate(last, "last");
+	share * s_c_in = new boolshare(v_c_in, this);
+	PutPrintValueGate(s_c_in, "carry in");
+	PutPrintValueGate(last, "last");
 #endif
-    for (size_t i = 1; i < out.size(); ++i) {
-        share * tmp = PutFullAdderGate(a[i], b[i], last->get_wires()[1]);
-        out[i] = tmp->get_wires()[0];
-        last = tmp;
+	for (size_t i = 1; i < out.size(); ++i) {
+		share * tmp = PutFullAdderGate(a[i], b[i], last->get_wires()[1]);
+		out[i] = tmp->get_wires()[0];
+		last = tmp;
 #ifdef AC_DEBUG
-        PutPrintValueGate(new boolshare(std::vector<uint32_t>(&a[i], &a[i+1]), this), "a i");
-        PutPrintValueGate(new boolshare(std::vector<uint32_t>(&b[i], &b[i+1]), this), "b i");
-        PutPrintValueGate(tmp, "tmp");
+		PutPrintValueGate(new boolshare(std::vector<uint32_t>(&a[i], &a[i+1]), this), "a i");
+		PutPrintValueGate(new boolshare(std::vector<uint32_t>(&b[i], &b[i+1]), this), "b i");
+		PutPrintValueGate(tmp, "tmp");
 #endif
-    }
-    std::vector<uint32_t> l = last->get_wires();
-    if (last->get_wires()[1] && out.size() < last->get_max_bitlength())
-        out.insert(out.end(), &l[1], &l[2]);
+	}
+	std::vector<uint32_t> l = last->get_wires();
+	if (last->get_wires()[1] && out.size() < last->get_max_bitlength())
+		out.insert(out.end(), &l[1], &l[2]);
 #ifdef AC_DEBUG
-    PutPrintValueGate(last, "last last");
-    PutPrintValueGate(new boolshare(out, this), "out");
+	PutPrintValueGate(last, "last last");
+	PutPrintValueGate(new boolshare(out, this), "out");
 #endif
-    return new boolshare(out, this);
+	return new boolshare(out, this);
 }
 
 share* BooleanCircuit::PutHammingWeightGate(share* s_in) {
-    return PutHammingWeightGate(s_in, s_in->get_bitlength());
+	return PutHammingWeightGate(s_in, s_in->get_bitlength());
 }
 
 share* BooleanCircuit::PutHammingWeightGate(share* s_in, uint32_t bitlen) {
 #ifdef HW_DEBUG
-    PutPrintValueGate(s_in, "INPUT_BUILD");
+	PutPrintValueGate(s_in, "INPUT_BUILD");
 #endif
-    // force all nvals equal assert
-    s_in->get_nvals();
-    std::vector<uint32_t> wires = s_in->get_wires();
-    return PutHammingWeightGateRec(wires.data(), bitlen);
+	// force all nvals equal assert
+	s_in->get_nvals();
+	std::vector<uint32_t> wires = s_in->get_wires();
+	return PutHammingWeightGateRec(wires.data(), bitlen);
 }
 
 share* BooleanCircuit::PutHammingWeightGateRec(uint32_t * wires, uint32_t bitlen) {
-    share* out;
-    uint32_t nvals = GetNumVals(wires[0]);
+	share* out;
+	uint32_t nvals = GetNumVals(wires[0]);
 
-    UGATE_T zero = 0u;
-    share* zero_share = PutSIMDCONSGate(nvals, zero, 1);
-    uint32_t zero_wire = zero_share->get_wire_id(0);
-
-#ifdef HW_DEBUG
-    std::vector<uint32_t> in(wires, wires + bitlen);
-    share * s = new boolshare(in, this);
-    PutPrintValueGate(s, "INPUT3");
-    delete s;
-#endif
-
-    if (bitlen > 3) {
-        share *v, *u;
-        uint32_t i;
-        size_t bitlen_v = pow(2, (uint) (log(bitlen) / log(2))) - 1;
-        size_t bitlen_u = bitlen - bitlen_v - 1;
+	UGATE_T zero = 0u;
+	share* zero_share = PutSIMDCONSGate(nvals, zero, 1);
+	uint32_t zero_wire = zero_share->get_wire_id(0);
 
 #ifdef HW_DEBUG
-        std::cout << "Input bitlen: " << bitlen << "\tBitlen v: " << bitlen_v <<
-                "\tBitlen u: " << bitlen_u << "\tBitlen i: " <<
-                bitlen - bitlen_v - bitlen_u << std::endl;
+	std::vector<uint32_t> in(wires, wires + bitlen);
+	share * s = new boolshare(in, this);
+	PutPrintValueGate(s, "INPUT3");
+	delete s;
 #endif
-        //build v
-        v = PutHammingWeightGateRec(&wires[bitlen - bitlen_v], bitlen_v);
 
-        //build u
-        if (bitlen_u > 0) {
-            u = PutHammingWeightGateRec(&wires[1], bitlen_u);
-        } else {
-            u = zero_share;
-        }
+	if (bitlen > 3) {
+		share *v, *u;
+		uint32_t i;
+		size_t bitlen_v = pow(2, (uint) (log(bitlen) / log(2))) - 1;
+		size_t bitlen_u = bitlen - bitlen_v - 1;
 
-        //build i
-        if (bitlen - bitlen_v > 0) {
-            i = wires[0];
-        } else {
-            i = zero_wire;
-        }
 #ifdef HW_DEBUG
-        PutPrintValueGate(v, "V");
-        PutPrintValueGate(u, "U");
-        std::vector<uint32_t> v_i(1, i);
-        PutPrintValueGate(std::make_unique<boolshare>(v_i, this).get(), "i");
-        std::cout << std::endl;
+		std::cout << "Input bitlen: " << bitlen << "\tBitlen v: " << bitlen_v <<
+				"\tBitlen u: " << bitlen_u << "\tBitlen i: " <<
+				bitlen - bitlen_v - bitlen_u << std::endl;
 #endif
-        out = PutADDChainGate(v->get_wires(), u->get_wires(), i);
-        delete v;
-        if (bitlen_u>0) delete u; // u == zero_share otherwise and deleted later
-    } else if (bitlen > 2)
-        out = PutFullAdderGate(wires[2], wires[1], wires[0]);
-    else if (bitlen > 1) {
-        out = PutFullAdderGate(wires[1], wires[0], zero_wire);
-    } else if (bitlen > 0) {
-        std::vector<uint32_t> out_v(1, wires[0]);
-        out = new boolshare(out_v, this);
-    } else {
-        return zero_share;
-    }
+		//build v
+		v = PutHammingWeightGateRec(&wires[bitlen - bitlen_v], bitlen_v);
 
-    delete zero_share;
-    return out;
+		//build u
+		if (bitlen_u > 0) {
+			u = PutHammingWeightGateRec(&wires[1], bitlen_u);
+		} else {
+			u = zero_share;
+		}
+
+		//build i
+		if (bitlen - bitlen_v > 0) {
+			i = wires[0];
+		} else {
+			i = zero_wire;
+		}
+#ifdef HW_DEBUG
+		PutPrintValueGate(v, "V");
+		PutPrintValueGate(u, "U");
+		std::vector<uint32_t> v_i(1, i);
+		PutPrintValueGate(std::make_unique<boolshare>(v_i, this).get(), "i");
+		std::cout << std::endl;
+#endif
+		out = PutADDChainGate(v->get_wires(), u->get_wires(), i);
+		delete v;
+		if (bitlen_u>0) delete u; // u == zero_share otherwise and deleted later
+	} else if (bitlen > 2)
+		out = PutFullAdderGate(wires[2], wires[1], wires[0]);
+	else if (bitlen > 1) {
+		out = PutFullAdderGate(wires[1], wires[0], zero_wire);
+	} else if (bitlen > 0) {
+		std::vector<uint32_t> out_v(1, wires[0]);
+		out = new boolshare(out_v, this);
+	} else {
+		return zero_share;
+	}
+
+	delete zero_share;
+	return out;
 }
 
 share* BooleanCircuit::PutUint2DoubleGate(share* input){
-    UINT32 from;
-    FP64 to;
-    return PutConvTypeGate(input, &from, &to);
+	UINT32 from;
+	FP64 to;
+	return PutConvTypeGate(input, &from, &to);
 }
 
 share*  BooleanCircuit::PutConvTypeGate(share * value, ConvType* from, ConvType* to, uint32_t nvals){
-    return new boolshare(PutConvTypeGate(value->get_wires(),from,to, nvals), this);
+	return new boolshare(PutConvTypeGate(value->get_wires(), from, to, nvals), this);
 }
 
 std::vector<uint32_t>  BooleanCircuit::PutConvTypeGate(std::vector<uint32_t> wires, ConvType* from, ConvType* to, uint32_t nvals){
-    switch(to->getType()){
-        case ENUM_FP_TYPE:
-            return PutUint2FpGate(wires, (UINTType*)from , (FPType*)to, nvals);
-        case ENUM_UINT_TYPE:
-            return PutFp2UintGate(wires, (FPType*)from , (UINTType*)to);
-        default:
-            std::cout <<"Unknown data type in CONVType %zu" << to << std::endl;
-            std::exit(EXIT_FAILURE);
-    }
+	switch(to->getType()){
+		case ENUM_FP_TYPE:
+			return PutUint2FpGate(wires, (UINTType*)from , (FPType*)to, nvals);
+		// case ENUM_UINT_TYPE:
+		// 	return PutFp2UintGate(wires, (FPType*)from , (UINTType*)to);
+		default:
+			std::cout <<"Unknown data type in CONVType %zu" << to << std::endl;
+			std::exit(EXIT_FAILURE);
+	}
 }
 
 
-std::vector<uint32_t>  BooleanCircuit::PutUint2FpGate(std::vector<uint32_t> wires, UINTType* from, FPType* to, uint32_t nvals){
+//TODO: value is in wires, remove paramter "from"?
+std::vector<uint32_t> BooleanCircuit::PutUint2FpGate(std::vector<uint32_t> wires, [[maybe_unused]] UINTType* from, FPType* to, uint32_t nvals){
 
 #ifdef UINT2FP_DEBUG
-    PutPrintValueGate(new boolshare(wires, this), "INPUT");
-    std::cout << "wires size: " << wires.size() << std::endl;
+	PutPrintValueGate(new boolshare(wires, this), "INPUT");
+	std::cout << "wires size: " << wires.size() << std::endl;
 #endif
-    //constants
-    uint64_t zero = 0, one = 1;
-    uint32_t one_bit_len = 1;
-    share* zero_gate = PutSIMDCONSGate(nvals, zero, one_bit_len);
-    share* one_gate = PutSIMDCONSGate(nvals, one, one_bit_len);
-    //pad to the length of fraction or remove the most significant bits
-    wires.resize(to->getNumOfDigits(), zero_gate->get_wires()[0]);
-    share * s_in = new boolshare(wires, this);
+	//constants
+	uint64_t zero = 0, one = 1;
+	uint32_t one_bit_len = 1;
+	share* zero_gate = PutSIMDCONSGate(nvals, zero, one_bit_len);
+	share* one_gate = PutSIMDCONSGate(nvals, one, one_bit_len);
+	//pad to the length of fraction or remove the most significant bits
+	wires.resize(to->getNumOfDigits(), zero_gate->get_wires()[0]);
+	share * s_in = new boolshare(wires, this);
 
-    //check if input is zero
-    share* eq_zero = PutEQGate(zero_gate, s_in);
+	//check if input is zero
+	share* eq_zero = PutEQGate(zero_gate, s_in);
 
-    //calculate prefix or
-    std::vector<uint32_t> prefix_or = PutPreOrGate(wires);
-    share * s_prefix_or = new boolshare(prefix_or, this);
+	//calculate prefix or
+	std::vector<uint32_t> prefix_or = PutPreOrGate(wires);
+	share * s_prefix_or = new boolshare(prefix_or, this);
 
 #ifdef UINT2FP_DEBUG
-    PutPrintValueGate(s_prefix_or, "PREFIX OR");
+	PutPrintValueGate(s_prefix_or, "PREFIX OR");
 #endif
 
-    std::vector<uint32_t> reversed_preor;
-    reversed_preor.insert(reversed_preor.begin(), prefix_or.rbegin(), prefix_or.rend());
-    share * value = new boolshare(PutINVGate(reversed_preor), this);
+	std::vector<uint32_t> reversed_preor;
+	reversed_preor.insert(reversed_preor.begin(), prefix_or.rbegin(), prefix_or.rend());
+	share * value = new boolshare(PutINVGate(reversed_preor), this);
 
-    value->set_max_bitlength(to->getNumOfDigits()+1);
-    std::vector<uint32_t> tmp_inv_out = value->get_wires();
+	value->set_max_bitlength(to->getNumOfDigits()+1);
+	std::vector<uint32_t> tmp_inv_out = value->get_wires();
 
-    std::vector<uint32_t> power_of_2;
-    power_of_2.insert(power_of_2.begin(), tmp_inv_out.begin(), tmp_inv_out.end());
-    power_of_2.push_back(one_gate->get_wires()[0]);
-    share * p2 = new boolshare(power_of_2,this);
+	std::vector<uint32_t> power_of_2;
+	power_of_2.insert(power_of_2.begin(), tmp_inv_out.begin(), tmp_inv_out.end());
+	power_of_2.push_back(one_gate->get_wires()[0]);
+	share * p2 = new boolshare(power_of_2,this);
 
-    value = PutHammingWeightGate(p2, nvals);
+	value = PutHammingWeightGate(p2, nvals);
 
-    value = new boolshare(PutBarrelLeftShifterGate(s_in->get_wires(), value->get_wires(), nvals), this);
-    std::vector<uint32_t> tmp_fract = value->get_wires();
-    tmp_fract.resize(to->getNumOfDigits());
+	value = new boolshare(PutBarrelLeftShifterGate(s_in->get_wires(), value->get_wires(), nvals), this);
+	std::vector<uint32_t> tmp_fract = value->get_wires();
+	tmp_fract.resize(to->getNumOfDigits());
 
-    value = new boolshare(tmp_fract ,this);
+	value = new boolshare(tmp_fract ,this);
 
-    std::vector<uint32_t> value_v = value->get_wires();
+	std::vector<uint32_t> value_v = value->get_wires();
 
 #ifdef UINT2FP_DEBUG
-    PutPrintValueGate(value, "VALUE");
+	PutPrintValueGate(value, "VALUE");
 #endif
 
-    std::reverse(value_v.begin(), value_v.end());
+	std::reverse(value_v.begin(), value_v.end());
 
-    value_v.resize(to->getNumOfDigits(), zero_gate->get_wires()[0]);
+	value_v.resize(to->getNumOfDigits(), zero_gate->get_wires()[0]);
 
 #ifdef UINT2FP_DEBUG
-    //PutPrintValueGate(new boolshare(value_v, this), "RESIZED");
-    std::cout << "fraction vector size: " << value_v.size() << std::endl;
+	//PutPrintValueGate(new boolshare(value_v, this), "RESIZED");
+	std::cout << "fraction vector size: " << value_v.size() << std::endl;
 #endif
 
-    //Calculate number of 1-bits in Prefix OR output
-    share* pre_or_for_exp = PutHammingWeightGate(s_prefix_or, nvals);
+	//Calculate number of 1-bits in Prefix OR output
+	share* pre_or_for_exp = PutHammingWeightGate(s_prefix_or, nvals);
 
 #ifdef UINT2FP_DEBUG
-    std::cout << "HW out size: " << pre_or_for_exp->get_wires().size() << std::endl;
-    PutPrintValueGate(pre_or_for_exp, "pre or for exp");
+	std::cout << "HW out size: " << pre_or_for_exp->get_wires().size() << std::endl;
+	PutPrintValueGate(pre_or_for_exp, "pre or for exp");
 #endif
 
-    share * exp = PutSIMDCONSGate(nvals, (uint64_t)(to->getExpBias()-1), to->getExpBits());
+	share * exp = PutSIMDCONSGate(nvals, (uint64_t)(to->getExpBias()-1), to->getExpBits());
 
 #ifdef UINT2FP_DEBUG
-    PutPrintValueGate(exp, "exp initialized with bias");
-    std::cout << "bias bit length: " << exp->get_wires().size() << std::endl;
+	PutPrintValueGate(exp, "exp initialized with bias");
+	std::cout << "bias bit length: " << exp->get_wires().size() << std::endl;
 #endif
 
-    exp = PutADDGate(exp, pre_or_for_exp);
+	exp = PutADDGate(exp, pre_or_for_exp);
 
-    std::vector<uint32_t> tmp_exp = exp->get_wires();
-    //exp = PutXORGate(exp, PutMUXGate(zero_gate,exp,eq_zero));
-    exp = PutMUXGate(exp, zero_gate, eq_zero);
+	std::vector<uint32_t> tmp_exp = exp->get_wires();
+	//exp = PutXORGate(exp, PutMUXGate(zero_gate,exp,eq_zero));
+	exp = PutMUXGate(exp, zero_gate, eq_zero);
 
-    tmp_exp.resize(to->getExpBits(), zero_gate->get_wires()[0]);
+	tmp_exp.resize(to->getExpBits(), zero_gate->get_wires()[0]);
 
-    std::vector<uint32_t> v_out(1);
-    v_out[0]=zero_gate->get_wires()[0];
-    std::vector<uint32_t> exp_v(&tmp_exp[0], &tmp_exp[to->getExpBits()]);
-    v_out.insert(v_out.end() ,exp_v.rbegin(), exp_v.rend());
+	std::vector<uint32_t> v_out(1);
+	v_out[0]=zero_gate->get_wires()[0];
+	std::vector<uint32_t> exp_v(&tmp_exp[0], &tmp_exp[to->getExpBits()]);
+	v_out.insert(v_out.end() ,exp_v.rbegin(), exp_v.rend());
 
 #ifdef UINT2FP_DEBUG
-    std::cout << "out+exp size: " << v_out.size() << std::endl;
+	std::cout << "out+exp size: " << v_out.size() << std::endl;
 #endif
 
-    v_out.insert(v_out.end(), value_v.begin(), value_v.end());
+	v_out.insert(v_out.end(), value_v.begin(), value_v.end());
 
 #ifdef UINT2FP_DEBUG
-    PutPrintValueGate(new boolshare(exp_v, this), "exponent");
-    PutPrintValueGate(new boolshare(value_v, this), "fraction");
+	PutPrintValueGate(new boolshare(exp_v, this), "exponent");
+	PutPrintValueGate(new boolshare(value_v, this), "fraction");
 #endif
 
-    std::reverse(v_out.begin(), v_out.end());
+	std::reverse(v_out.begin(), v_out.end());
 
 #ifdef UINT2FP_DEBUG
-    std::cout << "Num of gates, end:" << GetNumGates() << std::endl;
-    //PutPrintValueGate(new boolshare(v_out, this), "RESULT");
+	std::cout << "Num of gates, end:" << GetNumGates() << std::endl;
+	//PutPrintValueGate(new boolshare(v_out, this), "RESULT");
 #endif
 
-    return v_out;
+	return v_out;
 }
 
+/*
+// TODO implement PutFP2INTGate
 std::vector<uint32_t> BooleanCircuit::PutFp2UintGate(std::vector<uint32_t> wires, FPType* from, UINTType* to){
-    std::vector<uint32_t> out;
-    // TODO implement PutFP2INTGate
-    std::cout << "PutFP2INTGate is not implemented yet" << std::endl;
-    std::exit(EXIT_FAILURE);
-    return out;
+	std::vector<uint32_t> out;
+	std::cout << "PutFP2INTGate is not implemented yet" << std::endl;
+	std::exit(EXIT_FAILURE);
+	return out;
 }
+*/
 
 share * BooleanCircuit::PutPreOrGate(share * input){
-    return new boolshare(PutPreOrGate(input->get_wires()), this);
+	return new boolshare(PutPreOrGate(input->get_wires()), this);
 }
 
 std::vector<uint32_t> BooleanCircuit::PutPreOrGate(std::vector<uint32_t> wires){
-    //TODO optimize circuit
-    if(!wires.size()){
-        std::cout << "PreORGate wires of size 0. Exitting." << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
+	//TODO optimize circuit
+	if(!wires.size()){
+		std::cout << "PreORGate wires of size 0. Exitting." << std::endl;
+		std::exit(EXIT_FAILURE);
+	}
 	std::vector <uint32_t> out(wires.size());
-    out[wires.size()-1] = wires[wires.size()-1];
+	out[wires.size()-1] = wires[wires.size()-1];
 
-    if(wires.size()==1)
-        return out;
+	if(wires.size()==1)
+		return out;
 
-    uint32_t tmp = PutORGate(wires[wires.size()-1], wires[wires.size()-2]);
-    out[wires.size()-2] = tmp;
+	uint32_t tmp = PutORGate(wires[wires.size()-1], wires[wires.size()-2]);
+	out[wires.size()-2] = tmp;
 
-    if(wires.size()==2)
-        return out;
+	if(wires.size()==2)
+		return out;
 
-    for(size_t i = 2; i < wires.size(); i++){
-        tmp = PutORGate(tmp, wires[wires.size()-i-1]);
-        out[wires.size()-i-1]= tmp;
-    }
-    return out;
+	for(size_t i = 2; i < wires.size(); i++){
+		tmp = PutORGate(tmp, wires[wires.size()-i-1]);
+		out[wires.size()-i-1]= tmp;
+	}
+	return out;
 }
 
 share * BooleanCircuit::PutBarrelLeftShifterGate(share * input, share * n){
-    return new boolshare(PutBarrelLeftShifterGate(input->get_wires(), n->get_wires()), this);
+	return new boolshare(PutBarrelLeftShifterGate(input->get_wires(), n->get_wires()), this);
 }
 
 std::vector<uint32_t> BooleanCircuit::PutBarrelLeftShifterGate(std::vector<uint32_t> wires,
-        std::vector<uint32_t> n, uint32_t nvals){
-    uint n_size = (uint)(log(wires.size())/log(2));
-    auto step = pow(2, (double)n_size);
-    auto out_size = step*2;
+		std::vector<uint32_t> n, uint32_t nvals){
+	uint n_size = (uint)(log(wires.size())/log(2));
+	auto step = pow(2, (double)n_size);
+	auto out_size = step*2;
 
-    std::vector<uint32_t> res(out_size);
-    std::vector<uint32_t> last;
+	std::vector<uint32_t> res(out_size);
+	std::vector<uint32_t> last;
 
-    uint64_t zero = 0;
-    share* zero_gate = PutSIMDCONSGate(nvals, zero, 1);
+	uint64_t zero = 0;
+	share* zero_gate = PutSIMDCONSGate(nvals, zero, 1);
 
-    n.resize(n_size, zero_gate->get_wires()[0]);
-    wires.resize(out_size, zero_gate->get_wires()[0]);
-    for(int i = n_size; i >=0 ; i--, step/=2){
-        for(auto j = 0; j < out_size; j++){
-            std::vector<uint32_t> tmp_right(1);
-            std::vector<uint32_t> tmp_left(1);
-            if(step == out_size/2){
-                tmp_right[0] = wires[j];
-                tmp_left[0] = j < step ? zero_gate->get_wires()[0] : wires[j-step];
-            }
-            else{
-                tmp_right[0] = last[j];
-                tmp_left[0] = j < step ? zero_gate->get_wires()[0] : last[j-step];
-            }
-            res[j] = PutMUXGate(tmp_left, tmp_right, n[i])[0];
-        }
-        last.clear();
-        last.insert(last.begin(), res.begin(), res.end());
-    }
-    return res;
+	n.resize(n_size, zero_gate->get_wires()[0]);
+	wires.resize(out_size, zero_gate->get_wires()[0]);
+	for(int i = n_size; i >=0 ; i--, step/=2){
+		for(auto j = 0; j < out_size; j++){
+			std::vector<uint32_t> tmp_right(1);
+			std::vector<uint32_t> tmp_left(1);
+			if(step == out_size/2){
+				tmp_right[0] = wires[j];
+				tmp_left[0] = j < step ? zero_gate->get_wires()[0] : wires[j-step];
+			}
+			else{
+				tmp_right[0] = last[j];
+				tmp_left[0] = j < step ? zero_gate->get_wires()[0] : last[j-step];
+			}
+			res[j] = PutMUXGate(tmp_left, tmp_right, n[i])[0];
+		}
+		last.clear();
+		last.insert(last.begin(), res.begin(), res.end());
+	}
+	return res;
 }
 
 share * BooleanCircuit::PutBarrelRightShifterGate(share * input, share * n){
-    return new boolshare(PutBarrelRightShifterGate(input->get_wires(), n->get_wires()), this);
+	return new boolshare(PutBarrelRightShifterGate(input->get_wires(), n->get_wires()), this);
 }
 
 std::vector<uint32_t> BooleanCircuit::PutBarrelRightShifterGate(std::vector<uint32_t> wires, std::vector<uint32_t> n){
-    std::reverse(wires.begin(), wires.end());
-    std::vector<uint32_t> res = PutBarrelLeftShifterGate(wires, n);
-    std::reverse(res.begin(), res.end());
-    res.erase(res.begin(), res.begin() + wires.size());
-    return res;
+	std::reverse(wires.begin(), wires.end());
+	std::vector<uint32_t> res = PutBarrelLeftShifterGate(wires, n);
+	std::reverse(res.begin(), res.end());
+	res.erase(res.begin(), res.begin() + wires.size());
+	return res;
 }
 
 share * BooleanCircuit::PutFPGate(share * in, op_t op, uint8_t bitlen, uint32_t nvals, fp_op_setting s){
@@ -3207,39 +3210,39 @@ share * BooleanCircuit::PutFPGate(share * in, op_t op, uint8_t bitlen, uint32_t 
 	if (nvals == 0) {
 		nvals = in->get_nvals();
 	}
-    const char * o;
-    switch(op){
-        case COS:
-                o = "ieee_cos";
-           break;
-        case EXP:
-                o = "nostatus_exp";
-           break;
-        case EXP2:
-                o = "nostatus_exp2";
-           break;
-        case LN:
-                o = "nostatus_ln";
-           break;
-        case LOG2:
-                o = "nostatus_log2";
-           break;
-        case SIN:
-                o = "ieee_sin";
-           break;
-        case SQR:
-                o = s==no_status ? "nostatus_sqr" : "ieee_sqr";
-           break;
-        case SQRT:
-        		o = s==no_status ? "nostatus_sqrt" : "ieee_sqrt";
-           break;
-        default:
-            std::cerr << "Wrong operation in floating point gate with one input.";
-            std::exit(EXIT_FAILURE);
-    }
-    return new boolshare(PutFPGate(o, in->get_wires(),
-        (uint8_t) bitlen,
-        nvals), this);
+	const char * o;
+	switch(op){
+		case COS:
+				o = "ieee_cos";
+		   break;
+		case EXP:
+				o = "nostatus_exp";
+		   break;
+		case EXP2:
+				o = "nostatus_exp2";
+		   break;
+		case LN:
+				o = "nostatus_ln";
+		   break;
+		case LOG2:
+				o = "nostatus_log2";
+		   break;
+		case SIN:
+				o = "ieee_sin";
+		   break;
+		case SQR:
+				o = s==no_status ? "nostatus_sqr" : "ieee_sqr";
+		   break;
+		case SQRT:
+				o = s==no_status ? "nostatus_sqrt" : "ieee_sqrt";
+		   break;
+		default:
+			std::cerr << "Wrong operation in floating point gate with one input.";
+			std::exit(EXIT_FAILURE);
+	}
+	return new boolshare(PutFPGate(o, in->get_wires(),
+		(uint8_t) bitlen,
+		nvals), this);
 }
 
 share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint8_t bitlen, uint32_t nvals, fp_op_setting s){
@@ -3250,28 +3253,28 @@ share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint8_t b
 	if (nvals == 0) {
 		nvals = in_a->get_nvals();
 	}
-    const char * o;
-    switch(op){
-        case ADD:
-                o = s==no_status ? "nostatus_add" : "ieee_add";
-           break;
-        case CMP:
-                o = "nostatus_cmp";
-           break;
-        case DIV:
-                o = s==no_status ? "nostatus_div" : "ieee_div";
-           break;
-        case MUL:
-                o = s==no_status ? "nostatus_mult" : "ieee_mult";
-           break;
-        case SUB:
-                o = s==no_status ? "nostatus_sub" : "ieee_sub";
-           break;
-        default:
-            std::cerr << "Wrong operation in floating point gate with two inputs.";
-            std::exit(EXIT_FAILURE);
-    }
-    return new boolshare(PutFPGate(o, in_a->get_wires(),
-                   in_b->get_wires(), (uint8_t) bitlen,
-                   nvals), this);
+	const char * o;
+	switch(op){
+		case ADD:
+				o = s==no_status ? "nostatus_add" : "ieee_add";
+		   break;
+		case CMP:
+				o = "nostatus_cmp";
+		   break;
+		case DIV:
+				o = s==no_status ? "nostatus_div" : "ieee_div";
+		   break;
+		case MUL:
+				o = s==no_status ? "nostatus_mult" : "ieee_mult";
+		   break;
+		case SUB:
+				o = s==no_status ? "nostatus_sub" : "ieee_sub";
+		   break;
+		default:
+			std::cerr << "Wrong operation in floating point gate with two inputs.";
+			std::exit(EXIT_FAILURE);
+	}
+	return new boolshare(PutFPGate(o, in_a->get_wires(),
+				   in_b->get_wires(), (uint8_t) bitlen,
+				   nvals), this);
 }

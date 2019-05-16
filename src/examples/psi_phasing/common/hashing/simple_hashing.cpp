@@ -35,9 +35,9 @@ uint8_t* simple_hashing(uint8_t* elements, uint32_t neles, uint32_t bitlen, uint
 	}
 
 	for(i = 0; i < ntasks; i++) {
-		// old call, but init_hash_table does not use #elements 
+		// old call, but init_hash_table does not use #elements
 		// init_hash_table(&table[i], ceil_divide(neles, ntasks), &hs, *maxbinsize);
-		
+
 		init_hash_table(&table[i], &hs, *maxbinsize);
 	}
 
@@ -186,19 +186,16 @@ void free_hash_table(sht_ctx* table) {
 }
 
 inline uint32_t get_max_bin_size(uint32_t nbins, uint32_t neles) {
-	if(ceil_divide(neles, nbins) < 3) {
-		if(neles >= (1<<24))
-			return 27;
-		if(neles >= (1<<20))
-			return 26;
-		if(neles >= (1<<16))
-			return 25;
-		if(neles >= (1<<12))
-			return 24;
-		if(neles >= (1<<8))
-			return 23;
-	} else
-		return 6*std::max((uint32_t) ceil_divide(neles, nbins), (uint32_t) 3);
+	if (ceil_divide(neles, nbins) < 3) {
+		if (neles >= (1 << 24)) return 27;
+		if (neles >= (1 << 20)) return 26;
+		if (neles >= (1 << 16)) return 25;
+		if (neles >= (1 << 12)) return 24;
+		if (neles >= (1 << 8))	return 23;
+		else return 22; //TODO is 22 a good max bin size in this case?
+	} else {
+		return 6 * ceil_divide(neles, nbins);
+	}
 }
 
 void increase_max_bin_size(sht_ctx* table, uint32_t valbytelen) {

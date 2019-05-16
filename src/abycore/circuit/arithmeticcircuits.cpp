@@ -179,12 +179,12 @@ uint32_t ArithmeticCircuit::PutSharedSIMDINGate(uint32_t ninvals) {
 }
 
 
-share* ArithmeticCircuit::PutDummyINGate(uint32_t bitlen) {
+share* ArithmeticCircuit::PutDummyINGate([[maybe_unused]] uint32_t bitlen) {
 	std::vector<uint32_t> wires(1);
 	wires[0] = PutINGate((e_role) !m_eMyRole);
 	return new arithshare(wires, this);
 }
-share* ArithmeticCircuit::PutDummySIMDINGate(uint32_t nvals, uint32_t bitlen) {
+share* ArithmeticCircuit::PutDummySIMDINGate(uint32_t nvals, [[maybe_unused]] uint32_t bitlen) {
 	std::vector<uint32_t> wires(1);
 	wires[0] = PutSIMDINGate(nvals, (e_role) !m_eMyRole);
 	return new arithshare(wires, this);

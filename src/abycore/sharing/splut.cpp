@@ -205,7 +205,7 @@ void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 			}
 		}
 		//create the outbit mapping
-		assert(max_out_bits < (1<<31));//some maximal bitlen
+		assert(max_out_bits < (uint32_t) (1<<31));//some maximal bitlen
 		m_vOutBitMapping[i].resize(max_out_bits+1, 0);
 
 		for(uint32_t j = 0; j < ingatelens[i]; j++) {
@@ -342,10 +342,10 @@ void SetupLUT::PrepareSetupPhase(ABYSetup* setup) {
 
 }
 
-void SetupLUT::PerformSetupPhase(ABYSetup* setup) {
+void SetupLUT::PerformSetupPhase([[maybe_unused]] ABYSetup* setup) {
 	//Do nothing
 }
-void SetupLUT::FinishSetupPhase(ABYSetup* setup) {
+void SetupLUT::FinishSetupPhase([[maybe_unused]] ABYSetup* setup) {
 	if (m_nTotalTTs == 0)
 		return;
 

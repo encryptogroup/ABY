@@ -25,7 +25,7 @@ static uint32_t* pos_odd;
 
 
 int32_t test_aes_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t nvals, uint32_t nthreads,
-		e_mt_gen_alg mt_alg, e_sharing sharing, bool verbose, bool use_vec_ands, bool expand_in_sfe, bool client_only) {
+		e_mt_gen_alg mt_alg, e_sharing sharing, [[maybe_unused]] bool verbose, bool use_vec_ands, bool expand_in_sfe, bool client_only) {
 	uint32_t bitlen = 32;
 	uint32_t aes_key_bits;
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg, 4000000);
@@ -716,7 +716,7 @@ std::vector<uint32_t> AESSBox_Forward_SPLUT(std::vector<uint32_t> input, Boolean
 // The basic construction was partally taken from the KeyExpansion function of the
 // tiny-AES-c project, https://github.com/kokke/tiny-AES-c
 // This function produces NB_CONSTANT(AES_ROUNDS+1) round keys in SFE.
-// The round keys are used in each round to decrypt the states. 
+// The round keys are used in each round to decrypt the states.
 share* BuildKeyExpansion(share* key, BooleanCircuit* circ, bool use_vec_ands) {
 
 	//TODO make the function SIMD-able if multiple keys are needed
@@ -732,7 +732,7 @@ share* BuildKeyExpansion(share* key, BooleanCircuit* circ, bool use_vec_ands) {
 		std::vector<uint32_t> key_vec = key->get_wires();
 		for (i = 0; i < key_vec.size(); i++) {
 			ex_key_vec[i / 8][i % 8] = key_vec[i];
-		} 
+		}
 	}
 
 	std::vector<uint32_t> s_rc[RCON_SIZE];
@@ -741,7 +741,7 @@ share* BuildKeyExpansion(share* key, BooleanCircuit* circ, bool use_vec_ands) {
 		uint8_t rc_temp = Rcon[i];
 		s_rc[i] = circ->PutCONSGate(rc_temp, 8)->get_wires();
 	}
-	
+
 	std::vector<std::vector<uint32_t>> tempa(4); // Used for the column/row operations
 
 	// All other round keys are found from the previous round keys.
@@ -767,7 +767,7 @@ share* BuildKeyExpansion(share* key, BooleanCircuit* circ, bool use_vec_ands) {
 				tempa[3] = u8tmp;
 			}
 
-			// SubWord() is a function that takes a four-byte input word and 
+			// SubWord() is a function that takes a four-byte input word and
 			// applies the S-box to each of the four bytes to produce an output word.
 
 			// Function Subword()
@@ -819,7 +819,7 @@ void verify_AES_encryption(uint8_t* input, uint8_t* key, uint32_t nvals, uint8_t
 // Copied from the KeyExpansion function of the
 // tiny-AES-c project, https://github.com/kokke/tiny-AES-c, original license is public domain
 // This function produces NB_CONSTANT(AES_ROUNDS+1) round keys.
-// The round keys are used in each round to decrypt the states. 
+// The round keys are used in each round to decrypt the states.
 void ExpandKey(uint8_t* roundKey, const uint8_t* key) {
 //static void KeyExpansion(uint8_t* RoundKey, const uint8_t* Key)
 //{
@@ -857,7 +857,7 @@ void ExpandKey(uint8_t* roundKey, const uint8_t* key) {
 				tempa[3] = u8tmp;
 			}
 
-			// SubWord() is a function that takes a four-byte input word and 
+			// SubWord() is a function that takes a four-byte input word and
 			// applies the S-box to each of the four bytes to produce an output word.
 
 			// Function Subword()

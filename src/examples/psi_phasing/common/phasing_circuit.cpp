@@ -128,7 +128,7 @@ int32_t test_phasing_circuit(e_role role, const std::string& address, uint16_t p
 		shr_cli_stash[i] = circ->PutRepeaterGate(server_neles, shr_cli_stash[i]);
 	}
 
-	shr_stash_out = BuildPhasingStashCircuit(shr_srv_set, shr_cli_stash, server_neles, bitlen, maxstashsize, circ);
+	shr_stash_out = BuildPhasingStashCircuit(shr_srv_set, shr_cli_stash, server_neles, maxstashsize, circ);
 	{
 		auto tmp = shr_stash_out;
 		shr_stash_out = circ->PutOUTGate(shr_stash_out, CLIENT);
@@ -284,7 +284,7 @@ share* BuildPhasingCircuit(share** shr_srv_set, share* shr_cli_set, uint32_t bin
 }
 
 
-share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint32_t neles, uint32_t bitlen,
+share* BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint32_t neles,
 		uint32_t maxstashsize, BooleanCircuit* circ) {
 
 	share* out = new boolshare(maxstashsize, circ);
@@ -364,9 +364,7 @@ void ClientHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen,
 		uint8_t** hash_table, uint32_t* inv_perm, uint32_t* outbitlen, uint8_t** stash,
 		uint32_t maxstashsize, uint32_t** stashperm, uint32_t ntasks, crypto* crypt, uint32_t nhashfuns) {
 
-	uint32_t outbytelen;
 	prf_state_ctx prf_state;
-	uint8_t *tmphashtable;
 	uint32_t *nelesinbin = (uint32_t*) calloc(nbins, sizeof(uint32_t));
 	uint32_t* perm = (uint32_t*) malloc(sizeof(uint32_t) * nbins);
 

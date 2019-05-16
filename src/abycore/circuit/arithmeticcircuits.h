@@ -342,7 +342,7 @@ private:
 		return shr;
 	}
 
-	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T val, uint32_t bitlen) {
+	template<class T> share* InternalPutSharedINGate(uint32_t nvals, T val, [[maybe_unused]] uint32_t bitlen) {
 		share* shr = new arithshare(this);
 		shr->set_wire_id(0, PutSharedSIMDINGate(nvals, val));
 		return shr;
@@ -370,7 +370,7 @@ private:
 		return shr;
 	}
 
-	template<class T> share* InternalPutINGate(uint32_t nvals, T val, uint32_t bitlen, e_role role) {
+	template<class T> share* InternalPutINGate(uint32_t nvals, T val, [[maybe_unused]] uint32_t bitlen, e_role role) {
 		share* shr = new arithshare(this);
 		shr->set_wire_id(0, PutSIMDINGate(nvals, val, role));
 		return shr;

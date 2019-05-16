@@ -37,10 +37,7 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 	uint64_t mask = ((uint64_t) 1 << bitlen)-1;
 
 	e_sharing sort, permute;
-	if(prot_version == 0) {
-		sort = S_BOOL;
-		permute = S_BOOL;
-	} else if (prot_version == 1) {
+	if (prot_version == 1) {
 		sort = S_YAO;
 		permute = S_YAO;
 	} else if (prot_version == 2) {
@@ -49,7 +46,10 @@ int32_t test_psi_scs_circuit(e_role role, const std::string& address, uint16_t p
 	} else if (prot_version == 3) {
 		sort = S_YAO;
 		permute = S_YAO_REV;
-	}
+	} else { // prot_version == 0 and others
+        sort = S_BOOL;
+		permute = S_BOOL;
+    }
 
 	//vector<uint32_t> sel_bits(nswapgates);
 

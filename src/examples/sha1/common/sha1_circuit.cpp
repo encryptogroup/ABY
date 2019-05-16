@@ -31,7 +31,7 @@ int32_t test_sha1_circuit(e_role role, const std::string& address, uint16_t port
 
 	crypto* crypt = new crypto(seclvl.symbits, (uint8_t*) const_seed);
 	CBitVector msgS, msgC, verify;
-	uint32_t testvec = 0x616263;
+	// uint32_t testvec = 0x616263;
 
 	//The plaintext output computation will only be done once instead of nvals times!
 	uint8_t* plain_out = (uint8_t*) malloc(ABY_SHA1_OUTPUT_BYTES);

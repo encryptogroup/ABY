@@ -349,10 +349,10 @@ void BoolSharing::PrepareSetupPhaseOPLUT(ABYSetup* setup) {
 }
 
 
-void BoolSharing::PerformSetupPhase(ABYSetup* setup) {
+void BoolSharing::PerformSetupPhase([[maybe_unused]] ABYSetup* setup) {
 	//Do nothing
 }
-void BoolSharing::FinishSetupPhase(ABYSetup* setup) {
+void BoolSharing::FinishSetupPhase([[maybe_unused]]  ABYSetup* setup) {
 	if (m_nTotalNumMTs == 0 && m_nOPLUT_Tables == 0)
 		return;
 

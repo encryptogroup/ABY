@@ -156,12 +156,12 @@ void ArithSharing<T>::PrepareSetupPhase(ABYSetup* setup) {
 }
 
 template<typename T>
-void ArithSharing<T>::PerformSetupPhase(ABYSetup* setup) {
+void ArithSharing<T>::PerformSetupPhase([[maybe_unused]] ABYSetup* setup) {
 	//Do nothing
 }
 
 template<typename T>
-void ArithSharing<T>::FinishSetupPhase(ABYSetup* setup) {
+void ArithSharing<T>::FinishSetupPhase([[maybe_unused]] ABYSetup* setup) {
 #ifdef DEBUGARITH
 	for(uint32_t i = 0; i < m_nMTs; i++) {
 		std::cout << "Output from OT: A: " << (uint64_t) m_vA[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen) << ", B: " << (uint64_t) m_vB[0].template Get<T>(i * m_nTypeBitLen, m_nTypeBitLen)

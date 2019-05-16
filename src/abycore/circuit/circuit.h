@@ -45,7 +45,7 @@ struct non_lin_on_layers {
  */
 template <typename T>
 T binary_accumulate(std::vector<T> vals,
-    std::function<T (const T&, const T&)>& op) {
+	std::function<T (const T&, const T&)>& op) {
 	for(size_t j, n{vals.size()}; n > 1; n = j) {
 		j = 0;
 		for(size_t i{0}; i < n; ++j) {
@@ -115,7 +115,7 @@ public:
 		\param lvl Required level of local queue.
 		\return Local queue on the required level
 	*/
-        std::deque<uint32_t> GetLocalQueueOnLvl(uint32_t lvl) {
+		std::deque<uint32_t> GetLocalQueueOnLvl(uint32_t lvl) {
 
 		if (lvl < m_vLocalQueueOnLvl.size())
 			return m_vLocalQueueOnLvl[lvl];
@@ -128,19 +128,19 @@ public:
 		\param lvl Required level of interactive queue.
 		\return Interactive queue on the required level
 	*/
-        std::deque<uint32_t> GetInteractiveQueueOnLvl(uint32_t lvl) {
+		std::deque<uint32_t> GetInteractiveQueueOnLvl(uint32_t lvl) {
 		if (lvl < m_vInteractiveQueueOnLvl.size()) {
 			return m_vInteractiveQueueOnLvl[lvl];
-                } else { 
+				} else {
 			return EMPTYQUEUE;
-                }
+				}
 	}
 
 	/*
 	 * print the number of interactive operations for each layer
 	 */
 	void PrintInteractiveQueues(){
-          std::vector<std::string> sharingnames {"GMW", "Yao", "Arith", "Yao_Rev", "SPLUT"};
+		  std::vector<std::string> sharingnames {"GMW", "Yao", "Arith", "Yao_Rev", "SPLUT"};
 
 		std::cout << "Interactive Queue Sizes " << sharingnames[this->m_eContext] << std::endl;
 
@@ -197,7 +197,7 @@ public:
 		\param	party Party role based on which the Output gates are returned.
 		\return Output gates for the provided party
 	*/
-        std::deque<uint32_t> GetOutputGatesForParty(e_role party) {
+		std::deque<uint32_t> GetOutputGatesForParty(e_role party) {
 		return m_vOutputGates[party];
 	}
 
@@ -416,32 +416,32 @@ public:
 	std::vector<uint32_t> PutSplitterGate(uint32_t input, const std::vector<uint32_t>& new_nvals);
 
 	//Templates may not be virtual, hence use dummy functions
-	template<class T> uint32_t PutINGate(T val) {
-                std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
-		return -1;
-	}
-
-	template<class T> uint32_t PutINGate(T val, e_role role) {
+	template <class T> uint32_t PutINGate([[maybe_unused]] T val) {
 		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
-	template<class T> uint32_t PutSharedINGate(T val) {
+	template<class T> uint32_t PutINGate([[maybe_unused]] T val, [[maybe_unused]] e_role role) {
 		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
-	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val) {
+	template<class T> uint32_t PutSharedINGate([[maybe_unused]] T val) {
 		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
-	template<class T> uint32_t PutSIMDINGate(uint32_t nvals, T val, e_role role) {
+	template<class T> uint32_t PutSIMDINGate([[maybe_unused]]uint32_t nvals, [[maybe_unused]] T val) {
 		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}
 
-	template<class T> uint32_t PutSharedSIMDINGate(uint32_t nvals, T val) {
+	template<class T> uint32_t PutSIMDINGate([[maybe_unused]] uint32_t nvals, [[maybe_unused]] T val, [[maybe_unused]] e_role role) {
+		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
+		return -1;
+	}
+
+	template<class T> uint32_t PutSharedSIMDINGate([[maybe_unused]]uint32_t nvals, [[maybe_unused]] T val) {
 		std::cout << "IN gate not implemented in super-class, stopping!" << std::endl;
 		return -1;
 	}

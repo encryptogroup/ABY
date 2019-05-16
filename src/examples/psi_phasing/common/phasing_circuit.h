@@ -38,7 +38,7 @@ void 	set_fixed_elements(uint32_t server_neles, uint32_t client_neles, uint32_t*
 share* 	BuildPhasingCircuit(share** shr_srv_set, share* shr_cli_set, uint32_t binsize,
 		BooleanCircuit* circ);
 
-share* 	BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint32_t neles, uint32_t bitlen,
+share* 	BuildPhasingStashCircuit(share* shr_srv_set, share** shr_cli_stash, uint32_t neles,
 		uint32_t maxstashsize, BooleanCircuit* circ);
 
 void 	ServerHashingRoutine(uint8_t* elements, uint32_t neles, uint32_t elebitlen, uint32_t nbins,
