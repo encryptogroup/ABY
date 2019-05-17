@@ -365,7 +365,7 @@ void BoolSharing::FinishSetupPhase([[maybe_unused]]  ABYSetup* setup) {
 	//Delete the X values for OP-LUT of the sender when pre-computing the OTs
 	for(auto it=m_vOP_LUT_data.begin(); it!=m_vOP_LUT_data.end(); it++) {
 		if(it->second->n_gates > 0 && m_eRole == SERVER) {
-			for(uint32_t i = 0; i < 1<<it->second->n_inbits; i++) {
+			for(uint32_t i = 0; i < (uint32_t) 1<<it->second->n_inbits; i++) {
 				it->second->rot_OT_vals[i]->delCBitVector();
 			}
 			free(it->second->rot_OT_vals);

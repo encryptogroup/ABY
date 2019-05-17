@@ -45,6 +45,7 @@ static const aby_ops_t m_tBenchOps[] = {
 	{ OP_EQ, S_BOOL, "eqbool" },
 	{ OP_MUX, S_BOOL, "muxbool" },
 	{ OP_MUX, S_BOOL, "muxvecbool" },
+	{ OP_INV, S_BOOL, "invbool" },
 
 	{ OP_SBOX, S_BOOL, "sboxsobool" },
 	{ OP_SBOX, S_BOOL, "sboxdobool" },
@@ -58,6 +59,7 @@ static const aby_ops_t m_tBenchOps[] = {
 
 	{ OP_EQ, S_YAO, "eqyao" },
 	{ OP_MUX, S_YAO, "muxyao" },
+	{ OP_INV, S_YAO, "invyao" },
 	{ OP_SBOX, S_YAO, "sboxsoyao" },
 	{ OP_ADD, S_ARITH, "addarith" },
 	{ OP_MUL, S_ARITH, "mularith" },
@@ -142,6 +144,7 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 	Circuit *bc, *yc, *ac, *ycr;
 	double op_time, o_time, s_time, o_comm, s_comm;
 	uint32_t non_linears, depth, ynvals, yrnvals;
+	bool aes_remark = false;
 
 	avec = (uint64_t*) malloc(nvals * sizeof(uint64_t));
 	bvec = (uint64_t*) malloc(nvals * sizeof(uint64_t));
@@ -357,6 +360,11 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 					for (uint32_t j = 0; j < nvals; j++)
 						verifyvec[j] = (avec[j] + bvec[j]) & typebitmask;
 					break;
+				case OP_INV:
+					shrres = ((BooleanCircuit*) circ)->PutINVGate(shra);
+					for (uint32_t j = 0; j < nvals; j++)
+						verifyvec[j] = avec[j] ^ typebitmask;
+					break;
 				case OP_SBOX:
 					if (bitlen >= 8) {
 						shrsel = new boolshare(8, circ);
@@ -375,7 +383,8 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 							verifyvec[j] = (uint64_t) plaintext_aes_sbox[avec[j] & 0xFF]; //(avec[j] + bvec[j]) & typebitmask;
 					}
 					else{
-						std::cout << "AES only works with bitlen >= 8!\t";
+						std::cout << "*\t";
+						aes_remark = true;
 						shrres = shra;
 						for (uint32_t j = 0; j < nvals; j++){
 							verifyvec[j] = avec[j];
@@ -465,6 +474,10 @@ int32_t bench_operations(aby_ops_t* bench_ops, uint32_t nops, ABYParty* party, u
 		if(!detailed)
 			std::cout << std::endl;
 
+	}
+
+	if(aes_remark){
+		std::cout << "\n* =  AES only works with bitlen >= 8" << std::endl;
 	}
 
 	free(avec);

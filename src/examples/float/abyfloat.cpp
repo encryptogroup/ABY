@@ -110,31 +110,38 @@ void test_verilog_add64_SIMD(e_role role, const std::string& address, uint16_t p
 
 	// FP addition gate
 	share* sum = circ->PutFPGate(ain, bin, ADD, bitlen, nvals, no_status);
-	
+
 	// 32-bit FP addition gate (bitlen, nvals, no_status are omitted)
 	share* sqrt_share = circ->PutFPGate(asqrtin, SQRT);
+
+	share* cmp = circ->PutFPGate(ain, bin, CMP, bitlen, nvals);
 
 	// output gate
 	share* add_out = circ->PutOUTGate(sum, ALL);
 	share* sqrt_out = circ->PutOUTGate(sqrt_share, ALL);
+	share* cmp_out = circ->PutOUTGate(cmp, ALL);
 
 	// run SMPC
 	party->ExecCircuit();
 
 	// retrieve plain text output
-	uint32_t out_bitlen, out_nvals;
-	uint64_t *out_vals;
+	uint32_t out_bitlen_add, out_bitlen_cmp, out_nvals;
+	uint64_t *out_vals_add, *out_vals_cmp;
 
-	add_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
+	add_out->get_clear_value_vec(&out_vals_add, &out_bitlen_add, &out_nvals);
+	cmp_out->get_clear_value_vec(&out_vals_cmp, &out_bitlen_cmp, &out_nvals);
 
 	// print every output
 	for (uint32_t i = 0; i < nvals; i++) {
 
 		// dereference output value as double without casting the content
-		double val = *((double*) &out_vals[i]);
+		double val = *((double*) &out_vals_add[i]);
 
 		std::cout << "ADD RES: " << val << " = " << *(double*) &avals[i] << " + " << *(double*) &bvals[i] << " | nv: " << out_nvals
-		<< " bitlen: " << out_bitlen << std::endl;
+		<< " bitlen: " << out_bitlen_add << std::endl;
+
+		std::cout << "CMP RES: " << out_vals_cmp[i] << " = " << *(double*) &avals[i] << " > " << *(double*) &bvals[i] << " | nv: " << out_nvals
+		<< " bitlen: " << out_bitlen_cmp << std::endl;
 	}
 
 	uint32_t *sqrt_out_vals = (uint32_t*) sqrt_out->get_clear_value_ptr();
