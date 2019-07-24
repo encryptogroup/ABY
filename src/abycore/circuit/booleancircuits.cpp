@@ -2356,6 +2356,7 @@ std::vector<uint32_t> BooleanCircuit::PutGateFromFile(const std::string filename
 
 	else {
 		std::cerr << "Error: Unable to open circuit file " << filename << std::endl;
+		std::exit(EXIT_FAILURE);
 	}
 
 	wires.clear();
@@ -2382,6 +2383,7 @@ std::vector<uint32_t> BooleanCircuit::PutUniversalCircuitFromFile(const std::str
 
 	if(!p1file.is_open()) {
 		std::cerr << "Error: Unable to open programming file " << p1filename << std::endl;
+		std::exit(EXIT_FAILURE);
 	}
 	#ifdef DEBUG_UC
 	std::cout << "Server Input Control Bits " ;
@@ -2423,6 +2425,7 @@ std::vector<uint32_t> BooleanCircuit::PutUniversalCircuitFromFile(const std::str
 
 	if (!myfile.is_open()) {
 		std::cerr << "Error: Unable to open circuit file " << filename << std::endl;
+		std::exit(EXIT_FAILURE);
 	}
 	while (getline(myfile, line)) {
 
@@ -2524,6 +2527,7 @@ void BooleanCircuit::GetInputLengthFromFile(const std::string filename, uint32_t
 
 	if (!myfile.is_open()) {
 		std::cerr << "Error: Unable to open circuit file " << filename << std::endl;
+		std::exit(EXIT_FAILURE);
 	}
 	while (getline(myfile, line)) {
 
@@ -2671,6 +2675,7 @@ std::vector<uint32_t> BooleanCircuit::PutLUTGateFromFile(const std::string filen
 
 	else {
 		std::cerr << "Error: Unable to open circuit file " << filename << std::endl;
+		std::exit(EXIT_FAILURE);
 	}
 
 	wires.clear();
@@ -2714,6 +2719,7 @@ uint32_t BooleanCircuit::GetInputLengthFromFile(const std::string filename){
 
 	else {
 		std::cerr << "Error: Unable to open circuit file " << filename << std::endl;
+		std::exit(EXIT_FAILURE);
 	}
 
 	tokens.clear();

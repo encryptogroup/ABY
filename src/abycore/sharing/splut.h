@@ -60,7 +60,7 @@ class SetupLUT: public Sharing {
 
 public:
 	/** Constructor of the class.*/
-	SetupLUT(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt);
+	SetupLUT(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, const std::string& circdir = ABY_CIRCUIT_DIR);
 
 	/** Destructor of the class.*/
 	virtual ~SetupLUT();

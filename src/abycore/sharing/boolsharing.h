@@ -50,9 +50,8 @@ class BoolSharing: public Sharing {
 
 public:
 	/** Constructor of the class.*/
-	BoolSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :\
-
-			Sharing(context, role, sharebitlen, circuit, crypt) {
+	BoolSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, const std::string& circdir = ABY_CIRCUIT_DIR) :
+			Sharing(context, role, sharebitlen, circuit, crypt, circdir) {
 		Init();
 	}
 	;

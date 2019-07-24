@@ -33,8 +33,7 @@
 /** BooleanCircuit class. */
 class BooleanCircuit: public Circuit {
 public:
-	//TODO this default circdir works for now, but should be changed, if things move some place else
-	BooleanCircuit(ABYCircuit* aby, e_role myrole, e_sharing context, const std::string& circdir = "../../bin/circ/") :
+	BooleanCircuit(ABYCircuit* aby, e_role myrole, e_sharing context, const std::string& circdir = ABY_CIRCUIT_DIR) :
 			Circuit(aby, context, myrole, 1, C_BOOLEAN),
 			m_cCircuitFileDir(circdir)
 			{

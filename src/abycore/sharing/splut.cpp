@@ -26,8 +26,8 @@
 #include "../circuit/booleancircuits.h"
 
 
-SetupLUT::SetupLUT(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt)
-	: Sharing(context, role, sharebitlen, circuit, crypt) {
+SetupLUT::SetupLUT(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, const std::string& circdir)
+	: Sharing(context, role, sharebitlen, circuit, crypt, circdir) {
 	Init();
 }
 
@@ -90,7 +90,7 @@ void SetupLUT::Init() {
 	m_nInputShareRcvSize = 0;
 	m_nOutputShareRcvSize = 0;
 
-	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext);
+	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext, m_cCircuitFileDir);
 
 	//first round: the server is the active part and skips the first send iteration while the client waits until the server is done with depth 1
 	m_bPlaySender = !((bool) m_eRole);

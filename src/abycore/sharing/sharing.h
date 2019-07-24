@@ -48,7 +48,7 @@ public:
 
 	 \brief 		Initialises the members of the class.
 	 */
-	Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt);
+	Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, const std::string& circdir = ABY_CIRCUIT_DIR);
 
 	/**
 	 Destructor of class.
@@ -245,6 +245,7 @@ protected:
 	uint32_t m_nTypeBitLen; /** Bit-length of the arithmetic shares in arithsharing */
 	uint64_t m_nFilePos;/**< Variable which stores the position of the file pointer. */
 	ePreCompPhase m_ePhaseValue;/**< Variable storing the current Precomputation Mode */
+	const std::string m_cCircuitFileDir; /** Storing path to .aby circuit files (e.g. floating point) */
 
 };
 

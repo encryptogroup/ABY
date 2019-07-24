@@ -26,7 +26,7 @@ void YaoSharing::Init() {
 	/* init the class for correctly sized Yao key operations*/
 	InitYaoKey(&m_pKeyOps, m_cCrypto->get_seclvl().symbits);
 
-	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext);
+	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext, m_cCircuitFileDir);
 
 	m_bZeroBuf = (BYTE*) calloc(m_nSecParamBytes, sizeof(BYTE));
 	m_bTempKeyBuf = (BYTE*) malloc(sizeof(BYTE) * AES_BYTES);

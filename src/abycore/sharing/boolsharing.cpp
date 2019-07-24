@@ -43,7 +43,7 @@ void BoolSharing::Init() {
 	m_nInputShareRcvSize = 0;
 	m_nOutputShareRcvSize = 0;
 
-	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext);
+	m_cBoolCircuit = new BooleanCircuit(m_pCircuit, m_eRole, m_eContext, m_cCircuitFileDir);
 
 #ifdef BENCHBOOLTIME
 	m_nCombTime = 0;

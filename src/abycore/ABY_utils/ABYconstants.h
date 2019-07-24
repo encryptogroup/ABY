@@ -64,6 +64,10 @@
 
 #define USE_MULTI_MUX_GATES
 
+// default directory containing ABY circuit files.
+// can also be passed to ABYParty constructor at runtime
+#define ABY_CIRCUIT_DIR "../../bin/circ/"
+
 /**
  \enum 	e_role
  \brief	Defines the role of the party or the source / target for certain operations (e.g., input/output)
@@ -279,7 +283,7 @@ typedef enum op_t{
     ADD, MUL, SUB, DIV, SIN, SQRT, EXP, EXP2, CMP, LN, LOG2, COS, SQR
 }op_t;
 
-// Floating point operation cinfiguration. 
+// Floating point operation cinfiguration.
 typedef enum fp_op_setting{
     ieee, no_status
 }fp_op_setting;

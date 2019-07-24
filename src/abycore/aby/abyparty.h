@@ -41,7 +41,7 @@ class CLock;
 class ABYParty {
 public:
 	ABYParty(e_role pid, const std::string& addr = "127.0.0.1", uint16_t port = 7766, seclvl seclvl = LT, uint32_t bitlen = 32,
-			uint32_t nthreads =	2, e_mt_gen_alg mg_algo = MT_OT, uint32_t reservegates = 65536);
+			uint32_t nthreads =	2, e_mt_gen_alg mg_algo = MT_OT, uint32_t reservegates = 65536, const std::string& abycircdir = ABY_CIRCUIT_DIR);
 	~ABYParty();
 
 	/**
@@ -66,7 +66,7 @@ private:
 	BOOL Init();
 	void Cleanup();
 
-	BOOL InitCircuit(uint32_t bitlen, uint32_t reservegates);
+	BOOL InitCircuit(uint32_t bitlen, uint32_t reservegates, const std::string& circdir = ABY_CIRCUIT_DIR);
 
 	BOOL EstablishConnection();
 

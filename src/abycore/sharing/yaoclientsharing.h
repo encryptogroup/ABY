@@ -31,8 +31,8 @@ class YaoClientSharing: public YaoSharing {
 
 public:
 	/** Constructor of the class.*/
-	YaoClientSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
-			YaoSharing(context, role, sharebitlen, circuit, crypt) {
+	YaoClientSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, const std::string& circdir = ABY_CIRCUIT_DIR) :
+			YaoSharing(context, role, sharebitlen, circuit, crypt, circdir) {
 		InitClient();
 	}
 	;
@@ -152,7 +152,7 @@ private:
 	 \param gleft	left gate in the queue.
 	 \param gright	right gate in the queue.
 	 */
-	BOOL EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gleft, GATE* gright);	
+	BOOL EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gleft, GATE* gright);
 	/**
 	 Method for server output Gate for the inputted Gate.
 	 \param gate		Gate Object

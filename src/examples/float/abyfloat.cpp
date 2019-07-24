@@ -28,7 +28,7 @@
 
 void read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 	uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
-	uint16_t* port, int32_t* test_op, uint32_t* test_bit, std::string* circuit, double* fpa, double* fpb) {
+	uint16_t* port, int32_t* test_op, uint32_t* test_bit, double* fpa, double* fpb) {
 
 	uint32_t int_role = 0, int_port = 0, int_testbit = 0;
 
@@ -39,7 +39,6 @@ void read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 	{(void*) bitlen, T_NUM, "b", "Bit-length, default 32", false,false },
 	{(void*) secparam, T_NUM, "s", "Symmetric Security Bits, default: 128", false, false },
 	{(void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
-	{(void*) circuit, T_STR, "c", "circuit file name", false, false },
 	{(void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false },
 	{(void*) test_op, T_NUM, "t", "Single test (leave out for all operations), default: off", false, false },
 	{(void*) fpa, T_DOUBLE, "x", "FP a", false, false },
@@ -71,7 +70,9 @@ void test_verilog_add64_SIMD(e_role role, const std::string& address, uint16_t p
 	// for addition we operate on doubles, so set bitlen to 64 bits
 	uint32_t bitlen = 64;
 
-	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
+	std::string circuit_dir = "../../bin/circ/";
+
+	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg, 100000, circuit_dir);
 
 	std::vector<Sharing*>& sharings = party->GetSharings();
 
@@ -159,14 +160,13 @@ int main(int argc, char** argv) {
 
 	uint16_t port = 7766;
 	std::string address = "127.0.0.1";
-	std::string circuit = "none.aby";
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 	uint32_t test_bit = 0;
 	double fpa = 0, fpb = 0;
 
 	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address,
-		&port, &test_op, &test_bit, &circuit, &fpa, &fpb);
+		&port, &test_op, &test_bit, &fpa, &fpb);
 
 	std::cout << std::fixed << std::setprecision(3);
 	std::cout << "double input values: " << fpa << " ; " << fpb << std::endl;

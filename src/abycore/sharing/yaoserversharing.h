@@ -36,8 +36,8 @@ public:
 	/**
 	 Constructor of the class.
 	 */
-	YaoServerSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
-			YaoSharing(context, role, sharebitlen, circuit, crypt) {
+	YaoServerSharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, const std::string& circdir = ABY_CIRCUIT_DIR) :
+			YaoSharing(context, role, sharebitlen, circuit, crypt, circdir) {
 		InitServer();
 	}
 	;

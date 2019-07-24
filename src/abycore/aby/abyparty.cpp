@@ -65,7 +65,7 @@ private:
 
 ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl seclvl,
 	uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mg_algo,
-	uint32_t reservegates)
+	uint32_t reservegates, const std::string& abycircdir)
 	: m_cCrypt(std::make_unique<crypto>(seclvl.symbits)), glock(std::make_unique<CLock>()),
 	m_eMTGenAlg(mg_algo), m_eRole(pid), m_nNumOTThreads(nthreads),
 	m_tComm(std::make_unique<comm_ctx>()),
@@ -97,7 +97,7 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 	std::cout << "Generating circuit" << std::endl;
 #endif
 	StartWatch("Generating circuit", P_CIRCUIT);
-	if (!InitCircuit(bitlen, reservegates)) {
+	if (!InitCircuit(bitlen, reservegates, abycircdir)) {
 		std::cout << "There was an while initializing the circuit, ending! " << std::endl;
 		std::exit(EXIT_FAILURE);
 	}
@@ -268,19 +268,19 @@ void ABYParty::ExecCircuit() {
 }
 
 
-BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t reservegates) {
+BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t reservegates, const std::string& abycircdir) {
 	// Default reserved gates in abyparty.h constructur
 	m_pCircuit = new ABYCircuit(reservegates);
 
 	m_vSharings.resize(S_LAST);
-	m_vSharings[S_BOOL] = new BoolSharing(S_BOOL, m_eRole, 1, m_pCircuit, m_cCrypt.get());
+	m_vSharings[S_BOOL] = new BoolSharing(S_BOOL, m_eRole, 1, m_pCircuit, m_cCrypt.get(), abycircdir);
 	if (m_eRole == SERVER) {
-		m_vSharings[S_YAO] = new YaoServerSharing(S_YAO, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get());
-		m_vSharings[S_YAO_REV] = new YaoClientSharing(S_YAO_REV, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get());
+		m_vSharings[S_YAO] = new YaoServerSharing(S_YAO, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get(), abycircdir);
+		m_vSharings[S_YAO_REV] = new YaoClientSharing(S_YAO_REV, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get(), abycircdir);
 	}
 	else {
-		m_vSharings[S_YAO] = new YaoClientSharing(S_YAO, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get());
-		m_vSharings[S_YAO_REV] = new YaoServerSharing(S_YAO_REV, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get());
+		m_vSharings[S_YAO] = new YaoClientSharing(S_YAO, CLIENT, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get(), abycircdir);
+		m_vSharings[S_YAO_REV] = new YaoServerSharing(S_YAO_REV, SERVER, m_sSecLvl.symbits, m_pCircuit, m_cCrypt.get(), abycircdir);
 	}
 	switch (bitlen) {
 	case 8:
@@ -299,7 +299,7 @@ BOOL ABYParty::InitCircuit(uint32_t bitlen, uint32_t reservegates) {
 		m_vSharings[S_ARITH] = new ArithSharing<uint32_t>(S_ARITH, m_eRole, 1, m_pCircuit, m_cCrypt.get(), m_eMTGenAlg);
 		break;
 	}
-	m_vSharings[S_SPLUT] = new SetupLUT(S_SPLUT, m_eRole, 1, m_pCircuit, m_cCrypt.get());
+	m_vSharings[S_SPLUT] = new SetupLUT(S_SPLUT, m_eRole, 1, m_pCircuit, m_cCrypt.get(), abycircdir);
 
 	m_vGates = &(m_pCircuit->GatesVec());
 

@@ -38,7 +38,7 @@ namespace filesystem = std::experimental::filesystem;
 #include <iterator>
 #include <boost/algorithm/hex.hpp>
 
-Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt) :
+Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircuit* circuit, crypto* crypt, const std::string& circdir) :
 	m_eContext(context),
 	m_nShareBitLen(sharebitlen),
 	m_pCircuit(circuit),
@@ -48,7 +48,8 @@ Sharing::Sharing(e_sharing context, e_role role, uint32_t sharebitlen, ABYCircui
 	m_nSecParamBytes(ceil_divide(m_cCrypto->get_seclvl().symbits, 8)),
 	m_nTypeBitLen(sharebitlen),
 	m_nFilePos(-1),
-	m_ePhaseValue(ePreCompDefault)
+	m_ePhaseValue(ePreCompDefault),
+	m_cCircuitFileDir(circdir)
 {}
 
 
