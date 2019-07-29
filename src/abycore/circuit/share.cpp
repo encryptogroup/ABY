@@ -118,75 +118,81 @@ uint8_t* boolshare::get_clear_value_ptr() {
 	uint32_t nvals = m_ccirc->GetNumVals(m_ngateids[0]);
 	uint32_t bytelen = ceil_divide(m_ngateids.size(), 8);
 
-	out = (uint8_t*) calloc(ceil_divide(m_ngateids.size(), 8) * nvals, sizeof(uint8_t));
+	out = (uint8_t*)calloc(ceil_divide(m_ngateids.size(), 8) * nvals, sizeof(uint8_t));
 
 	for (uint32_t i = 0, ibytes; i < m_ngateids.size(); i++) {
 		assert(nvals == m_ccirc->GetNumVals(m_ngateids[i]));
 		gatevals = m_ccirc->GetOutputGateValue(m_ngateids[i]);
 
-		ibytes = i / 8;
-		for (uint32_t j = 0; j < nvals; j++) {
-			out[j * bytelen + ibytes] += (((gatevals[j / 64] >> (j % 64)) & 0x01) << (i & 0x07));
+		// only write sth if there are values (output might not be for this party)
+		if (gatevals != nullptr) {
+			ibytes = i / 8;
+			for (uint32_t j = 0; j < nvals; j++) {
+				out[j * bytelen + ibytes] += (((gatevals[j / 64] >> (j % 64)) & 0x01) << (i & 0x07));
+			}
 		}
 	}
 	return out;
 }
 
-
 //TODO This method will only work up to a bitlength of 32
-void boolshare::get_clear_value_vec(uint32_t** vec, uint32_t *bitlen, uint32_t *nvals) {
+void boolshare::get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t* nvals) {
 	assert(m_ngateids.size() <= sizeof(uint32_t) * 8);
 	UGATE_T* outvalptr;
 	uint32_t gnvals;
 
-	*nvals = 1;
+	*nvals = 0;
 	*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], outvalptr);
-	*vec = (uint32_t*) calloc(*nvals, sizeof(uint32_t));
 
-	for (uint32_t j = 0; j < *nvals; j++) {
-		(*vec)[j] = (outvalptr[j / 64] >> (j % 64)) & 0x01;
-	}
-
-	for (uint32_t i = 1; i < m_ngateids.size(); i++) {
-		gnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], outvalptr);
-		assert(*nvals == gnvals);
+	// only continue if there are values (output might not be for this party)
+	if (*nvals > 0) {
+		*vec = (uint32_t*)calloc(*nvals, sizeof(uint32_t));
 
 		for (uint32_t j = 0; j < *nvals; j++) {
-			(*vec)[j] = (*vec)[j] + (((outvalptr[j / 64] >> (j % 64)) & 0x01) << i);
+			(*vec)[j] = (outvalptr[j / 64] >> (j % 64)) & 0x01;
 		}
-	}
-	*bitlen = m_ngateids.size();
-	//return nvals;
-}
 
+		for (uint32_t i = 1; i < m_ngateids.size(); i++) {
+			gnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], outvalptr);
+			assert(*nvals == gnvals);  //check that all wires have same nvals
+
+			for (uint32_t j = 0; j < *nvals; j++) {
+				(*vec)[j] = (*vec)[j] + (((outvalptr[j / 64] >> (j % 64)) & 0x01) << i);
+			}
+		}
+		*bitlen = m_ngateids.size();
+	}
+}
 
 //TODO: copied from 32 bits. Put template in and test later on!
 //TODO This method will only work up to a bitlength of 64
-void boolshare::get_clear_value_vec(uint64_t** vec, uint32_t *bitlen, uint32_t *nvals) {
+void boolshare::get_clear_value_vec(uint64_t** vec, uint32_t* bitlen, uint32_t* nvals) {
 	assert(m_ngateids.size() <= sizeof(uint64_t) * 8);
 	UGATE_T* outvalptr;
 	uint32_t gnvals;
 
-	*nvals = 1;
+	*nvals = 0;
 	*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], outvalptr);
-	*vec = (uint64_t*) calloc(*nvals, sizeof(uint64_t));
 
-	for (uint32_t j = 0; j < *nvals; j++) {
-		(*vec)[j] = (outvalptr[j / 64] >> (j % 64)) & 0x01;
-	}
-
-	for (uint32_t i = 1; i < m_ngateids.size(); i++) {
-		gnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], outvalptr);
-		assert(*nvals == gnvals);
+	// only continue if there are values (output might not be for this party)
+	if (*nvals > 0) {
+		*vec = (uint64_t*)calloc(*nvals, sizeof(uint64_t));
 
 		for (uint32_t j = 0; j < *nvals; j++) {
-			(*vec)[j] = (*vec)[j] + (((outvalptr[j / 64] >> (j % 64)) & 0x01) << i);
+			(*vec)[j] = (outvalptr[j / 64] >> (j % 64)) & 0x01;
 		}
-	}
-	*bitlen = m_ngateids.size();
-	//return nvals;
-}
 
+		for (uint32_t i = 1; i < m_ngateids.size(); i++) {
+			gnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], outvalptr);
+			assert(*nvals == gnvals);  //check that all wires have same nvals
+
+			for (uint32_t j = 0; j < *nvals; j++) {
+				(*vec)[j] = (*vec)[j] + (((outvalptr[j / 64] >> (j % 64)) & 0x01) << i);
+			}
+		}
+		*bitlen = m_ngateids.size();
+	}
+}
 
 yao_fields* boolshare::get_internal_yao_keys() {
 	yao_fields* out;
@@ -219,11 +225,16 @@ yao_fields* boolshare::get_internal_yao_keys() {
 uint8_t* arithshare::get_clear_value_ptr() {
 	UGATE_T* gate_val;
 	uint32_t nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
-	uint8_t* out = (uint8_t*) malloc(nvals * sizeof(uint32_t));
-	for (uint32_t i = 0; i < nvals; i++) {
-		((uint32_t*) out)[i] = (uint32_t) gate_val[i];
+	if (nvals > 0) {
+		uint8_t* out = (uint8_t*)malloc(nvals * sizeof(uint32_t));
+		for (uint32_t i = 0; i < nvals; i++) {
+			((uint32_t*)out)[i] = (uint32_t)gate_val[i];
+		}
+		return out;
 	}
-	return out;
+	else{
+		return nullptr;
+	}
 }
 
 void arithshare::get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t* nvals) {
@@ -231,23 +242,27 @@ void arithshare::get_clear_value_vec(uint32_t** vec, uint32_t* bitlen, uint32_t*
 
 	UGATE_T* gate_val;
 	*nvals = 0;
-	for(uint32_t i = 0; i < m_ngateids.size(); i++) {
-		(*nvals) += m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
-	}
-	uint32_t sharebytes = ceil_divide(m_ccirc->GetShareBitLen(), 8);
 
-	//*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
-	*vec = (uint32_t*) calloc(*nvals, sizeof(uint32_t));
-
-	for(uint32_t i = 0, tmpctr=0, tmpnvals; i < m_ngateids.size(); i++) {
-		tmpnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
-		//cout << m_ngateids[i] << " gateval = " << gate_val[0] << ", nvals = " << *nvals << ", sharebitlen = " << m_ccirc->GetShareBitLen() << endl;
-		for(uint32_t j = 0; j < tmpnvals; j++, tmpctr++) {
-			memcpy((*vec)+tmpctr, ((uint8_t*) gate_val)+(j*sharebytes), sharebytes);
+	// only continue if there are values (output might not be for this party)
+	if (m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val) > 0) {
+		for (uint32_t i = 0; i < m_ngateids.size(); i++) {
+			(*nvals) += m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
 		}
-	}
+		uint32_t sharebytes = ceil_divide(m_ccirc->GetShareBitLen(), 8);
 
-	*bitlen = m_ccirc->GetShareBitLen();
+		//*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
+		*vec = (uint32_t*)calloc(*nvals, sizeof(uint32_t));
+
+		for (uint32_t i = 0, tmpctr = 0, tmpnvals; i < m_ngateids.size(); i++) {
+			tmpnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
+			//cout << m_ngateids[i] << " gateval = " << gate_val[0] << ", nvals = " << *nvals << ", sharebitlen = " << m_ccirc->GetShareBitLen() << endl;
+			for (uint32_t j = 0; j < tmpnvals; j++, tmpctr++) {
+				memcpy((*vec) + tmpctr, ((uint8_t*)gate_val) + (j * sharebytes), sharebytes);
+			}
+		}
+
+		*bitlen = m_ccirc->GetShareBitLen();
+	}
 }
 
 //TODO: copied from 32 bits. Put template in and test later on!
@@ -256,23 +271,26 @@ void arithshare::get_clear_value_vec(uint64_t** vec, uint32_t* bitlen, uint32_t*
 
 	UGATE_T* gate_val;
 	*nvals = 0;
-	for(uint32_t i = 0; i < m_ngateids.size(); i++) {
-		(*nvals) += m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
-	}
-	uint32_t sharebytes = ceil_divide(m_ccirc->GetShareBitLen(), 8);
-
-	//*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
-	*vec = (uint64_t*) calloc(*nvals, sizeof(uint64_t));
-
-	for(uint32_t i = 0, tmpctr=0, tmpnvals; i < m_ngateids.size(); i++) {
-		tmpnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
-		//cout << m_ngateids[i] << " gateval = " << gate_val[0] << ", nvals = " << *nvals << ", sharebitlen = " << m_ccirc->GetShareBitLen() << endl;
-		for(uint32_t j = 0; j < tmpnvals; j++, tmpctr++) {
-			memcpy((*vec)+tmpctr, ((uint8_t*) gate_val)+(j*sharebytes), sharebytes);
+	// only continue if there are values (output might not be for this party)
+	if (m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val) > 0) {
+		for (uint32_t i = 0; i < m_ngateids.size(); i++) {
+			(*nvals) += m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
 		}
-	}
+		uint32_t sharebytes = ceil_divide(m_ccirc->GetShareBitLen(), 8);
 
-	*bitlen = m_ccirc->GetShareBitLen();
+		//*nvals = m_ccirc->GetOutputGateValue(m_ngateids[0], gate_val);
+		*vec = (uint64_t*)calloc(*nvals, sizeof(uint64_t));
+
+		for (uint32_t i = 0, tmpctr = 0, tmpnvals; i < m_ngateids.size(); i++) {
+			tmpnvals = m_ccirc->GetOutputGateValue(m_ngateids[i], gate_val);
+			//cout << m_ngateids[i] << " gateval = " << gate_val[0] << ", nvals = " << *nvals << ", sharebitlen = " << m_ccirc->GetShareBitLen() << endl;
+			for (uint32_t j = 0; j < tmpnvals; j++, tmpctr++) {
+				memcpy((*vec) + tmpctr, ((uint8_t*)gate_val) + (j * sharebytes), sharebytes);
+			}
+		}
+
+		*bitlen = m_ccirc->GetShareBitLen();
+	}
 }
 
 share* arithshare::get_share_from_wire_id(uint32_t shareid) {
@@ -288,7 +306,3 @@ share* boolshare::get_share_from_wire_id(uint32_t shareid) {
 	new_shr->set_wire_id(shareid,get_wire_id(shareid));
 	return new_shr;
 }
-
-
-
-

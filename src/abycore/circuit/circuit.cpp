@@ -96,13 +96,21 @@ gate_specific Circuit::GetGateSpecificOutput(uint32_t gateid) {
 }
 
 uint32_t Circuit::GetOutputGateValue(uint32_t gateid, UGATE_T*& outval) {
-	assert(m_vGates[gateid].instantiated);
+	//assert(m_vGates[gateid].instantiated);
+	if(!m_vGates[gateid].instantiated){
+		std::cerr << "Output not allowed for this role. Returned value will be wrong!" << std::endl;
+		return 0;
+	}
 	outval = m_vGates[gateid].gs.val;
 	return m_vGates[gateid].nvals;
 }
 
 UGATE_T* Circuit::GetOutputGateValue(uint32_t gateid) {
-	assert(m_vGates[gateid].instantiated);
+	//assert(m_vGates[gateid].instantiated);
+	if(!m_vGates[gateid].instantiated){
+		std::cerr << "Output not allowed for this role! Returned value will be wrong!" << std::endl;
+		return nullptr;
+	}
 	return m_vGates[gateid].gs.val;
 }
 
