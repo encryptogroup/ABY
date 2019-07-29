@@ -25,9 +25,9 @@ script:
   - mkdir build_debug
   - cd build_debug
   - CC=/usr/bin/gcc-8 CXX=/usr/bin/g++-8 cmake .. -DCMAKE_BUILD_TYPE=Debug -DABY_BUILD_EXE=On
-  - make
-  - ./bin/abytest -r 0 &
-  - ./bin/abytest -r 1
+  - make -j 2
+  - ./bin/abytest -r 0 -q &
+  - ./bin/abytest -r 1 -q
 
 notifications:
   - email: false

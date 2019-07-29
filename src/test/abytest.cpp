@@ -151,6 +151,8 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 	vector<Sharing*>& sharings = party->GetSharings();
 	Circuit *bc, *yc, *ac;
 
+	if (quiet) {std::cout << "Running operation test quietly."<< std::endl;}
+
 	for (uint32_t r = 0; r < num_test_runs; r++) {
 		for (uint32_t i = 0; i < nops; i++) {
 			Circuit* circ = sharings[test_ops[i].sharing]->GetCircuitBuildRoutine();
@@ -286,8 +288,7 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 			shrout = circ->PutOUTGate(shrres, ALL);
 
 			if (!quiet){
-				std::cout << "Running test no. " << i << " on operation " << test_ops[i].opname;
-				std::cout << std::endl;
+				std::cout << "Running test no. " << i << " on operation " << test_ops[i].opname << std::endl;
 			}
 
 			party->ExecCircuit();
@@ -299,8 +300,13 @@ int32_t test_standard_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen,
 			}
 			party->Reset();
 
-			if(!ignore_verification){
-				assert(verify == c);
+			if (!ignore_verification) {
+				if (verify != c) {
+					std::cerr << "ERROR in test verification! " << std::endl;
+					std::cerr << get_role_name(role) << " " << test_ops[i].opname << ": values: a = " << a
+							  << ", b = " << b << ", c = " << c << ", verify = " << verify << std::endl;
+					exit(EXIT_FAILURE);
+				}
 			}
 		}
 	}
@@ -550,24 +556,31 @@ int32_t test_vector_ops(aby_ops_t* test_ops, ABYParty* party, uint32_t bitlen, u
 
 			party->Reset();
 			for (uint32_t j = 0; j < nvals; j++) {
-				if (!quiet)
+				if (!quiet){
 					std::cout << "\t" << get_role_name(role) << " " << test_ops[i].opname << ": values[" << j <<
 					"]: a = " << avec[j] <<	", b = " << bvec[j] << ", c = " << cvec[j] << ", verify = " <<
 					verifyvec[j] << std::endl;
+					}
 				if(!ignore_verification){
-					assert(verifyvec[j] == cvec[j]);
+					if(verifyvec[j] != cvec[j]){
+						std::cerr << "ERROR in test verification! " << std::endl;
+						std::cerr << "\t" << get_role_name(role) << " " << test_ops[i].opname << ": values[" << j <<
+					"]: a = " << avec[j] <<	", b = " << bvec[j] << ", c = " << cvec[j] << ", verify = " <<
+					verifyvec[j] << std::endl;
+					exit(EXIT_FAILURE);
+					}
 				}
-				
+
 			}
-			free(cvec);
+			std::free(cvec);
 		}
 	}
 
-	free(sa);
-	free(sb);
-	free(avec);
-	free(bvec);
-	free(verifyvec);
+	std::free(sa);
+	std::free(sb);
+	std::free(avec);
+	std::free(bvec);
+	std::free(verifyvec);
 
 	return EXIT_SUCCESS;
 
@@ -614,6 +627,3 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role, uint32_t*
 
 	return EXIT_SUCCESS;
 }
-
-
-
