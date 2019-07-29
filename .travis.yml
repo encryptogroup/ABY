@@ -1,23 +1,15 @@
 language: cpp
 compiler: g++
-dist: xenial
-
-addons:
-  apt:
-    sources:
-    - sourceline: 'ppa:ubuntu-toolchain-r/test'
-    - sourceline: 'ppa:mhier/libboost-latest'
-    packages:
-    - g++-8
-    - libboost1.67-dev
-    - libgmp-dev
-    - libssl-dev
+dist: bionic
 
 before_install:
+  - sudo add-apt-repository -y ppa:mhier/libboost-latest
+  - sudo apt-get update
+  - sudo apt-get install -y g++-8 libboost1.70-dev libgmp-dev libssl-dev
   # Install a recent CMake
   - mkdir $HOME/prefix
   - export PATH="$HOME/prefix/bin:$PATH"
-  - wget https://cmake.org/files/v3.14/cmake-3.14.0-Linux-x86_64.sh -O cmake_install.sh
+  - wget https://cmake.org/files/v3.15/cmake-3.15.1-Linux-x86_64.sh -O cmake_install.sh
   - chmod +x cmake_install.sh
   - ./cmake_install.sh --prefix=$HOME/prefix --exclude-subdir --skip-license
 
