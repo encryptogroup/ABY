@@ -692,7 +692,8 @@ private:
 			memset(tmpval, 0, tmpval_bytes);
 			for (uint32_t j = 0; j < nvals; j++) {
 				//tmpval[j / typebitlen] += ((val[j] >> (i % typebitlen) & 0x01) << j);
-				tmpval[j /typebitlen] += (((val[j * typebyteiters + i/typebitlen] >> (i % typebitlen)) & 0x01) << (j%typebitlen));
+				tmpval[j / typebitlen] +=
+					(((val[j * typebyteiters + i / typebitlen] >> (i % typebitlen)) & 0x01) << (j % typebitlen));
 			}
 			shr->set_wire_id(i, PutSIMDINGate(nvals, tmpval, role));
 		}
@@ -712,7 +713,8 @@ private:
 			memset(tmpval, 0, tmpval_bytes);
 			for (uint32_t j = 0; j < nvals; j++) {
 				//tmpval[j / typebitlen] += ((val[j] >> (i % typebitlen) & 0x01) << j);
-				tmpval[j /typebitlen] += (((val[j * typebyteiters + i/typebitlen] >> (i % typebitlen)) & 0x01) << (j%typebitlen));
+				tmpval[j / typebitlen] +=
+					(((val[j * typebyteiters + i / typebitlen] >> (i % typebitlen)) & 0x01) << (j % typebitlen));
 			}
 			shr->set_wire_id(i, PutSharedSIMDINGate(nvals, tmpval));
 		}

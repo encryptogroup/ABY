@@ -2315,8 +2315,8 @@ std::vector<uint32_t> BooleanCircuit::PutGateFromFile(const std::string filename
 					wires[tokens[0]] = PutConstantGate(0, nvals);
 					break;
 
-				case '1': // Constant Zero Gate
-					wires[tokens[0]] = PutConstantGate((1 << nvals) - 1, nvals);
+				case '1': // Constant One Gate
+					wires[tokens[0]] = PutConstantGate((UGATE_T) -1, nvals);
 					break;
 
 				case 'A': // AND Gate
@@ -3246,9 +3246,7 @@ share * BooleanCircuit::PutFPGate(share * in, op_t op, uint8_t bitlen, uint32_t 
 			std::cerr << "Wrong operation in floating point gate with one input.";
 			std::exit(EXIT_FAILURE);
 	}
-	return new boolshare(PutFPGate(o, in->get_wires(),
-		(uint8_t) bitlen,
-		nvals), this);
+	return new boolshare(PutFPGate(o, in->get_wires(), bitlen, nvals), this);
 }
 
 share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint8_t bitlen, uint32_t nvals, fp_op_setting s){
@@ -3280,7 +3278,5 @@ share * BooleanCircuit::PutFPGate(share * in_a, share * in_b, op_t op, uint8_t b
 			std::cerr << "Wrong operation in floating point gate with two inputs.";
 			std::exit(EXIT_FAILURE);
 	}
-	return new boolshare(PutFPGate(o, in_a->get_wires(),
-				   in_b->get_wires(), (uint8_t) bitlen,
-				   nvals), this);
+	return new boolshare(PutFPGate(o, in_a->get_wires(), in_b->get_wires(), bitlen, nvals), this);
 }
