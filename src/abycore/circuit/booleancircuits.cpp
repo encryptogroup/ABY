@@ -444,58 +444,39 @@ share* BooleanCircuit::PutSharedOUTGate(share* parent) {
 }
 
 share* BooleanCircuit::PutCONSGate(UGATE_T val, uint32_t bitlen) {
-	share* shr = new boolshare(bitlen, this);
-	for (uint32_t i = 0; i < bitlen; i++) {
-		if ((val >> i) & 0x01) {
-			shr->set_wire_id(i, PutConstantGate(1, 1));
-		} else {
-			shr->set_wire_id(i, PutConstantGate(0, 1));
-		}
-	}
-	return shr;
+	return PutSIMDCONSGate(1, val, bitlen);
 }
 
 share* BooleanCircuit::PutCONSGate(uint8_t* val, uint32_t bitlen) {
-	share* shr = new boolshare(bitlen, this);
-	for (uint32_t i = 0; i < bitlen; i++) {
-		shr->set_wire_id(i, PutConstantGate(val[i] & 0x01, 1));
-	}
-	return shr;
+	return PutSIMDCONSGate(1, val, bitlen);
 }
 
 share* BooleanCircuit::PutCONSGate(uint32_t* val, uint32_t bitlen) {
-	share* shr = new boolshare(bitlen, this);
-	for (uint32_t i = 0; i < bitlen; i++) {
-		shr->set_wire_id(i, PutConstantGate((val[i >> 5] >> i) & 0x01, 1));
-	}
-	return shr;
+	return PutSIMDCONSGate(1, val, bitlen);
 }
 
 share* BooleanCircuit::PutSIMDCONSGate(uint32_t nvals, UGATE_T val, uint32_t bitlen) {
 	share* shr = new boolshare(bitlen, this);
-	for (uint32_t i = 0; i < bitlen; i++) {
-		if ((val >> i) & 0x01) {
-			shr->set_wire_id(i, PutConstantGate(~0L, nvals));
-		}
-		else {
-			shr->set_wire_id(i, PutConstantGate(0L, nvals));
-		}
+	for(uint32_t i = 0; i < bitlen; ++i) {
+		shr->set_wire_id(i, PutConstantGate((val >> i) & 1, nvals));
 	}
 	return shr;
 }
 
 share* BooleanCircuit::PutSIMDCONSGate(uint32_t nvals, uint8_t* val, uint32_t bitlen) {
 	share* shr = new boolshare(bitlen, this);
-	for (uint32_t i = 0; i < bitlen; i++) {
-		shr->set_wire_id(i, PutConstantGate(val[i] & 0x01, nvals));
+	for(uint32_t i = 0; i < bitlen; ++i) {
+		uint32_t shift = i % 8;
+		shr->set_wire_id(i, PutConstantGate((val[(i / 8)] & (1 << shift)) >> shift, nvals));
 	}
 	return shr;
 }
 
 share* BooleanCircuit::PutSIMDCONSGate(uint32_t nvals, uint32_t* val, uint32_t bitlen) {
 	share* shr = new boolshare(bitlen, this);
-	for (uint32_t i = 0; i < bitlen; i++) {
-		shr->set_wire_id(i, PutConstantGate((val[i >> 5] >> i) & 0x01, nvals));
+	for(uint32_t i = 0; i < bitlen; ++i) {
+		uint32_t shift = i % 32;
+		shr->set_wire_id(i, PutConstantGate((val[(i / 32)] & (1 << shift)) >> shift, nvals));
 	}
 	return shr;
 }
@@ -892,17 +873,13 @@ std::vector<uint32_t> BooleanCircuit::PutLeftShifterGate(std::vector<uint32_t> v
 }
 
 // Builds a universal gate that output op_id depending on the circuit
-// Only works for nvals <= 32 due to the constant gate implementation in Bool
-// sharing.
 uint32_t BooleanCircuit::PutUniversalGateCircuit(uint32_t a, uint32_t b, uint32_t op_id) {
 	uint32_t nvals = std::max(m_vGates[a].nvals, m_vGates[b].nvals);
-	assert(nvals <= 32);
 
-	uint32_t mask = 0xFFFFFFFF;
-	uint32_t c0 = PutConstantGate((op_id & 0x01) * mask, nvals);
-	uint32_t c1 = PutConstantGate(((op_id>>1) & 0x01) * mask, nvals);
-	uint32_t c2 = PutConstantGate(((op_id>>2) & 0x01) * mask, nvals);
-	uint32_t c3 = PutConstantGate(((op_id>>3) & 0x01) * mask, nvals);
+	uint32_t c0 = PutConstantGate(op_id & 0x01, nvals);
+	uint32_t c1 = PutConstantGate((op_id>>1) & 0x01, nvals);
+	uint32_t c2 = PutConstantGate((op_id>>2) & 0x01, nvals);
+	uint32_t c3 = PutConstantGate((op_id>>3) & 0x01, nvals);
 
 	uint32_t c0c1 =	PutXORGate(c0, c1);
 	uint32_t c2c3 =	PutXORGate(c2, c3);
@@ -2316,7 +2293,7 @@ std::vector<uint32_t> BooleanCircuit::PutGateFromFile(const std::string filename
 					break;
 
 				case '1': // Constant One Gate
-					wires[tokens[0]] = PutConstantGate((UGATE_T) -1, nvals);
+					wires[tokens[0]] = PutConstantGate(1, nvals);
 					break;
 
 				case 'A': // AND Gate

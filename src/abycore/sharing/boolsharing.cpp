@@ -708,15 +708,21 @@ inline void BoolSharing::EvaluateConstantGate(uint32_t gateid) {
 	InstantiateGate(gate);
 	value = value * (m_eRole != CLIENT);
 
-	for (uint32_t i = 0; i < ceil_divide(gate->nvals, GATE_T_BITS); i++) {
-		gate->gs.val[i] = value;
-		if(value) {
-			gate->gs.val[i] = ~(0L);
-		}
+	uint32_t valsize = ceil_divide(gate->nvals, GATE_T_BITS);
+	UGATE_T setval;
+	if(value == 1L) {
+		setval = ~(0L);
+	} else {
+		setval = 0L;
 	}
-	if(gate->nvals % GATE_T_BITS != 0) {
-		gate->gs.val[ceil_divide(gate->nvals, GATE_T_BITS)-1] &= ((1L<<(gate->nvals%64)) -1L);
+	for (uint32_t i = 0; i < valsize; ++i) {
+		gate->gs.val[i] = setval;
 	}
+	uint32_t valmod = gate->nvals % GATE_T_BITS;
+	if(valmod != 0) {
+		gate->gs.val[valsize - 1] &= (1L << valmod) - 1L;
+	}
+
 #ifdef DEBUGBOOL
 		std::cout << "Constant gate value: "<< value << std::endl;
 #endif

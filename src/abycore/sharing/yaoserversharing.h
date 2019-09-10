@@ -210,6 +210,12 @@ private:
 	//void EvaluateClientOutputGate(GATE* gate);
 	void CollectClientOutputShares();
 	/**
+	 Method for evaluating a constant gate for the inputted
+	 gate id.
+	 \param gateid	Gate Identifier
+	 */
+	void EvaluateConstantGate(GATE* gate);
+	/**
 	 Method for evaluating Output gate for the inputted
 	 gate object.
 	 \param gate		Gate Object
