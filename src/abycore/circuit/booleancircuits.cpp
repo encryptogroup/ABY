@@ -1773,14 +1773,11 @@ std::vector<uint32_t> BooleanCircuit::PutVecANDMUXGate(std::vector<uint32_t> a, 
 	PadWithLeadingZeros(a, b);
 
 	std::vector<uint32_t> out(nmuxes);
-	uint32_t sab, ab;
 
 	//std::cout << "Putting Vector AND gate" << std::endl;
 
 	for (uint32_t i = 0; i < nmuxes; i++) {
-		ab = PutXORGate(a[i], b[i]);
-		sab = PutVectorANDGate(s[i], ab);
-		out[i] = PutXORGate(b[i], sab);
+		out[i] = PutVecANDMUXGate(a[i], b[i], s[i]);
 	}
 
 	return out;
@@ -1793,8 +1790,7 @@ uint32_t BooleanCircuit::PutVecANDMUXGate(uint32_t a, uint32_t b, uint32_t s) {
 	if (m_eContext == S_BOOL) {
 		sab = PutVectorANDGate(s, ab);
 	} else {
-		uint32_t svec = PutRepeaterGate(s, m_vGates[ab].nvals);
-		sab = PutANDGate(svec, ab);
+		sab = PutANDGate(s, ab);
 	}
 	return PutXORGate(b, sab);
 }
