@@ -104,28 +104,29 @@ ABYParty::ABYParty(e_role pid, const std::string& addr, uint16_t port, seclvl se
 	StopWatch("Time for circuit generation: ", P_CIRCUIT);
 }
 
-
 void ABYParty::ConnectAndBaseOTs() {
+	if (!is_online) {
 #ifndef BATCH
-	std::cout << "Establishing network connection" << std::endl;
+		std::cout << "Establishing network connection" << std::endl;
 #endif
-	//Establish network connection
-	StartWatch("Establishing network connection: ", P_NETWORK);
-	if (!EstablishConnection()) {
-		std::cout << "There was an error during establish connection, ending! " << std::endl;
-		std::exit(EXIT_FAILURE);
+		//Establish network connection
+		StartWatch("Establishing network connection: ", P_NETWORK);
+		if (!EstablishConnection()) {
+			std::cout << "There was an error during establish connection, ending! " << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
+		StopWatch("Time for network connect: ", P_NETWORK);
+
+#ifndef BATCH
+		std::cout << "Performing base OTs" << std::endl;
+#endif
+		/* Pre-Compute Naor-Pinkas base OTs by starting two threads */
+		StartRecording("Starting NP OT", P_BASE_OT, m_vSockets);
+		m_pSetup->PrepareSetupPhase(m_tComm.get());
+		StopRecording("Time for NP OT: ", P_BASE_OT, m_vSockets);
+
+		is_online = true;
 	}
-	StopWatch("Time for network connect: ", P_NETWORK);
-
-#ifndef BATCH
-	std::cout << "Performing base OTs" << std::endl;
-#endif
-	/* Pre-Compute Naor-Pinkas base OTs by starting two threads */
-	StartRecording("Starting NP OT", P_BASE_OT, m_vSockets);
-	m_pSetup->PrepareSetupPhase(m_tComm.get());
-	StopRecording("Time for NP OT: ", P_BASE_OT, m_vSockets);
-
-	is_online = true;
 }
 
 ABYParty::~ABYParty() {
@@ -187,9 +188,7 @@ void ABYParty::ExecCircuit() {
 	std::cout << "Finishing circuit generation" << std::endl;
 #endif
 
-	if (!is_online) {
-		ConnectAndBaseOTs();
-	}
+	ConnectAndBaseOTs();
 
 	StartRecording("Starting execution", P_TOTAL, m_vSockets);
 
