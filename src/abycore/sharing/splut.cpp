@@ -625,8 +625,19 @@ inline void SetupLUT::EvaluateConstantGate(uint32_t gateid) {
 	InstantiateGate(gate);
 	value = value * (m_eRole != CLIENT);
 
-	for (uint32_t i = 0; i < ceil_divide(gate->nvals, GATE_T_BITS); i++) {
-		gate->gs.val[i] = value;
+	uint32_t valsize = ceil_divide(gate->nvals, GATE_T_BITS);
+	UGATE_T setval;
+	if(value == 1L) {
+		setval = ~(0L);
+	} else {
+		setval = 0L;
+	}
+	for (uint32_t i = 0; i < valsize; ++i) {
+		gate->gs.val[i] = setval;
+	}
+	uint32_t valmod = gate->nvals % GATE_T_BITS;
+	if(valmod != 0) {
+		gate->gs.val[valsize - 1] &= (1L << valmod) - 1L;
 	}
 #ifdef DEBUG_SPLUT
 		std::cout << "Constant gate value: "<< value << std::endl;

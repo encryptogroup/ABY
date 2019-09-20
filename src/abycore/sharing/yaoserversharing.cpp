@@ -392,13 +392,7 @@ void YaoServerSharing::PrecomputeGC(std::deque<uint32_t>& queue, ABYSetup* setup
 #endif
 			EvaluateConversionGate(queue[i]);
 		} else if (gate->type == G_CONSTANT) {
-			//assign 0 and 1 gates
-			UGATE_T constval = gate->gs.constval;
-			InstantiateGate(gate);
-			memset(gate->gs.yinput.outKey, 0, m_nSecParamBytes * gate->nvals);
-			for(uint32_t i = 0; i < gate->nvals; i++) {
-				gate->gs.yinput.pi[i] = (constval>>i) & 0x01;
-			}
+			EvaluateConstantGate(gate);
 #ifdef DEBUGYAOSERVER
 			std::cout << "Assigned key to constant gate " << queue[i] << " (" << (uint32_t) gate->gs.yinput.pi[0] << ") : ";
 			PrintKey(gate->gs.yinput.outKey);
@@ -799,6 +793,20 @@ void YaoServerSharing::CollectClientOutputShares() {
 			m_vOutputShareSndBuf.SetBit(m_nOutputShareSndSize, !!((m_vGates[out.front()].gs.val[j / GATE_T_BITS]) & ((UGATE_T) 1 << (j % GATE_T_BITS))));
 		}
 		out.pop_front();
+	}
+}
+
+void YaoServerSharing::EvaluateConstantGate(GATE* gate) {
+	//assign 0 and 1 gates
+	UGATE_T constval = gate->gs.constval;
+	InstantiateGate(gate);
+	memset(gate->gs.yinput.outKey, 0, m_nSecParamBytes * gate->nvals);
+	for (uint32_t i = 0; i < gate->nvals; ++i) {
+		if(constval == 1L) {
+			gate->gs.yinput.pi[i] = 1;
+		} else {
+			gate->gs.yinput.pi[i] = 0;
+		}
 	}
 }
 

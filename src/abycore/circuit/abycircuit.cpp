@@ -402,9 +402,9 @@ uint32_t ABYCircuit::PutConstantGate(e_sharing context, UGATE_T val, uint32_t nv
 	gate->sharebitlen = sharebitlen;
 	gate->nrounds = 0;
 
-	if (gate->nvals > m_nMaxVectorSize)
+	if(gate->nvals > m_nMaxVectorSize) {
 		m_nMaxVectorSize = gate->nvals;
-
+	}
 	return currentGateId();
 }
 
