@@ -25,15 +25,15 @@
 #include "common/innerproduct.h"
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
-		uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
+		uint32_t* bitlen, uint32_t* numbers, uint32_t* secparam, std::string* address,
 		uint16_t* port, int32_t* test_op) {
 
 	uint32_t int_role = 0, int_port = 0;
 
 	parsing_ctx options[] =
 			{ { (void*) &int_role, T_NUM, "r", "Role: 0/1", true, false },
-			  { (void*) nvals, T_NUM, "n",	"Number of elements for inner product", false, false },
-			  {	(void*) bitlen, T_NUM, "b", "Bit-length, default 32", false, false },
+			  { (void*) numbers, T_NUM, "n",	"Number of elements for inner product, default: 128", false, false },
+			  {	(void*) bitlen, T_NUM, "b", "Bit-length, default 16", false, false },
 			  { (void*) secparam, T_NUM, "s", "Symmetric Security Bits, default: 128", false, false },
 			  {	(void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
 			  {	(void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false },
@@ -61,18 +61,18 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 int main(int argc, char** argv) {
 
 	e_role role;
-	uint32_t bitlen = 16, nvals = 128, secparam = 128, nthreads = 1;
+	uint32_t bitlen = 16, numbers = 128, secparam = 128, nthreads = 1;
 	uint16_t port = 7766;
 	std::string address = "127.0.0.1";
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 
-	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address, &port, &test_op);
+	read_test_options(&argc, &argv, &role, &bitlen, &numbers, &secparam, &address, &port, &test_op);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	// call inner product routine. set size with cmd-parameter -n <size>
-	test_inner_product_circuit(role, address, port, seclvl, 1, 16, nthreads, mt_alg, S_ARITH, nvals);
+	test_inner_product_circuit(role, address, port, seclvl, numbers, bitlen, nthreads, mt_alg, S_ARITH);
 
 	return 0;
 }
