@@ -33,7 +33,7 @@ class BooleanCircuit;
 //        uint32_t* y2, uint32_t * res, uint32_t n, uint32_t t);
 void verify_min_euclidean_dist(uint64_t* x1, uint64_t* x2, uint64_t* y1,
         uint64_t* y2, uint64_t * res, uint32_t n, uint64_t t);
-int32_t test_min_eucliden_dist_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t dbsize, uint32_t dim,
+int32_t test_min_eucliden_dist_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl, uint32_t operationbitlen,
 		uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing dstsharing, e_sharing minsharing, uint32_t n, bool only_yao);
 share* build_min_euclidean_dist_circuit(share* x1, share* y1, share* x2, share* y2,
         uint32_t n, uint64_t t, uint32_t bitlen, Circuit* distcirc, BooleanCircuit* mincirc,
