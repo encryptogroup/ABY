@@ -29,7 +29,6 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint16_t* port, int32_t* test_op) {
 
 	uint32_t int_role = 0, int_port = 0;
-	bool useffc = false;
 
 	parsing_ctx options[] =
 			{ { (void*) &int_role, T_NUM, "r", "Role: 0/1", true, false }, {
@@ -80,10 +79,10 @@ int main(int argc, char** argv) {
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	//evaluate the millionaires circuit using Yao
-	test_millionaire_prob_circuit(role, address, port, seclvl, 1, 32,
+	test_millionaire_prob_circuit(role, address, port, seclvl, 32,
 			nthreads, mt_alg, S_YAO);
 	//evaluate the millionaires circuit using GMW
-	//test_millionaire_prob_circuit(role, address, seclvl, 1, 32,
+	//test_millionaire_prob_circuit(role, address, port, seclvl, 32,
 	//		nthreads, mt_alg, S_BOOL);
 
 	return 0;
