@@ -22,8 +22,6 @@
 #include "../../../abycore/aby/abyparty.h"
 #include <ENCRYPTO_utils/cbitvector.h>
 #include <ENCRYPTO_utils/typedefs.h>
-//TODO make the graycode functionallity work again, the current graycode implementation depends on gpl code
-//#include <ENCRYPTO_utils/graycode.h>
 #include <cassert>
 
 static const BYTE mpccseed[16] = { 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF };
@@ -73,5 +71,8 @@ void CallbackMultiplyAndDestroy4RMatrix(GATE* gate, void* matrix);
 
 
 void FourRussiansMatrixMult(std::vector<uint32_t>& state, uint32_t lowmcstatesize, BooleanCircuit* circ);
+
+uint32_t* BuildGrayCode(uint32_t length);
+uint32_t* BuildGrayCodeIncrement(uint32_t length);
 
 #endif /* __LOWMCCIRCUIT_H_ */

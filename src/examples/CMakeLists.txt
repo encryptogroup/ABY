@@ -3,9 +3,7 @@ add_subdirectory(bench_operations)
 add_subdirectory(euclidean_distance)
 add_subdirectory(float)
 add_subdirectory(innerproduct)
-#currently not supported due to dependency to gpl code
-#TODO make it work again
-#add_subdirectory(lowmc)
+add_subdirectory(lowmc)
 add_subdirectory(millionaire_prob)
 add_subdirectory(min-euclidean-dist)
 add_subdirectory(psi_phasing)
