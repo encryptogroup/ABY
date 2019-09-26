@@ -17,11 +17,28 @@
  */
 
 #include "innerproduct.h"
-#include "../../../abycore/sharing/sharing.h"
+#include <abycore/sharing/sharing.h>
+#include <abycore/MATRIX/MatrixMeasurement.h>
 
 int32_t test_inner_product_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
 		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
 		e_sharing sharing, uint32_t num) {
+
+	/**
+	  Step 0: Init logger.
+	*/
+    char * argv[4];
+    argv[0] = (char*)"innerproduct";
+    argv[1] = (char*)malloc(16);
+    sprintf(argv[1], "%d", role);
+    argv[2] = (char*)malloc(16);
+    sprintf(argv[2], "%d", bitlen);
+    argv[3] = (char*)malloc(16);
+    sprintf(argv[3], "%d", seclvl.symbits);
+
+    vector<string> subTaskNames{"BuildInnerProductCircuit", "ExecCircuit"};
+
+	MatrixMeasurement log(4, argv, subTaskNames, 1);
 
 	/**
 	 Step 1: Create the ABYParty object which defines the basis of all the
@@ -30,6 +47,7 @@ int32_t test_inner_product_circuit(e_role role, const std::string& address, uint
 	 */
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads,
 			mt_alg);
+
 
 	/**
 	 Step 2: Get to know all the sharing types available in the program.
@@ -92,8 +110,10 @@ int32_t test_inner_product_circuit(e_role role, const std::string& address, uint
 	 problem by passing the shared objects and circuit object.
 	 Don't forget to type cast the circuit object to type of share
 	 */
+	log.startSubTask("BuildInnerProductCircuit", 0);
 	s_out = BuildInnerProductCircuit(s_x_vec, s_y_vec, num,
 			(ArithmeticCircuit*) circ);
+    log.endSubTask("BuildInnerProductCircuit", 0);
 
 	/**
 	 Step 8: Output the value of s_out (the computation result) to both parties
@@ -104,7 +124,13 @@ int32_t test_inner_product_circuit(e_role role, const std::string& address, uint
 	 Step 9: Executing the circuit using the ABYParty object evaluate the
 	 problem.
 	 */
+	log.startSubTask("ExecCircuit", 0);
 	party->ExecCircuit();
+    log.endSubTask("ExecCircuit", 0);
+
+#ifdef ABY_ENABLE_MATRIX
+	log.write_log();
+#endif
 
 	/**
 	 Step 10: Type caste the plaintext output to 16 bit unsigned integer.

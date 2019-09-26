@@ -123,6 +123,9 @@ applications, you use the `ABY_BUILD_EXE` option:
 cmake .. -DABY_BUILD_EXE=On
 ```
 
+If also `-DABY_ENABLE_MATRIX=On` is given, then the examples output data for
+the [MATRIX framework](https://github.com/cryptobiu/MATRIX) (if available).
+
 ###### Build Options
 
 You can choose the build type, e.g. `Release` or `Debug` using

@@ -20,7 +20,7 @@
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/parse_options.h>
 //ABY Party class
-#include "../../abycore/aby/abyparty.h"
+#include <abycore/aby/abyparty.h>
 
 #include "common/innerproduct.h"
 

@@ -6,6 +6,7 @@ if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
 endif()
 
 option(ABY_BUILD_EXE "Build executables" OFF)
+option(ABY_ENABLE_MATRIX "Enable logging for the MATRIX framework in examples applications" OFF)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
