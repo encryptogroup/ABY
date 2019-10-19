@@ -22,15 +22,13 @@
 #include "common/euclidean_dist.h"
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
-		uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
-		uint16_t* port) {
+		uint32_t* nvals, uint32_t* secparam, std::string* address, uint16_t* port) {
 
 	uint32_t int_role = 0, int_port = 0;
 
 	parsing_ctx options[] = {
 		{(void*) &int_role, T_NUM, "r", "Role: 0/1", true, false },
 		{(void*) nvals, T_NUM, "n",	"Number of parallel elements", false, false },
-		{(void*) bitlen, T_NUM, "b", "Bit-length, default 32", false, false },
 		{(void*) secparam, T_NUM, "s", "Symmetric Security Bits, default: 128", false, false },
 		{(void*) address, T_STR, "a", "IP-address, default: localhost", false, false },
 		{(void*) &int_port, T_NUM, "p", "Port, default: 7766", false, false }
@@ -57,20 +55,20 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 int main(int argc, char** argv) {
 
 	e_role role;
-	uint32_t bitlen = 32, nvals = 31, secparam = 128, nthreads = 1;
+	uint32_t nvals = 31, secparam = 128, nthreads = 1;
 	uint16_t port = 7766;
 	std::string address = "127.0.0.1";
 	e_mt_gen_alg mt_alg = MT_OT;
 
-	read_test_options(&argc, &argv, &role, &bitlen, &nvals, &secparam, &address,
+	read_test_options(&argc, &argv, &role, &nvals, &secparam, &address,
 			&port);
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
-	test_euclid_dist_circuit(role, address, port, seclvl, 1, 32,
+	test_euclid_dist_circuit(role, address, port, seclvl, nvals,
 			nthreads, mt_alg, S_YAO);
 
-	test_euclid_dist_circuit(role, address, port, seclvl, 1, 32,
+	test_euclid_dist_circuit(role, address, port, seclvl, nvals,
 			nthreads, mt_alg, S_BOOL);
 
 	return 0;

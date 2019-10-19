@@ -39,7 +39,7 @@
  Euclidean Distance.
  */
 int32_t test_euclid_dist_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
+		uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg,
 		e_sharing sharing);
 
 /**
@@ -49,11 +49,9 @@ int32_t test_euclid_dist_circuit(e_role role, const std::string& address, uint16
  \param		s_y2 		shared object of first coordinate y2.
 
  \param		bc	 		boolean circuit object.
- \brief		This function is used to build and find the Euclidean Distance.
+ \brief		This function is used to build and find the Euclidean Distance (without computing the sqrt at the end).
  */
 share* BuildEuclidDistanceCircuit(share *s_x1, share *s_x2, share *s_y1,
 		share *s_y2, BooleanCircuit *bc);
-
-static uint32_t m_nBitLength;
 
 #endif /* __EUCLIDEAN_DIST_H_ */

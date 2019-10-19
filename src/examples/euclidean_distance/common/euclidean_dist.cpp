@@ -20,8 +20,12 @@
 #include "../../../abycore/sharing/sharing.h"
 
 int32_t test_euclid_dist_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
+		uint32_t nvals, uint32_t nthreads, e_mt_gen_alg mt_alg,
 		e_sharing sharing) {
+
+	// defines the operation/output bitlength operations for boolean and arithmetic circuits
+	// this is why the output bitlen is 32 bits and not 8 bits like the input length
+	uint32_t bitlen = 32;
 
 	/**
 		Step 1: Create the ABY Party object which defines the basis of
@@ -57,31 +61,33 @@ int32_t test_euclid_dist_circuit(e_role role, const std::string& address, uint16
 		here we know both pairs for verification later on.
 	*/
 
-	uint8_t x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+	uint8_t* x1 = new uint8_t[nvals];
+	uint8_t* x2 = new uint8_t[nvals];
+	uint8_t* y1 = new uint8_t[nvals];
+	uint8_t* y2 = new uint8_t[nvals];
 	srand(time(NULL));
-	x1 = rand();
-	y1 = rand();
-	y2 = rand();
-	x2 = rand();
+	for(uint32_t i = 0; i < nvals; ++i) {
+		x1[i] = rand();
+		y1[i] = rand();
+		y2[i] = rand();
+		x2[i] = rand();
+	}
 
 	/**
 		Step 6: Set the coordinates as inputs for the circuit for the respective party.
-		The other party's inputs must be specified but can be set arbitrarily (dummy).
-		The values will be secret shared before the circuit evaluation.
+		The other party's input length must be specified.
 	*/
 
-	uint8_t dummy = 0;
-
 	if (role == SERVER) {
-		s_x1 = circ->PutINGate(x1, 32, SERVER);
-		s_y1 = circ->PutINGate(y1, 32, SERVER);
-		s_x2 = circ->PutINGate(dummy, 32, CLIENT);
-		s_y2 = circ->PutINGate(dummy, 32, CLIENT);
+		s_x1 = circ->PutSIMDINGate(nvals, x1, 8, SERVER);
+		s_y1 = circ->PutSIMDINGate(nvals, y1, 8, SERVER);
+		s_x2 = circ->PutDummySIMDINGate(nvals, 8);
+		s_y2 = circ->PutDummySIMDINGate(nvals, 8);
 	} else {
-		s_x1 = circ->PutINGate(dummy, 32, SERVER);
-		s_y1 = circ->PutINGate(dummy, 32, SERVER);
-		s_x2 = circ->PutINGate(x2, 32, CLIENT);
-		s_y2 = circ->PutINGate(y2, 32, CLIENT);
+		s_x1 = circ->PutDummySIMDINGate(nvals, 8);
+		s_y1 = circ->PutDummySIMDINGate(nvals, 8);
+		s_x2 = circ->PutSIMDINGate(nvals, x2, 8, CLIENT);
+		s_y2 = circ->PutSIMDINGate(nvals, y2, 8, CLIENT);
 	}
 
 	/**
@@ -104,33 +110,45 @@ int32_t test_euclid_dist_circuit(e_role role, const std::string& address, uint16
 	party->ExecCircuit();
 
 	/**
-		Step 10: Print plaintext output of the circuit.
+		Step 10: Obtain the output from
 	*/
 
-	uint32_t output;
-	output = s_out->get_clear_value<uint32_t>();
+	uint32_t* output;
+	uint32_t out_bitlen, out_nvals;
+	// This method only works for an output length of maximum 64 bits in general,
+	// if the output length is higher you must use get_clear_value_ptr
+	s_out->get_clear_value_vec(&output, &out_bitlen, &out_nvals);
+
+	/**
+		Step 11:Print plaintext output of the circuit.
+	 */
 
 	std::cout << "Testing Euclidean Distance in " << get_sharing_name(sharing)
-			<< " sharing: " << std::endl;
+			<< " sharing, out_bitlen=" << out_bitlen << " and out_nvals=" << out_nvals << ":" << std::endl;
 
-	printf("\n x1: %d, y1: %d \n x2: %d, y2: %d\n", x1, y1, x2, y2);
-	printf(" Circuit result: %lf ", sqrt(output));
+	for(uint32_t i = 0; i < nvals; ++i) {
+		std::cout << "x1: " << (int) x1[i] << ", y1: " << (int) y1[i] << "; x2: " << (int) x2[i] << ", y2: " << (int) y2[i] << std::endl;
+		std::cout << "Circuit result: " << sqrt(output[i]);
 
-	printf("\n Verification: %lf \n\n",
-			sqrt((pow((double)abs(y2 - y1), (double)2) + pow((double)abs(x2 - x1),(double) 2))));
+		std::cout << " Verification: " <<
+			sqrt((pow((double)abs(y2[i] - y1[i]), (double)2) + pow((double)abs(x2[i] - x1[i]),(double) 2))) << std::endl;
+	}
 
 	delete party;
+	delete x1;
+	delete x2;
+	delete y1;
+	delete y2;
 	return 0;
 }
 
 /**
- * \brief Builds a Euclidean distance circuit for two pairs of coordinate shares
+ * \brief Builds a Euclidean distance circuit for two pairs of coordinate shares (without the computation of sqrt at the end)
  */
 share* BuildEuclidDistanceCircuit(share *s_x1, share *s_x2, share *s_y1,
 		share *s_y2, BooleanCircuit *bc) {
 
-	m_nBitLength = 64;
-	share* out, *t_a, *t_b, *t_ay, *t_by, *res_x, *res_y, *check_sel,
+	share* out, *t_a, *t_b, *res_x, *res_y, *check_sel,
 			*check_sel_inv;
 
 	/** Following code performs (x2-x1)*(x2-x1) */
@@ -143,14 +161,12 @@ share* BuildEuclidDistanceCircuit(share *s_x1, share *s_x2, share *s_y1,
 	res_x = bc->PutMULGate(res_x, res_x);
 
 	/** Following code performs (y2-y1)*(y2-y1) */
-
 	check_sel = bc->PutGTGate(s_y1, s_y2);
 	check_sel_inv = bc->PutINVGate(check_sel);
 	t_a = bc->PutMUXGate(s_y1, s_y2, check_sel);
 	t_b = bc->PutMUXGate(s_y1, s_y2, check_sel_inv);
 
 	res_y = bc->PutSUBGate(t_a, t_b);
-
 	res_y = bc->PutMULGate(res_y, res_y);
 
 	/** Following code performs out = res_y + res_x*/

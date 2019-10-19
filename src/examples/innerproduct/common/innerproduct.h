@@ -41,19 +41,19 @@
  Inner Product.
  */
 int32_t test_inner_product_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t nvals, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
-		e_sharing sharing, uint32_t num);
+		uint32_t numbers, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
+		e_sharing sharing);
 
 /**
  \param		s_x			share of X values
  \param		s_y 		share of Y values
- \param 	num			the number of elements in the inner product
+ \param 	numbers		the number of elements in the inner product
  \param		ac	 		Arithmetic Circuit object.
  \brief		This function is used to build and solve the Inner Product modulo 2^16. It computes the inner product by
  	 	 	multiplying each value in x and y, and adding those multiplied results to evaluate the inner
  	 	 	product. The addition is performed in a tree, thus with logarithmic depth.
  */
-share* BuildInnerProductCircuit(share *s_x, share *s_y, uint32_t num, ArithmeticCircuit *ac);
+share* BuildInnerProductCircuit(share *s_x, share *s_y, uint32_t numbers, ArithmeticCircuit *ac);
 
 
 #endif

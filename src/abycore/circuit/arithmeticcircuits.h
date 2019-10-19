@@ -221,8 +221,16 @@ public:
 
 
 	share* PutCallbackGate(share* in, uint32_t rounds, void (*callback)(GATE*, void*), void* infos, uint32_t nvals);
-	share* PutTruthTableGate(share* in, uint64_t* ttable);
-	share* PutTruthTableMultiOutputGate(share* in, uint32_t out_bits, uint64_t* ttable);
+
+	share* PutTruthTableGate(share*, uint64_t*) {
+		std::cerr << "PutTruthTableGate not implemented in ArithmeticCircuit!!" << std::endl;
+		return NULL;
+	}
+
+	share* PutTruthTableMultiOutputGate(share*, uint32_t, uint64_t*) {
+		std::cerr << "PutTruthTableMultiOutputGate not implemented in ArithmeticCircuit!!" << std::endl;
+		return NULL;
+	}
 
 
 
