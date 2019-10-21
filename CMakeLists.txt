@@ -60,10 +60,14 @@ find_package(GMP REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Boost 1.66.0 REQUIRED COMPONENTS thread system)
 
+if(APPLE)
+    find_package(Boost REQUIRED COMPONENTS filesystem)
+endif()
+
 add_subdirectory(src/abycore)
 
 
 if(ABY_BUILD_EXE)
-    add_subdirectory(src/test)
     add_subdirectory(src/examples)
+    add_subdirectory(src/test)
 endif(ABY_BUILD_EXE)
