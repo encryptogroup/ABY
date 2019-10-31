@@ -89,7 +89,7 @@ int32_t test_addition_circuit(e_role role, const std::string& address, uint16_t 
 				Don't forget to type cast the circuit object to type of share
 	*/
 
-	s_out = BuilAdditionCircuit(s_A, s_B,
+	s_out = BuildAdditionCircuit(s_A, s_B,
 			(ArithmeticCircuit*) circ);
 
 	/**
@@ -128,7 +128,7 @@ share* BuildMillionaireProbCircuit(share *s_a, share *s_b,
 	share* out;
 
 	/** Calling the Addition gate in the Arithmetic circuit.*/
-	out = ac->PuTAddGate(s_a, s_a);
+	out = ac->PutAddGate(s_a, s_a);
 
 	return out;
 }
