@@ -122,7 +122,7 @@ int32_t test_addition_circuit(e_role role, const std::string& address, uint16_t 
 	return 0;
 }
 
-share* BuildMillionaireProbCircuit(share *s_a, share *s_b,
+share* BuildAdditionProbCircuit(share *s_a, share *s_b,
 		ArithmeticCircuit *ac) {
 
 	share* out;
