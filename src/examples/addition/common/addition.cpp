@@ -128,7 +128,7 @@ share* BuildAdditionProbCircuit(share *s_a, share *s_b,
 	share* out;
 
 	/** Calling the Addition gate in the Arithmetic circuit.*/
-	out = ac->PutADDGate(s_a, s_a);
+	out = ac->PutADDGate(s_a, s_b);
 
 	return out;
 }
