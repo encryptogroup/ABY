@@ -1,0 +1,2 @@
+add_executable(multiplication_test multiplication_test.cpp common/multiplication.cpp)
+target_link_libraries(multiplication_test ABY::aby ENCRYPTO_utils::encrypto_utils)
