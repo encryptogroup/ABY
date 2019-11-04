@@ -79,7 +79,7 @@ int main(int argc, char** argv) {
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	//evaluate multiplication cirucuit using arithmetic
-	test_addition_circuit(role, address, port, seclvl, 32,
+	test_multiplication_circuit(role, address, port, seclvl, 32,
 			nthreads, mt_alg, S_ARITH);
 	
 	return 0;
