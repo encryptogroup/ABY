@@ -114,7 +114,7 @@ int32_t test_addition_circuit(e_role role, const std::string& address, uint16_t 
 				<< " sharing: " << std::endl;
 	std::cout << "\nValue A:\t" << a_val;
 	std::cout << "\nValue B:\t" << b_val;
-	std::cout << "\nCircuit Result:\t" << (output ? VALUE_A : VALUE_B);
+	std::cout << "\nCircuit Result:\t" << (output);
 	std::cout << "\nVerify Result: \t" << (a_val + b_val)
 				<< "\n";
 
