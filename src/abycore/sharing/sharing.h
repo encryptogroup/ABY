@@ -62,7 +62,7 @@ public:
 	Note: PrepareSetupPhase, PerformSetupPhase, FinishSetupPhases are generally triggered from
 	      the ABYParty class for the function call on ExecCircuit. Whenever a circuit is built
 	      and executed these methods mentioned above are triggered. For instance, if the circuit
-	      setup expects a execution and reset loop for n iterations, these methods would be
+	      setup expects an execution and reset loop for n iterations, these methods would be
 	      triggered n times. Also the precomputation phase plays a huge role in these methods.
 	*/
 

@@ -248,13 +248,6 @@ void ABYParty::ExecCircuit() {
 
 	StopRecording("Total Time: ", P_TOTAL, m_vSockets);
 
-#ifdef PRINT_OUTPUT
-	//Print input and output gates
-	PrintInput();
-	PrintOutput();
-#endif
-
-
 #if PRINT_PERFORMANCE_STATS
 	PrintPerformanceStatistics();
 #endif
@@ -339,7 +332,7 @@ BOOL ABYParty::EvaluateCircuit() {
 #endif
 		for (uint32_t i = 0; i < m_vSharings.size(); i++) {
 #if DEBUGABYPARTY
-			std::cout << "Evaluating local operations of sharing " << i << " on depth " << depth << std::endl;
+			std::cout << "Evaluating local operations of sharing " << i << " (" << get_sharing_name((e_sharing)i) << ") on depth " << depth << std::endl;
 #endif
 #if BENCHONLINEPHASE
 			clock_gettime(CLOCK_MONOTONIC, &tstart);

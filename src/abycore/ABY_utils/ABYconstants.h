@@ -26,7 +26,6 @@
 #define ABY_PRODUCTION 0
 
 //#define ABYDEBUG
-//#define PRINT_OUTPUT
 //#define DEBUGCOMM
 #define DEBUGABYPARTY 0
 
@@ -279,7 +278,7 @@ typedef enum op_t{
     ADD, MUL, SUB, DIV, SIN, SQRT, EXP, EXP2, CMP, LN, LOG2, COS, SQR
 }op_t;
 
-// Floating point operation cinfiguration. 
+// Floating point operation configuration.
 typedef enum fp_op_setting{
     ieee, no_status
 }fp_op_setting;
