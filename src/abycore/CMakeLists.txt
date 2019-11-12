@@ -41,6 +41,7 @@ target_link_libraries(aby
     PUBLIC ENCRYPTO_utils::encrypto_utils
     PUBLIC GMP::GMP
     PUBLIC Threads::Threads
+    SEAL::seal
 )
 
 

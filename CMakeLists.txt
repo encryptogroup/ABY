@@ -5,7 +5,7 @@ if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0)
     message(FATAL_ERROR "ABY requires at least g++-8")
 endif()
 
-option(ABY_BUILD_EXE "Build executables" OFF)
+option(ABY_BUILD_EXE "Build executables" ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
@@ -27,6 +27,9 @@ endif()
 if(NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
 endif()
+
+
+message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}/extern/ENCRYPTO_utils/CMakeLists.txt")
 
 find_package(ENCRYPTO_utils QUIET)
 if(ENCRYPTO_utils_FOUND)
@@ -59,11 +62,13 @@ endif()
 find_package(GMP REQUIRED)
 find_package(Threads REQUIRED)
 find_package(Boost 1.66.0 REQUIRED)
+find_package(SEAL 3.3.2 EXACT REQUIRED)
 
 add_subdirectory(src/abycore)
 
 
 if(ABY_BUILD_EXE)
-    add_subdirectory(src/test)
-    add_subdirectory(src/examples)
+#    add_subdirectory(src/test)
+    add_subdirectory(src/examples/millionaire_prob)
+#    add_subdirectory(src/examples/selection)
 endif(ABY_BUILD_EXE)
