@@ -339,8 +339,21 @@ public:
 		return m_nNumXORGates;
 	};
 
+	uint32_t GetNumConstantGates() {
+		return m_nNumConstantGates;
+	};
+
 	uint32_t GetNumUNIVGates() {
 		return m_nUNIVGates;
+	}
+
+	uint32_t GetNumInputGates() {
+		return m_nNumInputGates;
+	}
+
+	uint32_t GetNumOutputGates() {
+		assert(m_vOutputGates[0].size() == m_vOutputGates[1].size());
+		return m_vOutputGates[0].size();
 	}
 
 	share* PutMULGate(share* ina, share* inb);
@@ -500,7 +513,7 @@ public:
          * @return Number of 1's in the input bit string
          */
         share* PutHammingWeightGate(share* s_in);
-        
+
         /**
          * Constructs optimal Hamming Weight Gate. Described by Boyar, Joan, and
          * René Peralta in "Tight bounds for the multiplicative complexity of
@@ -510,7 +523,7 @@ public:
          * @return Number of 1's in the input bit string
          */
         share* PutHammingWeightGate(share* s_in, uint32_t bitlen);
-        
+
         /**
          * Recursively constructs optimal Hamming Weight Gate. Described by
          * Boyar, Joan, and René Peralta in "Tight bounds for the multiplicative
@@ -520,7 +533,7 @@ public:
          * @return Number of 1's in the input bit string
          */
         share* PutHammingWeightGateRec(uint32_t * array, uint32_t bitlen);
-        
+
         /**
          * Constructs Full Adder Gate
          * @param a Input bit a
@@ -529,7 +542,7 @@ public:
          * @return sum of input bits
          */
         share* PutFullAdderGate(uint32_t a, uint32_t b, uint32_t carry_in);
-        
+
         /**
          * Constructs Adder Chain Gate
          * @param a vector of wires a
@@ -538,7 +551,7 @@ public:
          * @return sum of values on wires a and b
          */
     	share* PutADDChainGate(std::vector <uint32_t> a, std::vector <uint32_t> b, uint32_t carry_in);
-        
+
 
         /**
          * Converts unsigned integer input to floating point number of double precision
@@ -546,25 +559,25 @@ public:
          * @return floating point number of double precision
          */
         share* PutUint2DoubleGate(share* input);
-        
+
         /**
-         * Converts a number "value" from the type "from" to the type "to" 
+         * Converts a number "value" from the type "from" to the type "to"
          * @param value input value
          * @param from type of the value
          * @param to type to which value will be converted
          * @return converted value
          */
         share* PutConvTypeGate(share* value, ConvType* from, ConvType* to, uint32_t nvals = 1);
-        
+
         /**
-         * Converts a number "value" from the type "from" to the type "to" 
+         * Converts a number "value" from the type "from" to the type "to"
          * @param wires wires of the input value
          * @param from type of the value
          * @param to type to which value will be converted
          * @return wires of the converted value
          */
         std::vector<uint32_t> PutConvTypeGate(std::vector<uint32_t> wires, ConvType* from, ConvType* to, uint32_t nvals = 1);
-        
+
         /**
          * Converts unsigned integer to floating point number
          * @param wires wires of the input value
@@ -573,7 +586,7 @@ public:
          * @return wires of the converted value
          */
         std::vector<uint32_t> PutUint2FpGate(std::vector<uint32_t> wires, UINTType* from, FPType* to, uint32_t nvals = 1);
-        
+
         /**
          * Converts floating point to unsigned integer number
          * @param wires wires of the input value
@@ -582,7 +595,7 @@ public:
          * @return wires of the converted value
          */
         std::vector<uint32_t> PutFp2UintGate(std::vector<uint32_t> wires, FPType* from, UINTType* to);
-        
+
         /**
          * Computes Prefix Or operation, thus, zeros before first seen 1 and 1s after (e.g. 0010100 => 0011111).
          * @param input input value
@@ -596,7 +609,7 @@ public:
          * @return value of prefix or
          */
         std::vector<uint32_t> PutPreOrGate(std::vector<uint32_t> wires);
-        
+
         /**
          * Uses MUXs to shift bits of the value to the left.
          * @param input input value
@@ -625,7 +638,7 @@ public:
          * @return shifted value
          */
         std::vector<uint32_t> PutBarrelRightShifterGate(std::vector<uint32_t> wires, std::vector<uint32_t> n);
-        
+
         /**
          * Put floating point gate with one input
          * @param in input share
@@ -634,7 +647,7 @@ public:
          * @return result of the operation
          */
         share * PutFPGate(share * in, op_t op, uint8_t bitlen = 0, uint32_t nvals = 0, fp_op_setting s = no_status);
-        
+
         /**
          * Put floating point gate with two inputs
          * @param in_a input share a
@@ -745,6 +758,8 @@ private:
 
 	uint32_t m_nNumXORVals;
 	uint32_t m_nNumXORGates;
+	uint32_t m_nNumConstantGates;
+	uint32_t m_nNumInputGates;
 
 	const std::string m_cCircuitFileDir;
 
