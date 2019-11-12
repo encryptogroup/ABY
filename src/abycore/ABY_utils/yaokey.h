@@ -20,6 +20,7 @@
 #define __YAOKEY_H_
 
 #include <ENCRYPTO_utils/typedefs.h>
+#include <iostream>
 /* an interface to operations on yaos garbled circuits keys for pre-defined symmetric security sizes */
 
 #define _MSB_uint64_t 0x80000000000000L
@@ -32,6 +33,7 @@ public:
 	}
 	;
 	virtual void XOR(BYTE* out, BYTE* ina, BYTE* inb) = 0;
+	virtual void XOR37(BYTE* out, BYTE* ina, BYTE* inb) = 0;
 	virtual void XOR_DOUBLE_B(BYTE* out, BYTE* ina, BYTE* inb) = 0;
 	virtual void XOR_QUAD_B(BYTE* out, BYTE* ina, BYTE* inb) = 0;
 };
@@ -47,6 +49,10 @@ public:
 	void XOR(BYTE* out, BYTE* ina, BYTE* inb) {
 		(((uint64_t*) (out))[0] = ((uint64_t*) (ina))[0] ^ ((uint64_t*) (inb))[0]);
 		(((uint16_t*) (out))[4] = ((uint16_t*) (ina))[4] ^ ((uint16_t*) (inb))[4]);
+	};
+	void XOR37(BYTE* out, BYTE* ina, BYTE* inb) {
+		std::cout << "XOR37 is not implemented for this secrity paramenter" << std::endl;
+		std::exit(1);
 	};
 	void XOR_DOUBLE_B(BYTE* out, BYTE* ina, BYTE* inb) {
 
@@ -73,6 +79,10 @@ public:
 		(((uint64_t*) (out))[0] = ((uint64_t*) (ina))[0] ^ ((uint64_t*) (inb))[0]);
 		(((uint32_t*) (out))[3] = ((uint32_t*) (ina))[3] ^ ((uint32_t*) (inb))[3]);
 	};
+	void XOR37(BYTE* out, BYTE* ina, BYTE* inb) {
+		std::cout << "XOR37 is not implemented for this secrity paramenter" << std::endl;
+		std::exit(1);
+	};
 	void XOR_DOUBLE_B(BYTE* out, BYTE* ina, BYTE* inb) {
 		(((uint64_t*) (out))[0] = ((uint64_t*) (ina))[0] ^ ((uint64_t*) (inb))[0]<<1);
 		(((uint32_t*) (out))[3] = ((uint32_t*) (ina))[3] ^ ((uint32_t*) (inb))[3]<<1);
@@ -93,6 +103,14 @@ public:
 	void XOR(BYTE* out, BYTE* ina, BYTE* inb) {
 		(((uint64_t*) (out))[0] = ((uint64_t*) (ina))[0] ^ ((uint64_t*) (inb))[0]);
 		(((uint64_t*) (out))[1] = ((uint64_t*) (ina))[1] ^ ((uint64_t*) (inb))[1]);
+	};
+	void XOR37(BYTE* out, BYTE* ina, BYTE* inb) {
+		(((uint64_t*) (out))[0] = ((uint64_t*) (ina))[0] ^ ((uint64_t*) (inb))[0]); // 8
+		(((uint64_t*) (out))[1] = ((uint64_t*) (ina))[1] ^ ((uint64_t*) (inb))[1]); // 16
+		(((uint64_t*) (out))[2] = ((uint64_t*) (ina))[2] ^ ((uint64_t*) (inb))[2]); // 24
+		(((uint64_t*) (out))[3] = ((uint64_t*) (ina))[3] ^ ((uint64_t*) (inb))[3]); // 32
+		(((uint32_t*) (out))[8] = ((uint32_t*) (ina))[8] ^ ((uint32_t*) (inb))[8]); // 36
+		(((uint8_t*) (out))[36] = ((uint8_t*) (ina))[36] ^ ((uint8_t*) (inb))[36]); // 37
 	};
 	void XOR_DOUBLE_B(BYTE* out, BYTE* ina, BYTE* inb) {
 		(((uint64_t*) (out))[0] = ((uint64_t*) (ina))[0] ^ ((uint64_t*) (inb))[0]<<1);
@@ -115,6 +133,10 @@ public:
 		(((uint64_t*) (out))[1] = ((uint64_t*) (ina))[1] ^ ((uint64_t*) (inb))[1]);
 		(((uint64_t*) (out))[2] = ((uint64_t*) (ina))[2] ^ ((uint64_t*) (inb))[2]);
 
+	};
+	void XOR37(BYTE* out, BYTE* ina, BYTE* inb) {
+		std::cout << "XOR37 is not implemented for this secrity paramenter" << std::endl;
+		std::exit(1);
 	};
 	void XOR_DOUBLE_B(BYTE* out, BYTE* ina, BYTE* inb) {
 		(((uint64_t*) (out))[0] = ((uint64_t*) (ina))[0] ^ ((uint64_t*) (inb))[0]<<1);
@@ -140,6 +162,10 @@ public:
 		(((uint64_t*) (out))[1] = ((uint64_t*) (ina))[1] ^ ((uint64_t*) (inb))[1]);
 		(((uint64_t*) (out))[2] = ((uint64_t*) (ina))[2] ^ ((uint64_t*) (inb))[2]);
 		(((uint64_t*) (out))[3] = ((uint64_t*) (ina))[3] ^ ((uint64_t*) (inb))[3]);
+	};
+	void XOR37(BYTE* out, BYTE* ina, BYTE* inb) {
+		std::cout << "XOR37 is not implemented for this secrity paramenter" << std::endl;
+		std::exit(1);
 	};
 	void XOR_DOUBLE_B(BYTE* out, BYTE* ina, BYTE* inb) {
 		(((uint64_t*) (out))[0] = ((uint64_t*) (ina))[0] ^ ((uint64_t*) (inb))[0]<<1);
