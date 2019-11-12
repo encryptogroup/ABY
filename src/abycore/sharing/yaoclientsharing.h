@@ -21,6 +21,10 @@
 #include "sharing.h"
 #include <algorithm>
 #include "yaosharing.h"
+#include <ENCRYPTO_utils/crypto/djn.h>
+#include "seal/seal.h"
+#include "seal/encryptor.h"
+#include "seal/util/polyarithsmallmod.h"
 
 //#define DEBUGYAOCLIENT
 
@@ -78,10 +82,31 @@ private:
 	uint32_t m_nClientRcvKeyCtr; /**< Client Receiver Key Counter*/
 	uint32_t m_nClientOutputShareCtr;/**< Client Output Share Counter*/
 	uint32_t m_nServerOutputShareCtr;/**< Server Output Share Counter*/
-
 	uint64_t m_nClientOUTBitCtr; /**< Client Output Bit Counter.*/
+#ifdef KM11_GARBLING
+	uint64_t m_nNumberOfKeypairs; /**< the number of wire key pairs in the KM11 protocol */
+	uint8_t* m_bEncWireKeys; /**< the encrypted wire keys */
+	uint8_t* m_bOutputWireKeys; /**< the wire keys of the output wire keys of the circuit */
+	uint32_t m_nOutputWireKeysCtr; /**< counter for the output wire key buffer */
+	uint8_t* m_bEncGG; /**< the encrypted garbled gates */
+#if KM11_CRYPTOSYSTEM == KM11_CRYPTOSYSTEM_BFV
+	std::shared_ptr<seal::SEALContext> m_nWirekeySEALcontext; /**< SEAL library context */
+	seal::PublicKey m_nWirekeySEALpublicKey; /**< the SEAL public key */
+	uint8_t* m_bBlindingValues; /**< the blinding values buffer */
+	std::vector<seal::Ciphertext> m_vEncBlindingValues; /**< vector containing the encrypted blinding values */
+#elif KM11_CRYPTOSYSTEM == KM11_CRYPTOSYSTEM_DJN
+	djn_pubkey_t *m_nDJNPubkey; /**< public key for the DJN cryptosystem */
+#elif KM11_CRYPTOSYSTEM == KM11_CRYPTOSYSTEM_ECC
+	fe* m_nECCPubkey; /**< EC ElGamal public key */
+	brickexp* m_nECCPubkeyBrick; /**< public key brick to speedup scalar multiplications with the public key */
+	brickexp* m_nECCGeneratorBrick; /**< generator point brick to speedup scalar mult. with the generator point */
+	std::vector<fe*> m_vBlindingValues; /**< vector containing the blinding values */
+	std::vector<fe*> m_vEncBlindingValues; /**< the encrypted blinding values (two fe* elements per blinding value) */
+#endif
+	uint8_t* m_bTmpGTEntry; /**< buffer used while decrypting the garbled tables */
+	uint8_t* m_bTmpGTKey; /**< buffer used while decrypting the garbled tables */
+#endif
 
-	CBitVector m_vServerKeyRcvBuf; /**< Server Key Receiver Buffer*/
 	std::vector<CBitVector> m_vClientKeyRcvBuf; /**< Client Key Receiver Buffer*/
 
 	uint32_t m_nGarbledCircuitRcvCtr;/**< Garbled Circuit Receiver Counter*/
@@ -119,6 +144,31 @@ private:
 	 */
 	void AssignClientInputKeys();
 
+#ifdef KM11_GARBLING
+	/**
+	 Method for creating the blinding values used to blind the encrypted
+	 wire keys when forming the encrypted garbled gates (KM11)
+	 */
+	void CreateBlindingValues();
+	/**
+	 Method for encrypting the blinding values to speedup the creation of
+	 the encrypted garbled gates in the online phase (KM11)
+	 */
+	void PrecomputeBlindingValues();
+	/**
+	 Method for creating all encrypted garbled gates that will be sent to the
+	 server using homomorphic encryption (KM11)
+	 \param setup 	ABYSetup Object.
+	 */
+	void CreateEncGarbledGates(ABYSetup* setup);
+	/**
+	 Method for evaluating a KM11 gate for the given gateid. This method
+	 decrypts the garbled table for the given gate and assigns the
+	 resulting wirekey to the gates outkey ("decYao" from KM11 paper).
+	 \param gateid		Gate Identifier
+	 */
+	void EvaluateKM11Gate(uint32_t gateid);
+#endif
 	/**
 	 Method for evaluating XOR gate for the inputted
 	 gate object.
@@ -152,7 +202,7 @@ private:
 	 \param gleft	left gate in the queue.
 	 \param gright	right gate in the queue.
 	 */
-	BOOL EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gleft, GATE* gright);	
+	BOOL EvaluateUniversalGate(GATE* gate, uint32_t pos, GATE* gleft, GATE* gright);
 	/**
 	 Method for server output Gate for the inputted Gate.
 	 \param gate		Gate Object

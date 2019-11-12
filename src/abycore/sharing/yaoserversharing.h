@@ -24,7 +24,10 @@
 #include <deque>
 #include <vector>
 #include "yaosharing.h"
-
+#include "seal/seal.h"
+#include <ENCRYPTO_utils/crypto/djn.h>
+#include <ENCRYPTO_utils/crypto/ecc-pk-crypto.h>
+#include <ENCRYPTO_utils/crypto/pk-crypto.h>
 
 //#define DEBUGYAOSERVER
 /**
@@ -83,7 +86,42 @@ private:
 	uint32_t m_nClientInputKexIdx; /**< Client __________*/
 	uint32_t m_nClientInputKeyCtr; /**< Client __________*/
 
-	uint64_t m_nGarbledTableSndCtr;
+#ifdef KM11_GARBLING
+	uint64_t m_nNumberOfKeypairs; /**< the number of gates for which wire keys are generated (KM11 protocol) */
+	uint8_t* m_bEncWireKeys; /**< the encrypted wire keys sent to the client (KM11 protocol) */
+	uint8_t* m_bEncGG; /**< the encryted garbled gates receibed from the client (KM11 protocol) */
+	uint8_t* m_bGTKeys; /**< buffer used while generating the garbled tables */
+	uint8_t* m_bTmpGTEntry; /**< buffer used while generating the garbled tables */
+	uint8_t* m_bTmpWirekeys; /**< buffer for two wire keys */
+	uint32_t m_nEncGGRcvCtr; /**< counter used when receiving the encrypted garbled gates */
+	uint8_t* m_nEncGGRcvPtr; /**< pointer used when receiving the encrypted garbled gates */
+
+#if KM11_CRYPTOSYSTEM == KM11_CRYPTOSYSTEM_DJN
+	uint8_t* m_bWireKeys; /**< the unencrypted wire keys created by the server */
+	uint8_t* m_bPublickey; /**< the exported DJN/ECC public key */
+	djn_pubkey_t *m_nDJNPubkey; /**< the DJN public key */
+	djn_prvkey_t *m_nDJNPrvkey; /**< the DJN secret key */
+	mpz_t m_zR; /**< mpz representation of the global random shift r (see section "3.2 A More Efficient Variant" of KM11) */
+	mpz_t m_zTmpWirekey; /**< temporary mpz value for a wire key */
+#elif KM11_CRYPTOSYSTEM == KM11_CRYPTOSYSTEM_BFV
+	uint8_t* m_bWireKeys; /**< the unencrypted wire keys created by the server (KM11 protocol) */
+	std::shared_ptr<seal::SEALContext> m_nWirekeySEALcontext;
+	seal::PublicKey m_nWirekeySEALpublicKey;
+	seal::SecretKey m_nWirekeySEALsecretKey;
+	seal::GaloisKeys m_nSEALgaloisKeys;
+	seal::Decryptor* m_nSEALdecryptor;
+#elif KM11_CRYPTOSYSTEM == KM11_CRYPTOSYSTEM_ECC
+	std::vector<fe*> m_vWireKeys; /**< the unencrypted wire keys created by the server (KM11 protocol) */
+	uint8_t* m_bPublickey; /**< the exported DJN/ECC public key (KM11 protocol) */
+	fe* m_nECCPubkey; /**< EC ElGamal public key */
+	num* m_nECCPrvkey; /**< EC ElGamal private key */
+	brickexp* m_nECCPubkeyBrick; /**< public key brick to speedup scalar multiplications with the public key */
+	brickexp* m_nECCGeneratorBrick; /**< generator point brick to speedup scalar mult. with the generator point */
+	fe* m_zR; /**< ECC representation of the global random shift r (see section "3.2 A More Efficient Variant" of KM11) */
+#endif // KM11_CRYPTOSYSTEM
+#endif // KM11_GARBLING
+
+	uint64_t m_nGarbledTableSndCtr; /**< _____________*/
 
 	CBitVector m_vServerKeySndBuf; /**< Server Key Sender Buffer*/
 	std::vector<CBitVector> m_vClientKeySndBuf; /**< Client Key Sender Buffer*/
@@ -132,6 +170,22 @@ private:
 	 \param 	numkeys		number of keys.
 	 */
 	void CreateRandomWireKeys(CBitVector& vec, uint32_t numkeys);
+#ifdef KM11_GARBLING
+	/**
+	 Create the encrypted wire keys for each wire that will be sent to the
+	 client (KM11)
+	**/
+	void CreateEncryptedWireKeys();
+#if KM11_CRYPTOSYSTEM == KM11_CRYPTOSYSTEM_DJN
+	/**
+	 Add global random shift r to a wire key buffer (KM11, only used for DJN
+	 homomorphic encryption)
+	 \param keyout	buffer to which the shifted wire key will be written
+	 \param keyin		buffer holding the wire key to be shifted
+	**/
+	void AddGlobalRandomShift(BYTE* keyout, BYTE* keyin);
+#endif
+#endif // KM11_GARBLING
 	/**
 	 Creating and sending Garbled Circuit.
 	 \param 	setup 	ABYSetup Object.
@@ -147,6 +201,16 @@ private:
 	 \param gateid	Gate Identifier
 	 */
 	void EvaluateInputGate(uint32_t gateid);
+#ifdef KM11_GARBLING
+	/**
+	 Method for evaluating a KM11 gate (all gate types) for the given gateid.
+	 Decrypts the received encrypted garbled gate and creates the garbled table
+	 for the gate to be sent to the client.
+	 \param gate		Gate Identifier
+	 \param setup 	ABYSetup Object
+	 */
+	void EvaluateKM11Gate(uint32_t gateid, ABYSetup* setup);
+#endif // KM11_GARBLING
 	/**
 	 Method for evaluating XOR gate for the inputted
 	 gate object.

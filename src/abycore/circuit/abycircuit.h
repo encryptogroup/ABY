@@ -43,6 +43,18 @@ struct yao_fields {
 	BYTE* outKey;
 	//The permutation bit for point-and-permute
 	BYTE* pi;
+	//The blinding factors from KM11 used to create the encrypted garbled gate encGG [Enc(a_i * s_j + b_i)]
+	//These factors correspond to a, b, a', b' (see KM11 paper)
+	BYTE* a1;
+	BYTE* a2;
+	BYTE* b1;
+	BYTE* b2;
+	//The precomputed (encrypted) value of b, b'
+	BYTE* b1_enc;
+	BYTE* b2_enc;
+	//The values for bj/bk for KM11 BFV encryption
+	std::vector<uint64_t>* bj_vec;
+	std::vector<uint64_t>* bk_vec;
 };
 
 struct input_fields {
