@@ -55,7 +55,7 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 int main(int argc, char** argv) {
 
 	e_role role;
-	uint32_t nvals = 31, secparam = 128, nthreads = 1;
+	uint32_t nvals = 2, secparam = 128, nthreads = 1;
 	uint16_t port = 7766;
 	std::string address = "127.0.0.1";
 	e_mt_gen_alg mt_alg = MT_OT;
