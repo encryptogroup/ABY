@@ -6,16 +6,19 @@ import sys, getopt
 
 
 def main(argv):
-        value = 2
+        ip_add = "172.17.0.4"
+        value = 0
         try:
-                opts, args = getopt.getopt(argv,"hv:",["value="])
+                opts, args = getopt.getopt(argv,"ha:v:",["address=","value="])
         except getopt.GetoptError:
-                print 'client.py -v <value> '
+                print 'client.py -a <ip address> -v <value 1>  '
                 sys.exit(2)
         for opt, arg in opts:
                 if opt == '-h':
                         print 'client.py -v <value>'
                         sys.exit()
+                elif opt in ("-a", "--address"):
+                        ip_add = arg
                 elif opt in ("-v", "--value"):
                         value = arg
 
@@ -30,7 +33,8 @@ def main(argv):
         port = 12345
 
   # connect to the server on local computer 
-        s.connect(('172.17.0.4', port))
+        
+        s.connect((ip_add, port))
 
   #send data
         s.send(value);
