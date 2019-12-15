@@ -21,8 +21,10 @@
 #include "../../../abycore/circuit/arithmeticcircuits.h"
 #include "../../../abycore/sharing/sharing.h"
 
+
+
 int32_t test_addition_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing) {
+		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing, uint32_t sum) {
 
 	/**
 		Step 1: Create the ABYParty object which defines the basis of all the
@@ -63,8 +65,24 @@ int32_t test_addition_circuit(e_role role, const std::string& address, uint16_t 
 
 	uint32_t a_val, b_val, output;
 	srand(time(NULL));
-	a_val = 10;
-	b_val = 20;
+
+
+	if(sum != 0){
+
+
+                if(role == SERVER) {
+                	b_val =sum;// sum;
+			a_val = rand();
+                } else {
+                         a_val = sum;//sum;
+			b_val = rand();
+                }
+	}
+
+	else{
+		a_val = 10;
+		b_val = 20;
+	}	
 
 	/**
 		Step 6: Copy the randomly generated values into the respective
@@ -132,3 +150,5 @@ share* BuildAdditionCircuit(share *s_a, share *s_b,
 
 	return out;
 }
+
+

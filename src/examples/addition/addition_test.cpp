@@ -16,13 +16,19 @@
  \brief		Simple addition test implementation
  */
 
+#include <string>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+//#include "./common/demo.txt"
+
 //Utility libs
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/parse_options.h>
 //ABY Party class
 #include "../../abycore/aby/abyparty.h"
-
 #include "common/addition.h"
+
 
 int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
@@ -64,6 +70,8 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 	return 1;
 }
 
+
+
 int main(int argc, char** argv) {
 
 	e_role role;
@@ -78,9 +86,29 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
+
+int sum = 0;
+    int x;
+    std::ifstream inFile;
+    
+    inFile.open("/root/SocketServer/demo.txt");
+    if (!inFile) {
+        std::cout << "Unable to open file";
+        sum=0;
+	return sum; // terminate with error
+    }else{
+    
+    while (inFile >> x) {
+        sum = sum + x;
+    }
+   }
+    
+    inFile.close();
+    std::cout << "Sum = " << sum << std:: endl; 
+   	
 	//evaluate addition cirucui using arithmetic
 	test_addition_circuit(role, address, port, seclvl, 32,
-			nthreads, mt_alg, S_ARITH);
+			nthreads, mt_alg, S_ARITH, sum);
 	
 	return 0;
 }
