@@ -1,48 +1,65 @@
 #!/usr/bin/python
 
-##immport socket module v
-import socket
-import sys, getopt
 
+## This file will open to connections with two different servers. Will send a+alpha to one server and -alpha
+## to the other,  where alpha is a random number.
+
+## The addresses are hardcoded and just useful for my environment. Same for the port numbers.
+##immport socket module v
+import socket                
+import sys, getopt
+from random import randrange
 
 def main(argv):
-        ip_add = "172.17.0.4"
-        value = 0
+        random= randrange(11)
+        value = 2
+        fAddress = '172.17.0.4'
+        sAddress = '172.17.0.5'
         try:
-                opts, args = getopt.getopt(argv,"ha:v:",["address=","value="])
+                opts, args = getopt.getopt(argv,"hv:a:",["value=","address="])
         except getopt.GetoptError:
-                print 'client.py -a <ip address> -v <value 1>  '
+                print 'client.py -v <value> -a <address> '
                 sys.exit(2)
         for opt, arg in opts:
                 if opt == '-h':
                         print 'client.py -v <value>'
                         sys.exit()
-                elif opt in ("-a", "--address"):
-                        ip_add = arg
                 elif opt in ("-v", "--value"):
-                        value = arg
+                        value = int(arg)
+                elif opt in ("-a","--address"):
+                        print 'baba'  
 
-  ## print 'Input file is "', inputfile
+## print 'Input file is "', inputfile
   ## print 'Output file is "', outputfile
 
   ## Do socket things
   # Create a socket object 
-        s = socket.socket()
-
+        s = socket.socket()          
+  
   # Define the port on which you want to connect 
-        port = 12345
-
+        port = 12345                
+  
   # connect to the server on local computer 
-        
-        s.connect((ip_add, port))
+        s.connect((fAddress, port)) 
 
-  #send data
-        s.send(value);
+  #send data A to ALICE. So we need to send -random to BOB
+        eValue = value+ random
+        s.send(str(eValue));
+  
 
+        s.close
+        s = socket.socket()
+        s.connect((sAddress, port))
+        eValueB = 0-random
+        s.send(str(eValueB))
   # receive data from the server 
-        print s.recv(1024)
+        #print s.recv(1024) 
   # close the connection 
+
+
         s.close()
+
+
 
 if __name__ == "__main__":
    main(sys.argv[1:])
