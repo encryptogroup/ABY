@@ -117,7 +117,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				Don't forget to type cast the circuit object to type of share
 	*/
 
-	s_out = BuildFirstCircuit(role, s_A1,s_B1,s_A2,s_B2,s_localS,s_localC
+	s_out = BuildFirstCircuit(role, s_A1,s_B1,s_A2,s_B2,s_localS,s_localC,
 			(ArithmeticCircuit*) circ);
 
 	/**
@@ -153,12 +153,25 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   share* BuildFirstCircuit(e_role role, share *s_a1, share *s_b1,share *s_a2, share *s_b2, share *s_localS, share *s_localC,
 		ArithmeticCircuit *ac) {
 
-	share* out;
-
-	  out = s_b1;
+	share* out1;
+	share* a1b2;
+	share* b1a2;
+	
+	  
+	a1b2 = ac->PutADDGate(s_a1,s_b2);
+	b1a2 = ac->PutADDGate(s_b1,s_a2);
+	
+	out = ac->PutADDGate(a1b2,b1a2);
+	out = ac->PutADDGate(out,s_localC);
+	out = ac->PutAddGate(out,s_localS)
+		
 	//std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
-	ac->PutPrintValueGate(s_a1, "Share A");
-	ac->PutPrintValueGate(s_b1, "Share B");
+	ac->PutPrintValueGate(s_a1, "Share A1");
+	ac->PutPrintValueGate(s_b1, "Share B1");
+	ac->PutPrintValueGate(s_a2, "Share A2");
+	ac->PutPrintValueGate(s_B2, "Share B2");
+	//ac->PutPrintValueGate(s_b1, "Share B1");
+
 	/** Calling the Addition gate in the Arithmetic circuit.*/
 	//output = s_a->get_clear_value<uint32_t>();
 	//s_out = circ->PutOUTGate(s_out, ALL);
