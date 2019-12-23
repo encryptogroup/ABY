@@ -93,7 +93,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		s_localC = circ->PutDummyINGate(bitlen);
 
 		//s_Dummy= circ->PutINGate(b_val, bitlen, SERVER);
-		circ->PutPrintValueGate(s_A, "SERVER SA");
+		circ->PutPrintValueGate(s_A1, "SERVER SA");
 
 	} else { //role == CLIENT
 		local_factor = a2_val*b2_val;
@@ -106,7 +106,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		s_localC = circ->PutINGate(local_factor,bitlen,CLIENT);
 
 		//s_Dummy = circ->PutINGate(b_val, bitlen, SERVER);
-		circ->PutPrintValueGate(s_A, "CLIENT SA");
+		circ->PutPrintValueGate(s_A2, "CLIENT SA");
 
 	}
   
@@ -155,10 +155,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	share* out;
 
-	  out = s_b;
+	  out = s_b1;
 	//std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
-	ac->PutPrintValueGate(s_a, "Share A");
-	ac->PutPrintValueGate(s_b, "Share B");
+	ac->PutPrintValueGate(s_a1, "Share A");
+	ac->PutPrintValueGate(s_b1, "Share B");
 	/** Calling the Addition gate in the Arithmetic circuit.*/
 	//output = s_a->get_clear_value<uint32_t>();
 	//s_out = circ->PutOUTGate(s_out, ALL);
