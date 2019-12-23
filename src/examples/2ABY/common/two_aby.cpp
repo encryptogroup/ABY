@@ -158,10 +158,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* b1a2;
 	
 	  
-	a1b2 = ac->PutADDGate(s_a1,s_b2);
+	a1b2 = ac->PutMULGate(s_a1,s_b2);
 	ac->PutPrintValueGate(a1b2, "A1B2");
 
-	b1a2 = ac->PutADDGate(s_b1,s_a2);
+	b1a2 = ac->PutMULGate(s_b1,s_a2);
 	ac->PutPrintValueGate(b1a2, "B1A2");
 	
 	out = ac->PutADDGate(a1b2,b1a2);
