@@ -53,7 +53,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				which stores the output.
 	*/
 
-	share *s_A, *s_B, *s_Dummy, *s_out;
+	share *s_A1, *s_B1, *s_A2, *s_B2, *s_localS, *s_localC, *s_Dummy,  *s_out;
 
 	/**
 		Step 5: Initialize A and B values randomly or not....
@@ -62,11 +62,17 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				one input value.
 	*/
 
-	uint32_t a_val, b_val, dummy_value, output;
+	uint32_t a1_val, b1_val,a2_val, b2_val,local_factor, dummy_value, output;
 	srand(time(NULL));
-	a_val = 10;
-  	dummy_value = 5;
-	b_val = 20;
+	a1_val = 60;
+	b1_val = 33;
+	a2_val = -15;
+	b2_val = -3;
+	
+	dummy_value = 5;
+	
+	// 
+
   
   
   /**
@@ -75,17 +81,31 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				for my inputs and PutDummyINGate() for the other parties input.
 				Also mention who is sharing the object.
 	*/
-	//s_alice_money = circ->PutINGate(alice_money, bitlen, CLIENT);
-	//s_bob_money = circ->PutINGate(bob_money, bitlen, SERVER);
-  
+	
 	if(role == SERVER) {
-		s_A = circ->PutDummyINGate(bitlen);
-		s_B = circ->PutINGate(b_val, bitlen, SERVER);
+		local_factor = a1_val*b1_val;
+		s_A1 = circ->PutINGate(a1_val,bitlen,SERVER);
+		s_B1 = circ->PutINGate(b1_val, bitlen, SERVER);
+		s_localS = circ->PutINGate(local_factor,bitlen,SERVER);
+
+		s_A2 = circ->PutDummyINGate( bitlen);
+		s_B2 = circ->PutDummyINGate(bitlen);
+		s_localC = circ->PutDummyINGate(bitlen);
+
+		//s_Dummy= circ->PutINGate(b_val, bitlen, SERVER);
 		circ->PutPrintValueGate(s_A, "SERVER SA");
 
 	} else { //role == CLIENT
-		s_A = circ->PutINGate(a_val, bitlen, CLIENT);
-		s_B = circ->PutDummyINGate(bitlen);
+		local_factor = a2_val*b2_val;
+		s_A1 = circ->PutDummyINGate(bitlen);
+		s_B1 = circ->PutDummyINGate(bitlen);
+		s_localS = circ->PutDummyINGate(bitlen);
+
+		s_A2 = circ->PutINGate(a2_val, bitlen, CLIENT);
+		s_B2 = circ->PutINGate(b2_val, bitlen, CLIENT);
+		s_localC = circ->PutINGate(local_factor,bitlen,CLIENT);
+
+		//s_Dummy = circ->PutINGate(b_val, bitlen, SERVER);
 		circ->PutPrintValueGate(s_A, "CLIENT SA");
 
 	}
@@ -97,7 +117,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				Don't forget to type cast the circuit object to type of share
 	*/
 
-	s_out = BuildFirstCircuit(role, s_A,s_B,
+	s_out = BuildFirstCircuit(role, s_A1,s_B1,s_A2,s_B2,s_localS,s_localC
 			(ArithmeticCircuit*) circ);
 
 	/**
@@ -130,7 +150,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
   
-  share* BuildFirstCircuit(e_role role, share *s_a, share *s_b,
+  share* BuildFirstCircuit(e_role role, share *s_a1, share *s_b1,share *s_a2, share *s_b2, share *s_localS, share *s_localC,
 		ArithmeticCircuit *ac) {
 
 	share* out;
