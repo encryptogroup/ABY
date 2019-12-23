@@ -125,7 +125,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				the server and the client. This step writes the output to the
 				shared output object based on the role.
 	*/
-	s_out = circ->PutOUTGate(s_out, ALL);
+	s_out = circ->PutOUTGate(s_out, SERVER);
 	circ->PutPrintValueGate(s_out, "Share S_OUT");
 
 
