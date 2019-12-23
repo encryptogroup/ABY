@@ -137,7 +137,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	  out = s_b;
 	//std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
-	ac->PutPrintValueGate(s_a, "Share A"<< role);
+	ac->PutPrintValueGate(s_a, "Share A");
 	ac->PutPrintValueGate(s_b, "Share B");
 	/** Calling the Addition gate in the Arithmetic circuit.*/
 	//output = s_a->get_clear_value<uint32_t>();
