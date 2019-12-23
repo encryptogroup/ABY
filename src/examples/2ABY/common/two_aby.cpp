@@ -65,7 +65,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	uint32_t a_val, b_val, dummy_value, output;
 	srand(time(NULL));
 	a_val = 10;
-  dummy_value = 5;
+  	dummy_value = 5;
 	b_val = 20;
   
   
