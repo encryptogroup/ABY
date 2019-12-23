@@ -115,7 +115,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	*/
 	output = s_out->get_clear_value<uint32_t>();
 
-	std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
+	std::cout << " I AM "<<role<< " AND THIS IS THE OUTPUT " << output << std::endl;
 
 
 	delete party;
@@ -130,11 +130,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* out;
 
 	//std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
-	ac->PutPrintValueGate(s_a, "Share A");
+	ac->PutPrintValueGate(s_a, "Share A"<< role);
 	ac->PutPrintValueGate(s_b, "Share B");
 	/** Calling the Addition gate in the Arithmetic circuit.*/
-	out = s_a;
-
+	output = s_a->get_clear_value<uint32_t>();
+	//s_out = circ->PutOUTGate(s_out, ALL);
 	return out;
 }
   
