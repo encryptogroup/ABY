@@ -53,7 +53,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				which stores the output.
 	*/
 
-	share *s_A, *s_B, *s_Dummy *s_out;
+	share *s_A, *s_B, *s_Dummy, *s_out;
 
 	/**
 		Step 5: Initialize A and B values randomly or not....
