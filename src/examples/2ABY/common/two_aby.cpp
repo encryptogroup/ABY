@@ -153,7 +153,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   share* BuildFirstCircuit(e_role role, share *s_a1, share *s_b1,share *s_a2, share *s_b2, share *s_localS, share *s_localC,
 		ArithmeticCircuit *ac) {
 
-	share* out1;
+	share* out;
 	share* a1b2;
 	share* b1a2;
 	
@@ -163,13 +163,13 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	out = ac->PutADDGate(a1b2,b1a2);
 	out = ac->PutADDGate(out,s_localC);
-	out = ac->PutAddGate(out,s_localS)
+	out = ac->PutADDGate(out,s_localS)
 		
 	//std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
 	ac->PutPrintValueGate(s_a1, "Share A1");
 	ac->PutPrintValueGate(s_b1, "Share B1");
 	ac->PutPrintValueGate(s_a2, "Share A2");
-	ac->PutPrintValueGate(s_B2, "Share B2");
+	ac->PutPrintValueGate(s_b2, "Share B2");
 	//ac->PutPrintValueGate(s_b1, "Share B1");
 
 	/** Calling the Addition gate in the Arithmetic circuit.*/
