@@ -31,7 +31,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
  \param		ac	 		arithmetic circuit object.
  \brief		This function is used to build and solve the addition.
  */
-share* BuildFirstCircuit(e_role role, share *s_a1, share *s_b1, share *s_a2, share *s_b2 share *s_localS, share *s_localC,
+share* BuildFirstCircuit(e_role role, share *s_a1, share *s_b1, share *s_a2, share *s_b2, share *s_localS, share *s_localC,
 		ArithmeticCircuit *ac);
 
 
