@@ -81,12 +81,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	if(role == SERVER) {
 		s_A = circ->PutDummyINGate(bitlen);
 		s_B = circ->PutINGate(b_val, bitlen, SERVER);
-		circ->PutPrintValueGate(s_a, "SERVER SA");
+		circ->PutPrintValueGate(s_A, "SERVER SA");
 
 	} else { //role == CLIENT
 		s_A = circ->PutINGate(a_val, bitlen, CLIENT);
 		s_B = circ->PutDummyINGate(bitlen);
-		circ->PutPrintValueGate(s_a, "CLIENT SA");
+		circ->PutPrintValueGate(s_A, "CLIENT SA");
 
 	}
   
