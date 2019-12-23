@@ -79,11 +79,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	//s_bob_money = circ->PutINGate(bob_money, bitlen, SERVER);
   
 	if(role == SERVER) {
-		s_Dummy = circ->PutDummyINGate(bitlen);
+		s_A = circ->PutDummyINGate(bitlen);
 		s_B = circ->PutINGate(b_val, bitlen, SERVER);
 	} else { //role == CLIENT
 		s_A = circ->PutINGate(a_val, bitlen, CLIENT);
-		s_Dummy = circ->PutDummyINGate(bitlen);
+		s_B = circ->PutDummyINGate(bitlen);
 	}
   
   
@@ -93,7 +93,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				Don't forget to type cast the circuit object to type of share
 	*/
 
-	s_out = BuildFirstCircuit(s_A,s_B,
+	s_out = BuildFirstCircuit(role, s_A,s_B,
 			(ArithmeticCircuit*) circ);
 
 	/**
@@ -101,7 +101,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				the server and the client. This step writes the output to the
 				shared output object based on the role.
 	*/
-	s_out = circ->PutOUTGate(s_out, ALL); // Just want the 
+	s_out = circ->PutOUTGate(s_out, ALL); 
 
 
   /**
@@ -124,13 +124,16 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
   
-  share* BuildFirstCircuit(share *s_a, share *s_b,
+  share* BuildFirstCircuit(e_role role, share *s_a, share *s_b,
 		ArithmeticCircuit *ac) {
 
 	share* out;
 
+	//std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
+	ac->PutPrintValueGate(s_a, "Share A");
+	ac->PutPrintValueGate(s_b, "Share B");
 	/** Calling the Addition gate in the Arithmetic circuit.*/
-	out = ac->PutOUTGate(s_a, SERVER);
+	out = s_a;
 
 	return out;
 }
