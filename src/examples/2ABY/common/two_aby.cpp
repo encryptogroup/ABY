@@ -64,10 +64,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	uint32_t a1_val, b1_val,a2_val, b2_val,local_factor, dummy_value, output;
 	srand(time(NULL));
-	a1_val = 40;
-	b1_val = 27;
-	a2_val = 5;
-	b2_val = 3;
+	a1_val = 60;
+	b1_val = 33;
+	a2_val = -15;
+	b2_val = -3;
 	
 	dummy_value = 5;
 	
