@@ -163,7 +163,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	out = ac->PutADDGate(a1b2,b1a2);
 	out = ac->PutADDGate(out,s_localC);
-	out = ac->PutADDGate(out,s_localS)
+	out = ac->PutADDGate(out,s_localS);
 		
 	//std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
 	ac->PutPrintValueGate(s_a1, "Share A1");
