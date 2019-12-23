@@ -156,8 +156,14 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* out;
 	share* a1b2;
 	share* b1a2;
+	uint32_t output;
 	
-	  
+	output = s_a1->get_clear_value<uint32_t>();
+	std::cout << " I AM "<<role<< " AND THIS IS THE sA1 " << output << std::endl;
+
+	output = s_a2->get_clear_value<uint32_t>();
+  	std::cout << " I AM "<<role<< " AND THIS IS THE s_A2 " << output << std::endl;
+
 	a1b2 = ac->PutMULGate(s_a1,s_b2);
 	ac->PutPrintValueGate(a1b2, "A1B2");
 
