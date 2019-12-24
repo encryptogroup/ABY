@@ -165,8 +165,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* a1b2;
 	share* b1a2;
 	uint32_t output;
-	uint32_t r=1;
+	uint32_t r1 =33299088;
+	  	uint32_t r2 =39598800;
+
 	uint32_t bitlen=32;
+	  
 	share* rando;
 	  
 	//rando = ac->PutSharedINGate(r,bitlen);
@@ -192,7 +195,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	out = ac->PutADDGate(out,s_localC);
 	out = ac->PutADDGate(out,s_localS);
 		
-	//std::cout << "I AM "<<role<< "AND THIS IS THE OUTPUT" << output << std::endl;
+	std::cout << "I AM NOT " << r1+r2 << std::endl;
 	ac->PutPrintValueGate(s_localC, "Local Cliente");
 	ac->PutPrintValueGate(s_localS, "Local Server");
 	ac->PutPrintValueGate(s_a1, "Share A1");
