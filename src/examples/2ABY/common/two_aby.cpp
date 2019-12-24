@@ -167,9 +167,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	uint32_t bitlen=32;
 	share* rando;
 	  
-	rando = ac->PutSharedINGate(r,bitlen);
-	ac->PutPrintValueGate(rando, "Random");
-
+	//rando = ac->PutSharedINGate(r,bitlen);
+	//ac->PutPrintValueGate(rando, "Random");
+	  
+	  
 
 	
 
@@ -197,8 +198,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	ac->PutPrintValueGate(s_a2, "Share A2");
 	ac->PutPrintValueGate(s_b2, "Share B2");
 	//ac->PutPrintValueGate(s_b1, "Share B1");
+	  
+	rando = ac->PutSharedOUTGate(rando);
+		ac->PutPrintValueGate(rando, "Random");
 
-	
 	return out;
 }
   
