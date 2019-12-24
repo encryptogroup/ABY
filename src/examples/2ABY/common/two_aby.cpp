@@ -129,8 +129,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	
-	s_out = circ->PutSharedOUTGate(s_out);
-		circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
+	//s_out = circ->PutSharedOUTGate(s_out);
+	//	circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
 	
 	//s_out = circ->PutOUTGate(s_out, ALL);
 	
@@ -175,14 +175,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	  
 	share* rando;
 	  
-	  if(role == SERVER){
-		  r1 = 17439440;
-		  shared = ac->PutSharedINGate(r1,bitlen);
-	  }else{
-	  	r1 = 19917456;
-		shared = ac->PutSharedINGate(r1,bitlen);
-	  }
-	  ac->PutPrintValueGate(shared, "SHARED");
+	  
 
 	
 	  
