@@ -131,8 +131,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	
-	//s_out = circ->PutOUTGate(s_out, ALL);
-	s_out = circ->PutSharedOUTGate(s_out);
+	s_out = circ->PutOUTGate(s_out, ALL);
+	//s_out = circ->PutSharedOUTGate(s_out);
 		circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
 
 	//circ->PutPrintValueGate(s_out, "Share S_OUT");
@@ -166,25 +166,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* a1b2;
 	share* b1a2;
 	uint32_t output;
-	uint32_t r1 =33299088;
-	  	uint32_t r2 =39598800;
 
 	uint32_t bitlen=32;
 	  
 	share* rando;
 	  
-	//rando = ac->PutSharedINGate(r,bitlen);
-	//ac->PutPrintValueGate(rando, "Random");
-	  
-	  
-
-	
-
-	//output = s_a1->get_clear_value<uint32_t>();
-	//std::cout << " I AM "<<role<< " AND THIS IS THE sA1 " << output << std::endl;
-
-	//output = s_a2->get_clear_value<uint32_t>();
-  	//std::cout << " I AM "<<role<< " AND THIS IS THE s_A2 " << output << std::endl;
 
 	a1b2 = ac->PutMULGate(s_a1,s_b2);
 	ac->PutPrintValueGate(a1b2, "A1B2");
@@ -196,7 +182,6 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	out = ac->PutADDGate(out,s_localC);
 	out = ac->PutADDGate(out,s_localS);
 		
-	std::cout << "I AM NOT " << r1+r2 << std::endl;
 	ac->PutPrintValueGate(s_localC, "Local Cliente");
 	ac->PutPrintValueGate(s_localS, "Local Server");
 	ac->PutPrintValueGate(s_a1, "Share A1");
