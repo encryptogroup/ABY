@@ -149,7 +149,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	*/
 	output = s_out->get_clear_value<uint32_t>();
 
-	std::cout << " I AM "<<role<< " AND THIS IS THE OUTPUT " << -output << std::endl;
+	std::cout << " I AM "<<role<< " AND THIS IS THE OUTPUT " << output << std::endl;
 
 
 	delete party;
