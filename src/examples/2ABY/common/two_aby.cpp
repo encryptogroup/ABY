@@ -133,7 +133,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	
-	s_out = circ->PutOUTGate(s_out, SERVER);
+	//s_out = circ->PutOUTGate(s_out, SERVER);
+	s_out = circ->PutSharedOUTGate(s_out);
 	circ->PutPrintValueGate(s_out, "Share S_OUT");
 
 
@@ -164,15 +165,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* out;
 	share* a1b2;
 	share* b1a2;
-	share* rand;
 	uint32_t output;
-	uint32_t r = 5;
-	uint32_t bitlen = 32;
 
-	std::cout << " HELLO" << std::endl;
 
-	rand = ac->PutSharedINGate(r, bitlen);
-	ac->PutPrintValueGate(rand, "RANDOM");
+	
 
 	output = s_a1->get_clear_value<uint32_t>();
 	std::cout << " I AM "<<role<< " AND THIS IS THE sA1 " << output << std::endl;
