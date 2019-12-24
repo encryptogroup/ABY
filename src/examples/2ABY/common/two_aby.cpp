@@ -199,7 +199,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	ac->PutPrintValueGate(s_b2, "Share B2");
 	//ac->PutPrintValueGate(s_b1, "Share B1");
 	  
-	rando = ac->PutSharedOUTGate(rando);
+	rando = ac->PutSharedOUTGate(out);
 		ac->PutPrintValueGate(rando, "Random");
 
 	return out;
