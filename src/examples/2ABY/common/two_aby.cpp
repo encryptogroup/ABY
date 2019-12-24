@@ -119,6 +119,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	s_out = BuildFirstCircuit(role, s_A1,s_B1,s_A2,s_B2,s_localS,s_localC,
 			(ArithmeticCircuit*) circ);
+	ac->PutPrintValueGate(s_out, "DEBAJO BUILD");	
+
 
 	/**
 		Step 8: Modify the output receiver based on the role played by
