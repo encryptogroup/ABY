@@ -131,10 +131,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	
-	s_out = circ->PutOUTGate(s_out, ALL);
-	//s_out = circ->PutSharedOUTGate(s_out);
-		circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
-
+	//s_out = circ->PutOUTGate(s_out, ALL);
+	
 	//circ->PutPrintValueGate(s_out, "Share S_OUT");
 
 
@@ -144,6 +142,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				problem.
 	*/
 	party->ExecCircuit();
+	s_out = circ->PutSharedOUTGate(s_out);
+		circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
+
 
 	/**
 		Step 10:Type casting the value to 32 bit unsigned integer for output.
