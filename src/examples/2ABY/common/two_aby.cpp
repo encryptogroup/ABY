@@ -163,7 +163,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* a1b2;
 	share* b1a2;
 	uint32_t output;
-	uint32_t r=10;
+	uint32_t r=1;
 	uint32_t bitlen=32;
 	share* rando;
 	  
