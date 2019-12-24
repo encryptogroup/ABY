@@ -119,7 +119,6 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	s_out = BuildFirstCircuit(role, s_A1,s_B1,s_A2,s_B2,s_localS,s_localC,
 			(ArithmeticCircuit*) circ);
-	circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
 
 
 	/**
@@ -133,7 +132,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	//s_out = circ->PutOUTGate(s_out, ALL);
-	//s_out = circ->PutSharedOUTGate(s_out);
+	s_out = circ->PutSharedOUTGate(s_out);
+		circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
+
 	//circ->PutPrintValueGate(s_out, "Share S_OUT");
 
 
@@ -204,9 +205,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	ac->PutPrintValueGate(s_b2, "Share B2");
 	//ac->PutPrintValueGate(s_b1, "Share B1");
 	  
-	rando = ac->PutSharedOUTGate(out);
+	//rando = ac->PutSharedOUTGate(out);
 	//	ac->PutPrintValueGate(rando, "Random");
 
-	return rando;
+	return out;
 }
   
