@@ -169,6 +169,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	uint32_t r = 5;
 	uint32_t bitlen = 32;
 
+	std::cout << " HELLO" << std::endl;
 
 	rand = ac->PutSharedINGate(r, bitlen);
 	ac->PutPrintValueGate(rand, "RANDOM");
