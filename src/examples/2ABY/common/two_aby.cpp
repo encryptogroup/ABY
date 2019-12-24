@@ -166,11 +166,25 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* out;
 	share* a1b2;
 	share* b1a2;
-	uint32_t output;
+	share* shared;
 
+	uint32_t output;
+	//uint32_t r1 = 17439440;
+	//uint32_t r2 = 19917456;
 	uint32_t bitlen=32;
 	  
 	share* rando;
+	  
+	  if(role == SERVER){
+		  r1 = 17439440;
+		  shared = ac->PutSharedINGate(r1,bitlen);
+	  }else{
+	  	r1 = 19917456;
+		shared = ac->PutSharedINGate(r1,bitlen);
+	  }
+	  ac->PutPrintValueGate(shared, "SHARED");
+
+	
 	  
 
 	a1b2 = ac->PutMULGate(s_a1,s_b2);
