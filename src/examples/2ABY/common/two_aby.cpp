@@ -125,6 +125,14 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				the server and the client. This step writes the output to the
 				shared output object based on the role.
 	*/
+	
+	share *s1_out, *s2_out, *s_random;
+	uint32_t rando;
+	srand(time(NULL));
+	rando = rand();
+	
+	
+	
 	s_out = circ->PutOUTGate(s_out, SERVER);
 	circ->PutPrintValueGate(s_out, "Share S_OUT");
 
@@ -156,8 +164,15 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* out;
 	share* a1b2;
 	share* b1a2;
+	share* rand;
 	uint32_t output;
-	
+	uint32_t r = 5;
+	uint32_t bitlen = 32;
+
+
+	rand = ac->PutSharedINGate(r, bitlen);
+	ac->PutPrintValueGate(rand, "RANDOM");
+
 	output = s_a1->get_clear_value<uint32_t>();
 	std::cout << " I AM "<<role<< " AND THIS IS THE sA1 " << output << std::endl;
 
@@ -183,9 +198,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	ac->PutPrintValueGate(s_b2, "Share B2");
 	//ac->PutPrintValueGate(s_b1, "Share B1");
 
-	/** Calling the Addition gate in the Arithmetic circuit.*/
-	//output = s_a->get_clear_value<uint32_t>();
-	//s_out = circ->PutOUTGate(s_out, ALL);
+	
 	return out;
 }
   
