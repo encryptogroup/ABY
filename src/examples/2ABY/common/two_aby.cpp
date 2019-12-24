@@ -169,7 +169,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* shared;
 
 	uint32_t output;
-	//uint32_t r1 = 17439440;
+	uint32_t r1 ;//= 17439440;
 	//uint32_t r2 = 19917456;
 	uint32_t bitlen=32;
 	  
