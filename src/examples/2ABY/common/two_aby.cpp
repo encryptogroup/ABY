@@ -126,15 +126,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				shared output object based on the role.
 	*/
 	
-	share *s1_out, *s2_out, *s_random;
-	uint32_t rando;
-	srand(time(NULL));
-	rando = rand();
 	
 	
 	
-	//s_out = circ->PutOUTGate(s_out, SERVER);
-	s_out = circ->PutSharedOUTGate(s_out);
+	
+	s_out = circ->PutOUTGate(s_out, ALL);
+	//s_out = circ->PutSharedOUTGate(s_out);
 	circ->PutPrintValueGate(s_out, "Share S_OUT");
 
 
