@@ -98,6 +98,7 @@ int sum = 0;
 	return sum; // terminate with error
     }else{
     
+	    //TODO sum = array. Each iteration assign the line to a new position in sum
     while (inFile >> x) {
         sum = sum + x;
     }
