@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     int x;
     std::ifstream inFile;
     
-    inFile.open("/root/SocketServer/demo.txt");
+    inFile.open("/root/ABY/demo.txt");
     if (!inFile) {
         std::cout << "Unable to open file";
         sum=0;
