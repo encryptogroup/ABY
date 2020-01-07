@@ -2,7 +2,12 @@
  \file 		addition_test.cpp
  \author	romalvarezllorens@gmail.com
  */
- 
+
+#include <string>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/parse_options.h>
 //ABY Party class
@@ -65,6 +70,25 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 
+	
+	int sum = 0;
+    int x;
+    std::ifstream inFile;
+    
+    inFile.open("/root/SocketServer/demo.txt");
+    if (!inFile) {
+        std::cout << "Unable to open file";
+        sum=0;
+	return sum; // terminate with error
+    }else{
+    
+    while (inFile >> x) {
+        sum = sum + x;
+    }
+   }
+    
+    inFile.close();
+    std::cout << "Sum = " << sum << std:: endl; 
 	//evaluate addition cirucui using arithmetic
 	test_circuit(role, address, port, seclvl, 32,
 			nthreads, mt_alg, S_ARITH);           
