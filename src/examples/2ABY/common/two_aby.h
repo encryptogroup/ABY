@@ -23,7 +23,7 @@
  millionaire's problem
  */
 int32_t test_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing,uint32_t sum);
+		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing);
 /**
  \param		s_a		shared object of alice.
  \param		s_b 		shared object of bob.
