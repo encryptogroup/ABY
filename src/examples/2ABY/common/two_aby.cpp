@@ -129,7 +129,6 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	
-	s_out = circ->PutSharedOUTGate(s_out);
 		circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
 	
 	//s_out = circ->PutOUTGate(s_out, ALL);
@@ -200,6 +199,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	  
 	//rando = ac->PutSharedOUTGate(out);
 	//	ac->PutPrintValueGate(rando, "Random");
+	out = ac->PutSharedOUTGate(out);
 
 	return out;
 }
