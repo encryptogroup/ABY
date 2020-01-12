@@ -76,6 +76,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	uint32_t a1_val, b1_val,a2_val, b2_val,c1_val, d1_val,c2_val, d2_val,local_factor_1, local_factor_2, dummy_value, output;
 	srand(time(NULL));
 	
+	
+	// EUCLIDEAN Distance a(4,6) b(3,2) = sqrt(17)
 	//a = 4
 	a1_val = 1;
 	a2_val = 3;
