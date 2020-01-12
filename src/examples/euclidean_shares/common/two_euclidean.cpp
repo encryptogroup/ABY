@@ -123,7 +123,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		s_local2_C = circ->PutDummyINGate(bitlen);
 
 		//s_Dummy= circ->PutINGate(b_val, bitlen, SERVER);
-		circ->PutPrintValueGate(s_A1, "SERVER SA");
+		//circ->PutPrintValueGate(s_A1, "SERVER SA");
 
 	} else { //role == CLIENT
 		local_factor_1 = a2_val-c2_val; 
@@ -137,7 +137,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		s_local2_C = circ->PutINGate(local_factor_2, bitlen, CLIENT);
 
 		//s_Dummy = circ->PutINGate(b_val, bitlen, SERVER);
-		circ->PutPrintValueGate(s_A2, "CLIENT SA");
+		//circ->PutPrintValueGate(s_A2, "CLIENT SA");
 
 	}
   
