@@ -216,9 +216,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	 //(a2-c2)^2 
 	a2_sub_c2_square = ac->PutMULGate(s_local1_C,s_local1_C);
 	ac->PutPrintValueGate(a2_sub_c2_square, "a2_sub_c2_square");
+	
 	// (a1-c1)*(a2-c2)  
 	a1subc1_mul_a2subc2 = ac->PutMULGate(s_local1_S,s_local1_C);
-	ac->PutPrintValueGate(a1subc1_mul_a2subc2, "(a1-c1*a2-c2");
+	ac->PutPrintValueGate(a1subc1_mul_a2subc2, "(a1-c1)*(a2-c2)");
 	//  (a1-c1)*(a2-c2) + (a1-c1)*(a2-c2)
 	a1subc1_mul_a2subc2 = ac->PutADDGate(a1subc1_mul_a2subc2,a1subc1_mul_a2subc2);
 	
@@ -226,9 +227,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	b1_sub_d1_square = ac->PutMULGate(s_local2_S,s_local2_S);
 	//(b2-d2)^2  
 	b2_sub_d2_square = ac->PutMULGate(s_local2_C,s_local2_C);
+	ac->PutPrintValueGate(b2_sub_d2_square, "b2d2 square");
+
  	//(a1-c1)*(a2-c2)
 	b1subd1_mul_b2subd2 = ac->PutMULGate(s_local2_S,s_local2_C);
-	ac->PutPrintValueGate(a1subc1_mul_a2subc2, "(b1-d1*b2-d2");
+	//ac->PutPrintValueGate(a1subc1_mul_a2subc2, "(b1-d1*b2-d2");
 	//  (b1-d1)*(b2-d2) + (b1-d1)*(b2-d2)
 	b1subd1_mul_b2subd2 = ac->PutADDGate(b1subd1_mul_b2subd2,b1subd1_mul_b2subd2);
 	  
