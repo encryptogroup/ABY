@@ -1,5 +1,5 @@
-#ifndef __TWOABY_H_
-#define __TWOABY_H_
+#ifndef __TWOEUCLIDEAN_H_
+#define __TWOEUCLIDEAN_H_
 
 #include "../../../abycore/circuit/booleancircuits.h"
 #include "../../../abycore/circuit/arithmeticcircuits.h"
@@ -28,10 +28,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
  \param		s_a		shared object of alice.
  \param		s_b 		shared object of bob.
  \param		ac	 		arithmetic circuit object.
- \brief		This function is used to build and solve the addition.
+ \brief		This function is used to build and solve the euclidean distance using shares coming from the two parties.
  */
 share* BuildFirstCircuit(e_role role, share *s_a1, share *s_b1, share *s_a2, share *s_b2, share *s_localS, share *s_localC,
 		ArithmeticCircuit *ac);
 
 
-#endif /* __TWOABY_H_ */
+#endif /* __TWOEUCLIDEAN_H_ */
