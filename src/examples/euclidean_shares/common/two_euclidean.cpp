@@ -73,7 +73,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	// x1 = a=a1+a2 , y1 = b=b1+b2 , x2 = c=c1+c2, y2 = d=d1+d2
 	
-	uint32_t a1_val, b1_val,a2_val, b2_val,local_factor_1, local_factor_2, dummy_value, output;
+	uint32_t a1_val, b1_val,a2_val, b2_val,c1_val, d1_val,c2_val, d2_val,local_factor_1, local_factor_2, dummy_value, output;
 	srand(time(NULL));
 	
 	//a = 4
