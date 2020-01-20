@@ -78,7 +78,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		c1_val, d1_val,
 		c2_val, d2_val,
 		local_factor_1, local_factor_2, 
-		secret1, secre2,
+		secret1, secret2,
 		dummy_value, output;
 	srand(time(NULL));
 	
