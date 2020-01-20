@@ -53,7 +53,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				which stores the output.
 	*/
 
-	share  *s_local1_S, *s_local1_C, *s_local2_S, *s_local2_C, *s_Dummy,  *s_out;
+	share  *s_local1_S, *s_local1_C, *s_local2_S, *s_local2_C, *s_secret1, *s_secret2, *s_Dummy,  *s_out;
 
 	/**
 		Step 5: Initialize A and B values randomly or not....
@@ -73,7 +73,13 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	// x1 = a=a1+a2 , y1 = b=b1+b2 , x2 = c=c1+c2, y2 = d=d1+d2
 	
-	uint32_t a1_val, b1_val,a2_val, b2_val,c1_val, d1_val,c2_val, d2_val,local_factor_1, local_factor_2, dummy_value, output;
+	uint32_t a1_val, b1_val
+		,a2_val,b2_val,
+		c1_val, d1_val,
+		c2_val, d2_val,
+		local_factor_1, local_factor_2, 
+		secret1, secre2,
+		dummy_value, output;
 	srand(time(NULL));
 	
 	
@@ -90,6 +96,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	//d = 2
 	d1_val = 2;
 	d2_val = 0;
+	//secret = 5
+	secret1 = 2;
+	secret2 = 3;
 	
 	
 	// 
@@ -120,9 +129,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		
 		s_local1_S = circ->PutINGate(local_factor_1,bitlen,SERVER);
 		s_local2_S = circ->PutINGate(local_factor_2,bitlen,SERVER);
+		s_secret1 = circ->PutINGate(secret1,bitlen,SERVER);
 
 		s_local1_C = circ->PutDummyINGate( bitlen);
 		s_local2_C = circ->PutDummyINGate(bitlen);
+		s_secret2 = circ->PutDummyINGate(bitlen);
 
 		//s_Dummy= circ->PutINGate(b_val, bitlen, SERVER);
 		//circ->PutPrintValueGate(s_A1, "SERVER SA");
@@ -134,9 +145,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		
 		s_local1_S = circ->PutDummyINGate(bitlen);
 		s_local2_S = circ->PutDummyINGate(bitlen);
+		s_secret1 = circ->PutDummyINGate(bitlen);
 
 		s_local1_C = circ->PutINGate(local_factor_1, bitlen, CLIENT);
 		s_local2_C = circ->PutINGate(local_factor_2, bitlen, CLIENT);
+		s_secret2 = circ->PutINGate(secret2,bitlen,CLIENT);
+
 
 		//s_Dummy = circ->PutINGate(b_val, bitlen, SERVER);
 		//circ->PutPrintValueGate(s_A2, "CLIENT SA");
@@ -150,7 +164,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				Don't forget to type cast the circuit object to type of share
 	*/
 
-	s_out = BuildFirstCircuit(role,s_local1_S, s_local2_S, s_local1_C, s_local2_C,
+	s_out = BuildFirstCircuit(role,s_local1_S, s_local2_S, s_local1_C, s_local2_C, s_secret1, s_secret2,
 			(ArithmeticCircuit*) circ);
 
 
@@ -193,6 +207,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
   share* BuildFirstCircuit(e_role role, share *s_local1_S, share *s_local2_S, share *s_local1_C, share *s_local2_C,
+			   sahre *s_secret1, share *s_secret2,
 		ArithmeticCircuit *ac) {
 
 	  //The circuit will solve the euclidean distance between a and b, without square root.
@@ -245,6 +260,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	out = ac->PutADDGate(out,b1subd1_mul_b2subd2);
 	out = ac->PutADDGate(out,a2_sub_c2_square);
 	out = ac->PutADDGate(out,b2_sub_d2_square);
+	out = ac->PutADDGate(out,s_secret1);
+	out = ac->PutADDGate(out,s_secret2);
+
+
 	ac->PutPrintValueGate(out, "Euclidean Distance inside circuit");
 
 
