@@ -207,7 +207,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
   share* BuildFirstCircuit(e_role role, share *s_local1_S, share *s_local2_S, share *s_local1_C, share *s_local2_C,
-			   sahre *s_secret1, share *s_secret2,
+			   share *s_secret1, share *s_secret2,
 		ArithmeticCircuit *ac) {
 
 	  //The circuit will solve the euclidean distance between a and b, without square root.
