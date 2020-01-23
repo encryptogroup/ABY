@@ -1,36 +1,21 @@
 /**
  \file 		addition_test.cpp
  \author	romalvarezllorens@gmail.com
- \copyright	ABY - A Framework for Efficient Mixed-protocol Secure Two-party Computation
-			Copyright (C) 2019 Engineering Cryptographic Protocols Group, TU Darmstadt
-			This program is free software: you can redistribute it and/or modify
-            it under the terms of the GNU Lesser General Public License as published
-            by the Free Software Foundation, either version 3 of the License, or
-            (at your option) any later version.
-            ABY is distributed in the hope that it will be useful,
-            but WITHOUT ANY WARRANTY; without even the implied warranty of
-            MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-            GNU Lesser General Public License for more details.
-            You should have received a copy of the GNU Lesser General Public License
-            along with this program. If not, see <http://www.gnu.org/licenses/>.
- \brief		Simple addition test implementation
  */
 
 #include <string>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-//#include "./common/demo.txt"
 
-//Utility libs
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/parse_options.h>
 //ABY Party class
 #include "../../abycore/aby/abyparty.h"
-#include "common/addition.h"
 
-
-int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
+#include "common/two_aby.h"
+ 
+ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
 		uint16_t* port, int32_t* test_op) {
 
@@ -71,7 +56,6 @@ int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 }
 
 
-
 int main(int argc, char** argv) {
 
 	e_role role;
@@ -87,29 +71,9 @@ int main(int argc, char** argv) {
 	seclvl seclvl = get_sec_lvl(secparam);
 
 
-int sum = 0;
-    int x;
-    std::ifstream inFile;
-    
-    inFile.open("/root/SocketServer/demo.txt");
-    if (!inFile) {
-        std::cout << "Unable to open file";
-        sum=0;
-	return sum; // terminate with error
-    }else{
-    
-	    //TODO sum = array. Each iteration assign the line to a new position in sum
-    while (inFile >> x) {
-        sum = sum + x;
-    }
-   }
-    
-    inFile.close();
-    std::cout << "Sum = " << sum << std:: endl; 
-   	
 	//evaluate addition cirucui using arithmetic
-	test_addition_circuit(role, address, port, seclvl, 32,
-			nthreads, mt_alg, S_ARITH, sum);
+	test_circuit(role, address, port, seclvl, 32,
+			nthreads, mt_alg, S_ARITH);           
 	
 	return 0;
 }
