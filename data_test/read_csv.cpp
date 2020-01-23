@@ -70,7 +70,9 @@ int main(){
         // Keep track of the current column index
         int colIdx = 0;
         if(colIdx == 1){
-          Print(x_start);
+          for (int i=0; i<v.size();i++){
+            std::cout << x_start[i] << std::endl;
+          }      
         }
         
         
