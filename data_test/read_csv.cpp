@@ -31,7 +31,7 @@ int main(){
     std::vector<int> y_end;
 
     // Create an input filestream
-    std::ifstream myFile(filename);
+    std::ifstream myFile("data1.csv");
 
     // Make sure the file is open
     if(!myFile.is_open()) throw std::runtime_error("Could not open file");
@@ -53,7 +53,7 @@ int main(){
         while(std::getline(ss, colname, ',')){
             
             // Initialize and add <colname, int vector> pairs to result
-            result.push_back({colname, std::vector<int> {}});
+            result.push_back(colname);
             std::cout << " COLUMN NAME "<< colname <<std::endl;
 
 
