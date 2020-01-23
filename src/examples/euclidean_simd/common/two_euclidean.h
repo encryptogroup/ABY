@@ -1,5 +1,5 @@
-#ifndef __TWOEUCLIDEAN_H_
-#define __TWOEUCLIDEAN_H_
+#ifndef __EUCLIDEANSIMD_H_
+#define __EUCLIDEANSIMD_H_
 
 #include "../../../abycore/circuit/booleancircuits.h"
 #include "../../../abycore/circuit/arithmeticcircuits.h"
@@ -35,4 +35,4 @@ share* BuildFirstCircuit(e_role role, share *s_local1_S, share *s_local2_S, shar
 		ArithmeticCircuit *ac);
 
 
-#endif /* __TWOEUCLIDEAN_H_ */
+#endif /* __EUCLIDEANSIMD_H_ */
