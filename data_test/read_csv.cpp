@@ -9,11 +9,11 @@
 
 
 
-void print(std::vector <int> const &a) {
-   std::cout << "The vector elements are : ";
-   
-   for(int i=0; i < a.size(); i++)
-      std::cout << a.at(i) << ' ';
+void Print (const vector<int>& v){
+  //vector<int> v;
+  for (int i=0; i<v.size();i++){
+    std::cout << v[i] << std::endl;
+  }
 }
 
 
