@@ -1,2 +1,2 @@
-add_executable(two_euclidean_test two_euclidean_test.cpp common/two_euclidean.cpp)
-target_link_libraries(two_euclidean_test ABY::aby ENCRYPTO_utils::encrypto_utils)
+add_executable(euclidean_simd euclidean_simd.cpp common/euclidean_simd.cpp)
+target_link_libraries(euclidean_simd ABY::aby ENCRYPTO_utils::encrypto_utils)
