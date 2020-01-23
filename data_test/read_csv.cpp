@@ -9,12 +9,6 @@
 
 
 
-void Print (const vector<int>& v){
-  //vector<int> v;
-  for (int i=0; i<v.size();i++){
-    std::cout << v[i] << std::endl;
-  }
-}
 
 
 //std::vector<std::pair<std::string, std::vector<int>>> read_csv(std::string filename){
