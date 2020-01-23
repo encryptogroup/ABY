@@ -81,10 +81,10 @@ int32_t test_euclid_dist_circuit(e_role role, const std::string& address, uint16
 	if (role == SERVER) {
 		s_x1 = circ->PutSIMDINGate(nvals, x1, 8, SERVER);
 		s_y1 = circ->PutSIMDINGate(nvals, y1, 8, SERVER);
-		s_x2 = circ->PutDummySIMDINGate(nvals, 8);
-		s_y2 = circ->PutDummySIMDINGate(nvals, 8);
+		//s_x2 = circ->PutDummySIMDINGate(nvals, 8);
+		//s_y2 = circ->PutDummySIMDINGate(nvals, 8);
 	} else {
-		s_x1 = circ->PutDummySIMDINGate(nvals, 8);
+		//s_x1 = circ->PutDummySIMDINGate(nvals, 8);
 		s_y1 = circ->PutDummySIMDINGate(nvals, 8);
 		s_x2 = circ->PutSIMDINGate(nvals, x2, 8, CLIENT);
 		s_y2 = circ->PutSIMDINGate(nvals, y2, 8, CLIENT);

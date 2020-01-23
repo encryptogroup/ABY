@@ -20,6 +20,42 @@
 #include "../../../abycore/circuit/booleancircuits.h"
 #include "../../../abycore/circuit/arithmeticcircuits.h"
 #include "../../../abycore/sharing/sharing.h"
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+
+
+
+
+//Alice is a_valu, Bob is b_value
+int32_t readValueFromFile (e_role role,uint32_t a_val,uint32_t b_val){
+	
+  string line;
+  int32_t count = 0;
+  ifstream myfile ("demo.txt");
+  if (myfile.is_open())
+  {
+    while ( getline (myfile,line) )
+    {
+      if(role == SERVER) {
+	 b_val += std::stoi(line);
+   
+      }else {
+         a_val += std::stoi(line);
+      }
+    	myfile.close();
+	return 1;
+  }
+  }
+
+  else{ cout << "Unable to open file";}
+      
+
+  return 0;
+
+
+}
 
 
 
@@ -66,6 +102,8 @@ int32_t test_addition_circuit(e_role role, const std::string& address, uint16_t 
 	uint32_t a_val, b_val, output;
 	srand(time(NULL));
 
+  
+  /*
 
 	if(sum != 0){
 
@@ -83,7 +121,16 @@ int32_t test_addition_circuit(e_role role, const std::string& address, uint16_t 
 		a_val = 10;
 		b_val = 20;
 	}	
-
+	a_val = 0;
+	b_val = 0;
+	
+	if(readValueFromFile(role, a_val,b_val)){
+	}
+	else{
+		a_val = 10;
+		b_val = 20;		   
+	}
+*/
 	/**
 		Step 6: Copy the randomly generated values into the respective
 				share objects using the circuit object method PutINGate()
