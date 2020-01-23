@@ -69,7 +69,9 @@ int main(){
         
         // Keep track of the current column index
         int colIdx = 0;
-        if(colIdx == 1) print(x_start);
+        if(colIdx == 1){
+          Print(x_start);
+        }
         
         
         // Extract each integer
