@@ -24,7 +24,7 @@ void print(std::vector <int> const &a) {
 
 int main(){
     // Create a vector of <string, int vector> pairs to store the result
-    std::vector<string> result;
+   // std::vector<string> result;
     std::vector<int> x_start;
     std::vector<int> x_end;
     std::vector<int> y_start;
@@ -53,8 +53,8 @@ int main(){
         while(std::getline(ss, colname, ',')){
             
             // Initialize and add <colname, int vector> pairs to result
-            result.push_back(colname);
-            std::cout << " COLUMN NAME "<< colname <<std::endl;
+           // result.push_back(colname);
+           // std::cout << " COLUMN NAME "<< colname <<std::endl;
 
 
         }
