@@ -51,10 +51,16 @@ def main(argv):
         ##Creating a list
         ##each pair x11 x12 y11 y12 are just one set of coordinates
         x1_s1 =[]#  [0]*(nrows-2)
-        y1_s1 =[]#  [0]*(nrows-2)
-
         x1_s2 =[]#  [0]*(nrows-2)
+
+        x2_s1 =[]#  [0]*(nrows-2)
+        x2_s2 =[]#  [0]*(nrows-2)
+        
+        y1_s1 =[]#  [0]*(nrows-2)
         y1_s2 =[]#  [0]*(nrows-2)
+        
+        y2_s1 =[]#  [0]*(nrows-2)
+        y2_s2 =[]#  [0]*(nrows-2)
         
         
         ##evaluate all the sheets of the file
@@ -91,10 +97,10 @@ def main(argv):
             sheetS1 = wbS1.add_worksheet('points')
             sheetS2 = wbS2.add_worksheet('points')
 
-            sheetS1.write(0,0,'Share X')
-            sheetS1.write(0,1,'Share Y')
-            sheetS2.write(0,0,'Share X')
-            sheetS2.write(0,1,'Share Y')
+            sheetS1.write(0,0,'Share Start X')
+            sheetS1.write(0,1,'Share Start Y')
+            sheetS2.write(0,0,'Share End X')
+            sheetS2.write(0,1,'Share End Y')
 
             sheetS1.write_column(1,0,x1_s1)
             sheetS1.write_column(1,1,y1_s1)
