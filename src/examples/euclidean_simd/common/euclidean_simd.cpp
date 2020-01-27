@@ -176,7 +176,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	  
 	  share* out;
-	  share* first_x;
+	  share* x_start;
+	  share* y_start;
+	  share* x_end;
+	  share* y_end;
+
 	
 	  
 	uint32_t output;
@@ -186,7 +190,19 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* rando;
 	  
 	  
-	  rando = circ->PutADDGate(s1_x_start,s2_x_start);
+	 x_start = circ->PutADDGate(s1_x_start,s2_x_start);
+	 y_start = circ->PutADDGate(s1_y_start,s2_y_start);
+	 x_end = circ->PutADDGate(s1_x_end,s2_x_end);
+	 y_end = circ->PutADDGate(s1_y_end,s2_x_end);
+	  
+	 
+	uint32_t out_bitlen , out_nvals , *out_vals;
+	x_start->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
+	  
+	  
+	 	std::cout<< " I AM INSIDE. This Is X " << out_vals[0] << std::endl;
+
+
 	  
 	  
 	  
