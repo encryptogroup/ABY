@@ -123,7 +123,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				  s2_y_start, s2_x_end, s2_y_end,
 			(ArithmeticCircuit*) circ);
 
-	  s_out = circ->PutSharedOUTGate(s_out);
+	  s_out = circ->PutOUTGate(s_out,ALL);
 
 	/**
 		Step 8: Modify the output receiver based on the role played by
@@ -156,8 +156,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	uint32_t out_bitlen , out_nvals , *out_vals;
 	s_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
+	std::cout << " HERE WE ARE. ABOUT TO PRINT CLEAR VALUE" << std::endl;
 
-	std::cout << " I AM "<<role<< " AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
+	std::cout << " I AM "<<role<< std::endl;
+	std::cout" AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
 
 
 	delete party;
