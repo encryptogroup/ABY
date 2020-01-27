@@ -45,26 +45,29 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
   
   
-  	uint32_t x_start [4];
-	uint32_t y_start [4];	
-	uint32_t x_end [4];
-	uint32_t y_end [4];
-	uint32_t n = x_start.size();
+  	//uint32_t x_start [4];
+	//uint32_t y_start [4];	
+	//uint32_t x_end [4];
+	//uint32_t y_end [4];
 	
 
 	if(role == SERVER){
 	
-	 x_start= {349878, 205297, 156505, 294944};
-  	 y_start= {4267509, 4531068, 4257078, 4219945};
-	 x_end = {169015, 422706, 106029, 89585};
-	 y_end = {4568415, 4340206, 4542962, 4273139};
+	 uint32_t x_start [4] = {349878, 205297, 156505, 294944};
+  	 uint32_t y_start [4]= {4267509, 4531068, 4257078, 4219945};
+	 uint32_t x_end [4] = {169015, 422706, 106029, 89585};
+	 uint32_t y_end [4] = {4568415, 4340206, 4542962, 4273139};
+
 	}else{
 
-	 x_start = {130066, 265203, 313995, 177860};
-  	 y_start = {308575, 68182, 342172, 378095};
-	 x_end   = {349878, 205297, 156505, 294944};
-	 y_end   = {4267509, 4531068, 4257078, 4219945};
+	 uint32_t x_start [4] = {130066, 265203, 313995, 177860};
+  	 uint32_t y_start [4] = {308575, 68182, 342172, 378095};
+	 uint32_t x_end [4]  = {349878, 205297, 156505, 294944};
+	 uint32_t y_end [4]   = {4267509, 4531068, 4257078, 4219945};
 	}
+	
+		uint32_t n = 4;
+
   /**
 		Step 4: Creating the share objects - Values A and B which
 				are used as input to the computation function. Also s_out
