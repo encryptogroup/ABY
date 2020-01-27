@@ -123,6 +123,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				  s2_y_start, s2_x_end, s2_y_end,
 			(ArithmeticCircuit*) circ);
 
+	  s_out = circ->PutSharedOUTGate(s_out);
 
 	/**
 		Step 8: Modify the output receiver based on the role played by
@@ -136,7 +137,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	//s_out = circ->PutOUTGate(s_out, ALL);
 	
-	circ->PutPrintValueGate(s_out, "Share S_OUT");
+	//circ->PutPrintValueGate(s_out, "Share S_OUT");
 
 
 
@@ -186,7 +187,6 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	  rando = circ->PutADDGate(s1_x_start,s2_x_start);
 	  
 	  
-	  rando = circ->PutSharedOUTGate(rando);
 	  
 	  
 
