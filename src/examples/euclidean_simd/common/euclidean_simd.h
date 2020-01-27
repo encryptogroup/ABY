@@ -30,7 +30,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
  \param		ac	 		arithmetic circuit object.
  \brief		This function is used to build and solve the euclidean distance using shares coming from the two parties.
  */
-share* BuildFirstCircuit(e_role *role, share *s1_x_start,  share *s1_y_start, share *s1_x_end, share *s1_y_end, 
+share* BuildFirstCircuit(e_role role, share *s1_x_start,  share *s1_y_start, share *s1_x_end, share *s1_y_end, 
 			   share *s2_x_start, share *s2_y_start, share *s2_x_end, share *s2_y_end,
 			 ArithmeticCircuit *circ);
 
