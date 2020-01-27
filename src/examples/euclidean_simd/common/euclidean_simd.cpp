@@ -185,7 +185,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 
 
-	ac->PutPrintValueGate(out, "Euclidean Distance inside circuit");
+	circ->PutPrintValueGate(out, "Euclidean Distance inside circuit");
 
 
 	/*	
