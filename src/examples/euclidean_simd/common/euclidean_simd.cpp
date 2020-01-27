@@ -51,20 +51,19 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	//uint32_t y_end [4];
 	
 
-	if(role == SERVER){
 	
-	 uint32_t x_start [4] = {349878, 205297, 156505, 294944};
-  	 uint32_t y_start [4]= {4267509, 4531068, 4257078, 4219945};
-	 uint32_t x_end [4] = {169015, 422706, 106029, 89585};
-	 uint32_t y_end [4] = {4568415, 4340206, 4542962, 4273139};
+	 uint32_t x1_start [4] = {349878, 205297, 156505, 294944};
+  	 uint32_t y1_start [4]= {4267509, 4531068, 4257078, 4219945};
+	 uint32_t x1_end [4] = {169015, 422706, 106029, 89585};
+	 uint32_t y1_end [4] = {4568415, 4340206, 4542962, 4273139};
 
-	}else{
+	
 
-	 uint32_t x_start [4] = {130066, 265203, 313995, 177860};
-  	 uint32_t y_start [4] = {308575, 68182, 342172, 378095};
-	 uint32_t x_end [4]  = {349878, 205297, 156505, 294944};
-	 uint32_t y_end [4]   = {4267509, 4531068, 4257078, 4219945};
-	}
+	 uint32_t x2_start [4] = {130066, 265203, 313995, 177860};
+  	 uint32_t y2_start [4] = {308575, 68182, 342172, 378095};
+	 uint32_t x2_end [4]  = {349878, 205297, 156505, 294944};
+	 uint32_t y2_end [4]   = {4267509, 4531068, 4257078, 4219945};
+
 	
 		uint32_t n = 4;
 
@@ -90,10 +89,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	if(role == SERVER) {
 	
 		
-		s1_x_start = circ->PutSIMDINGate(n,x_start,bitlen,SERVER);
-		s1_y_start = circ->PutSIMDINGate(n,y_start,bitlen,SERVER);
-		s1_x_end = circ->PutSIMDINGate(n,x_end,bitlen,SERVER);
-		s1_y_end = circ->PutSIMDINGate(n, y_end,bitlen,SERVER);
+		s1_x_start = circ->PutSIMDINGate(n,x1_start,bitlen,SERVER);
+		s1_y_start = circ->PutSIMDINGate(n,y1_start,bitlen,SERVER);
+		s1_x_end = circ->PutSIMDINGate(n,x1_end,bitlen,SERVER);
+		s1_y_end = circ->PutSIMDINGate(n, y1_end,bitlen,SERVER);
 		
 		s2_x_start = circ->PutDummySIMDINGate(n, bitlen);
         	s2_y_start = circ->PutDummySIMDINGate(n, bitlen);
@@ -101,10 +100,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
         	s2_y_end = circ->PutDummySIMDINGate(n, bitlen);
 
 	} else { //role == CLIENT
-		s2_x_start = circ->PutSIMDINGate(n,x_start,bitlen,CLIENT);
-		s2_y_start = circ->PutSIMDINGate(n,y_start,bitlen,CLIENT);
-		s2_x_end = circ->PutSIMDINGate(n,x_end,bitlen,CLIENT);
-		s2_y_end = circ->PutSIMDINGate(n,y_end,bitlen,CLIENT);
+		s2_x_start = circ->PutSIMDINGate(n,x2_start,bitlen,CLIENT);
+		s2_y_start = circ->PutSIMDINGate(n,y2_start,bitlen,CLIENT);
+		s2_x_end = circ->PutSIMDINGate(n,x2_end,bitlen,CLIENT);
+		s2_y_end = circ->PutSIMDINGate(n,y2_end,bitlen,CLIENT);
 		
 		s1_x_start = circ->PutDummySIMDINGate(n, bitlen);
         	s1_y_start = circ->PutDummySIMDINGate(n, bitlen);
