@@ -200,10 +200,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	 
 	uint32_t out_bitlen , out_nvals , *out_vals;
 	  
-	out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
+	  //NOT WORKING
+	//out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
 	  
 	  
-	 	std::cout<< " I AM INSIDE. This Is X " << out_vals[0] << std::endl;
+	 //	std::cout<< " I AM INSIDE. This Is X " << out_vals[0] << std::endl;
 
 
 	  
