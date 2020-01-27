@@ -51,6 +51,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	//uint32_t y_end [4];
 	
 
+	uint32_t output;
 	
 	 uint32_t x1_start [4] = {349878, 205297, 156505, 294944};
   	 uint32_t y1_start [4]= {4267509, 4531068, 4257078, 4219945};
@@ -150,9 +151,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	/**
 		Step 10:Type casting the value to 32 bit unsigned integer for output.
 	*/
-	output = s_out->get_clear_value<uint32_t>();
+//	output = s_out->get_clear_value<uint32_t>();
+	
+	s_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
 
-	std::cout << " I AM "<<role<< " AND THIS IS THE OUTPUT " << output << std::endl;
+	std::cout << " I AM "<<role<< " AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
 
 
 	delete party;
@@ -179,7 +182,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* rando;
 	  
 	  
-	  rando = circ->PutADDGate(s1_x_start[0],s2_x_start[0]);
+	  rando = circ->PutADDGate(s1_x_start,s2_x_start);
 	  
 	  
 	  rando = circ->PutSharedOUTGate(rando);
