@@ -161,7 +161,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   share* BuildFirstCircuit(share* role, share* s1_x_start,  share* s1_y_start, share* s1_x_end, share* s1_y_end, 
 			   share* s2_x_start,
 				  share* s2_y_start, share*  s2_x_end, share* s2_y_end,
-			(ArithmeticCircuit*) circ) {
+			ArithmeticCircuit* circ) {
 
 	
 	  
@@ -176,7 +176,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* rando;
 	  
 	  
-	  rando = circ->PutADDGate(s1_x_start[0],s2_x_start);
+	  rando = circ->PutADDGate(s1_x_start[0],s2_x_start[0]);
 	  
 	  
 	  output = circ->PutSharedOUTGate(rando);
