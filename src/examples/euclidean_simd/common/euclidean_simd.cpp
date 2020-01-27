@@ -195,9 +195,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	 x_end = circ->PutADDGate(s1_x_end,s2_x_end);
 	 y_end = circ->PutADDGate(s1_y_end,s2_x_end);
 	  
+	 out = circ->PutSharedOUTGate(x_start);
+	  
 	 
 	uint32_t out_bitlen , out_nvals , *out_vals;
-	x_start->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
+	  
+	out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
 	  
 	  
 	 	std::cout<< " I AM INSIDE. This Is X " << out_vals[0] << std::endl;
