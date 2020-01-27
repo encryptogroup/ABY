@@ -158,19 +158,16 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
   
-  share* BuildFirstCircuit(e_role role, share *s_local1_S, share *s_local2_S, share *s_local1_C, share *s_local2_C,
-			   share *s_secret1, share *s_secret2,
-		ArithmeticCircuit *ac) {
+  share* BuildFirstCircuit(share* role, share* s1_x_start,  share* s1_y_start, share* s1_x_end, share* s1_y_end, 
+			   share* s2_x_start,
+				  share* s2_y_start, share*  s2_x_end, share* s2_y_end,
+			(ArithmeticCircuit*) circ) {
 
-	  //The circuit will solve the euclidean distance between a and b, without square root.
-	  // Euclidean_distance = ()
-	share* out;
-	share* a1_sub_c1_square;
-	share* a2_sub_c2_square;
-	share* b1_sub_d1_square;
-	share* b2_sub_d2_square;
-	share* a1subc1_mul_a2subc2;
-	share* b1subd1_mul_b2subd2;
+	
+	  
+	  share* out;
+	  share* first_x;
+	
 	  
 	uint32_t output;
 
@@ -178,7 +175,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	  
 	share* rando;
 	  
-
+	  
+	  rando = circ->PutADDGate(s1_x_start[0],s2_x_start);
+	  
+	  
+	  output = circ->PutSharedOUTGate(rando);
 	  
 	  
 	
