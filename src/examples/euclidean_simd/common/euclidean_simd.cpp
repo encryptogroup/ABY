@@ -45,63 +45,34 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
   
   
-  
-  
+  	uint32_t x_start []
+	uint32_t y_start []	
+	uint32_t x_end []
+	uint32_t y_end []
+	
+
+	if(role == SERVER){
+	
+	 x_start [] = {349878, 205297, 156505, 294944}
+  	 y_start []= {4267509, 4531068, 4257078, 4219945}
+	 x_end   []= {169015, 422706, 106029, 89585}
+	 y_end   []= {4568415, 4340206, 4542962, 4273139}
+	}else{
+
+	 x_start [] = {130066, 265203, 313995, 177860}
+  	 y_start []= {308575, 68182, 342172, 378095}
+	 x_end   []= {349878, 205297, 156505, 294944}
+	 y_end   []= {4267509, 4531068, 4257078, 4219945}
+	}
   /**
 		Step 4: Creating the share objects - Values A and B which
 				are used as input to the computation function. Also s_out
 				which stores the output.
 	*/
 
-	share  *s_local1_S, *s_local1_C, *s_local2_S, *s_local2_C, *s_secret1, *s_secret2, *s_Dummy,  *s_out;
+	share  *s1_x_start, *s1_y_start, *s1_x_end,
+	*s1_y_end, *s2_x_start, *s2_y_start, *s2_x_end, *s2_y_end,  *s_out;
 
-	/**
-		Step 5: Initialize A and B values randomly or not....
-				Both parties use the same seed, to be able to verify the
-				result. In a real example each party would only supply
-				one input value.
-	*/
-	
-	
-	// point1 (x1,y1)
-	// x1 --> x11+ x12
-	// y1 --> y11+ y12
-	
-	// point2 (x2,y2)
-	// x2 --> x21+ x22
-	// y2 --> y21+ y22
-	
-	// x1 = a=a1+a2 , y1 = b=b1+b2 , x2 = c=c1+c2, y2 = d=d1+d2
-	
-	uint32_t a1_val, b1_val
-		,a2_val,b2_val,
-		c1_val, d1_val,
-		c2_val, d2_val,
-		local_factor_1, local_factor_2, 
-		secret1, secret2,
-		dummy_value, output;
-	srand(time(NULL));
-	
-	
-	// EUCLIDEAN Distance a(4,6) b(3,2) = sqrt(17)
-	//a = 4
-	a1_val = 1;
-	a2_val = 3;
-	//b= 6
-	b1_val = 2;
-	b2_val = 4;
-	//c = 3
-	c1_val = 1;
-	c2_val = 2;
-	//d = 2
-	d1_val = 2;
-	d2_val = 0;
-	//secret = 5
-	secret1 = 2;
-	secret2 = 3;
-	
-	
-	// 
 
   
   
@@ -110,51 +81,31 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				share objects using the circuit object method PutINGate()
 				for my inputs and PutDummyINGate() for the other parties input.
 				Also mention who is sharing the object.
-	*/
 	
-	
-	/*
-	
-	eucl = (a-c)^2 + (b-d)^2
-	eucl =  (a1-c1)*(a1-c1)+(a1-c1)*(a2-c2)+(a2-c2)*(a1-c1)+(a2-c2)*(a2-c2) --> (a-c)*(a-c)
-		+
-		(b1-d1)*(b1-d1)+(b1-d1)*(b2-d2)+(b2-d2)*(b1-d1)+(b2-d2)*(b2-d2) --> (b-d)*(b-d)
-		
-	S1 can compute a1-c1 and b1-d1
-	S2 can compute a2-c2 and b2-c2
 	*/
 	if(role == SERVER) {
-		local_factor_1 = a1_val-c1_val; 
-		local_factor_2 = b1_val-d1_val;
+	
 		
-		s_local1_S = circ->PutINGate(local_factor_1,bitlen,SERVER);
-		s_local2_S = circ->PutINGate(local_factor_2,bitlen,SERVER);
-		s_secret1 = circ->PutINGate(secret1,bitlen,SERVER);
-
-		s_local1_C = circ->PutDummyINGate( bitlen);
-		s_local2_C = circ->PutDummyINGate(bitlen);
-		s_secret2 = circ->PutDummyINGate(bitlen);
-
-		//s_Dummy= circ->PutINGate(b_val, bitlen, SERVER);
-		//circ->PutPrintValueGate(s_A1, "SERVER SA");
+		s1_x_start = circ->PutSIMDINGate(n,x_start,bitlen,SERVER);
+		s1_y_start = circ->PutSIMDINGate(n,y_start,bitlen,SERVER);
+		s1_x_end = circ->PutSIMDINGate(n,x_end,bitlen,SERVER);
+		s1_y_end = circ->PutSIMDINGate(n, y_end,bitlen,SERVER);
+		
+		s2_x_start = circ->PutDummySIMDINGate(n, bitlen);
+        	s2_y_start = circ->PutDummySIMDINGate(n, bitlen);
+		s2_x_end = circ->PutDummySIMDINGate(n, bitlen);
+        	s2_y_end = circ->PutDummySIMDINGate(n, bitlen);
 
 	} else { //role == CLIENT
-		local_factor_1 = a2_val-c2_val; 
-		local_factor_2 = b2_val-d2_val;
+		s2_x_start = circ->PutSIMDINGate(n,x_start,bitlen,CLIENT);
+		s2_y_start = circ->PutSIMDINGate(n,y_start,bitlen,CLIENT);
+		s2_x_end = circ->PutSIMDINGate(n,x_end,bitlen,CLIENT);
+		s2_y_end = circ->PutSIMDINGate(n,y_end,bitlen,CLIENT);
 		
-		
-		s_local1_S = circ->PutDummyINGate(bitlen);
-		s_local2_S = circ->PutDummyINGate(bitlen);
-		s_secret1 = circ->PutDummyINGate(bitlen);
-
-		s_local1_C = circ->PutINGate(local_factor_1, bitlen, CLIENT);
-		s_local2_C = circ->PutINGate(local_factor_2, bitlen, CLIENT);
-		s_secret2 = circ->PutINGate(secret2,bitlen,CLIENT);
-
-
-		//s_Dummy = circ->PutINGate(b_val, bitlen, SERVER);
-		//circ->PutPrintValueGate(s_A2, "CLIENT SA");
-
+		s1_x_start = circ->PutDummySIMDINGate(n, bitlen);
+        	s1_y_start = circ->PutDummySIMDINGate(n, bitlen);
+		s1_x_end = circ->PutDummySIMDINGate(n, bitlen);
+		s1_y_end = circ->PutDummySIMDINGate(n, bitlen);
 	}
   
   
@@ -164,7 +115,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				Don't forget to type cast the circuit object to type of share
 	*/
 
-	s_out = BuildFirstCircuit(role,s_local1_S, s_local2_S, s_local1_C, s_local2_C, s_secret1, s_secret2,
+	s_out = BuildFirstCircuit(role,s1_x_start, s1_y_start, s1_x_end, s1_y_end, s2_x_start,
+				  s2_y_start, s2_x_end, s2_y_end,
 			(ArithmeticCircuit*) circ);
 
 
@@ -227,41 +179,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	share* rando;
 	  
 
-	//(a1-c1)^2
-	a1_sub_c1_square = ac->PutMULGate(s_local1_S,s_local1_S);
-	ac->PutPrintValueGate(a1_sub_c1_square, "a1_sub_c1_square");
-	 //(a2-c2)^2 
-	a2_sub_c2_square = ac->PutMULGate(s_local1_C,s_local1_C);
-	ac->PutPrintValueGate(a2_sub_c2_square, "a2_sub_c2_square");
-	
-	// (a1-c1)*(a2-c2)  
-	a1subc1_mul_a2subc2 = ac->PutMULGate(s_local1_S,s_local1_C);
-	ac->PutPrintValueGate(a1subc1_mul_a2subc2, "(a1-c1)*(a2-c2)");
-	//  (a1-c1)*(a2-c2) + (a1-c1)*(a2-c2)
-	a1subc1_mul_a2subc2 = ac->PutADDGate(a1subc1_mul_a2subc2,a1subc1_mul_a2subc2);
-	
-	//(b1-d1)^2
-	b1_sub_d1_square = ac->PutMULGate(s_local2_S,s_local2_S);
-	//(b2-d2)^2  
-	b2_sub_d2_square = ac->PutMULGate(s_local2_C,s_local2_C);
-	ac->PutPrintValueGate(b2_sub_d2_square, "b2d2 square");
-
- 	//(a1-c1)*(a2-c2)
-	b1subd1_mul_b2subd2 = ac->PutMULGate(s_local2_S,s_local2_C);
-	//ac->PutPrintValueGate(a1subc1_mul_a2subc2, "(b1-d1*b2-d2");
-	//  (b1-d1)*(b2-d2) + (b1-d1)*(b2-d2)
-	b1subd1_mul_b2subd2 = ac->PutADDGate(b1subd1_mul_b2subd2,b1subd1_mul_b2subd2);
-	  
 	  
 	  
 	
-	out = ac->PutADDGate(a1_sub_c1_square,b1_sub_d1_square);
-	out = ac->PutADDGate(out,a1subc1_mul_a2subc2);
-	out = ac->PutADDGate(out,b1subd1_mul_b2subd2);
-	out = ac->PutADDGate(out,a2_sub_c2_square);
-	out = ac->PutADDGate(out,b2_sub_d2_square);
-	out = ac->PutADDGate(out,s_secret1);
-	out = ac->PutADDGate(out,s_secret2);
 
 
 	ac->PutPrintValueGate(out, "Euclidean Distance inside circuit");
