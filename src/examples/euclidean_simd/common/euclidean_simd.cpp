@@ -159,7 +159,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	std::cout << " HERE WE ARE. ABOUT TO PRINT CLEAR VALUE" << std::endl;
 
 	std::cout << " I AM "<<role<< std::endl;
-	std::cout" AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
+	std::cout<< " AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
 
 
 	delete party;
