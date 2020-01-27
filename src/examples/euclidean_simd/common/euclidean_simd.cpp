@@ -153,6 +153,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	*/
 //	output = s_out->get_clear_value<uint32_t>();
 	
+	uint32_t out_bitlen , out_nvals , *out_vals;
 	s_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
 
 	std::cout << " I AM "<<role<< " AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
