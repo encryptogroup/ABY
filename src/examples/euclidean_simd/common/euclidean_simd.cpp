@@ -180,28 +180,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	  rando = circ->PutADDGate(s1_x_start[0],s2_x_start[0]);
 	  
 	  
-	  output = circ->PutSharedOUTGate(rando);
+	  rando = circ->PutSharedOUTGate(rando);
 	  
 	  
-	
-
-
-	//circ->PutPrintValueGate(out, "Euclidean Distance inside circuit");
-
-
-	/*	
-	ac->PutPrintValueGate(s_localC, "Local Cliente");
-	ac->PutPrintValueGate(s_localS, "Local Server");
-	ac->PutPrintValueGate(s_a1, "Share A1");
-	ac->PutPrintValueGate(s_b1, "Share B1");
-	ac->PutPrintValueGate(s_a2, "Share A2");
-	ac->PutPrintValueGate(s_b2, "Share B2");
-	*/
-	//ac->PutPrintValueGate(s_b1, "Share B1");
-	  
-	//rando = ac->PutSharedOUTGate(out);
-	//	ac->PutPrintValueGate(rando, "Random");
-	//out = ac->PutSharedOUTGate(out);
 
 	return rando;
 }
