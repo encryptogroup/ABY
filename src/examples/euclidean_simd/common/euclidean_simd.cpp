@@ -119,7 +119,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				Don't forget to type cast the circuit object to type of share
 	*/
 
-	s_out = BuildFirstCircuit(role,s1_x_start, s1_y_start, s1_x_end, s1_y_end, s2_x_start,
+	s_out = BuildFirstCircuit(role, s1_x_start, s1_y_start, s1_x_end, s1_y_end, s2_x_start,
 				  s2_y_start, s2_x_end, s2_y_end,
 			(ArithmeticCircuit*) circ);
 
@@ -164,7 +164,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
   
-  share* BuildFirstCircuit(e_role* role, share* s1_x_start,  share* s1_y_start, share* s1_x_end, share* s1_y_end, 
+  share* BuildFirstCircuit(e_role role, share* s1_x_start,  share* s1_y_start, share* s1_x_end, share* s1_y_end, 
 			   share* s2_x_start,
 				  share* s2_y_start, share*  s2_x_end, share* s2_y_end,
 			ArithmeticCircuit* circ) {
