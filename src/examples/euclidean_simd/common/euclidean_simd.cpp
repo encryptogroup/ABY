@@ -186,7 +186,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	check_sel = circ->PutGTGate(x_start, x_end);
 	check_sel_inv = circ->PutINVGate(check_sel);
 	t_a = circ->PutMUXGate(x_start, x_end, check_sel);
-	t_b = bc->PutMUXGate(x_start, x_end, check_sel_inv);
+	t_b = circ->PutMUXGate(x_start, x_end, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
 	res_x = circ->PutMULGate(res_x, res_x);
