@@ -43,9 +43,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				being inputed.
 	*/
 	
-	uint32_t i = 0;
 	
-	while(i<3){
 	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
   
   
@@ -131,6 +129,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	*/
 	
 	
+	uint32_t i = 0;
+	
+	while(i<3){
 
 	s_out = BuildFirstCircuit(role, s1_x_start, s1_y_start, s1_x_end, s1_y_end, s2_x_start,
 				  s2_y_start, s2_x_end, s2_y_end,
@@ -155,7 +156,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	std::cout << " I AM "<<i<< std::endl;
 	std::cout<< " AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
 
-
+		party -> Reset();
 
 	}
 	delete party;
