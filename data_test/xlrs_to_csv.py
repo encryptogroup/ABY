@@ -33,7 +33,7 @@ def main(argv):
                 print 'csvConvert.py -f <file>'
                 sys.exit()
             elif opt in ("-f", "--file"):
-                loc = str(arg)
+                filename = str(arg)
                 
             elif opt in ("-o", "--output"):
                 output = str(arg)
@@ -45,3 +45,4 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+llorenc-air:temp llorenc$ 
