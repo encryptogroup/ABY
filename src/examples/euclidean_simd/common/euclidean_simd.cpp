@@ -157,6 +157,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	std::cout<< " AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
 
 		party -> Reset();
+		i++;
 
 	}
 	delete party;
