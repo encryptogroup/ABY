@@ -143,11 +143,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	//std::cout << " I AM "<<i<< std::endl;
 	//std::cout<< " AND THIS IS THE OUTPUT " << output << std::endl;
-
-	party -> Reset();
+	std::cout << " DISTANCE  "<<i<<"-->"<<distances<< std::endl;
 	i++;
 
-				std::cout << " DISTANCE  "<<i<<"-->"<<distances<< std::endl;
+	party -> Reset();
+
+
 
 	}
 
