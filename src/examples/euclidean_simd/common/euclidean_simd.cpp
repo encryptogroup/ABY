@@ -176,7 +176,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	x_start = circ->PutADDGate(s1_x_start,s2_x_start);
 	y_start = circ->PutADDGate(s1_y_start,s2_y_start);
 	x_end = circ->PutADDGate(s1_x_end,s2_x_end);
-	y_end = circ->PutADDGate(s1_y_end,s2_x_end);
+	y_end = circ->PutADDGate(s1_y_end,s2_y_end);
 
 	uint32_t out_bitlen , out_nvals , *out_vals;
 	  
