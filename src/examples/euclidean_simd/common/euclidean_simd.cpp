@@ -55,20 +55,22 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	uint32_t output;
 	
-	 uint32_t x1_start [4] = {349878, 205297, 156505, 294944};
-  	 uint32_t y1_start [4]= {4267509, 4531068, 4257078, 4219945};
-	 uint32_t x1_end [4] = {169015, 422706, 106029, 89585};
-	 uint32_t y1_end [4] = {4568415, 4340206, 4542962, 4273139};
+	uint32_t x1_start [4] = {349878, 205297, 156505, 294944};
+	uint32_t y1_start [4]= {4267509, 4531068, 4257078, 4219945};
+	uint32_t x1_end [4] = {169015, 422706, 106029, 89585};
+	uint32_t y1_end [4] = {4568415, 4340206, 4542962, 4273139};
+
+
+
+	uint32_t x2_start [4] = {130066, 265203, 313995, 177860};
+	uint32_t y2_start [4] = {308575, 68182, 342172, 378095};
+	uint32_t x2_end [4]  = {349878, 205297, 156505, 294944};
+	uint32_t y2_end [4]   = {4267509, 4531068, 4257078, 4219945};
+
+	uint32_t distances [4] ;
 
 	
-
-	 uint32_t x2_start [4] = {130066, 265203, 313995, 177860};
-  	 uint32_t y2_start [4] = {308575, 68182, 342172, 378095};
-	 uint32_t x2_end [4]  = {349878, 205297, 156505, 294944};
-	 uint32_t y2_end [4]   = {4267509, 4531068, 4257078, 4219945};
-
-	
-		uint32_t n = 4;
+	uint32_t n = 4;
 
   /**
 		Step 4: Creating the share objects - Values A and B which
@@ -81,83 +83,68 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 
   
-  
-  /**
-		Step 6: Copy the randomly generated values into the respective
-				share objects using the circuit object method PutINGate()
-				for my inputs and PutDummyINGate() for the other parties input.
-				Also mention who is sharing the object.
+
+	uint32_t i = 0;
 	
-	*/
+	while(i<4){
+		
 	if(role == SERVER) {
 	
 		
-		s1_x_start = circ->PutSIMDINGate(n,x1_start,bitlen,SERVER);
-		s1_y_start = circ->PutSIMDINGate(n,y1_start,bitlen,SERVER);
-		s1_x_end = circ->PutSIMDINGate(n,x1_end,bitlen,SERVER);
-		s1_y_end = circ->PutSIMDINGate(n, y1_end,bitlen,SERVER);
+		s1_x_start = circ->PutINGate(x1_start[i],bitlen,SERVER);
+		s1_y_start = circ->PutINGate(y1_start[i],bitlen,SERVER);
+		s1_x_end = circ->PutINGate(x1_end[i],bitlen,SERVER);
+		s1_y_end = circ->PutINGate(y1_end[i],bitlen,SERVER);
 		
-		s2_x_start = circ->PutDummySIMDINGate(n, bitlen);
-        	s2_y_start = circ->PutDummySIMDINGate(n, bitlen);
-		s2_x_end = circ->PutDummySIMDINGate(n, bitlen);
-        	s2_y_end = circ->PutDummySIMDINGate(n, bitlen);
+		s2_x_start = circ->PutDummyINGate( bitlen);
+        	s2_y_start = circ->PutDummyINGate( bitlen);
+		s2_x_end = circ->PutDummyINGate( bitlen);
+        	s2_y_end = circ->PutDummyINGate( bitlen);
 
 	} else { //role == CLIENT
-		s2_x_start = circ->PutSIMDINGate(n,x2_start,bitlen,CLIENT);
-		s2_y_start = circ->PutSIMDINGate(n,y2_start,bitlen,CLIENT);
-		s2_x_end = circ->PutSIMDINGate(n,x2_end,bitlen,CLIENT);
-		s2_y_end = circ->PutSIMDINGate(n,y2_end,bitlen,CLIENT);
+		s2_x_start = circ->PutINGate(x2_start[i],bitlen,CLIENT);
+		s2_y_start = circ->PutINGate(y2_start[i],bitlen,CLIENT);
+		s2_x_end = circ->PutINGate(x2_end[i],bitlen,CLIENT);
+		s2_y_end = circ->PutINGate(y2_end[i],bitlen,CLIENT);
 		
-		s1_x_start = circ->PutDummySIMDINGate(n, bitlen);
-        	s1_y_start = circ->PutDummySIMDINGate(n, bitlen);
-		s1_x_end = circ->PutDummySIMDINGate(n, bitlen);
-		s1_y_end = circ->PutDummySIMDINGate(n, bitlen);
+		s1_x_start = circ->PutDummyINGate( bitlen);
+        	s1_y_start = circ->PutDummyINGate( bitlen);
+		s1_x_end = circ->PutDummyINGate(bitlen);
+		s1_y_end = circ->PutDummyINGate( bitlen);
 	}
-  
-  
-  /**
-		Step 7: Call the build method for building the circuit for the
-				problem by passing the shared objects and circuit object.
-				Don't forget to type cast the circuit object to type of share
-	*/
 
 	
-	/**
-		Step 8: Modify the output receiver based on the role played by
-				the server and the client. This step writes the output to the
-				shared output object based on the role.
-	*/
 	
 	
-	uint32_t i = 0;
-	
-	while(i<3){
 
 	s_out = BuildFirstCircuit(role, s1_x_start, s1_y_start, s1_x_end, s1_y_end, s2_x_start,
 				  s2_y_start, s2_x_end, s2_y_end,
 			(ArithmeticCircuit*) circ);
 
-	  s_out = circ->PutOUTGate(s_out,ALL);
+	s_out = circ->PutOUTGate(s_out,ALL);
 
 	circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
-	
+
 	//s_out = circ->PutOUTGate(s_out, ALL);
-	
+
 	//circ->PutPrintValueGate(s_out, "Share S_OUT");
 	party->ExecCircuit();
-	
 
-//	output = s_out->get_clear_value<uint32_t>();
-	
+
+	//	output = s_out->get_clear_value<uint32_t>();
+
 	uint32_t out_bitlen , out_nvals , *out_vals;
-	s_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
+	//s_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
+
+	output = s_out->get_clear_value<uint32_t>();
+
 	std::cout << " HERE WE ARE. ABOUT TO PRINT CLEAR VALUE" << std::endl;
 
 	std::cout << " I AM "<<i<< std::endl;
-	std::cout<< " AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
+	std::cout<< " AND THIS IS THE OUTPUT " << output << std::endl;
 
-		party -> Reset();
-		i++;
+	party -> Reset();
+	i++;
 
 	}
 	delete party;
@@ -170,32 +157,24 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			   share* s2_x_start,
 				  share* s2_y_start, share*  s2_x_end, share* s2_y_end,
 			ArithmeticCircuit* circ) {
+ 
+	share* out;
+	share* x_start;
+	share* y_start;
+	share* x_end;
+	share* y_end;
 
-	
-	  
-	  share* out;
-	  share* x_start;
-	  share* y_start;
-	  share* x_end;
-	  share* y_end;
-
-	
-	  
 	uint32_t output;
-
 	uint32_t bitlen=32;
-	  
+
 	share* rando;
-	  
-	  
-	 x_start = circ->PutADDGate(s1_x_start,s2_x_start);
-	 y_start = circ->PutADDGate(s1_y_start,s2_y_start);
-	 x_end = circ->PutADDGate(s1_x_end,s2_x_end);
-	 y_end = circ->PutADDGate(s1_y_end,s2_x_end);
-	  
-	 //out = circ->PutOUTGate(x_start,ALL);
-	  
-	 
+
+
+	x_start = circ->PutADDGate(s1_x_start,s2_x_start);
+	y_start = circ->PutADDGate(s1_y_start,s2_y_start);
+	x_end = circ->PutADDGate(s1_x_end,s2_x_end);
+	y_end = circ->PutADDGate(s1_y_end,s2_x_end);
+
 	uint32_t out_bitlen , out_nvals , *out_vals;
 	  
 	  //NOT WORKING
@@ -203,12 +182,6 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	  
 	  
 	 //	std::cout<< " I AM INSIDE. This Is X " << out_vals[0] << std::endl;
-
-
-	  
-	  
-	  
-	  
 
 	return x_start;
 }
