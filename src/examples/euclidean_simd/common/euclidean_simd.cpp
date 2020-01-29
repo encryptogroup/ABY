@@ -146,8 +146,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	party -> Reset();
 	i++;
 
+				std::cout << " DISTANCE  "<<i<<"-->"<<distances<< std::endl;
+
 	}
-		std::cout << " POINTS "<<distances<< std::endl;
 
 	delete party;
 	return 0;
@@ -171,7 +172,6 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	share* rando;
 
-
 	x_start = circ->PutADDGate(s1_x_start,s2_x_start);
 	y_start = circ->PutADDGate(s1_y_start,s2_y_start);
 	x_end = circ->PutADDGate(s1_x_end,s2_x_end);
@@ -179,12 +179,47 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	uint32_t out_bitlen , out_nvals , *out_vals;
 	  
+	share* out, *t_a, *t_b, *res_x, *res_y, *check_sel,
+			*check_sel_inv;
+
+	/** Following code performs (x2-x1)*(x2-x1) */
+	check_sel = circ->PutGTGate(x_start, x_end);
+	check_sel_inv = circ->PutINVGate(check_sel);
+	t_a = circ->PutMUXGate(x_start, x_end, check_sel);
+	t_b = bc->PutMUXGate(x_start, x_end, check_sel_inv);
+
+	res_x = circ->PutSUBGate(t_a, t_b);
+	res_x = circ->PutMULGate(res_x, res_x);
+
+	/** Following code performs (y2-y1)*(y2-y1) */
+	check_sel = circ->PutGTGate(y_start, y_end);
+	check_sel_inv = circ->PutINVGate(check_sel);
+	t_a = circ->PutMUXGate(y_start, y_end, check_sel);
+	t_b = circ->PutMUXGate(y_start, y_end, check_sel_inv);
+
+	res_y = circ->PutSUBGate(t_a, t_b);
+	res_y = circ->PutMULGate(res_y, res_y);
+
+	/** Following code performs out = res_y + res_x*/
+	out = circ->PutADDGate(res_x, res_y);
+	
+	  
+	  circ->PutPrintValueGate(x_start, "X START");
+	  circ->PutPrintValueGate(y_start, "Y START");	
+	  circ->PutPrintValueGate(x_end, "X END");	
+	  circ->PutPrintValueGate(y_end, "Y END");	
+
+	
+	 circ->PutPrintValueGate(out, "DISTANCE");	
+ 
+	  
+	  
 	  //NOT WORKING
 	//out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
 	  
 	  
 	 //	std::cout<< " I AM INSIDE. This Is X " << out_vals[0] << std::endl;
 
-	return x_start;
+	return out;
 }
   
