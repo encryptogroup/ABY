@@ -132,26 +132,18 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	*/
 	
 	
+uint32_t i = 0;
 	
-		circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
+	while(i<3){
+	
+	circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
 	
 	//s_out = circ->PutOUTGate(s_out, ALL);
 	
 	//circ->PutPrintValueGate(s_out, "Share S_OUT");
-
-
-
-  /**
-		Step 9: Executing the circuit using the ABYParty object evaluate the
-				problem.
-	*/
 	party->ExecCircuit();
 	
 
-
-	/**
-		Step 10:Type casting the value to 32 bit unsigned integer for output.
-	*/
 //	output = s_out->get_clear_value<uint32_t>();
 	
 	uint32_t out_bitlen , out_nvals , *out_vals;
@@ -162,6 +154,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	std::cout<< " AND THIS IS THE OUTPUT " << out_vals[0] << std::endl;
 
 
+
+	}
 	delete party;
 	return 0;
 }
