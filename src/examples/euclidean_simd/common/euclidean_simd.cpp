@@ -56,17 +56,17 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	uint32_t output;
 
 	
-	uint32_t x1_start [4] = {479942, 4576077, 470500, 4599247};
-	uint32_t y1_start [4]= {470497, 4599243, 470494, 4599244};
-	uint32_t x1_end [4] = {470499, 4599245, 472798, 4598039};
-	uint32_t y1_end [4] = {472800, 4598039, 472802, 4598034};
+	uint32_t x1_start [4] = {479942, 470497, 470499, 472800};
+	uint32_t y1_start [4]= {4576077, 4599243, 4599245, 4598039};
+	uint32_t x1_end [4] = {470500, 4599245, 470494, 472802};
+	uint32_t y1_end [4] = {4599247, 4599244, 4598039, 4598034};
 
 
 
-	uint32_t x2_start [4] = {2, 7, 0, 3};
-	uint32_t y2_start [4] = {3, 7, 6, 6};
-	uint32_t x2_end [4]  = {1, 5, 6, 1};
-	uint32_t y2_end [4]   = {4, 1, 2, 6};
+	uint32_t x2_start [4] = {2, 3,1, 4};
+	uint32_t y2_start [4] = {7, 7, 5, 1};
+	uint32_t x2_end [4]  = {0, 6, 6, 2};
+	uint32_t y2_end [4]   = {3, 6, 1, 6};
 
 	uint32_t distances [4] ;
 
