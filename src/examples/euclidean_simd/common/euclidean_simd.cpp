@@ -119,7 +119,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	s_out = BuildFirstCircuit(role, s1_x_start, s1_y_start, s1_x_end, s1_y_end, s2_x_start,
 				  s2_y_start, s2_x_end, s2_y_end,
-			(ArithmeticCircuit*) circ);
+			(BooleanCircuit*) circ);
 
 	s_out = circ->PutOUTGate(s_out,ALL);
 
