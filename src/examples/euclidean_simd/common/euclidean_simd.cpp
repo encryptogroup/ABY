@@ -58,7 +58,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	uint32_t x1_start [4] = {479942, 470497, 470499, 472800};
 	uint32_t y1_start [4]= {4576077, 4599243, 4599245, 4598039};
-	uint32_t x1_end [4] = {470500, 4599245, 470494, 472802};
+	uint32_t x1_end [4] = {470500, 470494, 470494, 472802};
 	uint32_t y1_end [4] = {4599247, 4599244, 4598039, 4598034};
 
 
