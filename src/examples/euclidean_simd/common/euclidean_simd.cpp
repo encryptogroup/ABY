@@ -224,7 +224,24 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			party -> Reset();
 		}
 	}
-
+	if(role == SERVER){
+		for(auto itr1 = neighborhood.begin(); itr1 != neighborhood.end(); itr1++)
+		{
+			std::cout << itr1->first << ' '; // Add space to separate entries on the same line
+			// itr1->second represents map<string, vector<string>> stored in test.
+			for(auto itr2 = itr1->second.begin (); itr2 != itr1->second.end (); itr2++)
+				{
+				std::cout << itr2->first << ' ';
+				// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
+				for(auto itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++)
+				{
+					std::cout << *itr3 << ' ';
+				}
+			}
+			std::cout << std::endl;
+		}
+	}
+	
 	delete party;
 	return 0;
 }
