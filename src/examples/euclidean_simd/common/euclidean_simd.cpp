@@ -87,14 +87,14 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	uint32_t distance;
 
 	//# initialize epsilon and minLns values
-	int epsilon = 13500000000;//eps 
+	double epsilon = 13500000000;//eps 
 	int minLns = 3;//m
 
 	//int no_of_lines = len(lines) 
 	int no_of_lines = 4 // in general number of columns 
 	//# dictionary to store neighborhood information of line segments
-std::map< std::string,
-              std::map<std::string,std::vector<int> > > neighborhood;
+	std::map< std::string,
+              std::map< std::string, std::vector<int> > > neighborhood;
 	
 	int sum_minLns = 0;
 	int max_minLns = -1;
@@ -120,7 +120,7 @@ std::map< std::string,
 	
 	
 	for(int l = 0; l < no_of_lines; l++){
-		if(neighborhood.count(std::to_string(l))==0){
+		if(neighborhood.count(patch::to_string(l))==0){
 
 			//neighborhood[patch::to_string(l)]["neighbors"].push_back(0);
 			neighborhood[patch::to_string(l)]["ncounter"].push_back(0);
@@ -205,7 +205,7 @@ std::map< std::string,
             # symmetric matrix after we compute all of the distances. therefore, it is faster
             # to compute distances above or below the diagonal. */
 
-			if(neighborhood.count(std::to_string(ll))==0){
+			if(neighborhood.count(patch::to_string(ll))==0){
 
 				neighborhood[patch::to_string(ll)]["ncounter"].push_back(0);
 				neighborhood[patch::to_string(ll)]["cluster"].push_back(0);
@@ -213,7 +213,7 @@ std::map< std::string,
 			if (distance <= epsilon){
 				neighborhood[patch::to_string(l)]["neighbors"].push_back(ll);
     				neighborhood[patch::to_string(l)]["ncounter"].assign(1,neighborhood[patch::to_string(l)]["ncounter"].at(0)+1);
-				neighborhood[std::to_string(ll)]["neighbors"].push_back(l);
+				neighborhood[patch::to_string(ll)]["neighbors"].push_back(l);
     				neighborhood[patch::to_string(ll)]["ncounter"].assign(1,neighborhood[patch::to_string(ll)]["ncounter"].at(0)+1);
 			}
 
