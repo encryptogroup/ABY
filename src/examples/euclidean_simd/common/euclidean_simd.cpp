@@ -93,8 +93,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	//int no_of_lines = len(lines) 
 	int no_of_lines = 4 // in general number of columns 
 	//# dictionary to store neighborhood information of line segments
-	std::map< std::string,
-              std::map< std::string, std::vector<int> > > neighborhood;
+	std::map< std::string, std::map< std::string, std::vector<int> > > neighborhood;
 	
 	int sum_minLns = 0;
 	int max_minLns = -1;
@@ -111,7 +110,6 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	share  *s1_x_start, *s1_y_start, *s1_x_end,
 	*s1_y_end, *s2_x_start, *s2_y_start, *s2_x_end, *s2_y_end,
-	
 	*s1_x_next_start, *s1_y_next_start, *s1_x_next_end,
 	*s1_y_next_end, *s2_x_next_start, *s2_y_next_start, *s2_x_next_end, *s2_y_next_end,
 	
