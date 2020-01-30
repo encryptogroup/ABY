@@ -198,7 +198,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			output = s_out->get_clear_value<uint32_t>();
 			distance = output;
 			if(role == SERVER){
-				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll<< "-->" distance << std::endl;
+				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" <<distance << std::endl;
 			}
 
 		/** check whether the second line segment is in the neighborhood dictionary or not
