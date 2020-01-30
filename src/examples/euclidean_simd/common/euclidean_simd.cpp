@@ -181,7 +181,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 			s_out = circ->PutOUTGate(s_out,ALL);
 
-			circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
+			//circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
 
 			//s_out = circ->PutOUTGate(s_out, ALL);
 
@@ -197,7 +197,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
 			output = s_out->get_clear_value<uint32_t>();
 			distance = output;
-			std::cout<< " DISTANCE ED--> " << distance << std::endl;
+			if(role == SERVER){
+				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll<< "-->" distance << std::endl;
+			}
 
 		/** check whether the second line segment is in the neighborhood dictionary or not
             # this part is used for speed up the distance computation. If we consider distances
