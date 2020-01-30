@@ -76,8 +76,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	//int no_of_lines = len(lines) 
 	int no_of_lines = 4 // in general number of columns 
-	# dictionary to store neighborhood information of line segments
-	//neighborhood = {}
+	//# dictionary to store neighborhood information of line segments
+	std::map< std::string,std::string > neighborhood;
 	int sum_minLns = 0
 	int max_minLns = -1
 	int min_minLns = 70432
@@ -100,14 +100,14 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	*s_out;
 
 	
-	std::map< std::string,std::map<std::string, int> > neighborhood;
 	
 	for(int l = 0; l < no_of_lines; l++){
-		if str(l) not in neighborhood:
-		neighborhood[std::to_string(l)] = {}; //maybe not necessary
-		neighborhood[std::to_string(l)]['neighbors'] = []// # array to store other line segments in the neighborhood
-		neighborhood[std::to_string(l)]["cluster"] = 0// # cluster id, initially 0
-		neighborhood[std::to_string(l)]["ncounter"] = 0// # number of line segments in the neighborhood
+		if(neighborhood.count(std::to_string(ll))==0){
+			neighborhood[std::to_string(l)] = {}; //maybe not necessary
+			neighborhood[std::to_string(l)]['neighbors'] = []// # array to store other line segments in the neighborhood
+			neighborhood[std::to_string(l)]["cluster"] = 0// # cluster id, initially 0
+			neighborhood[std::to_string(l)]["ncounter"] = 0// # number of line segments in the neighborhood
+		}
 		for (int ll = l+1; ll < no_of_lines; ll++){
 		
 			if(role == SERVER) {
