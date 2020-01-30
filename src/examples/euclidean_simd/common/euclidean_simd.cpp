@@ -197,6 +197,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
 			output = s_out->get_clear_value<uint32_t>();
 			distance = output;
+			std::cout<< " DISTANCE ED--> " << distance << std::endl;
+
 		/** check whether the second line segment is in the neighborhood dictionary or not
             # this part is used for speed up the distance computation. If we consider distances
             # between every line segment as a matrix, then it is obvious that we will have a 
@@ -298,7 +300,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	circ->PutPrintValueGate(y_start, "Y START");	
 	circ->PutPrintValueGate(x_end, "X END");	
 	circ->PutPrintValueGate(y_end, "Y END");*/	
-	circ->PutPrintValueGate(ed1, "ED 1");	
+	//circ->PutPrintValueGate(ed1, "ED 1");	
 	
 	  
 	/** Distance metric 2: (x1_end-x2_end)^2 + (y1_start-y2_start)^2*/
@@ -331,7 +333,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	circ->PutPrintValueGate(y_end, "Y END");*/	
 
 
-	circ->PutPrintValueGate(ed2, "ED 2");
+	//circ->PutPrintValueGate(ed2, "ED 2");
 	  
 	  
 	  /** Distance metric 3: (x1_start-x2_end)^2 + (y1_start-y2_end)^2*/
@@ -364,7 +366,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	circ->PutPrintValueGate(y_end, "Y END");*/	
 
 
-	circ->PutPrintValueGate(ed3, "ED 3");	
+	//circ->PutPrintValueGate(ed3, "ED 3");	
 	  
 	  
 	  /** Distance metric 4: (x2_start-x1_end)^2 + (y2_start-y1_end)^2*/
@@ -397,7 +399,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	circ->PutPrintValueGate(y_end, "Y END");*/	
 
 
-	circ->PutPrintValueGate(ed4, "ED 4");	
+	//circ->PutPrintValueGate(ed4, "ED 4");	
 
 	  
 	out = circ->PutADDGate(ed1, ed2);
