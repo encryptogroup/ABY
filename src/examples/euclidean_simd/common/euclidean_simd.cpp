@@ -18,6 +18,22 @@
 #include "../../../abycore/circuit/booleancircuits.h"
 #include "../../../abycore/circuit/arithmeticcircuits.h"
 #include "../../../abycore/sharing/sharing.h"
+#include <iostream>
+#include <map>
+#include <string>
+#include <vector>
+#include <string>
+#include <sstream>
+
+namespace patch
+{
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
 
 
 int32_t test_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
@@ -70,9 +86,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	uint32_t distance;
 
-	# initialize epsilon and minLns values
-	int epsilon = eps 
-	int minLns = m
+	//# initialize epsilon and minLns values
+	int epsilon = 13500000000;//eps 
+	int minLns = 3;//m
 
 	//int no_of_lines = len(lines) 
 	int no_of_lines = 4 // in general number of columns 
@@ -80,10 +96,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 std::map< std::string,
               std::map<std::string,std::vector<int> > > neighborhood;
 	
-	int sum_minLns = 0
-	int max_minLns = -1
-	int min_minLns = 70432
-	int total_distance = 0
+	int sum_minLns = 0;
+	int max_minLns = -1;
+	int min_minLns = 70432;
+	int total_distance = 0;
 
 	uint32_t n = 4;
 
@@ -194,10 +210,10 @@ std::map< std::string,
 				neighborhood[patch::to_string(ll)]["ncounter"].push_back(0);
 				neighborhood[patch::to_string(ll)]["cluster"].push_back(0);
 			}			// check that whether the resulting distance is less than or equal to epsilon
-			if (ed <= epsilon){
+			if (distance <= epsilon){
 				neighborhood[patch::to_string(l)]["neighbors"].push_back(ll);
     				neighborhood[patch::to_string(l)]["ncounter"].assign(1,neighborhood[patch::to_string(l)]["ncounter"].at(0)+1);
-				neighborhood[std::to_string(ll)]['neighbors'].push_back(l);
+				neighborhood[std::to_string(ll)]["neighbors"].push_back(l);
     				neighborhood[patch::to_string(ll)]["ncounter"].assign(1,neighborhood[patch::to_string(ll)]["ncounter"].at(0)+1);
 			}
 
