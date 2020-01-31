@@ -358,11 +358,10 @@ if(role == SERVER){
 		{
 			std::cout << itr1->first << ' '; // Add space to separate entries on the same line
 			// itr1->second represents map<string, vector<string>> stored in test.
-			for(auto itr2 = itr1->second.begin (); itr2 != itr1->second.end (); itr2++)
-				{
-				std::cout << itr2->first << ' ';
-				
+			for(auto it2 = it->second.begin(); it2 != it->second.end(); ++it2){
+    				std::cout << *it2 << " ";
 			}
+			
 			std::cout << std::endl;
 		}
 	}
