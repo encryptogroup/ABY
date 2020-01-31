@@ -353,9 +353,7 @@ std::vector<std::string> cluster_labels ;
     }
 if(role == SERVER){
 	
-	for (auto const& pair: clusters) {
-        std::cout << "{" << pair.first << ": " << pair.second << "}\n";
-    		}
+
 		for(auto itr1 = clusters.begin(); itr1 != clusters.end(); itr1++)
 		{
 			std::cout << itr1->first << ' '; // Add space to separate entries on the same line
