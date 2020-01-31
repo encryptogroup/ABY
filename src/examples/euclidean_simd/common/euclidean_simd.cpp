@@ -352,6 +352,10 @@ std::vector<std::string> cluster_labels ;
 
     }
 if(role == SERVER){
+	
+	for (auto const& pair: clusters) {
+        std::cout << "{" << pair.first << ": " << pair.second << "}\n";
+    		}
 		for(auto itr1 = clusters.begin(); itr1 != clusters.end(); itr1++)
 		{
 			std::cout << itr1->first << ' '; // Add space to separate entries on the same line
@@ -359,11 +363,7 @@ if(role == SERVER){
 			for(auto itr2 = itr1->second.begin (); itr2 != itr1->second.end (); itr2++)
 				{
 				std::cout << itr2->first << ' ';
-				// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
-				for(auto itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++)
-				{
-					std::cout << *itr3 << ' ';
-				}
+				
 			}
 			std::cout << std::endl;
 		}
