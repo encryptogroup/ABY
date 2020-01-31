@@ -259,7 +259,7 @@ for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator
 std::random_shuffle ( keys.begin(), keys.end() );
 
 
-int minLns = 3;
+ minLns = 3;
 int noise_counter = 0;
 
 std::map<std::string,std::vector<int> > clusters;
