@@ -353,6 +353,7 @@ std::vector<std::string> cluster_labels ;
     }
 if(role == SERVER){
 	
+			std::cout <<"THIS IS CLUSTER SIZE"<<clusters.size()<<std::endl;
 
 		for(auto itr1 = clusters.begin(); itr1 != clusters.end(); itr1++)
 		{
