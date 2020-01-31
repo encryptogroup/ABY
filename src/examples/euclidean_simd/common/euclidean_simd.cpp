@@ -97,7 +97,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	int sum_minLns = 0;
 	int max_minLns = -1;
-	int min_minLns = 70432;
+	//int min_minLns = 70432;
 	int total_distance = 0;
 
 	uint32_t n = 4;
