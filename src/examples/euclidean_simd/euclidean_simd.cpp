@@ -136,11 +136,16 @@ int main(int argc, char** argv) {
 
 
 	for(std::vector<std::string> vec : dataList){
+		if(n_columns<4){
 		
-		x_start.push_back(std::stoi(vec.at(0)));
-		y_start.push_back(std::stoi(vec.at(1)));
-		x_end.push_back(std::stoi(vec.at(2)));
-		y_end.push_back(std::stoi(vec.at(3)));
+			std::cout<< vec.at(0)<< " "<<vect.at(1)<<std::endl;
+
+			
+		}
+		//x_start.push_back(std::stoi(vec.at(0)));
+		//y_start.push_back(std::stoi(vec.at(1)));
+		//x_end.push_back(std::stoi(vec.at(2)));
+		//y_end.push_back(std::stoi(vec.at(3)));
 		n_columns++;
 
 	}
