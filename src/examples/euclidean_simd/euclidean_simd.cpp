@@ -147,9 +147,19 @@ int main(int argc, char** argv) {
 
 
 	for(std::vector<std::string> vec : dataList){
-		if(n_columns<4){
+		if(n_columns<2){
 		
-			std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
+			
+			// declaring character array 
+    char char_array[n + 1]; 
+  
+    // copying the contents of the 
+    // string to char array 
+    strcpy(char_array, vec.at(0).c_str()); 
+  
+    for (int i = 0; i < n; i++) 
+        std::cout << char_array[i]<<std::endl; 
+			//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
 
 			
 		}
