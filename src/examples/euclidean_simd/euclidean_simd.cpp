@@ -95,7 +95,9 @@ std::vector<std::vector<long> > CSVReader::getData()
 			typedef long(*stoi_type)(const std::string&, std::size_t*, long);
 			std::transform(vec.begin(), vec.end(), std::back_inserter(long_vec),
                			std::bind(static_cast<stoi_type>(&std::stoi),
-                         	std::placeholders::_1, nullptr, 10));		
+                         	std::placeholders::_1, nullptr, 10));	
+			dataList.push_back(long_vec);
+
 		}
 		catch (const std::invalid_argument& ia) {
 		    return std::cout << ia.what() << std::endl, 1;
@@ -103,7 +105,6 @@ std::vector<std::vector<long> > CSVReader::getData()
 		catch (const std::out_of_range& oor) {
 		    return std::cout << oor.what() << std::endl, 2;
 		}
-		dataList.push_back(long_vec);
 	}
 	// Close the File
 	file.close();
