@@ -151,6 +151,8 @@ int main(int argc, char** argv) {
 		
 			
 			// declaring character array 
+	int n = vec.at(0).length(); 
+
     char char_array[n + 1]; 
   
     // copying the contents of the 
