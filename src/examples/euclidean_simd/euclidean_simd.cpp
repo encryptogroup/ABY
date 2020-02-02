@@ -149,7 +149,7 @@ int main(int argc, char** argv) {
 		n_columns++;
 
 	}
-	std::string test = "TESTT
+	std::string test = "TESTT";
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
 				std::cout<< "X S "<<test<<std::endl;
 				
