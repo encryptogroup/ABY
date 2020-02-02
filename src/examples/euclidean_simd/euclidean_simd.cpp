@@ -18,6 +18,17 @@
 
 #include "common/euclidean_simd.h"
  
+
+namespace patch
+{
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
+
  int32_t read_test_options(int32_t* argcp, char*** argvp, e_role* role,
 		uint32_t* bitlen, uint32_t* nvals, uint32_t* secparam, std::string* address,
 		uint16_t* port, int32_t* test_op) {
