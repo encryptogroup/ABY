@@ -37,7 +37,10 @@ namespace patch
 
 
 int32_t test_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing) {
+		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg,
+		    std::vector<std::string> x_start,std::vector<std::string> y_start
+		    std::vector<std::string> x_end, std::vector<std::string> y_end,
+		    ) {
 
 	/**
 		Step 1: Create the ABYParty object which defines the basis of all the
@@ -71,6 +74,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	uint32_t output;
 
+	/**------------------------VALUES FROM THE FILE -----------
+	
+	/** HARDCODED VALUES
 	
 	uint32_t x1_start [4] = {479942, 470497, 470499, 472800};
 	uint32_t y1_start [4]= {4576077, 4599243, 4599245, 4598039};
@@ -83,6 +89,23 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	uint32_t y2_start [4] = {7, 7, 5, 1};
 	uint32_t x2_end [4]  = {0, 6, 6, 2};
 	uint32_t y2_end [4]   = {3, 6, 1, 6};
+	*/
+	
+	int n_vals = x_start.size();
+	
+	uint_32_t x1_start[n_vals];
+	std::copy(x_start.begin(), x_start.end(), x1_start);
+	
+	uint_32_t y1_start[n_vals];
+	std::copy(y_start.begin(), y_start.end(), y1_start);
+	
+	uint_32_t x1_end[n_vals];
+	std::copy(x_end.begin(), x_end.end(), x1_end);
+	
+	uint_32_t y1_end[n_vals];
+	std::copy(y_end.begin(), y_end.end(), y1_end);
+	
+	
 
 	uint32_t distance;
 
@@ -91,7 +114,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	int minLns = 3;//m
 
 	//int no_of_lines = len(lines) 
-	int no_of_lines = 4; // in general number of columns 
+	int no_of_lines = n_vals; // in general number of columns 
 	//# dictionary to store neighborhood information of line segments
 	std::map< std::string, std::map< std::string, std::vector<int> > > neighborhood;
 	
