@@ -88,9 +88,22 @@ std::vector<std::vector<long> > CSVReader::getData()
 	getline(file,line);
 	while (getline(file, line))
 	{
-		std::vector<long> vec;
+		std::vector<string> vec;
 		boost::algorithm::split(vec, line, boost::is_any_of(delimeter));
-		dataList.push_back(vec);
+		try {
+			std::vector<long> long_vec;
+			typedef long(*stoi_type)(const std::string&, std::size_t*, long);
+			std::transform(vec.begin(), vec.end(), std::back_inserter(long_vec),
+               			std::bind(static_cast<stoi_type>(&std::stoi),
+                         	std::placeholders::_1, nullptr, 10));		
+		}
+		catch (const std::invalid_argument& ia) {
+		    return std::cout << ia.what() << std::endl, 1;
+		}
+		catch (const std::out_of_range& oor) {
+		    return std::cout << oor.what() << std::endl, 2;
+		}
+		dataList.push_back(long_vec);
 	}
 	// Close the File
 	file.close();
