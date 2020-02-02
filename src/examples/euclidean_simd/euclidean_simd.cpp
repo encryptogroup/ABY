@@ -113,10 +113,10 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 	std::string filename;
-	std::vector<std::vector<std::string> > x_start;// = reader.getData();
-	std::vector<std::vector<std::string> > y_start;// = reader.getData();
-	std::vector<std::vector<std::string> > x_end;// = reader.getData();
-	std::vector<std::vector<std::string> > y_end;// = reader.getData();
+	std::vector<std::string>  x_start;// = reader.getData();
+	std::vector<std::string> y_start;// = reader.getData();
+	std::vector<std::string> x_end;// = reader.getData();
+	std::vector<std::string> y_end;// = reader.getData();
 	int n_columns=0;
 
 	if(role == SERVER){
