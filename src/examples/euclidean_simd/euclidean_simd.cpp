@@ -77,7 +77,7 @@ public:
 * in vector of vector of strings.
 */
 
-int CSVReader::getData()
+std::vector<std::vector<std::string> > CSVReader::getData()
 {
 	std::ifstream file(fileName);
  
@@ -120,9 +120,9 @@ int main(int argc, char** argv) {
 	int n_columns=0;
 
 	if(role == SERVER){
-		filename = "data1.csv";
+		filename = "/root/ABY/data_test/data1.csv";
 	}else {
-		filename = "data2.csv";
+		filename = "/root/ABY/data_test/data2.csv";
 	}
 	
 
