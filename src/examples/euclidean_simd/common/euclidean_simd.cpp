@@ -93,7 +93,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	int n_vals = x_start.size();
 	
-	if(role == SERVER){
+	/**if(role == SERVER){
 		uint32_t x1_start[n_vals];
 		std::copy(x_start.begin(), x_start.end(), x1_start);
 
@@ -118,6 +118,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		uint32_t y2_end[n_vals];
 		std::copy(y_end.begin(), y_end.end(), y2_end);
 	}
+	*/
 
 	
 
@@ -167,6 +168,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			if(role == SERVER) {
 
 				// Two consecutive line segments. We need start and end of both
+				/**
 				s1_x_start = circ->PutINGate(x1_start[l],bitlen,SERVER);
 				s1_y_start = circ->PutINGate(y1_start[l],bitlen,SERVER);
 				s1_x_end = circ->PutINGate(x1_end[l],bitlen,SERVER);
@@ -185,9 +187,29 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s2_x_next_start = circ->PutDummyINGate( bitlen);
 				s2_y_next_start = circ->PutDummyINGate( bitlen);
 				s2_x_next_end = circ->PutDummyINGate( bitlen);
+				s2_y_next_end = circ->PutDummyINGate( bitlen);*/
+				s1_x_start = circ->PutINGate((uint32_t) std::stoi( x_start.at(l)),bitlen,SERVER);
+				s1_y_start = circ->PutINGate((uint32_t) std::stoi( y_start.at(l)),bitlen,SERVER);
+				s1_x_end = circ->PutINGate((uint32_t) std::stoi( x_end.at(l)),bitlen,SERVER);
+				s1_y_end = circ->PutINGate((uint32_t) std::stoi( y_end.at(l)),bitlen,SERVER);
+				
+				s1_x_next_start = circ->PutINGate((uint32_t) std::stoi( x_start.at(ll)),bitlen,SERVER);
+				s1_y_next_start = circ->PutINGate((uint32_t) std::stoi( y_start.at(ll)),bitlen,SERVER);
+				s1_x_next_end = circ->PutINGate((uint32_t) std::stoi( x_end.at(ll)),bitlen,SERVER);
+				s1_y_next_end = circ->PutINGate((uint32_t) std::stoi( y_end.at(ll)),bitlen,SERVER);
+
+				s2_x_start = circ->PutDummyINGate( bitlen);
+				s2_y_start = circ->PutDummyINGate( bitlen);
+				s2_x_end = circ->PutDummyINGate( bitlen);
+				s2_y_end = circ->PutDummyINGate( bitlen);
+				
+				s2_x_next_start = circ->PutDummyINGate( bitlen);
+				s2_y_next_start = circ->PutDummyINGate( bitlen);
+				s2_x_next_end = circ->PutDummyINGate( bitlen);
 				s2_y_next_end = circ->PutDummyINGate( bitlen);
 
 			} else { //role == CLIENT
+			/**
 				s2_x_start = circ->PutINGate(x2_start[l],bitlen,CLIENT);
 				s2_y_start = circ->PutINGate(y2_start[l],bitlen,CLIENT);
 				s2_x_end = circ->PutINGate(x2_end[l],bitlen,CLIENT);
@@ -206,7 +228,29 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s1_x_next_start = circ->PutDummyINGate( bitlen);
 				s1_y_next_start = circ->PutDummyINGate( bitlen);
 				s1_x_next_end = circ->PutDummyINGate(bitlen);
+				s1_y_next_end = circ->PutDummyINGate( bitlen);*/
+				
+				s2_x_start = circ->PutINGate((uint32_t) std::stoi( x_start.at(l)),bitlen,CLIENT);
+				s2_y_start = circ->PutINGate((uint32_t) std::stoi( y_start.at(l)),bitlen,CLIENT);
+				s2_x_end = circ->PutINGate((uint32_t) std::stoi( x_end.at(l)),bitlen,CLIENT);
+				s2_y_end = circ->PutINGate((uint32_t) std::stoi( y_end.at(l)),bitlen,CLIENT);
+				
+				s2_x_next_start = circ->PutINGate((uint32_t) std::stoi( x_start.at(ll)),bitlen,CLIENT);
+				s2_y_next_start = circ->PutINGate((uint32_t) std::stoi( y_start.at(ll)),bitlen,CLIENT);
+				s2_x_next_end = circ->PutINGate((uint32_t) std::stoi( x_end.at(ll)),bitlen,CLIENT);
+				s2_y_next_end = circ->PutINGate((uint32_t) std::stoi( y_end.at(ll)),bitlen,CLIENT);
+
+				s1_x_start = circ->PutDummyINGate( bitlen);
+				s1_y_start = circ->PutDummyINGate( bitlen);
+				s1_x_end = circ->PutDummyINGate( bitlen);
+				s1_y_end = circ->PutDummyINGate( bitlen);
+				
+				s1_x_next_start = circ->PutDummyINGate( bitlen);
+				s1_y_next_start = circ->PutDummyINGate( bitlen);
+				s1_x_next_end = circ->PutDummyINGate( bitlen);
 				s1_y_next_end = circ->PutDummyINGate( bitlen);
+				
+				
 			}	
 
 			s_out = BuildFirstCircuit(role, 
