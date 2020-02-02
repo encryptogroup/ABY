@@ -134,21 +134,23 @@ int main(int argc, char** argv) {
 	CSVReader reader(filename);
 	std::vector<std::vector<std::string> > dataList = reader.getData();
 
-	
+
 	for(std::vector<std::string> vec : dataList){
 		
-		x_start.push_back(std::stoi(vec.at(0)));
-		y_start.push_back(std::stoi(vec.at(1)));
-		x_end.push_back(std::stoi(vec.at(2)));
-		y_end.push_back(std::stoi(vec.at(3)));
+		//x_start.push_back(std::stoi(vec.at(0)));
+		//y_start.push_back(std::stoi(vec.at(1)));
+		//x_end.push_back(std::stoi(vec.at(2)));
+		//y_end.push_back(std::stoi(vec.at(3)));
 		n_columns++;
 
 	}
+				std::cout<< "LENGTH "<< n_columns<<std::endl;
+
 
 
 	//evaluate addition cirucui using arithmetic
-	test_circuit(role, address, port, seclvl, 32,
-			nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end);           
+	//test_circuit(role, address, port, seclvl, 32,
+	//		nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end);           
 	
 	return 0;
 }
