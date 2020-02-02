@@ -77,7 +77,7 @@ public:
 * in vector of vector of strings.
 */
 
-std::vector<std::vector<std::string> > CSVReader::getData()
+std::vector<std::vector<long > CSVReader::getData()
 {
 	std::ifstream file(fileName);
  
