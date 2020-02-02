@@ -149,8 +149,9 @@ int main(int argc, char** argv) {
 		n_columns++;
 
 	}
+	std::string test = "TESTT
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
-				std::cout<< "X S "<< x_start.size()<<std::endl;
+				std::cout<< "X S "<<test<<std::endl;
 				
 
 
