@@ -147,28 +147,14 @@ int main(int argc, char** argv) {
 
 
 	for(std::vector<std::string> vec : dataList){
-		if(n_columns<2){
 		
 			
-			// declaring character array 
-	int n = vec.at(0).length(); 
 
-    char char_array[n + 1]; 
-  
-    // copying the contents of the 
-    // string to char array 
-    strcpy(char_array, vec.at(0).c_str()); 
-  
-    for (int i = 0; i < n; i++) 
-        std::cout << char_array[i]<<std::endl; 
-			//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
-
-			
-		}
-		//x_start.push_back(std::stoi(vec.at(0)));
-		//y_start.push_back(std::stoi(vec.at(1)));
-		//x_end.push_back(std::stoi(vec.at(2)));
-		//y_end.push_back(std::stoi(vec.at(3)));
+		//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
+		x_start.push_back(std::stoi(boost::erase_all(vec.at(0), '\"')));
+		y_start.push_back(std::stoi(boost::erase_all(vec.at(1),'\"')));
+		x_end.push_back(std::stoi(boost::erase_all(vec.at(2), '\"')));
+		y_end.push_back(std::stoi(boost::erase_all(vec.at(3), '\"')));
 		n_columns++;
 
 	}
