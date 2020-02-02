@@ -69,7 +69,7 @@ public:
 	{ }
  
 	// Function to fetch data from a CSV File
-	std::vector<std::vector<std::string> > getData();
+	std::vector<std::vector<long> > getData();
 };
  
 /*
@@ -81,14 +81,14 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 {
 	std::ifstream file(fileName);
  
-	std::vector<std::vector<std::string> > dataList;
+	std::vector<std::vector<long> > dataList;
  
 	std::string line = "";
 	// Iterate through each line and split the content using delimeter
 	getline(file,line);
 	while (getline(file, line))
 	{
-		std::vector<std::string> vec;
+		std::vector<long> vec;
 		boost::algorithm::split(vec, line, boost::is_any_of(delimeter));
 		dataList.push_back(vec);
 	}
@@ -113,10 +113,10 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 	std::string filename;
-	std::vector<std::string>  x_start;// = reader.getData();
-	std::vector<std::string> y_start;// = reader.getData();
-	std::vector<std::string> x_end;// = reader.getData();
-	std::vector<std::string> y_end;// = reader.getData();
+	std::vector<long>  x_start;// = reader.getData();
+	std::vector<long> y_start;// = reader.getData();
+	std::vector<long> x_end;// = reader.getData();
+	std::vector<long> y_end;// = reader.getData();
 	int n_columns=0;
 
 	if(role == SERVER){
@@ -127,10 +127,10 @@ int main(int argc, char** argv) {
 	
 
 	CSVReader reader(filename);
-	std::vector<std::vector<std::string> > dataList = reader.getData();
+	std::vector<std::vector<long> > dataList = reader.getData();
 
 	
-	for(std::vector<std::string> vec : dataList){
+	for(std::vector<long> vec : dataList){
 		
 		x_start.push_back(vec.at(0));
 		y_start.push_back(vec.at(1));
