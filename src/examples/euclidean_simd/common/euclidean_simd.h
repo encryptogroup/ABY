@@ -23,7 +23,10 @@
  millionaire's problem
  */
 int32_t test_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing);
+		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, 
+		    std::vector<std::string> x_start, std::vector<std::string> y_start,
+		    std::vector<std::string> x_end, std::vector<std::string> y_end,
+		    int n_columns);
 /**
  \param		s_a		shared object of alice.
  \param		s_b 		shared object of bob.
