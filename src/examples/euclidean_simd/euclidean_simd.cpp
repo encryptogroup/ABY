@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
 	for(std::vector<std::string> vec : dataList){
 		if(n_columns<4){
 		
-			std::cout<< vec.at(0)<< " "<<vec.at(1)<<std::endl;
+			std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
 
 			
 		}
