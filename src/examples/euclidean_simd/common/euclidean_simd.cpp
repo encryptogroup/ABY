@@ -94,28 +94,28 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	int n_vals = x_start.size();
 	
 	if(role == SERVER){
-		uint_32_t x1_start[n_vals];
+		uint32_t x1_start[n_vals];
 		std::copy(x_start.begin(), x_start.end(), x1_start);
 
-		uint_32_t y1_start[n_vals];
+		uint32_t y1_start[n_vals];
 		std::copy(y_start.begin(), y_start.end(), y1_start);
 
-		uint_32_t x1_end[n_vals];
+		uint32_t x1_end[n_vals];
 		std::copy(x_end.begin(), x_end.end(), x1_end);
 
-		uint_32_t y1_end[n_vals];
+		uint32_t y1_end[n_vals];
 		std::copy(y_end.begin(), y_end.end(), y1_end);
 	}else{
-		uint_32_t x2_start[n_vals];
+		uint32_t x2_start[n_vals];
 		std::copy(x_start.begin(), x_start.end(), x2_start);
 
-		uint_32_t y2_start[n_vals];
+		uint32_t y2_start[n_vals];
 		std::copy(y_start.begin(), y_start.end(), y2_start);
 
-		uint_32_t x2_end[n_vals];
+		uint32_t x2_end[n_vals];
 		std::copy(x_end.begin(), x_end.end(), x2_end);
 
-		uint_32_t y2_end[n_vals];
+		uint32_t y2_end[n_vals];
 		std::copy(y_end.begin(), y_end.end(), y2_end);
 	}
 
