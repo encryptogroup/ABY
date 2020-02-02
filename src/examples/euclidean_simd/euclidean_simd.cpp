@@ -69,7 +69,7 @@ public:
 	{ }
  
 	// Function to fetch data from a CSV File
-	std::vector<std::vector<long> > getData();
+	std::vector<std::vector<std::string> > getData();
 };
  
 /*
@@ -77,34 +77,25 @@ public:
 * in vector of vector of strings.
 */
 
-std::vector<std::vector<long> > CSVReader::getData()
+
+
+
+std::vector<std::vector<std::string> > CSVReader::getData()
 {
 	std::ifstream file(fileName);
  
-	std::vector<std::vector<long> > dataList;
+	std::vector<std::vector<std::string> > dataList;
  
 	std::string line = "";
 	// Iterate through each line and split the content using delimeter
 	getline(file,line);
+	
 	while (getline(file, line))
 	{
 		std::vector<string> vec;
-		boost::algorithm::split(vec, line, boost::is_any_of(delimeter));
-		try {
-			std::vector<long> long_vec;
-			typedef long(*stoi_type)(const std::string&, std::size_t*, long);
-			std::transform(vec.begin(), vec.end(), std::back_inserter(long_vec),
-               			std::bind(static_cast<stoi_type>(&std::stoi),
-                         	std::placeholders::_1, nullptr, 10));	
-			dataList.push_back(long_vec);
+		boost::algorithm::split(vec, line, boost::is_any_of(delimeter));		
+		dataList.push_back(vec);
 
-		}
-		catch (const std::invalid_argument& ia) {
-		    return std::cout << ia.what() << std::endl, 1;
-		}
-		catch (const std::out_of_range& oor) {
-		    return std::cout << oor.what() << std::endl, 2;
-		}
 	}
 	// Close the File
 	file.close();
@@ -141,15 +132,15 @@ int main(int argc, char** argv) {
 	
 
 	CSVReader reader(filename);
-	std::vector<std::vector<long> > dataList = reader.getData();
+	std::vector<std::vector<string> > dataList = reader.getData();
 
 	
-	for(std::vector<long> vec : dataList){
+	for(std::vector<std::string> vec : dataList){
 		
-		x_start.push_back(vec.at(0));
-		y_start.push_back(vec.at(1));
-		x_end.push_back(vec.at(2));
-		y_end.push_back(vec.at(3));
+		x_start.push_back(std::stoi(vec.at(0)));
+		y_start.push_back(std::stoi(vec.at(1)));
+		x_end.push_back(std::stoi(vec.at(2)));
+		y_end.push_back(std::stoi(vec.at(3)));
 		n_columns++;
 
 	}
