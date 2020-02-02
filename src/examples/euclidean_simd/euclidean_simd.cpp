@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
 	
 
 	CSVReader reader(filename);
-	std::vector<std::vector<string> > dataList = reader.getData();
+	std::vector<std::vector<std::string> > dataList = reader.getData();
 
 	
 	for(std::vector<std::string> vec : dataList){
