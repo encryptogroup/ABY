@@ -2,7 +2,10 @@
  \file 		addition_test.cpp
  \author	romalvarezllorens@gmail.com
  */
-
+#include <vector>
+#include <iterator>
+#include <algorithm>
+#include <boost/algorithm/string.hpp>
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -55,6 +58,46 @@
 	return 1;
 }
 
+class CSVReader
+{
+	std::string fileName;
+	std::string delimeter;
+ 
+public:
+	CSVReader(std::string filename, std::string delm = ",") :
+			fileName(filename), delimeter(delm)
+	{ }
+ 
+	// Function to fetch data from a CSV File
+	std::vector<std::vector<std::string> > getData();
+};
+ 
+/*
+* Parses through csv file line by line and returns the data
+* in vector of vector of strings.
+*/
+
+int CSVReader::getData()
+{
+	std::ifstream file(fileName);
+ 
+	std::vector<std::vector<std::string> > dataList;
+ 
+	std::string line = "";
+	// Iterate through each line and split the content using delimeter
+	getline(file,line);
+	while (getline(file, line))
+	{
+		std::vector<std::string> vec;
+		boost::algorithm::split(vec, line, boost::is_any_of(delimeter));
+		dataList.push_back(vec);
+	}
+	// Close the File
+	file.close();
+ 
+	return dataList;
+}
+  
 
 int main(int argc, char** argv) {
 
@@ -69,11 +112,38 @@ int main(int argc, char** argv) {
 			&port, &test_op);
 
 	seclvl seclvl = get_sec_lvl(secparam);
+	std::string filename;
+	std::vector<std::vector<std::string> > x_start;// = reader.getData();
+	std::vector<std::vector<std::string> > y_start;// = reader.getData();
+	std::vector<std::vector<std::string> > x_end;// = reader.getData();
+	std::vector<std::vector<std::string> > y_end;// = reader.getData();
+	int n_columns=0;
+
+	if(role == SERVER){
+		filename = "data1.csv";
+	}else {
+		filename = "data2.csv";
+	}
+	
+
+	CSVReader reader(filename);
+	std::vector<std::vector<std::string> > dataList = reader.getData();
+
+	
+	for(std::vector<std::string> vec : dataList){
+		
+		x_start.push_back(vec.at(0));
+		y_start.push_back(vec.at(1));
+		x_end.push_back(vec.at(2));
+		y_end.push_back(vec.at(3));
+		n_columns++;
+
+	}
 
 
 	//evaluate addition cirucui using arithmetic
 	test_circuit(role, address, port, seclvl, 32,
-			nthreads, mt_alg, S_BOOL);           
+			nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end, n_columns);           
 	
 	return 0;
 }
