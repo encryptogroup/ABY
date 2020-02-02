@@ -38,8 +38,8 @@ namespace patch
 
 int32_t test_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
 		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing,
-		    std::vector<std::string> x_start,std::vector<std::string> y_start,
-		    std::vector<std::string> x_end, std::vector<std::string> y_end
+		    std::vector<long> x_start,std::vector<long> y_start,
+		    std::vector<long> x_end, std::vector<slong> y_end
 		    ) {
 
 	/**
@@ -188,7 +188,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s2_y_next_start = circ->PutDummyINGate( bitlen);
 				s2_x_next_end = circ->PutDummyINGate( bitlen);
 				s2_y_next_end = circ->PutDummyINGate( bitlen);*/
-				s1_x_start = circ->PutINGate((uint32_t) std::stoul( x_start.at(l),nullptr,10),bitlen,SERVER);
+				s1_x_start = circ->PutINGate((uint32_t) std::stoi( x_start.at(l),nullptr,10),bitlen,SERVER);
 				s1_y_start = circ->PutINGate((uint32_t) std::stoi( y_start.at(l),nullptr,10),bitlen,SERVER);
 				s1_x_end = circ->PutINGate((uint32_t) std::stoi( x_end.at(l),nullptr,10),bitlen,SERVER);
 				s1_y_end = circ->PutINGate((uint32_t) std::stoi( y_end.at(l),nullptr,10),bitlen,SERVER);
