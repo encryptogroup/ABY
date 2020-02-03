@@ -439,7 +439,7 @@ for(int i= 0; i< keys.size();i++)
 				std::cout <<"INITIAL QUEUE "<<queue.size()<< std::endl;
 
 				int j = 0;
-				while(queue.size()>0 || j <10)
+				while(queue.size()>0 || j < 10)
 				{
 				// LOOP DELTA
 					for(int llls = 0 ; llls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size();llls++)
@@ -484,7 +484,8 @@ for(int i= 0; i< keys.size();i++)
 						}
 					}
 				//}
-					queue.erase(queue.begin());
+					queue.erase(queue.begin()+0);
+					std::cout <<"QEUE"<< queue.size()<<std::endl;
 					j++;
 				}
 				cluster_id++;
