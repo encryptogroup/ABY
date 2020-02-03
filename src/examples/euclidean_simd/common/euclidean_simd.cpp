@@ -496,7 +496,7 @@ for(int i= 0; i< keys.size();i++)
 				}
 				//std::cout <<"OUT OF WHILE "<< std::endl;
 
-				cluster_id++;
+				cluster_id = cluster_id+1;
 			}
 			else
 			{
