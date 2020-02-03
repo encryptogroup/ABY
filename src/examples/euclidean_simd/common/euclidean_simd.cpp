@@ -404,8 +404,8 @@ std::vector<std::string> cluster_labels ;
                 for(int ls= 0 ; neighborhood[patch::to_string(i)]["neighbors"].size(); ls++){
 		        std::cout <<"LOOP CHARLIE : "<<ls<< std::endl;
 
-                  if(neighborhood[patch::to_string(ls)]["cluster"].at(0)< 1){
-                      neighborhood[patch::to_string(ls)]["cluster"].push_back(cluster_id);
+                  if(neighborhood[patch::to_string(neighborhood[patch::to_string(i)]["neighbors"].at(ls))]["cluster"].at(0)< 1){
+                      neighborhood[patch::to_string(neighborhood[patch::to_string(i)]["neighbors"].at(ls))]["cluster"].push_back(cluster_id);
                       if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), ls)){
                         //the line exists in the cluster
                       }
