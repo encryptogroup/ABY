@@ -573,6 +573,7 @@ for(int i= 0; i< keys.size();i++)
 	      
   	printf ("Starting time: "+std::ctime(&end_time)+"\n");
 	printf ("Execution time: "+ elapsed_seconds.count());
+	printf("Number of clusters: "+ clusters.size());
 	printf("minLns: "+ minLns+ "\n");
 	printf("Number of line segments: "+ no_of_lines+"\n" );
 	printf("Epsilon: "+ epsilon+"\n" );
