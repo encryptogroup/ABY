@@ -159,7 +159,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	*s_out;
 
 	
-	auto start = std::chrono::high_resolution_clock::now();
+	auto start1 = std::chrono::high_resolution_clock::now();
 	for(int l = 0; l < no_of_lines; l++){
 		if(neighborhood.count(patch::to_string(l))==0){
 
@@ -557,7 +557,7 @@ for(int i= 0; i< keys.size();i++)
 	
 	delete party;
 	auto finish = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double> elapsed = finish - start;
+	std::chrono::duration<double> elapsed = finish - start1;
 
 	std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
@@ -572,11 +572,11 @@ for(int i= 0; i< keys.size();i++)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
 	      
   	printf ("Starting time: "+std::ctime(&end_time)+"\n");
-	printf ("Execution time: "+ elapsed_seconds.count());
-	printf("Number of clusters: "+ clusters.size());
-	printf("minLns: "+ minLns+ "\n");
-	printf("Number of line segments: "+ no_of_lines+"\n" );
-	printf("Epsilon: "+ epsilon+"\n" );
+	printf ("Execution time: "+ std::stoi(elapsed_seconds.count()));
+	printf("Number of clusters: "+ std::stoi(clusters.size())+"\n");
+	printf("minLns: "+ std::stoi(minLns)+ "\n");
+	printf("Number of line segments: "+std::stoi(no_of_lines)+"\n" );
+	printf("Epsilon: "+ std::stoi(epsilon)+"\n" );
 	printf("-------------------------------------------")
 
  	fclose (stdout);
