@@ -400,6 +400,7 @@ for(int i= 0; i< keys.size();i++)
 				// no needed since using a vector ?
 				if(clusters.count(patch::to_string(cluster_id))==0)
 				{
+
 					clusters[patch::to_string(cluster_id)].push_back(cluster_id);
 				}
 				//# add the line segment into the cluster
@@ -412,7 +413,8 @@ for(int i= 0; i< keys.size();i++)
 					clusters[patch::to_string(cluster_id)].push_back(std::stoi(keys.at(i)));
 
 				}
-				neighborhood[patch::to_string(keys.at(i))]["cluster"].push_back(cluster_id);
+
+				neighborhood[patch::to_string(keys.at(i))]["cluster"].assign(1,cluster_id);
 				// add every non initialized line segment 
 				//LOOP CHARLIE
 				for(int ls= 0 ; ls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size(); ls++)
@@ -464,7 +466,7 @@ for(int i= 0; i< keys.size();i++)
 
 							if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) < 1)
 							{
-								neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].push_back(cluster_id);
+								neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].assign(1,cluster_id);
 
 								if (std::find(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls)) != clusters[patch::to_string(cluster_id)].end())
 								{
