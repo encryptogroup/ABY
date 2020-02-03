@@ -469,7 +469,7 @@ std::vector<std::string> cluster_labels ;
 		  {
                     	queue.push_back(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls));
                   }
-                  clusters[patch::to_string(cluster_id)].push_back(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls);
+                  clusters[patch::to_string(cluster_id)].push_back(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls));
 
                 }
               }
