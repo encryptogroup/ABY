@@ -456,7 +456,7 @@ for(int i= 0; i< keys.size();i++)
 					//LOOP ECHO
 						for(int lls = 0; lls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size(); lls++)
 						{
-						//std::cout <<"LOOP ECHO : "<<lls<< std::endl;
+						std::cout <<"LOOP ECHO : "<<lls<< std::endl;
 
 							if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) < 1)
 							{
@@ -468,6 +468,8 @@ for(int i= 0; i< keys.size();i++)
 								}
 								else
 								{
+													std::cout <<"HERE WE ARE AGAIN"<< std::endl;
+
 									if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) == 0)
 									{
 										queue.push_back(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls));
