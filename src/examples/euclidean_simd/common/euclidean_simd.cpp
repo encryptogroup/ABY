@@ -401,7 +401,7 @@ std::vector<std::string> cluster_labels ;
                 neighborhood[patch::to_string(i)]["cluster"].push_back(cluster_id);
           // add every non initialized line segment 
 	  //LOOP CHARLIE
-                for(int ls= 0 ; neighborhood[patch::to_string(i)]["neighbors"].size(); ls++){
+                for(int ls= 0 ; ls < neighborhood[patch::to_string(i)]["neighbors"].size(); ls++){
 		        std::cout <<"LOOP CHARLIE : "<<ls<< std::endl;
 
                   if(neighborhood[patch::to_string(neighborhood[patch::to_string(i)]["neighbors"].at(ls))]["cluster"].at(0)< 1){
