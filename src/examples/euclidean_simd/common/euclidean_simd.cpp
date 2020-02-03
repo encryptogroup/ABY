@@ -442,7 +442,7 @@ for(int i= 0; i< keys.size();i++)
 				// LOOP DELTA
 					for(int llls = 0 ; llls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size();llls++)
 					{
-					//std::cout <<"LOOP DELTA : "<<llls<< std::endl;
+					std::cout <<"LOOP DELTA : "<<llls<< std::endl;
 
 						if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls))]["cluster"].at(0) < 1)
 						{
