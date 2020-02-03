@@ -571,13 +571,13 @@ for(int i= 0; i< keys.size();i++)
     	std::cout << "finished computation at " << std::ctime(&end_time)
               << "elapsed time: " << elapsed_seconds.count() << "s\n";
 	      
-  	printf ("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n");
-	printf ("Execution time: "+ patch::to_string(elapsed_seconds.count()));
-	printf("Number of clusters: "+ patch::to_string(clusters.size())+"\n");
-	printf("minLns: "+ patch::to_string(minLns)+ "\n");
-	printf("Number of line segments: "+patch::to_string(no_of_lines)+"\n" );
-	printf("Epsilon: "+ patch::to_string(epsilon)+"\n" );
-	printf("-------------------------------------------")
+  	printf (system("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n").c_str());
+	printf (system("Execution time: "+ patch::to_string(elapsed_seconds.count())).c_str());
+	printf(system("Number of clusters: "+ patch::to_string(clusters.size())+"\n").c_str());
+	printf(system("minLns: "+ patch::to_string(minLns)+ "\n").c_str());
+	printf(system("Number of line segments: "+patch::to_string(no_of_lines)+"\n").c_str() );
+	printf(system("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str() );
+	printf("-------------------------------------------");
 
  	fclose (stdout);
 	return 0;
