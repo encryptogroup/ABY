@@ -414,6 +414,9 @@ std::vector<std::string> cluster_labels ;
                       }
                   }
                 }
+		
+				        std::cout <<"ABOUT TO START DELTA "<< std::endl;
+
           //from now on the code follows the expand cluster algorithm in the TRACLUS paper
 
         std::vector<int> queue = neighborhood[patch::to_string(i)]["neighbors"];
