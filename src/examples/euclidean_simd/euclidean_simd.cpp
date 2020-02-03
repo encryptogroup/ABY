@@ -101,11 +101,12 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	std::string line = "";
 	// Iterate through each line and split the content using delimeter
 	getline(file,line);
+	std::vector<std::string> vec;
 	
 	while (getline(file, line))
 	{
 
-		std::vector<std::string> vec;
+		//std::vector<std::string> vec;
 		//line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
 		//boost::erase_all(line, "\"");
 		std::cout<< line<< " "<<std::endl;
