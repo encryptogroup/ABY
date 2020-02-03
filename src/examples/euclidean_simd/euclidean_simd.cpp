@@ -102,7 +102,7 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	// Iterate through each line and split the content using delimeter
 	getline(file,line);
 	std::cout<< line<< " "<<std::endl;
-	int i = 0
+	int i = 0;
 	while ( (getline(file, line)) || (i < 10))
 	{
 
