@@ -308,6 +308,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			party -> Reset();
 		}
 	}
+	
 
 	// PRINT THE MAPS
 	
@@ -346,9 +347,10 @@ std::random_shuffle ( keys.begin(), keys.end() );
 
 
 std::cout <<"JUST SHUFFLED "<<std::endl;
-for (std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end(); ++i){
+for (std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end(); ++i)
+{
     std::cout << *i << ' ';
-    }
+}
     
 
 
@@ -406,7 +408,7 @@ std::vector<std::string> cluster_labels ;
                 }
                 else
 		{
-                  clusters[patch::to_string(cluster_id)].push_back(keys.at(i));
+                  clusters[patch::to_string(cluster_id)].push_back((int)keys.at(i));
 
                 }
                 neighborhood[patch::to_string(keys.at(i))]["cluster"].push_back(cluster_id);
@@ -443,7 +445,7 @@ std::vector<std::string> cluster_labels ;
 
           if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls))]["cluster"].at(0) < 1)
 	  {
-            temp_array.push_back(patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls)));
+            temp_array.push_back(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls));
           }
 
         }
@@ -459,7 +461,7 @@ std::vector<std::string> cluster_labels ;
 	      {
                 neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].push_back(cluster_id);
 
-                if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(),neighborhood[patch::to_string(queue.at(0))]['neighbors'].at(lls)))
+                if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(),neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls)))
 		{
                   //the line exists in the cluster
                 }
