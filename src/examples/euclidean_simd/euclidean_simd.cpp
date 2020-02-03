@@ -111,7 +111,8 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 		//boost::erase_all(line, "\"");
 		std::cout<< line<< " "<<std::endl;
 		boost::algorithm::split(vec,line, boost::is_any_of(delimeter));
-		std::cout<< vec.at(0)<< " "<<std::endl;
+		//std::cout<< vec.at(0)<< " "<<std::endl;
+		std::cout<< line<< " "<<std::endl;
 
 		dataList.push_back(vec);
 		i++;
