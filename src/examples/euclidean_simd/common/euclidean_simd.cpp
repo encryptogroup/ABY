@@ -359,15 +359,15 @@ std::vector<int> temp_array;
 std::vector<std::string> cluster_labels ;
 // LOOP ALPHA
   for(int i= 0; i< keys.size();i++){
-          std::cout <<"KEY SIZE : "<<keys.size()<< std::endl;
+        std::cout <<"KEY SIZE : "<<keys.size()<< std::endl;
 
         std::cout <<"LOOP ALPHA : "<<i<< std::endl;
 
     //# check whether the line segment is assigned to a cluster or not
-    if(neighborhood[patch::to_string(i)]["clusters"].at(0) < 1){
+    if(neighborhood[patch::to_string(keys.at(i))]["cluster"].at(0) < 1){
     // # check that the number of line segments in a given line segment's neighborhood  
-      if(neighborhood[patch::to_string(i)]["ncounter"].at(0) < minLns){
-           neighborhood[patch::to_string(i)]["status"].push_back(-1);
+      if(neighborhood[patch::to_string(keys.at(i))]["ncounter"].at(0) < minLns){
+           neighborhood[patch::to_string(keys.at(i))]["status"].push_back(-1);
 
       }
       else{
@@ -375,14 +375,14 @@ std::vector<std::string> cluster_labels ;
       // # if a given line segment does not assigned to a cluster
       
       //LOOP BETA
-        for(int llls = 0 ; llls < neighborhood[patch::to_string(i)]["neighbors"].size();llls++){
+        for(int llls = 0 ; llls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size();llls++){
 	        std::cout <<"LOOP BETA : "<<llls<< std::endl;
 
-          if(neighborhood[patch::to_string(llls)]["cluster"].at(0) < 1){
+          if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls))]["cluster"].at(0) < 1){
             temp_array.push_back(neighborhood[patch::to_string(i)]["neighbors"].at(llls));
           }
 
-        }
+        }//HERE
         //# the number of elements in the temporary array should be greater than or equal to minLns value
         if(temp_array.size() >= minLns){
             //# initialize new key value for the new cluster if it didn't initialized before
