@@ -24,7 +24,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
-
+#include <chrono>
 namespace patch
 {
     template < typename T > std::string to_string( const T& n )
@@ -154,7 +154,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	*s_out;
 
 	
-	
+	auto start = std::chrono::high_resolution_clock::now();
 	for(int l = 0; l < no_of_lines-20; l++){
 		if(neighborhood.count(patch::to_string(l))==0){
 
@@ -550,6 +550,12 @@ for(int i= 0; i< keys.size();i++)
   
 	
 	delete party;
+	auto finish = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> elapsed = finish - start;
+
+	std::cout << "Elapsed time: " << elapsed.count() << " s\n";
+
+
 	return 0;
 }
   
