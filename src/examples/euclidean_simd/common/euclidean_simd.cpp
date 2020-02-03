@@ -311,13 +311,14 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	// PRINT THE MAPS
 	
-	if(role == SERVER){
+	if(role == SERVER)
+	{
 		for(auto itr1 = neighborhood.begin(); itr1 != neighborhood.end(); itr1++)
 		{
 			std::cout << itr1->first << ' '; // Add space to separate entries on the same line
 			// itr1->second represents map<string, vector<string>> stored in test.
 			for(auto itr2 = itr1->second.begin (); itr2 != itr1->second.end (); itr2++)
-				{
+			{
 				std::cout << itr2->first << ' ';
 				// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
 				for(auto itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++)
@@ -336,7 +337,8 @@ int cluster_id = 1;
 std::vector<std::string> keys ;
 
 std::pair<std::string,std::vector<int> > me; // what a map<int, int> is made of
-for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator it = neighborhood.begin(); it != neighborhood.end(); ++it) {
+for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator it = neighborhood.begin(); it != neighborhood.end(); ++it) 
+{
   keys.push_back(it->first);
  // std::cout << it->first << "\n";
 }
@@ -364,86 +366,107 @@ std::vector<std::string> cluster_labels ;
         std::cout <<"LOOP ALPHA : "<<i<< std::endl;
 
     //# check whether the line segment is assigned to a cluster or not
-    if(neighborhood[patch::to_string(keys.at(i))]["cluster"].at(0) < 1){
+    if(neighborhood[patch::to_string(keys.at(i))]["cluster"].at(0) < 1)
+    {
     // # check that the number of line segments in a given line segment's neighborhood  
-      if(neighborhood[patch::to_string(keys.at(i))]["ncounter"].at(0) < minLns){
+      if(neighborhood[patch::to_string(keys.at(i))]["ncounter"].at(0) < minLns)
+      {
            neighborhood[patch::to_string(keys.at(i))]["status"].push_back(-1);
 
       }
-      else{
+      else
+      {
          // # push each element in the neighborhood of a cluster into a temporary queue
       // # if a given line segment does not assigned to a cluster
       
       //LOOP BETA
-        for(int llls = 0 ; llls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size();llls++){
+        for(int llls = 0 ; llls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size();llls++)
+	{
 	        //std::cout <<"LOOP BETA : "<<llls<< std::endl;
 
-          if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls))]["cluster"].at(0) < 1){
+          if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls))]["cluster"].at(0) 			< 1)
+	  {
             temp_array.push_back(neighborhood[patch::to_string(i)]["neighbors"].at(llls));
           }
 
         }
         //# the number of elements in the temporary array should be greater than or equal to minLns value
-        if(temp_array.size() >= minLns){
+        if(temp_array.size() >= minLns)
+	{
             //# initialize new key value for the new cluster if it didn't initialized before
             		// no needed since using a vector ?
-                if(clusters.count(patch::to_string(cluster_id))==0){
-                clusters[patch::to_string(cluster_id)].push_back(cluster_id);
+                if(clusters.count(patch::to_string(cluster_id))==0)
+		{
+                	clusters[patch::to_string(cluster_id)].push_back(cluster_id);
                 }
           //# add the line segment into the cluster
-                if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), keys.at(i))){
+                if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), 	clusters[patch::to_string(cluster_id)].end(), keys.at(i)))
+		{
                   //the line exists in the cluster
                 }
-                else{
+                else
+		{
                   clusters[patch::to_string(cluster_id)].push_back(keys.at(i));
 
                 }
                 neighborhood[patch::to_string(keys.at(i))]["cluster"].push_back(cluster_id);
           // add every non initialized line segment 
 	  //LOOP CHARLIE
-                for(int ls= 0 ; ls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size(); ls++){
+                for(int ls= 0 ; ls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size(); ls++)
+		{
 		       // std::cout <<"LOOP CHARLIE : "<<ls<< std::endl;
 
-                  if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls))]["cluster"].at(0)< 1){
+                  if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls))]["cluster"].at(0)< 1)
+		  {
                       neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls))]["cluster"].push_back(cluster_id);
-                      if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls))){
+                      if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls)))
+		      {
                         //the line exists in the cluster
                       }
-                      else{
+                      else
+		      {
                         clusters[patch::to_string(cluster_id)].push_back(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls));
                       }
                   }
-                }
-		
-				        std::cout <<"ABOUT TO START DELTA "<< std::endl;
+                }//LOOP CHARLIE
+		std::cout <<"ABOUT TO START DELTA "<< std::endl;
 
           //from now on the code follows the expand cluster algorithm in the TRACLUS paper
 
         std::vector<int> queue = neighborhood[patch::to_string(keys.at(i))]["neighbors"];
-        while(queue.size()>0){
+        while(queue.size()>0)
+	{
 	// LOOP DELTA
-         for(int llls = 0 ; llls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size();llls++){
+         for(int llls = 0 ; llls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size();llls++)
+	 {
 	        //std::cout <<"LOOP DELTA : "<<llls<< std::endl;
 
-          if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls))]["cluster"].at(0) < 1){
+          if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls))]["cluster"].at(0) < 1)
+	  {
             temp_array.push_back(patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls)));
           }
 
         }
         //# the number of elements in the temporary array should be greater than or equal to minLns value
-        if(temp_array.size() >= minLns){
+        if(temp_array.size() >= minLns)
+	{
 	  //LOOP ECHO
-            for(int lls = 0; lls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size(); lls++){
+            for(int lls = 0; lls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size(); lls++)
+	    {
 	            //std::cout <<"LOOP ECHO : "<<lls<< std::endl;
 
-              if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) < 1){
+              if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) < 1)
+	      {
                 neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].push_back(cluster_id);
 
-                if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(),neighborhood[patch::to_string(queue.at(0))]['neighbors'].at(lls))){
+                if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(),neighborhood[patch::to_string(queue.at(0))]['neighbors'].at(lls)))
+		{
                   //the line exists in the cluster
                 }
-                else{
-                  if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) == 0){
+                else
+		{
+                  if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) == 0)
+		  {
                     	queue.push_back(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls));
                   }
                   clusters[patch::to_string(cluster_id)].push_back(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls);
@@ -465,24 +488,26 @@ std::vector<std::string> cluster_labels ;
 
 
     }
-if(role == SERVER){
-	
-		std::cout <<"THIS IS CLUSTER SIZE"<<patch::to_string(clusters.size())<<std::endl;
-
-		for(auto itr1 = clusters.begin(); itr1 != clusters.end(); itr1++)
+		if(role == SERVER)
 		{
-			std::cout << itr1->first << ' '; // Add space to separate entries on the same line
-			// itr1->second represents map<string, vector<string>> stored in test.
-			for(auto it2 = itr1->second.begin(); it2 != itr1->second.end(); ++it2){
-    				std::cout << *it2 << " ";
+
+			std::cout <<"THIS IS CLUSTER SIZE"<<patch::to_string(clusters.size())<<std::endl;
+
+			for(auto itr1 = clusters.begin(); itr1 != clusters.end(); itr1++)
+			{
+				std::cout << itr1->first << ' '; // Add space to separate entries on the same line
+				// itr1->second represents map<string, vector<string>> stored in test.
+				for(auto it2 = itr1->second.begin(); it2 != itr1->second.end(); ++it2)
+				{
+					std::cout << *it2 << " ";
+				}
+
+				std::cout << std::endl;
 			}
-			
-			std::cout << std::endl;
 		}
-	}
 
 
-  }
+  
 	
 	delete party;
 	return 0;
