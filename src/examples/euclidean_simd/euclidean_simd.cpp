@@ -172,7 +172,7 @@ int main(int argc, char** argv) {
 
 	}
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
-				//std::cout<< "X S "<<x_start.at(0)<<" "<< y_start.at(0)<<std::endl;
+				std::cout<< "X S "<<x_start.at(0)<<" "<< y_start.at(0)<<std::endl;
 				
 
 
