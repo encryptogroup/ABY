@@ -104,6 +104,8 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	
 	while (getline(file, line))
 	{
+		std::cout<< line<< " "<<std::endl;
+
 		std::vector<std::string> vec;
 		//line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
 		boost::erase_all(line, "\"");
