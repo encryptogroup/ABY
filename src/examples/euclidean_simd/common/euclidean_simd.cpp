@@ -279,7 +279,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			output = s_out->get_clear_value<uint32_t>();
 			distance = output;
 			if(role == SERVER){
-				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" <<distance << std::endl;
+				//std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" <<distance << std::endl;
 			}
 			
 			
@@ -312,7 +312,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	// PRINT THE MAPS
 	
-	if(role == SERVER)
+	/**if(role == SERVER)
 	{
 		for(auto itr1 = neighborhood.begin(); itr1 != neighborhood.end(); itr1++)
 		{
@@ -328,7 +328,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				}
 			}
 			std::cout << std::endl;
-		}
+		}*/
 	}//*/
 	
 	   // initialize the first cluster id
@@ -346,7 +346,7 @@ for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator
 std::random_shuffle ( keys.begin(), keys.end() );
 
 
-std::cout <<"JUST SHUFFLED "<<std::endl;
+//std::cout <<"JUST SHUFFLED "<<std::endl;
 for (std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end(); ++i)
 {
     std::cout << *i << ' ';
@@ -364,9 +364,9 @@ std::vector<std::string> cluster_labels ;
 // LOOP ALPHA
 for(int i= 0; i< keys.size();i++)
 {
-	std::cout <<"KEY SIZE : "<<keys.size()<< std::endl;
+	//std::cout <<"KEY SIZE : "<<keys.size()<< std::endl;
 
-	std::cout <<"LOOP ALPHA : "<<i<< std::endl;
+	//std::cout <<"LOOP ALPHA : "<<i<< std::endl;
 
 	//# check whether the line segment is assigned to a cluster or not
 	if(neighborhood[patch::to_string(keys.at(i))]["cluster"].at(0) < 1)
@@ -438,12 +438,12 @@ for(int i= 0; i< keys.size();i++)
 				//from now on the code follows the expand cluster algorithm in the TRACLUS paper
 
 				std::vector<int> queue = neighborhood[keys.at(i)]["neighbors"];
-				std::cout <<"INITIAL QUEUE "<<queue.size()<< std::endl;
+				//std::cout <<"INITIAL QUEUE "<<queue.size()<< std::endl;
 
 				int j = 0;
 				while(queue.size()>0 || j < 3)
 				{
-				std::cout <<"JUST IN"<< std::endl;
+				//std::cout <<"JUST IN"<< std::endl;
 
 				// LOOP DELTA
 					for(int llls = 0 ; llls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size();llls++)
@@ -474,7 +474,7 @@ for(int i= 0; i< keys.size();i++)
 								}
 								else
 								{
-									std::cout <<"HERE WE ARE AGAIN"<< std::endl;
+									//std::cout <<"HERE WE ARE AGAIN"<< std::endl;
 
 									if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) == 0)
 									{
@@ -489,10 +489,10 @@ for(int i= 0; i< keys.size();i++)
 					}
 				//}
 					queue.erase(queue.begin()+0);
-					std::cout <<"QEUE"<< queue.size()<<std::endl;
+					//std::cout <<"QEUE"<< queue.size()<<std::endl;
 					j++;
 				}
-				std::cout <<"OUT OF WHILE "<< std::endl;
+				//std::cout <<"OUT OF WHILE "<< std::endl;
 
 				cluster_id++;
 			}
