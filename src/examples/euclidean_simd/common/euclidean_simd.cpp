@@ -360,11 +360,13 @@ int noise_counter = 0;
 std::map<std::string,std::vector<int> > clusters;
 std::vector<int> temp_array;
 
+	std::cout <<"DISTANCES OK"<<keys.size()<< std::endl;
+
 std::vector<std::string> cluster_labels ;
 // LOOP ALPHA
 for(int i= 0; i< keys.size();i++)
 {
-	//std::cout <<"KEY SIZE : "<<keys.size()<< std::endl;
+	std::cout <<"ALPHA "<<keys.size()<< std::endl;
 
 	//std::cout <<"LOOP ALPHA : "<<i<< std::endl;
 
