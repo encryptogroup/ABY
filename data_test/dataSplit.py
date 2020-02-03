@@ -105,8 +105,8 @@ def main(argv):
                 y2_s1.append(shares[0])
                 y2_s2.append(shares[1])
         
-            wbS1 = xlsxwriter.Workbook('./dataS1.xlsx')
-            wbS2 = xlsxwriter.Workbook('./dataS2.xlsx')
+            wbS1 = xlsxwriter.Workbook('./dataS1_long.xlsx')
+            wbS2 = xlsxwriter.Workbook('./dataS2_long.xlsx')
 
             sheetS1 = wbS1.add_worksheet('points')
             sheetS2 = wbS2.add_worksheet('points')
