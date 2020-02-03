@@ -103,7 +103,7 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	getline(file,line);
 	std::cout<< line<< " "<<std::endl;
 	int i = 0;
-	while ( (getline(file, line)) || (i < 10))
+	while ( (getline(file, line)) && (i < 10))
 	{
 		
 		std::vector<std::string> vec;
