@@ -281,6 +281,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			if(role == SERVER){
 				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" <<distance << std::endl;
 			}
+			
+			
+			/** ++++++++++++ ABOVE IS OK ++++++++++++++++++++ */
 
 		/** check whether the second line segment is in the neighborhood dictionary or not
             # this part is used for speed up the distance computation. If we consider distances
@@ -292,7 +295,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 				neighborhood[patch::to_string(ll)]["ncounter"].push_back(0);
 				neighborhood[patch::to_string(ll)]["cluster"].push_back(0);
-			}			// check that whether the resulting distance is less than or equal to epsilon
+			}// check that whether the resulting distance is less than or equal to epsilon
 			if (distance <= epsilon){
 				neighborhood[patch::to_string(l)]["neighbors"].push_back(ll);
     				neighborhood[patch::to_string(l)]["ncounter"].assign(1,neighborhood[patch::to_string(l)]["ncounter"].at(0)+1);
@@ -338,6 +341,7 @@ for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator
   std::cout << it->first << "\n";
 }
 std::random_shuffle ( keys.begin(), keys.end() );
+std::cout <<"JUST SHUFFLED "<<std::endl;
 
 
  minLns = 3;
@@ -347,8 +351,10 @@ std::map<std::string,std::vector<int> > clusters;
 std::vector<int> temp_array;
 
 std::vector<std::string> cluster_labels ;
+// LOOP ALPHA
   for(int i; i< keys.size();i++){
-        
+        std::cout <<"LOOP ALPHA : "<<i<< std::endl;
+
     //# check whether the line segment is assigned to a cluster or not
     if(neighborhood[patch::to_string(i)]["clusters"].at(0) < 1){
     // # check that the number of line segments in a given line segment's neighborhood  
@@ -359,7 +365,11 @@ std::vector<std::string> cluster_labels ;
       else{
          // # push each element in the neighborhood of a cluster into a temporary queue
       // # if a given line segment does not assigned to a cluster
+      
+      //LOOP BETA
         for(int llls = 0 ; llls < neighborhood[patch::to_string(i)]["neighbors"].size();llls++){
+	        std::cout <<"LOOP BETA : "<<llls<< std::endl;
+
           if(neighborhood[patch::to_string(llls)]["cluster"].at(0) < 1){
             temp_array.push_back(neighborhood[patch::to_string(i)]["neighbors"].at(llls));
           }
@@ -382,7 +392,10 @@ std::vector<std::string> cluster_labels ;
                 }
                 neighborhood[patch::to_string(i)]["cluster"].push_back(cluster_id);
           // add every non initialized line segment 
+	  //LOOP CHARLIE
                 for(int ls= 0 ; neighborhood[patch::to_string(i)]["neighbors"].size(); ls++){
+		        std::cout <<"LOOP CHARLIE : "<<ls<< std::endl;
+
                   if(neighborhood[patch::to_string(ls)]["cluster"].at(0)< 1){
                       neighborhood[patch::to_string(ls)]["cluster"].push_back(cluster_id);
                       if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), ls)){
@@ -397,12 +410,18 @@ std::vector<std::string> cluster_labels ;
 
         std::vector<int> queue = neighborhood[patch::to_string(i)]["neighbors"];
         while(queue.size()>0){
+	// LOOP DELTA
           for(int llls = 0 ; llls < neighborhood[patch::to_string(i)]["neighbors"].size();llls++){
+	          std::cout <<"LOOP DELTA : "<<llls<< std::endl;
+
           if(neighborhood[patch::to_string(llls)]["cluster"].at(0) < 1){
             temp_array.push_back(neighborhood[patch::to_string(i)]["neighbors"].at(llls));
           }
           if(temp_array.size() >= minLns){
+	  //LOOP ECHO
             for(int lls = 0; lls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size(); lls++){
+	            std::cout <<"LOOP ECHO : "<<lls<< std::endl;
+
               if(neighborhood[patch::to_string(lls)]["cluster"].at(0) < 1){
                 neighborhood[patch::to_string(lls)]["cluster"].push_back(cluster_id);
 
