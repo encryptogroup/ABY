@@ -105,7 +105,7 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	while (getline(file, line))
 	{
 		std::vector<std::string> vec;
-		boost::algorithm::split(vec, str.erase(std::remove(line.begin(),line.end(),'\"'),line.end()), boost::is_any_of(delimeter));
+		boost::algorithm::split(vec, line.erase(std::remove(line.begin(),line.end(),'\"'),line.end()), boost::is_any_of(delimeter));
 		dataList.push_back(vec);
 
 	}
@@ -153,8 +153,8 @@ int main(int argc, char** argv) {
 
 		//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
 		x_start.push_back(std::stoi(vec.at(0)));
-		y_start.push_back(std::stoi(vec.at(1));
-		x_end.push_back(std::stoi(vec.at(2));
+		y_start.push_back(std::stoi(vec.at(1)));
+		x_end.push_back(std::stoi(vec.at(2)));
 		y_end.push_back(std::stoi(vec.at(3)));
 		n_columns++;
 
