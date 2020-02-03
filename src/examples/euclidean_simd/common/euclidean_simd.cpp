@@ -506,7 +506,6 @@ for(int i= 0; i< keys.size();i++)
 	}
 	
 }
-					std::cout <<"CLUSTERS SIZE"<< clusters.size()<<std::endl;
 
 			
 		/**	
@@ -548,6 +547,7 @@ for(int i= 0; i< keys.size();i++)
 		}
 	}
 
+	std::cout <<"CLUSTERS SIZE"<< clusters.size()<<std::endl;
 
   
 	
