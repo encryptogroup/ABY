@@ -353,6 +353,8 @@ std::vector<int> temp_array;
 std::vector<std::string> cluster_labels ;
 // LOOP ALPHA
   for(int i; i< keys.size();i++){
+          std::cout <<"KEY SIZE : "<<keys.size()<< std::endl;
+
         std::cout <<"LOOP ALPHA : "<<i<< std::endl;
 
     //# check whether the line segment is assigned to a cluster or not
