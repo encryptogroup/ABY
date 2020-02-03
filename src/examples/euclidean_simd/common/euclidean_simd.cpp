@@ -328,8 +328,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				}
 			}
 			std::cout << std::endl;
-		}*/
-	}//*/
+		}
+	}*/
 	
 	   // initialize the first cluster id
 int cluster_id = 1;
