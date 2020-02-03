@@ -341,7 +341,6 @@ std::pair<std::string,std::vector<int> > me; // what a map<int, int> is made of
 for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator it = neighborhood.begin(); it != neighborhood.end(); ++it) 
 {
   keys.push_back(it->first);
- // std::cout << it->first << "\n";
 }
 std::random_shuffle ( keys.begin(), keys.end() );
 
