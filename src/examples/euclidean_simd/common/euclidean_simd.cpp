@@ -156,7 +156,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	
 	auto start = std::chrono::high_resolution_clock::now();
-	for(int l = 0; l < 1000; l++){
+	for(int l = 0; l < 400; l++){
 		if(neighborhood.count(patch::to_string(l))==0){
 
 			//neighborhood[patch::to_string(l)]["neighbors"].push_back(0);
@@ -164,7 +164,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			neighborhood[patch::to_string(l)]["cluster"].push_back(0);
 		}
 					
-		for (int ll = l+1; ll < 1000; ll++){
+		for (int ll = l+1; ll < 400; ll++){
 		
 			if(role == SERVER) {
 
