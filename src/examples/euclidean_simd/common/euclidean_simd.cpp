@@ -419,10 +419,10 @@ for(int i= 0; i< keys.size();i++)
 				{
 					// std::cout <<"LOOP CHARLIE : "<<ls<< std::endl;
 
-					if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls))]["cluster"].at(0)< 1)
+					if(neighborhood[patch::to_string(neighborhood[keys.at(i)]["neighbors"].at(ls))]["cluster"].at(0)< 1)
 					{
 						neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls))]["cluster"].push_back(cluster_id);
-						if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls)))
+						if (std::find(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls)) != clusters[patch::to_string(cluster_id)].end())
 						{
 						//the line exists in the cluster
 						}
@@ -432,17 +432,19 @@ for(int i= 0; i< keys.size();i++)
 						}
 					}
 				}//LOOP CHARLIE
-				std::cout <<"ABOUT TO START DELTA "<< std::endl;
 
 				//from now on the code follows the expand cluster algorithm in the TRACLUS paper
 
-				std::vector<int> queue = neighborhood[patch::to_string(keys.at(i))]["neighbors"];
-				while(queue.size()>0)
+				std::vector<int> queue = neighborhood[keys.at(i)]["neighbors"];
+				std::cout <<"INITIAL QUEUE "<<queue.size()<< std::endl;
+
+				int j = 0;
+				while(queue.size()>0 || j <10)
 				{
 				// LOOP DELTA
 					for(int llls = 0 ; llls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size();llls++)
 					{
-					std::cout <<"LOOP DELTA : "<<llls<< std::endl;
+					//std::cout <<"LOOP DELTA : "<<llls<< std::endl;
 
 						if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls))]["cluster"].at(0) < 1)
 						{
@@ -456,19 +458,19 @@ for(int i= 0; i< keys.size();i++)
 					//LOOP ECHO
 						for(int lls = 0; lls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size(); lls++)
 						{
-						std::cout <<"LOOP ECHO : "<<lls<< std::endl;
+						//std::cout <<"LOOP ECHO : "<<lls<< std::endl;
 
 							if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) < 1)
 							{
 								neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].push_back(cluster_id);
 
-								if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(),neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls)))
+								if (std::find(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls)) != clusters[patch::to_string(cluster_id)].end())
 								{
-								//the line exists in the cluster
+									std::cout <<"BINARY IN"<< std::endl;
 								}
 								else
 								{
-													std::cout <<"HERE WE ARE AGAIN"<< std::endl;
+									std::cout <<"HERE WE ARE AGAIN"<< std::endl;
 
 									if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) == 0)
 									{
@@ -483,6 +485,7 @@ for(int i= 0; i< keys.size();i++)
 					}
 				//}
 					queue.erase(queue.begin());
+					j++;
 				}
 				cluster_id++;
 			}
