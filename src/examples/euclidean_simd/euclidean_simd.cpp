@@ -103,21 +103,20 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	// HEADERS
 	std::getline(file,line);
 	//std::cout<< line<< " "<<std::endl;
-	int i = 0;
-	while ( (std::getline(file, line)) && (i < 3))
+	while ( (std::getline(file, line)) )
 	{
 		
 		std::vector<std::string> vec;
 		//REMOVING DOUBLE QUOTES
 		line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
 		//boost::erase_all(line, "\"");
-		std::cout<< line<< " "<<std::endl;
+		//std::cout<< line<< " "<<std::endl;
 		boost::algorithm::split(vec,line, boost::is_any_of(delimeter));
 		//std::cout<< vec.at(0)<< " "<<std::endl;
-		std::cout<<"maybe good"<< vec.at(0)<< " "<< vec.at(1)<< " "<< vec.at(2)<< "  "<< vec.at(3)<< std::endl;
+		//std::cout<<"maybe good"<< vec.at(0)<< " "<< vec.at(1)<< " "<< vec.at(2)<< "  "<< vec.at(3)<< std::endl;
 
 		dataList.push_back(vec);
-		i++;
+		
 
 	}
 	// Close the File
@@ -165,10 +164,10 @@ int main(int argc, char** argv) {
 		// USING FROM INDEX 1 SINCE INDEX 0 IS THE ROW INDEX 
 		// not necessary for files without index
 		//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
-		x_start.push_back(std::stoi(vec.at(1).substr(1,vec.at(1).size()-2)));
-		y_start.push_back(std::stoi(vec.at(2).substr(1,vec.at(2).size()-2)));
-		x_end.push_back(std::stoi(vec.at(3).substr(1,vec.at(3).size()-2)));
-		y_end.push_back(std::stoi(vec.at(4).substr(1,vec.at(4).size()-2)));
+		x_start.push_back(std::stoi(vec.at(0)));//.substr(1,vec.at(0).size()-2)));
+		y_start.push_back(std::stoi(vec.at(1)));//.substr(1,vec.at(1).size()-2)));
+		x_end.push_back(std::stoi(vec.at(2)));//.substr(1,vec.at(2).size()-2)));
+		y_end.push_back(std::stoi(vec.at(3)));//.substr(1,vec.at(3).size()-2)));
 		n_columns++;
 
 	}
