@@ -155,7 +155,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	
 	
-	for(int l = 0; l < no_of_lines-87; l++){
+	for(int l = 0; l < no_of_lines-85; l++){
 		if(neighborhood.count(patch::to_string(l))==0){
 
 			//neighborhood[patch::to_string(l)]["neighbors"].push_back(0);
@@ -163,7 +163,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			neighborhood[patch::to_string(l)]["cluster"].push_back(0);
 		}
 					
-		for (int ll = l+1; ll < no_of_lines-87; ll++){
+		for (int ll = l+1; ll < no_of_lines-85; ll++){
 		
 			if(role == SERVER) {
 
