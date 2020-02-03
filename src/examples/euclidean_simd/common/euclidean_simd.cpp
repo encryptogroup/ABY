@@ -25,6 +25,8 @@
 #include <string>
 #include <sstream>
 #include <chrono>
+#include <stdio.h>
+
 namespace patch
 {
     template < typename T > std::string to_string( const T& n )
@@ -42,6 +44,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		    std::vector<long> x_end, std::vector<long> y_end
 		    ) {
     std::cout << "INDISDE" << std::endl;
+
+	auto start = std::chrono::system_clock::now();
 
 	/**
 		Step 1: Create the ABYParty object which defines the basis of all the
@@ -156,7 +160,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	
 	auto start = std::chrono::high_resolution_clock::now();
-	for(int l = 0; l < 400; l++){
+	for(int l = 0; l < no_of_lines; l++){
 		if(neighborhood.count(patch::to_string(l))==0){
 
 			//neighborhood[patch::to_string(l)]["neighbors"].push_back(0);
@@ -164,7 +168,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			neighborhood[patch::to_string(l)]["cluster"].push_back(0);
 		}
 					
-		for (int ll = l+1; ll < 400; ll++){
+		for (int ll = l+1; ll < no_of_lines; ll++){
 		
 			if(role == SERVER) {
 
@@ -366,7 +370,7 @@ std::vector<std::string> cluster_labels ;
 // LOOP ALPHA
 for(int i= 0; i< keys.size();i++)
 {
-	std::cout <<"ALPHA "<<keys.size()<< std::endl;
+	//std::cout <<"ALPHA "<<keys.size()<< std::endl;
 
 	//std::cout <<"LOOP ALPHA : "<<i<< std::endl;
 
@@ -557,7 +561,24 @@ for(int i= 0; i< keys.size();i++)
 
 	std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
+	freopen ("logfile.log","a",stdout);
+	
+    	// Some computation here
+    	auto end = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end-start;
+   	std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
+    	std::cout << "finished computation at " << std::ctime(&end_time)
+              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+	      
+  	printf ("Starting time: "+std::ctime(&end_time)+"\n");
+	printf ("Execution time: "+ elapsed_seconds.count());
+	printf("minLns: "+ minLns+ "\n");
+	printf("Number of line segments: "+ no_of_lines+"\n" );
+	printf("Epsilon: "+ epsilon+"\n" );
+	printf("-------------------------------------------")
+
+ 	fclose (stdout);
 	return 0;
 }
   
