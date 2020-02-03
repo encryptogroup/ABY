@@ -6,6 +6,7 @@
 #include <iterator>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/erase.hpp>
 #include <string>
 #include <iostream>
 #include <iomanip>
