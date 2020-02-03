@@ -41,6 +41,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		    std::vector<long> x_start,std::vector<long> y_start,
 		    std::vector<long> x_end, std::vector<long> y_end
 		    ) {
+    std::cout << "INDISDE" << std::endl;
 
 	/**
 		Step 1: Create the ABYParty object which defines the basis of all the
