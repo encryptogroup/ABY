@@ -105,7 +105,10 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	while (getline(file, line))
 	{
 		std::vector<std::string> vec;
-		boost::algorithm::split(vec, line.erase(std::remove(line.begin(),line.end(),'\"'),line.end()), boost::is_any_of(delimeter));
+		//line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
+		boost::erase_all(line, "\"");
+
+		boost::algorithm::split(vec,line, boost::is_any_of(delimeter));
 		dataList.push_back(vec);
 
 	}
