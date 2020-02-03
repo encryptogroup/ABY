@@ -107,7 +107,7 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	{
 		
 		std::vector<std::string> vec;
-		//line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
+		line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
 		//boost::erase_all(line, "\"");
 		std::cout<< line<< " "<<std::endl;
 		boost::algorithm::split(vec,line, boost::is_any_of(delimeter));
@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
 	int n_columns=0;
 
 	if(role == SERVER){
-		filename = "/root/ABY/data_test/data1.csv";
+		filename = "/root/ABY/data_test/data1_short.csv";
 	}else {
 		filename = "/root/ABY/data_test/data2_short.csv";
 	}
@@ -160,7 +160,8 @@ int main(int argc, char** argv) {
 		
 			
 
-		// USING FROM INDEX 1 SINCE INDEX 0 IS THE ROW INDEX
+		// USING FROM INDEX 1 SINCE INDEX 0 IS THE ROW INDEX 
+		// not necessary for files without index
 		//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
 		x_start.push_back(std::stoi(vec.at(1).substr(1,vec.at(1).size()-2)));
 		y_start.push_back(std::stoi(vec.at(2).substr(1,vec.at(2).size()-2)));
