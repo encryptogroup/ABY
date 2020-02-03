@@ -106,9 +106,9 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	{
 
 		std::vector<std::string> vec;
-		line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
+		//line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
 		//boost::erase_all(line, "\"");
-		std::cout<< line<< " "<<std::endl;
+		//std::cout<< line<< " "<<std::endl;
 		boost::algorithm::split(vec,line, boost::is_any_of(delimeter));
 		dataList.push_back(vec);
 
@@ -156,16 +156,16 @@ int main(int argc, char** argv) {
 			
 
 		//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
-		x_start.push_back(std::stoi(vec.at(0)));
-		y_start.push_back(std::stoi(vec.at(1)));
-		x_end.push_back(std::stoi(vec.at(2)));
-		y_end.push_back(std::stoi(vec.at(3)));
+		x_start.push_back(std::stoi(vec.at(0).substr(1,vec.at(0).size()-2)));
+		y_start.push_back(std::stoi(vec.at(1).substr(1,vec.at(1).size()-2)));
+		x_end.push_back(std::stoi(vec.at(2).substr(1,vec.at(2).size()-2)));
+		y_end.push_back(std::stoi(vec.at(3).substr(1,vec.at(3).size()-2)));
 		n_columns++;
 
 	}
 	std::string test = "TESTT";
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
-				std::cout<< "X S "<<test<<std::endl;
+				std::cout<< "X S "<<x_start.at(1)<<" "<< y_start.at(1)<<std::endl;
 				
 
 
