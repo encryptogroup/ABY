@@ -92,10 +92,10 @@ def main(argv):
 		dict2 = {'X_start': x1_s2, 'Y_START': y1_s2, 'X_END': x2_s2, "Y_END": y2_s2} 
 
 		df = pd.DataFrame(dict1)
-		df.to_csv(fileOutput1, sep=',',index=False)
+		df.to_csv(fileOutput1, sep=',')
 			
 		df = pd.DataFrame(dict2)
-		df.to_csv(fileOutput2, sep=',',index=False)
+		df.to_csv(fileOutput2, sep=',')
 
 		
 
