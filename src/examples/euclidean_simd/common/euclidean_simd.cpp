@@ -402,7 +402,7 @@ std::vector<std::string> cluster_labels ;
                 	clusters[patch::to_string(cluster_id)].push_back(cluster_id);
                 }
           //# add the line segment into the cluster
-                if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), 	clusters[patch::to_string(cluster_id)].end(), keys.at(i)))
+                if (std::binary_search(clusters[patch::to_string(cluster_id)].begin(), 	clusters[patch::to_string(cluster_id)].end(), std::stoi(keys.at(i))))
 		{
                   //the line exists in the cluster
                 }
