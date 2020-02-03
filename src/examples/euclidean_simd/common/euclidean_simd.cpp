@@ -408,7 +408,7 @@ std::vector<std::string> cluster_labels ;
                 }
                 else
 		{
-                  clusters[patch::to_string(cluster_id)].push_back((int)keys.at(i));
+                  clusters[patch::to_string(cluster_id)].push_back(std::stoi(keys.at(i)));
 
                 }
                 neighborhood[patch::to_string(keys.at(i))]["cluster"].push_back(cluster_id);
@@ -489,6 +489,7 @@ std::vector<std::string> cluster_labels ;
     }
 
 
+    }
     }
 		if(role == SERVER)
 		{
