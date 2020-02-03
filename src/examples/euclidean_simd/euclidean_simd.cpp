@@ -160,11 +160,12 @@ int main(int argc, char** argv) {
 		
 			
 
+		// USING FROM INDEX 1 SINCE INDEX 0 IS THE ROW INDEX
 		//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
-		x_start.push_back(std::stoi(vec.at(0).substr(1,vec.at(0).size()-2)));
-		y_start.push_back(std::stoi(vec.at(1).substr(1,vec.at(1).size()-2)));
-		x_end.push_back(std::stoi(vec.at(2).substr(1,vec.at(2).size()-2)));
-		y_end.push_back(std::stoi(vec.at(3).substr(1,vec.at(3).size()-2)));
+		x_start.push_back(std::stoi(vec.at(1).substr(1,vec.at(1).size()-2)));
+		y_start.push_back(std::stoi(vec.at(2).substr(1,vec.at(2).size()-2)));
+		x_end.push_back(std::stoi(vec.at(3).substr(1,vec.at(3).size()-2)));
+		y_end.push_back(std::stoi(vec.at(4).substr(1,vec.at(4).size()-2)));
 		n_columns++;
 
 	}
