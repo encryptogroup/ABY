@@ -342,8 +342,11 @@ for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator
 }
 std::random_shuffle ( keys.begin(), keys.end() );
 std::cout <<"JUST SHUFFLED "<<std::endl;
-for (std::vector<string>::const_iterator i = keys.begin(); i != keys.end(); ++i)
+for (std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end(); ++i){
     std::cout << *i << ' ';
+    }
+    
+
 
  minLns = 3;
 int noise_counter = 0;
