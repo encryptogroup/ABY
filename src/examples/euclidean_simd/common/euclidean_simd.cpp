@@ -468,7 +468,7 @@ for(int i= 0; i< keys.size();i++)
 
 								if (std::find(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls)) != clusters[patch::to_string(cluster_id)].end())
 								{
-									std::cout <<"BINARY IN"<< std::endl;
+									//std::cout <<"BINARY IN"<< std::endl;
 								}
 								else
 								{
@@ -503,7 +503,7 @@ for(int i= 0; i< keys.size();i++)
 	
 }
 			
-			
+		/**	
 		if(role == SERVER)
 		{
 
@@ -520,7 +520,27 @@ for(int i= 0; i< keys.size();i++)
 
 				std::cout << std::endl;
 			}
+			
+		}*/
+		
+		if(role == SERVER)
+	{
+		for(auto itr1 = neighborhood.begin(); itr1 != neighborhood.end(); itr1++)
+		{
+			std::cout << itr1->first << ' '; // Add space to separate entries on the same line
+			// itr1->second represents map<string, vector<string>> stored in test.
+			for(auto itr2 = itr1->second.begin (); itr2 != itr1->second.end (); itr2++)
+			{
+				std::cout << itr2->first << ' ';
+				// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
+				for(auto itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++)
+				{
+					std::cout << *itr3 << ' ';
+				}
+			}
+			std::cout << std::endl;
 		}
+	}
 
 
   
