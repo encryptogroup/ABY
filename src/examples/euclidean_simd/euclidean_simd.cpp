@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
 	if(role == SERVER){
 		filename = "/root/ABY/data_test/data1.csv";
 	}else {
-		filename = "/root/ABY/data_test/data2.csv";
+		filename = "/root/ABY/data_test/data2_short.csv";
 	}
 	
 
