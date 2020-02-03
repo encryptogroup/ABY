@@ -163,16 +163,15 @@ int main(int argc, char** argv) {
 		n_columns++;
 
 	}
-	std::string test = "TESTT";
-				std::cout<< "LENGTH "<< n_columns<<std::endl;
-				std::cout<< "X S "<<x_start.at(1)<<" "<< y_start.at(1)<<std::endl;
+				//std::cout<< "LENGTH "<< n_columns<<std::endl;
+				//std::cout<< "X S "<<x_start.at(1)<<" "<< y_start.at(1)<<std::endl;
 				
 
 
 
 	//evaluate addition cirucui using arithmetic
-	//test_circuit(role, address, port, seclvl, 32,
-	//		nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end);           
+	test_circuit(role, address, port, seclvl, 32,
+			nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end);           
 	
 	return 0;
 }
