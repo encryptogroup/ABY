@@ -338,9 +338,11 @@ std::vector<std::string> keys ;
 std::pair<std::string,std::vector<int> > me; // what a map<int, int> is made of
 for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator it = neighborhood.begin(); it != neighborhood.end(); ++it) {
   keys.push_back(it->first);
-  std::cout << it->first << "\n";
+ // std::cout << it->first << "\n";
 }
 std::random_shuffle ( keys.begin(), keys.end() );
+
+
 std::cout <<"JUST SHUFFLED "<<std::endl;
 for (std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end(); ++i){
     std::cout << *i << ' ';
@@ -356,7 +358,7 @@ std::vector<int> temp_array;
 
 std::vector<std::string> cluster_labels ;
 // LOOP ALPHA
-  for(int i; i< keys.size();i++){
+  for(int i= 0; i< keys.size();i++){
           std::cout <<"KEY SIZE : "<<keys.size()<< std::endl;
 
         std::cout <<"LOOP ALPHA : "<<i<< std::endl;
