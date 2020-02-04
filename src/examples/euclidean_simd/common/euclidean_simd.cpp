@@ -73,7 +73,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
-  
+  	Circuit* ac = sharings[S_ARITH]->GetCircuitBuildRoutine();
+
   
   
 
@@ -217,7 +218,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 						  s2_x_start,s2_y_start, s2_x_end, s2_y_end,//line 1 Server2
 						  s1_x_next_start, s1_y_next_start, s1_x_next_end,s1_y_next_end, //line 2 server 1
 						  s2_x_next_start,s2_y_next_start, s2_x_next_end, s2_y_next_end, //line 2 server 2
-					(BooleanCircuit*) circ);
+					(BooleanCircuit*) circ, (ArithmeticCircuit) ac);
 
 			s_out = circ->PutOUTGate(s_out,ALL);
 			party->ExecCircuit();
@@ -537,8 +538,8 @@ return 0;
 			   share* s2_x_start,share* s2_y_start, share*  s2_x_end, share* s2_y_end,
 			   share* s1_x_next_start,  share* s1_y_next_start, share* s1_x_next_end, share* s1_y_next_end, 
 			   share* s2_x_next_start,share* s2_y_next_start, share*  s2_x_next_end, share* s2_y_next_end,
-			   BooleanCircuit* circ) {
- 
+			   BooleanCircuit* circ, ArithmeticCircuit ac*) {
+
 	//share* out;
 	share* x_start;
 	share* y_start;
@@ -691,7 +692,6 @@ res_y = ac->PutB2A(res_y)
 	  
 	  
 	  /** Distance metric 4: (x2_start-x1_end)^2 + (y2_start-y1_end)^2*/
-	 Circuit* ac = sharings[S_ARITH]->GetCircuitBuildRoutine(): 
 	/** Following code performs (x2-x1)*(x2-x1) */
 	check_sel = circ->PutGTGate(x_end, x_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
