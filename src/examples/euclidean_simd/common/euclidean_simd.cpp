@@ -55,8 +55,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		 	 	operations which are happening.	Operations performed are on the
 		 	 	basis of the role played by this object.
 	*/
-	bitlen = 64;
-	ABYParty* party = new ABYParty(role, address, port, seclvl, 64, nthreads,
+	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads,
 			mt_alg);
 
 
@@ -148,6 +147,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s2_x_next_end = circ->PutDummyINGate( bitlen);
 				s2_y_next_end = circ->PutDummyINGate( bitlen);*/
 				s1_x_start = circ->PutINGate((uint64_t)(x_start.at(l)/10),bitlen,SERVER);
+				std::cout<< (uint64_t)(x.start.at(l)/10)<<std::endl;
+				circ->PutPrintValueGate(s1_x_start, "X_START");	
+
 				s1_y_start = circ->PutINGate((uint64_t) (y_start.at(l)/10),bitlen,SERVER);
 				s1_x_end = circ->PutINGate((uint64_t) (x_end.at(l)/10),bitlen,SERVER);
 				s1_y_end = circ->PutINGate((uint64_t) (y_end.at(l)/10),bitlen,SERVER);
@@ -621,7 +623,7 @@ return 0;
 
 	
 	circ->PutPrintValueGate(x_start, "X START");
-	circ->PutPrintValueGate(y_start, "Y START");	
+	/**circ->PutPrintValueGate(y_start, "Y START");	
 	circ->PutPrintValueGate(x_end, "X END");	
 	circ->PutPrintValueGate(y_end, "Y END");	
 	//circ->PutPrintValueGate(ed1, "ED 1");	
