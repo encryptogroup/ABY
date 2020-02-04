@@ -555,7 +555,7 @@ for(int i= 0; i< keys.size();i++)
 
 	std::cout <<"CLUSTERS SIZE "<<clusters.size()<<std::endl;
 
-for(auto itr2 =>clusters.begin (); itr2 != clusters.end (); itr2++)
+for(auto itr2 =clusters.begin (); itr2 != clusters.end (); itr2++)
 			{
 				std::cout << itr2->first << ' ';
 				// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
