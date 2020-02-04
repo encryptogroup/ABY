@@ -563,11 +563,12 @@ for(auto itr2 =>clusters.begin (); itr2 != clsuters.end (); itr2++)
 				{
 					std::cout << *itr3 << ' ';
 				}
+							std::cout << std::endl;
+
 			}
-			std::cout << std::endl;
 
 
-}
+
   
 	
 	delete party;
