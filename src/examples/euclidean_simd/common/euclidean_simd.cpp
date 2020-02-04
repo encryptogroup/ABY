@@ -85,7 +85,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 	//# initialize epsilon and minLns values
 	double epsilon =135000000;// 13500000000;//eps 
-	int minLns = 3;//m
+	int minLns = 2;//m
 
 	//int no_of_lines = len(lines) 
 	int no_of_lines = 10; // in general number of columns 
