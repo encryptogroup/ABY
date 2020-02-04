@@ -553,7 +553,7 @@ for(int i= 0; i< keys.size();i++)
 		}
 	}
 
-	std::cout <<"CLUSTERS SIZE"<< clusters.size()<<std::endl;
+	std::cout <<"CLUSTERS SIZE"<< clusters.at(0).at(0)<<std::endl;
 
   
 	
@@ -592,6 +592,7 @@ for(int i= 0; i< keys.size();i++)
 	log << "Starting time: "+ patch::to_string(std::ctime(&end_time))+"\n";
 	log << "Execution time: "+ patch::to_string(elapsed_seconds.count())+"\n";
 	log << "Number of clusters: "+ patch::to_string(clusters.size())+"\n";
+	log
 	log << "minLns: "+ patch::to_string(minLns)+ "\n";
 	log << "Number of line segments: "+patch::to_string(no_of_lines)+"\n";
 	log << "Epsilon: "+ patch::to_string(epsilon)+"\n";
