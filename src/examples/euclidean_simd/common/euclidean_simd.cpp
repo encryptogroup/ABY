@@ -302,15 +302,17 @@ std::vector<int> temp_array;
 std::cout <<"DISTANCES OK-->"<<keys.size()<< std::endl;
 
 std::vector<std::string> cluster_labels ;
+std::string key_elem;
 for(int i= 0; i< keys.size();i++)
 {
 	//# check whether the line segment is assigned to a cluster or not
-	if(neighborhood[patch::to_string(keys.at(i))]["cluster"].at(0) < 1)
+	 key_elem = patch::to_string(keys.at(i));
+	if(neighborhood[key_elem]["cluster"].at(0) < 1)
 	{
 		// # check that the number of line segments in a given line segment's neighborhood  
-		if(neighborhood[patch::to_string(keys.at(i))]["ncounter"].at(0) < minLns)
+		if(neighborhood[key_elem]["ncounter"].at(0) < minLns)
 		{
-			neighborhood[patch::to_string(keys.at(i))]["status"].push_back(-1);
+			neighborhood[key_elem]["status"].push_back(-1);
 
 		}
 		else
@@ -320,9 +322,12 @@ for(int i= 0; i< keys.size();i++)
 
 			for(int llls = 0 ; llls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size();llls++)
 			{
-							std::cout <<"TEMP ARRAY LOOP"<< std::endl;
+				std::cout <<" TEMP ARRAY LOOP "<< llls<<std::endl;
+				std::cout <<" LENGTH NEIGHBOR LLS"<< neighborhood[patch::to_string(keys.at(i))]["neighbors"].size()<<std::endl;
 
-				if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls))]["cluster"].at(0)< 1)
+						
+				std::string neigh = patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls));
+				if(neighborhood[neigh]["cluster"].at(0)< 1)
 				{
 					std::cout <<" INSIDE IF TEMP ARRAY LOOP"<< std::endl;
 
@@ -573,10 +578,10 @@ return 0;
 
 	  y_end = circ->PutADDGate(s1_y_end,s2_y_end);
 	
-	  	circ->PutPrintValueGate(x_start, "X START");	
+	  	/**circ->PutPrintValueGate(x_start, "X START");	
 		circ->PutPrintValueGate(y_start, "Y START");	
 		circ->PutPrintValueGate(x_end, "X END");
-		circ->PutPrintValueGate(y_end, "Y END");	
+		circ->PutPrintValueGate(y_end, "Y END");*/	
 
 	x_next_start = circ->PutADDGate(s1_x_next_start,s2_x_next_start);
 	y_next_start = circ->PutADDGate(s1_y_next_start,s2_y_next_start);
