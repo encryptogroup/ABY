@@ -170,7 +170,7 @@ int main(int argc, char** argv) {
 		y_end.push_back(std::stoi(vec.at(3)));//.substr(1,vec.at(3).size()-2)));
 		n_columns++;
 						
-		std::cout<< std::stoi(vec.at(0))<<std::endl;
+		std::cout<< (vec.at(0)+vec.at(2)<<std::endl;
 
 	}
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
