@@ -169,8 +169,11 @@ int main(int argc, char** argv) {
 		x_end.push_back(std::stoi(vec.at(2)));//.substr(1,vec.at(2).size()-2)));
 		y_end.push_back(std::stoi(vec.at(3)));//.substr(1,vec.at(3).size()-2)));
 		n_columns++;
-						
-		std::cout<< (vec.at(0)+vec.at(2))<<std::endl;
+		
+		double uno = vec.at(0);
+		double dos = vec.at(2);
+		double tres = uno+dos;
+		std::cout<< tres <<std::endl;
 
 	}
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
