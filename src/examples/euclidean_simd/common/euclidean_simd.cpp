@@ -583,12 +583,12 @@ for(int i= 0; i< keys.size();i++)
   	std::ofstream outfile;
    	 std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
 
-	    log << system(("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n").c_str()));
-	     log <<system(("Execution time: "+ patch::to_string(elapsed_seconds.count())).c_str()));
-	     log <<system(("Number of clusters: "+ patch::to_string(clusters.size())+"\n").c_str()));
-	     log <<system(("minLns: "+ patch::to_string(minLns)+ "\n").c_str()));
-	    log << system(("Number of line segments: "+patch::to_string(no_of_lines)+"\n").c_str()) );
-	     log <<system(("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str() ));
+	    log << system(("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n").c_str());
+	     log <<system(("Execution time: "+ patch::to_string(elapsed_seconds.count())).c_str());
+	     log <<system(("Number of clusters: "+ patch::to_string(clusters.size())+"\n").c_str());
+	     log <<system(("minLns: "+ patch::to_string(minLns)+ "\n").c_str());
+	    log << system(("Number of line segments: "+patch::to_string(no_of_lines)+"\n").c_str());
+	     log <<system(("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str());
 }
 	return 0;
 }
