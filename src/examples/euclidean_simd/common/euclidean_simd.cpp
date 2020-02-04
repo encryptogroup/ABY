@@ -596,7 +596,7 @@ return 0;
 	t_b = circ->PutMUXGate(x_start, x_next_start, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = ac->PutB2A(res_y)
+	res_x = ac->PutB2AGate(res_y)
 
 	res_x = ac->PutMULGate(res_x, res_x);
 	/** Following code performs (y2-y1)*(y2-y1) */
@@ -606,7 +606,7 @@ return 0;
 	t_b = circ->PutMUXGate(y_start, y_next_start, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-res_y = ac->PutB2A(res_y)
+res_y = ac->PutB2AGate(res_y)
 
 	res_y = ac->PutMULGate(res_y, res_y);
 	/** Following code performs out = res_y + res_x*/
@@ -637,7 +637,7 @@ res_y = ac->PutB2A(res_y)
 	t_a = circ->PutMUXGate(y_end, y_next_end, check_sel);
 	t_b = circ->PutMUXGate(y_end, y_next_end, check_sel_inv);
 
-	res_y = ac->PutB2A(res_y)
+	res_y = ac->PutB2AGate(res_y)
 
 	res_y = ac->PutMULGate(res_y, res_y);
 
@@ -663,7 +663,7 @@ res_y = ac->PutB2A(res_y)
 	t_b = circ->PutMUXGate(x_start, x_next_end, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = ac->PutB2A(res_y)
+	res_x = ac->PutB2AGate(res_y)
 
 	res_x = ac->PutMULGate(res_x, res_x);
 	/** Following code performs (y2-y1)*(y2-y1) */
@@ -673,7 +673,7 @@ res_y = ac->PutB2A(res_y)
 	t_b = circ->PutMUXGate(y_start, y_next_end, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = ac->PutB2A(res_y)
+	res_y = ac->PutB2AGate(res_y)
 
 	res_y = ac->PutMULGate(res_y, res_y);
 
@@ -700,7 +700,7 @@ res_y = ac->PutB2A(res_y)
 
 	 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = ac->PutB2A(res_x)
+	res_x = ac->PutB2AGate(res_x)
 	res_x = ac->PutMULGate(res_x, res_x);
 
 	/** Following code performs (y2-y1)*(y2-y1) */
@@ -710,7 +710,7 @@ res_y = ac->PutB2A(res_y)
 	t_b = circ->PutMUXGate(y_end, y_next_start, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = ac->PutB2A(res_y)
+	res_y = ac->PutB2AGate(res_y)
 
 	res_y = ac->PutMULGate(res_y, res_y);
 
