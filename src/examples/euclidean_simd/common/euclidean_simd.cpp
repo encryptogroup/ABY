@@ -593,7 +593,13 @@ for(int i= 0; i< keys.size();i++)
 	log << system(("minLns: "+ patch::to_string(minLns)+ "\n").c_str());
 	log << system(("Number of line segments: "+patch::to_string(no_of_lines)+"\n").c_str());
 	log << system(("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str());*/
-	log << "ROLE "+ role +"\n";
+	std::string role_string;
+	if(role == SERVER){
+	role_string = " SERVER ";
+	}else{
+	role_string = " CLIENT " ;
+	}
+	log << "ROLE "+ role_string +"\n";
 
 	log << "Starting time: "+ patch::to_string(std::ctime(&end_time))+"\n";
 	log << "Execution time: "+ patch::to_string(elapsed_seconds.count())+"\n";
