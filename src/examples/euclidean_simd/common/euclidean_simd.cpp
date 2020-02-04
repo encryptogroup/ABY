@@ -26,6 +26,8 @@
 #include <sstream>
 #include <chrono>
 #include <stdio.h>
+#include <ios>
+#include <fstream>
 
 namespace patch
 {
@@ -561,15 +563,14 @@ for(int i= 0; i< keys.size();i++)
 
 	std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
-	freopen ("logfile.log","a",stdout);
+	//freopen ("logfile.log","a",stdout);
 	
     	// Some computation here
     	auto end = std::chrono::system_clock::now();
 	std::chrono::duration<double> elapsed_seconds = end-start;
    	std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
-    	std::cout << "finished computation at " << std::ctime(&end_time)
-              << "elapsed time: " << elapsed_seconds.count() << "s\n";
+    	std::cout << "finished computation at " << std::ctime(&end_time)<< "elapsed time: " << elapsed_seconds.count() << "s\n";
 	      
   	/**printf (system(("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n").c_str()));
 	printf (system(("Execution time: "+ patch::to_string(elapsed_seconds.count())).c_str()));
@@ -579,19 +580,19 @@ for(int i= 0; i< keys.size();i++)
 	printf(system(("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str() ));
 	printf("-------------------------------------------");
  	fclose (stdout);*/
+	std::ofstream outfile;
+	std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
 
-  	std::ofstream outfile;
-   	 std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
+	log << system(("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n").c_str());
+	log << system(("Execution time: "+ patch::to_string(elapsed_seconds.count())).c_str());
+	log << system(("Number of clusters: "+ patch::to_string(clusters.size())+"\n").c_str());
+	log << system(("minLns: "+ patch::to_string(minLns)+ "\n").c_str());
+	log << system(("Number of line segments: "+patch::to_string(no_of_lines)+"\n").c_str());
+	log << system(("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str());
 
-	    log << system(("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n").c_str());
-	     log <<system(("Execution time: "+ patch::to_string(elapsed_seconds.count())).c_str());
-	     log <<system(("Number of clusters: "+ patch::to_string(clusters.size())+"\n").c_str());
-	     log <<system(("minLns: "+ patch::to_string(minLns)+ "\n").c_str());
-	    log << system(("Number of line segments: "+patch::to_string(no_of_lines)+"\n").c_str());
-	     log <<system(("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str());
-}
-	return 0;
-}
+return 0;
+	}
+	
   
   
   
