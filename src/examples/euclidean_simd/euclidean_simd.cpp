@@ -173,7 +173,7 @@ int main(int argc, char** argv) {
 
 				long tres = std::stol (vec.at(0)) + std::stol (vec.at(2));
 
-				std::cout<< "tres "<<std::endl;
+				std::cout<< tres <<std::endl;
 
 	}
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
