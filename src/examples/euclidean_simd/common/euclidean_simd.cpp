@@ -222,7 +222,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
-			output = s_out->get_clear_value<uint32_t>();
+			output = s_out->get_clear_value<uint64_t>();
 			distance = output;
 			if(role == SERVER){
 				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" <<distance << std::endl;
@@ -547,8 +547,8 @@ return 0;
 	share* x_next_end;
 	share* y_next_end;
 
-	uint32_t output;
-	uint32_t bitlen=32;
+	uint64_t output;
+	uint32_t bitlen=64;
 
 	share* rando;
 
