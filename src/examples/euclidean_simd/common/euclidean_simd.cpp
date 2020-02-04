@@ -289,6 +289,8 @@ for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator
 
 
 //std::cout <<"JUST SHUFFLED "<<std::endl;
+    std::cout << "KEYS COMING "<< ' ';
+
 for (std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end(); ++i)
 {
     std::cout << *i << ' ';
@@ -322,14 +324,14 @@ for(int i= 0; i< keys.size();i++)
 
 			for(int llls = 0 ; llls < neighborhood[key_elem]["neighbors"].size();llls++)
 			{
-				std::cout <<" TEMP ARRAY LOOP "<< llls<<std::endl;
-				std::cout <<" LENGTH NEIGHBOR LLS "<< neighborhood[key_elem]["neighbors"].size()<<std::endl;
+				//std::cout <<" TEMP ARRAY LOOP "<< llls<<std::endl;
+				//std::cout <<" LENGTH NEIGHBOR LLS "<< neighborhood[key_elem]["neighbors"].size()<<std::endl;
 
 						
 				std::string neigh = patch::to_string(neighborhood[key_elem]["neighbors"].at(llls));
 				if(neighborhood[neigh]["cluster"].at(0)< 1)
 				{
-					std::cout <<" INSIDE IF TEMP ARRAY LOOP"<< std::endl;
+					//std::cout <<" INSIDE IF TEMP ARRAY LOOP"<< std::endl;
 
 					temp_array.push_back(neighborhood[key_elem]["neighbors"].at(llls));
 				}
@@ -360,7 +362,7 @@ for(int i= 0; i< keys.size();i++)
 				// add every non initialized line segment 
 				for(int ls= 0 ; ls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size(); ls++)
 				{
-				std::cout <<"NON INITIALIZED LOOP"<< std::endl;
+				//std::cout <<"NON INITIALIZED LOOP"<< std::endl;
 
 					if(neighborhood[patch::to_string(neighborhood[keys.at(i)]["neighbors"].at(ls))]["cluster"].at(0)< 1)
 					{
@@ -381,8 +383,9 @@ for(int i= 0; i< keys.size();i++)
 				std::vector<int> queue = neighborhood[keys.at(i)]["neighbors"];
 				//std::cout <<"INITIAL QUEUE "<<queue.size()<< std::endl;
 
+				//TO stop the loop
 				int j = 0;
-				std::cout <<"WHILE LOOP"<< std::endl;
+				//std::cout <<"WHILE LOOP"<< std::endl;
 
 				while(queue.size()>0 || j < 3)
 				{
@@ -401,7 +404,6 @@ for(int i= 0; i< keys.size();i++)
 					{
 						for(int lls = 0; lls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size(); lls++)
 						{
-				std::cout <<"AFTER LOOP"<< std::endl;
 
 							if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) < 1)
 							{
@@ -477,9 +479,10 @@ for(int i= 0; i< keys.size();i++)
 			}
 			std::cout << std::endl;
 		}
+			std::cout <<" CLUSTERS SIZE "<<clusters.size()<<std::endl;
+
 	}
 
-	std::cout <<"CLUSTERS SIZE "<<clusters.size()<<std::endl;
 
 
 
