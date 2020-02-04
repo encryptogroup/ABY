@@ -132,7 +132,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	uint32_t distance;
 
 	//# initialize epsilon and minLns values
-	double epsilon = 13500000000;//eps 
+	double epsilon =135000000;// 13500000000;//eps 
 	int minLns = 3;//m
 
 	//int no_of_lines = len(lines) 
