@@ -553,9 +553,16 @@ return 0;
 	share* rando;
 
 	x_start = circ->PutADDGate(s1_x_start,s2_x_start);
+	circ->PutPrintValueGate(x_start, "X START");	
+
 	y_start = circ->PutADDGate(s1_y_start,s2_y_start);
+	circ->PutPrintValueGate(y_start, "Y START");	
+
 	x_end = circ->PutADDGate(s1_x_end,s2_x_end);
-	y_end = circ->PutADDGate(s1_y_end,s2_y_end);
+	circ->PutPrintValueGate(x_end, "X END);
+
+	  y_end = circ->PutADDGate(s1_y_end,s2_y_end);
+	circ->PutPrintValueGate(y_end, "Y END");	
 	  
 	x_next_start = circ->PutADDGate(s1_x_next_start,s2_x_next_start);
 	y_next_start = circ->PutADDGate(s1_y_next_start,s2_y_next_start);
