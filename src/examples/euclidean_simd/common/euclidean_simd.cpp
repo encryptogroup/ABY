@@ -148,7 +148,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s2_y_next_end = circ->PutDummyINGate( bitlen);*/
 				s1_x_start = circ->PutINGate((uint64_t)(x_start.at(l)/10),bitlen,SERVER);
 				std::cout<< (uint64_t)(x_start.at(l)/10)<<std::endl;
-				circ->PutPrintValueGate(s_x_start, "X_START");	
+				circ->PutPrintValueGate(s1_x_start, "X_START");	
 
 				s1_y_start = circ->PutINGate((uint64_t) (y_start.at(l)/10),bitlen,SERVER);
 				s1_x_end = circ->PutINGate((uint64_t) (x_end.at(l)/10),bitlen,SERVER);
