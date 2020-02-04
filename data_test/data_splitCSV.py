@@ -54,7 +54,7 @@ def main(argv):
 		y2_s2 =[] 
 		
 		
-		df = pd.read_csv(loc, header = None)#,names=["X_START", "Y_START", "X_END", "Y_END"])
+		df = pd.read_csv(loc, header = 0)#,names=["X_START", "Y_START", "X_END", "Y_END"])
 		print(df)
 		x_start = df.iloc[:,0]
 		y_start = df.iloc[:,1]
