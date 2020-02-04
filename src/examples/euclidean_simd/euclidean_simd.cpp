@@ -164,16 +164,16 @@ int main(int argc, char** argv) {
 		// USING FROM INDEX 1 SINCE INDEX 0 IS THE ROW INDEX 
 		// not necessary for files without index
 		//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
-		x_start.push_back(std::stoi(vec.at(0)));//.substr(1,vec.at(0).size()-2)));
-		y_start.push_back(std::stoi(vec.at(1)));//.substr(1,vec.at(1).size()-2)));
-		x_end.push_back(std::stoi(vec.at(2)));//.substr(1,vec.at(2).size()-2)));
-		y_end.push_back(std::stoi(vec.at(3)));//.substr(1,vec.at(3).size()-2)));
+		x_start.push_back(std::stol (vec.at(0),nullptr,10);//std::stoi(vec.at(0)));//.substr(1,vec.at(0).size()-2)));
+		y_start.push_back(std::stol (vec.at(1),nullptr,10);//std::stoi(vec.at(1)));//.substr(1,vec.at(1).size()-2)));
+		x_end.push_back(std::stol (vec.at(2),nullptr,10);//std::stoi(vec.at(2)));//.substr(1,vec.at(2).size()-2)));
+		y_end.push_back(std::stol (vec.at(3),nullptr,10);//std::stoi(vec.at(3)));//.substr(1,vec.at(3).size()-2)));
 		n_columns++;
 		
-		double uno = vec.at(0);
-		double dos = vec.at(2);
-		double tres = uno+dos;
-		std::cout<< tres <<std::endl;
+
+				long tres = std::stol (vec.at(0)) + std::stol (vec.at(2));
+
+				std::cout<< "tres "<<std::endl;
 
 	}
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
