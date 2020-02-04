@@ -75,13 +75,13 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
 
-	uint32_t output;
+	uint64_t output;
 	int n_vals = x_start.size();
 	
 	
 	
 
-	uint32_t distance;
+	uint64_t distance;
 
 	//# initialize epsilon and minLns values
 	double epsilon =135000000;// 13500000000;//eps 
@@ -95,7 +95,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	int sum_minLns = 0;
 	int max_minLns = -1;
 	//int min_minLns = 70432;
-	int total_distance = 0;
+	uint64_t total_distance = 0;
 
   /**
 		Step 4: Creating the share objects - Values A and B which
