@@ -55,7 +55,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		 	 	operations which are happening.	Operations performed are on the
 		 	 	basis of the role played by this object.
 	*/
-	ABYParty* party = new ABYParty(role, address, port, seclvl, 32, nthreads,
+	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads,
 			mt_alg);
 
 
@@ -96,7 +96,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	int sum_minLns = 0;
 	int max_minLns = -1;
 	//int min_minLns = 70432;
-	uint64_t total_distance = 0;
+	uint32_t total_distance = 0;
 
   /**
 		Step 4: Creating the share objects - Values A and B which
@@ -193,15 +193,15 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s1_x_next_end = circ->PutDummyINGate(bitlen);
 				s1_y_next_end = circ->PutDummyINGate( bitlen);*/
 				
-				s2_x_start = circ->PutINGate((uint64_t) round(x_start.at(l)/10),bitlen,CLIENT);
-				s2_y_start = circ->PutINGate((uint64_t) round(y_start.at(l)/10),bitlen,CLIENT);
-				s2_x_end = circ->PutINGate((uint64_t) round(x_end.at(l)/10),bitlen,CLIENT);
-				s2_y_end = circ->PutINGate((uint64_t)round(y_end.at(l)/10),bitlen,CLIENT);
+				s2_x_start = circ->PutINGate((uint32_t) round(x_start.at(l)/10),bitlen,CLIENT);
+				s2_y_start = circ->PutINGate((uint32_t) round(y_start.at(l)/10),bitlen,CLIENT);
+				s2_x_end = circ->PutINGate((uint32_t) round(x_end.at(l)/10),bitlen,CLIENT);
+				s2_y_end = circ->PutINGate((uint32_t)round(y_end.at(l)/10),bitlen,CLIENT);
 				
-				s2_x_next_start = circ->PutINGate((uint64_t) round(x_start.at(ll)/10),bitlen,CLIENT);
-				s2_y_next_start = circ->PutINGate((uint64_t) round(y_start.at(ll)/10),bitlen,CLIENT);
-				s2_x_next_end = circ->PutINGate((uint64_t) round(x_end.at(ll)/10),bitlen,CLIENT);
-				s2_y_next_end = circ->PutINGate((uint64_t)round(y_end.at(ll)/10),bitlen,CLIENT);
+				s2_x_next_start = circ->PutINGate((uint32_t) round(x_start.at(ll)/10),bitlen,CLIENT);
+				s2_y_next_start = circ->PutINGate((uint32_t) round(y_start.at(ll)/10),bitlen,CLIENT);
+				s2_x_next_end = circ->PutINGate((uint32_t) round(x_end.at(ll)/10),bitlen,CLIENT);
+				s2_y_next_end = circ->PutINGate((uint32_t)round(y_end.at(ll)/10),bitlen,CLIENT);
 
 				s1_x_start = circ->PutDummyINGate( bitlen);
 				s1_y_start = circ->PutDummyINGate( bitlen);
@@ -228,7 +228,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
-			output = s_out->get_clear_value<uint64_t>();
+			output = s_out->get_clear_value<uint32_t>();
 			distance = (double)output*100;
 			if(role == SERVER){
 				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" << distance << std::endl;
@@ -553,8 +553,8 @@ return 0;
 	share* x_next_end;
 	share* y_next_end;
 
-	uint64_t output;
-	uint32_t bitlen=64;
+	uint32_t output;
+	uint32_t bitlen=32;
 
 	share* rando;
 
