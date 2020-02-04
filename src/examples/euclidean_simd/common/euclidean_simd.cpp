@@ -538,7 +538,7 @@ return 0;
 			   share* s2_x_start,share* s2_y_start, share*  s2_x_end, share* s2_y_end,
 			   share* s1_x_next_start,  share* s1_y_next_start, share* s1_x_next_end, share* s1_y_next_end, 
 			   share* s2_x_next_start,share* s2_y_next_start, share*  s2_x_next_end, share* s2_y_next_end,
-			   BooleanCircuit* circ, ArithmeticCircuit ac*) {
+			   BooleanCircuit* circ, ArithmeticCircuit* ac) {
 
 	//share* out;
 	share* x_start;
