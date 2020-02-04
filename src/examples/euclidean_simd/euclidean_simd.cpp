@@ -101,20 +101,22 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 	std::string line = "";
 	// Iterate through each line and split the content using delimeter
 	// HEADERS
-	//std::getline(file,line);
-	//std::cout<< line<< " "<<std::endl;
-	while ( (std::getline(file, line)) )
+	std::getline(file,line);
+	std::cout<<"HEADER"<< line<< " "<<std::endl;
+	
+	int z = 0;
+	while ( (std::getline(file, line)) && z <10 )
 	{
 		
 		std::vector<std::string> vec;
 		//REMOVING DOUBLE QUOTES
 		line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
 		//boost::erase_all(line, "\"");
-		//std::cout<< line<< " "<<std::endl;
+		std::cout<< line<< " "<<std::endl;
 		boost::algorithm::split(vec,line, boost::is_any_of(delimeter));
 		//std::cout<< vec.at(0)<< " "<<std::endl;
 		//std::cout<<"maybe good"<< vec.at(0)<< " "<< vec.at(1)<< " "<< vec.at(2)<< "  "<< vec.at(3)<< std::endl;
-
+		z++;
 		dataList.push_back(vec);
 		
 
@@ -156,8 +158,8 @@ int main(int argc, char** argv) {
 	CSVReader reader(filename);
 	std::vector<std::vector<std::string> > dataList = reader.getData();
 
-
 	for(std::vector<std::string> vec : dataList){
+		
 		
 			
 
@@ -173,7 +175,7 @@ int main(int argc, char** argv) {
 
 				//long tres = std::stol (vec.at(0)) + std::stol (vec.at(2));
 
-				//std::cout<< tres <<std::endl;
+		std::cout<< tres <<std::endl;
 
 	}
 				std::cout<< "LENGTH "<< n_columns<<std::endl;
