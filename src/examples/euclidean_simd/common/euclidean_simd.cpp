@@ -73,60 +73,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
   
   
-  	//uint32_t x_start [4];
-	//uint32_t y_start [4];	
-	//uint32_t x_end [4];
-	//uint32_t y_end [4];
-	
+  
 
 	uint32_t output;
-
-	/**------------------------VALUES FROM THE FILE -----------
-	
-	/** HARDCODED VALUES
-	
-	uint32_t x1_start [4] = {479942, 470497, 470499, 472800};
-	uint32_t y1_start [4]= {4576077, 4599243, 4599245, 4598039};
-	uint32_t x1_end [4] = {470500, 470494, 472798, 472802};
-	uint32_t y1_end [4] = {4599247, 4599244, 4598039, 4598034};
-
-
-
-	uint32_t x2_start [4] = {2, 3,1, 4};
-	uint32_t y2_start [4] = {7, 7, 5, 1};
-	uint32_t x2_end [4]  = {0, 6, 6, 2};
-	uint32_t y2_end [4]   = {3, 6, 1, 6};
-	*/
-	
 	int n_vals = x_start.size();
 	
-	/**if(role == SERVER){
-		uint32_t x1_start[n_vals];
-		std::copy(x_start.begin(), x_start.end(), x1_start);
-
-		uint32_t y1_start[n_vals];
-		std::copy(y_start.begin(), y_start.end(), y1_start);
-
-		uint32_t x1_end[n_vals];
-		std::copy(x_end.begin(), x_end.end(), x1_end);
-
-		uint32_t y1_end[n_vals];
-		std::copy(y_end.begin(), y_end.end(), y1_end);
-	}else{
-		uint32_t x2_start[n_vals];
-		std::copy(x_start.begin(), x_start.end(), x2_start);
-
-		uint32_t y2_start[n_vals];
-		std::copy(y_start.begin(), y_start.end(), y2_start);
-
-		uint32_t x2_end[n_vals];
-		std::copy(x_end.begin(), x_end.end(), x2_end);
-
-		uint32_t y2_end[n_vals];
-		std::copy(y_end.begin(), y_end.end(), y2_end);
-	}
-	*/
-
+	
 	
 
 	uint32_t distance;
@@ -136,7 +88,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	int minLns = 3;//m
 
 	//int no_of_lines = len(lines) 
-	int no_of_lines = 100; // in general number of columns 
+	int no_of_lines = 10; // in general number of columns 
 	//# dictionary to store neighborhood information of line segments
 	std::map< std::string, std::map< std::string, std::vector<int> > > neighborhood;
 	
@@ -144,8 +96,6 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	int max_minLns = -1;
 	//int min_minLns = 70432;
 	int total_distance = 0;
-
-	uint32_t n = 4;
 
   /**
 		Step 4: Creating the share objects - Values A and B which
@@ -268,19 +218,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 					(BooleanCircuit*) circ);
 
 			s_out = circ->PutOUTGate(s_out,ALL);
-
-			//circ->PutPrintValueGate(s_out, "DEBAJO BUILD");	
-
-			//s_out = circ->PutOUTGate(s_out, ALL);
-
-			//circ->PutPrintValueGate(s_out, "Share S_OUT");
 			party->ExecCircuit();
 
-
-			//output = s_out->get_clear_value<uint32_t>();
-
-			//uint32_t out_bitlen , out_nvals , *out_vals;
-			//s_out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
 
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
 			output = s_out->get_clear_value<uint32_t>();
@@ -308,17 +247,10 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
     				neighborhood[patch::to_string(l)]["ncounter"].assign(1,neighborhood[patch::to_string(l)]["ncounter"].at(0)+1);
 				neighborhood[patch::to_string(ll)]["neighbors"].push_back(l);
     				neighborhood[patch::to_string(ll)]["ncounter"].assign(1,neighborhood[patch::to_string(ll)]["ncounter"].at(0)+1);
-			}
-
-
-			
+			}			
 			party -> Reset();
 		}
-	}
-	
-
-	// PRINT THE MAPS
-	
+	}	
 	/**if(role == SERVER)
 	{
 		for(auto itr1 = neighborhood.begin(); itr1 != neighborhood.end(); itr1++)
@@ -337,8 +269,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			std::cout << std::endl;
 		}
 	}*/
-	
-	   // initialize the first cluster id
+// initialize the first cluster id
 int cluster_id = 1;
 
 //# shuffle the keys of neighborhood dictionary 
@@ -358,24 +289,16 @@ for (std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end();
     std::cout << *i << ' ';
 }
     
-
-
- minLns = 3;
 int noise_counter = 0;
 
 std::map<std::string,std::vector<int> > clusters;
 std::vector<int> temp_array;
 
-	std::cout <<"DISTANCES OK"<<keys.size()<< std::endl;
+std::cout <<"DISTANCES OK-->"<<keys.size()<< std::endl;
 
 std::vector<std::string> cluster_labels ;
-// LOOP ALPHA
 for(int i= 0; i< keys.size();i++)
 {
-	//std::cout <<"ALPHA "<<keys.size()<< std::endl;
-
-	//std::cout <<"LOOP ALPHA : "<<i<< std::endl;
-
 	//# check whether the line segment is assigned to a cluster or not
 	if(neighborhood[patch::to_string(keys.at(i))]["cluster"].at(0) < 1)
 	{
@@ -390,11 +313,8 @@ for(int i= 0; i< keys.size();i++)
 			// # push each element in the neighborhood of a cluster into a temporary queue
 			// # if a given line segment does not assigned to a cluster
 
-			//LOOP BETA
 			for(int llls = 0 ; llls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size();llls++)
 			{
-				//std::cout <<"LOOP BETA : "<<llls<< std::endl;
-
 				if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls))]["cluster"].at(0) 			< 1)
 				{
 					temp_array.push_back(neighborhood[patch::to_string(i)]["neighbors"].at(llls));
@@ -424,10 +344,8 @@ for(int i= 0; i< keys.size();i++)
 
 				neighborhood[patch::to_string(keys.at(i))]["cluster"].assign(1,cluster_id);
 				// add every non initialized line segment 
-				//LOOP CHARLIE
 				for(int ls= 0 ; ls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size(); ls++)
 				{
-					// std::cout <<"LOOP CHARLIE : "<<ls<< std::endl;
 
 					if(neighborhood[patch::to_string(neighborhood[keys.at(i)]["neighbors"].at(ls))]["cluster"].at(0)< 1)
 					{
@@ -451,12 +369,9 @@ for(int i= 0; i< keys.size();i++)
 				int j = 0;
 				while(queue.size()>0 || j < 3)
 				{
-				//std::cout <<"JUST IN"<< std::endl;
 
-				// LOOP DELTA
 					for(int llls = 0 ; llls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size();llls++)
 					{
-					//std::cout <<"LOOP DELTA : "<<llls<< std::endl;
 
 						if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(llls))]["cluster"].at(0) < 1)
 						{
@@ -467,10 +382,8 @@ for(int i= 0; i< keys.size();i++)
 					//# the number of elements in the temporary array should be greater than or equal to minLns value
 					if(temp_array.size() >= minLns)
 					{
-					//LOOP ECHO
 						for(int lls = 0; lls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size(); lls++)
 						{
-						//std::cout <<"LOOP ECHO : "<<lls<< std::endl;
 
 							if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) < 1)
 							{
@@ -478,11 +391,9 @@ for(int i= 0; i< keys.size();i++)
 
 								if (std::find(clusters[patch::to_string(cluster_id)].begin(), clusters[patch::to_string(cluster_id)].end(), neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls)) != clusters[patch::to_string(cluster_id)].end())
 								{
-									//std::cout <<"BINARY IN"<< std::endl;
 								}
 								else
 								{
-									//std::cout <<"HERE WE ARE AGAIN"<< std::endl;
 
 									if(neighborhood[patch::to_string(neighborhood[patch::to_string(queue.at(0))]["neighbors"].at(lls))]["cluster"].at(0) == 0)
 									{
@@ -497,11 +408,8 @@ for(int i= 0; i< keys.size();i++)
 					}
 				//}
 					queue.erase(queue.begin()+0);
-					//std::cout <<"QEUE"<< queue.size()<<std::endl;
 					j++;
 				}
-				//std::cout <<"OUT OF WHILE "<< std::endl;
-
 				cluster_id = cluster_id+1;
 			}
 			else
