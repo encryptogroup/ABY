@@ -54,7 +54,7 @@ def main(argv):
 		y2_s2 =[] 
 		
 		
-		df = pd.read_csv(loc, header = 0)#,names=["X_START", "Y_START", "X_END", "Y_END"])
+		df = pd.read_csv(loc, header = None)#,names=["X_START", "Y_START", "X_END", "Y_END"])
 		print(df)
 		x_start = df.iloc[:,0]
 		y_start = df.iloc[:,1]
@@ -92,10 +92,10 @@ def main(argv):
 		dict2 = {'X_start': x1_s2, 'Y_START': y1_s2, 'X_END': x2_s2, "Y_END": y2_s2} 
 
 		df = pd.DataFrame(dict1)
-		df.to_csv(fileOutput1, sep=',', index=False)
+		df.to_csv(fileOutput1, sep=',', index=False, header = 0)
 			
 		df = pd.DataFrame(dict2)
-		df.to_csv(fileOutput2, sep=',', index=False)
+		df.to_csv(fileOutput2, sep=',', index=False, header =0)
 
 		
 
