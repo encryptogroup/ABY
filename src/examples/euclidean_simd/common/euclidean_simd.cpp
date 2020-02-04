@@ -684,7 +684,6 @@ return 0;
 	  
 	  
 	  /** Distance metric 4: (x2_start-x1_end)^2 + (y2_start-y1_end)^2*/
-	 Circuit* ac = sharings[S_ARITH]->GetCircuitBuildRoutine(): 
 	/** Following code performs (x2-x1)*(x2-x1) */
 	check_sel = circ->PutGTGate(x_end, x_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
@@ -693,8 +692,7 @@ return 0;
 
 	 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = ac->PutB2A(res_x)
-	res_x = ac->PutMULGate(res_x, res_x);
+	res_x = circ->PutMULGate(res_x, res_x);
 
 	/** Following code performs (y2-y1)*(y2-y1) */
 	check_sel = circ->PutGTGate(y_end, y_next_start);
