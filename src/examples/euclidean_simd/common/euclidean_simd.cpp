@@ -553,13 +553,21 @@ for(int i= 0; i< keys.size();i++)
 		}
 	}
 
-for(int i = 1; i <= clusters.size(); i++){
-	std::cout <<"CLUSTER lines"<< clusters[patch::to_string(i)].at(0)<<std::endl;
+	std::cout <<"CLUSTERS SIZE "<<clusters.size()<<std::endl;
+
+for(auto itr2 =>clusters.begin (); itr2 != clsuters.end (); itr2++)
+			{
+				std::cout << itr2->first << ' ';
+				// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
+				for(auto itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++)
+				{
+					std::cout << *itr3 << ' ';
+				}
+			}
+			std::cout << std::endl;
 
 
 }
-	std::cout <<"CLUSTERS SIZE"<<clusters.size()<<std::endl;
-
   
 	
 	delete party;
