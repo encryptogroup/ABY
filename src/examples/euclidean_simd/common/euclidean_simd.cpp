@@ -75,13 +75,13 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
 
-	double output;
+	long output;
 	int n_vals = x_start.size();
 	
 	
 	
 
-	double distance;
+	long distance;
 
 	//# initialize epsilon and minLns values
 	double epsilon =135000000;// 13500000000;//eps 
