@@ -607,7 +607,7 @@ for(int i= 0; i< keys.size();i++)
 					lin = lin + patch::to_string(*itr3);
 		
 				}
-	log << "Cluster no "+ patch::to_string(itr2->first)+": " lin+ "\n";
+	log << "Cluster no "+ patch::to_string(itr2->first)+": "+ lin+ "\n";
 
 			}	
 	log << "minLns: "+ patch::to_string(minLns)+ "\n";
