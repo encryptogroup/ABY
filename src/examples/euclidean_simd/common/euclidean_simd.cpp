@@ -41,7 +41,7 @@ namespace patch
 
 
 int32_t test_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing,
+		uint64_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing,
 		    std::vector<long> x_start,std::vector<long> y_start,
 		    std::vector<long> x_end, std::vector<long> y_end
 		    ) {
@@ -187,15 +187,15 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s1_x_next_end = circ->PutDummyINGate(bitlen);
 				s1_y_next_end = circ->PutDummyINGate( bitlen);*/
 				
-				s2_x_start = circ->PutINGate((uint32_t) x_start.at(l),bitlen,CLIENT);
-				s2_y_start = circ->PutINGate((uint32_t) y_start.at(l),bitlen,CLIENT);
-				s2_x_end = circ->PutINGate((uint32_t) x_end.at(l),bitlen,CLIENT);
-				s2_y_end = circ->PutINGate((uint32_t)y_end.at(l),bitlen,CLIENT);
+				s2_x_start = circ->PutINGate((uint64_t) x_start.at(l),bitlen,CLIENT);
+				s2_y_start = circ->PutINGate((uint64_t) y_start.at(l),bitlen,CLIENT);
+				s2_x_end = circ->PutINGate((uint64_t) x_end.at(l),bitlen,CLIENT);
+				s2_y_end = circ->PutINGate((uint64_t)y_end.at(l),bitlen,CLIENT);
 				
-				s2_x_next_start = circ->PutINGate((uint32_t) x_start.at(ll),bitlen,CLIENT);
-				s2_y_next_start = circ->PutINGate((uint32_t) y_start.at(ll),bitlen,CLIENT);
-				s2_x_next_end = circ->PutINGate((uint32_t) x_end.at(ll),bitlen,CLIENT);
-				s2_y_next_end = circ->PutINGate((uint32_t)y_end.at(ll),bitlen,CLIENT);
+				s2_x_next_start = circ->PutINGate((uint64_t) x_start.at(ll),bitlen,CLIENT);
+				s2_y_next_start = circ->PutINGate((uint64_t) y_start.at(ll),bitlen,CLIENT);
+				s2_x_next_end = circ->PutINGate((uint64_t) x_end.at(ll),bitlen,CLIENT);
+				s2_y_next_end = circ->PutINGate((uint64_t)y_end.at(ll),bitlen,CLIENT);
 
 				s1_x_start = circ->PutDummyINGate( bitlen);
 				s1_y_start = circ->PutDummyINGate( bitlen);
