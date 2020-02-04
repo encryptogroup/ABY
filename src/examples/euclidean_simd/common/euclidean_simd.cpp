@@ -703,8 +703,6 @@ return 0;
 	t_b = circ->PutMUXGate(y_end, y_next_start, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = ac->PutB2A(res_x)
-
 	res_y = circ->PutMULGate(res_y, res_y);
 
 	/** Following code performs out = res_y + res_x*/
