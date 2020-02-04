@@ -597,19 +597,13 @@ for(int i= 0; i< keys.size();i++)
 	log << "Execution time: "+ patch::to_string(elapsed_seconds.count())+"\n";
 	log << "Number of clusters: "+ patch::to_string(clusters.size())+"\n";
 	for(auto itr2 =clusters.begin (); itr2 != clusters.end (); itr2++)
-			{
+	{
 				std::cout <<"Cluster no"<< itr2->first << ": "<< clusters[patch::to_string(itr2->first)].size()<<std::endl ;
-				std::string lin;
 				// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
-				for(auto itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++)
-				{
-					//std::cout << *itr3 << ' ';
-					lin = lin + "" +patch::to_string(*itr3)+ ", ";
-		
-				}
-	log << "Cluster no "+ patch::to_string(itr2->first)+": "+ lin+ "\n";
+				
+		log << "Cluster no "+ patch::to_string(itr2->first)+": "+ patch::to_string(clusters[patch::to_string(itr2->first)].size())+ "\n";
 
-			}	
+	}	
 	log << "minLns: "+ patch::to_string(minLns)+ "\n";
 	log << "Number of line segments: "+patch::to_string(no_of_lines)+"\n";
 	log << "Epsilon: "+ patch::to_string(epsilon)+"\n";
