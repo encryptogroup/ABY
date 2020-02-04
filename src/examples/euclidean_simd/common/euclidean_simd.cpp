@@ -88,7 +88,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	int minLns = 2;//m
 
 	//int no_of_lines = len(lines) 
-	int no_of_lines = 20; // in general number of columns 
+	int no_of_lines = 100; // in general number of columns 
 	//# dictionary to store neighborhood information of line segments
 	std::map< std::string, std::map< std::string, std::vector<int> > > neighborhood;
 	
