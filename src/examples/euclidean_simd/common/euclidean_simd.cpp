@@ -325,13 +325,13 @@ for(int i= 0; i< keys.size();i++)
 			for(int llls = 0 ; llls < neighborhood[key_elem]["neighbors"].size();llls++)
 			{
 				//std::cout <<" TEMP ARRAY LOOP "<< llls<<std::endl;
-				//std::cout <<" LENGTH NEIGHBOR LLS "<< neighborhood[key_elem]["neighbors"].size()<<std::endl;
+				std::cout <<" LENGTH NEIGHBOR LLS "<< neighborhood[key_elem]["neighbors"].size()<<std::endl;
 
 						
 				std::string neigh = patch::to_string(neighborhood[key_elem]["neighbors"].at(llls));
 				if(neighborhood[neigh]["cluster"].at(0)< 1)
 				{
-					//std::cout <<" INSIDE IF TEMP ARRAY LOOP"<< std::endl;
+					std::cout <<" INSIDE IF TEMP ARRAY LOOP"<< std::endl;
 
 					temp_array.push_back(neighborhood[key_elem]["neighbors"].at(llls));
 				}
@@ -362,7 +362,7 @@ for(int i= 0; i< keys.size();i++)
 				// add every non initialized line segment 
 				for(int ls= 0 ; ls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size(); ls++)
 				{
-				//std::cout <<"NON INITIALIZED LOOP"<< std::endl;
+				std::cout <<"NON INITIALIZED LOOP"<< std::endl;
 
 					if(neighborhood[patch::to_string(neighborhood[keys.at(i)]["neighbors"].at(ls))]["cluster"].at(0)< 1)
 					{
@@ -385,7 +385,7 @@ for(int i= 0; i< keys.size();i++)
 
 				//TO stop the loop
 				int j = 0;
-				//std::cout <<"WHILE LOOP"<< std::endl;
+				std::cout <<"WHILE LOOP"<< std::endl;
 
 				while(queue.size()>0 || j < 3)
 				{
