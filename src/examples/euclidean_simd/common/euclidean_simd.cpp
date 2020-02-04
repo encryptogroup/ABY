@@ -149,17 +149,17 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				
 				/**DIVIDING BY 10 I MANAGE TO REDUCE THE BILENGTH OF THE FINAL DISTANCE
 				AND BE ABLE TO USE UINT64*/ 
-				s1_x_start = circ->PutINGate((uint32_t)(x_start.at(l)/10),bitlen,SERVER);
+				s1_x_start = circ->PutINGate((uint32_t)round(x_start.at(l)/10),bitlen,SERVER);
 				circ->PutPrintValueGate(s1_x_start, "X SHARE");
 
-				s1_y_start = circ->PutINGate((uint32_t) (y_start.at(l)/10),bitlen,SERVER);
-				s1_x_end = circ->PutINGate((uint32_t) (x_end.at(l)/10),bitlen,SERVER);
-				s1_y_end = circ->PutINGate((uint32_t) (y_end.at(l)/10),bitlen,SERVER);
+				s1_y_start = circ->PutINGate((uint32_t) round(y_start.at(l)/10),bitlen,SERVER);
+				s1_x_end = circ->PutINGate((uint32_t) round(x_end.at(l)/10),bitlen,SERVER);
+				s1_y_end = circ->PutINGate((uint32_t) round(y_end.at(l)/10),bitlen,SERVER);
 				
-				s1_x_next_start = circ->PutINGate((uint32_t) (x_start.at(ll)/10),bitlen,SERVER);
-				s1_y_next_start = circ->PutINGate((uint32_t)  (y_start.at(ll)/10),bitlen,SERVER);
-				s1_x_next_end = circ->PutINGate((uint32_t)  (x_end.at(ll)/10),bitlen,SERVER);
-				s1_y_next_end = circ->PutINGate((uint32_t) (y_end.at(ll)/10),bitlen,SERVER);
+				s1_x_next_start = circ->PutINGate((uint32_t) round(x_start.at(ll)/10),bitlen,SERVER);
+				s1_y_next_start = circ->PutINGate((uint32_t) round (y_start.at(ll)/10),bitlen,SERVER);
+				s1_x_next_end = circ->PutINGate((uint32_t)  round(x_end.at(ll)/10),bitlen,SERVER);
+				s1_y_next_end = circ->PutINGate((uint32_t) round(y_end.at(ll)/10),bitlen,SERVER);
 
 				s2_x_start = circ->PutDummyINGate( bitlen);
 				s2_y_start = circ->PutDummyINGate( bitlen);
@@ -193,15 +193,15 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s1_x_next_end = circ->PutDummyINGate(bitlen);
 				s1_y_next_end = circ->PutDummyINGate( bitlen);*/
 				
-				s2_x_start = circ->PutINGate((uint64_t) (x_start.at(l)/10),bitlen,CLIENT);
-				s2_y_start = circ->PutINGate((uint64_t) (y_start.at(l)/10),bitlen,CLIENT);
-				s2_x_end = circ->PutINGate((uint64_t) (x_end.at(l)/10),bitlen,CLIENT);
-				s2_y_end = circ->PutINGate((uint64_t)(y_end.at(l)/10),bitlen,CLIENT);
+				s2_x_start = circ->PutINGate((uint64_t) round(x_start.at(l)/10),bitlen,CLIENT);
+				s2_y_start = circ->PutINGate((uint64_t) round(y_start.at(l)/10),bitlen,CLIENT);
+				s2_x_end = circ->PutINGate((uint64_t) round(x_end.at(l)/10),bitlen,CLIENT);
+				s2_y_end = circ->PutINGate((uint64_t)round(y_end.at(l)/10),bitlen,CLIENT);
 				
-				s2_x_next_start = circ->PutINGate((uint64_t) (x_start.at(ll)/10),bitlen,CLIENT);
-				s2_y_next_start = circ->PutINGate((uint64_t) (y_start.at(ll)/10),bitlen,CLIENT);
-				s2_x_next_end = circ->PutINGate((uint64_t) (x_end.at(ll)/10),bitlen,CLIENT);
-				s2_y_next_end = circ->PutINGate((uint64_t)(y_end.at(ll)/10),bitlen,CLIENT);
+				s2_x_next_start = circ->PutINGate((uint64_t) round(x_start.at(ll)/10),bitlen,CLIENT);
+				s2_y_next_start = circ->PutINGate((uint64_t) round(y_start.at(ll)/10),bitlen,CLIENT);
+				s2_x_next_end = circ->PutINGate((uint64_t) round(x_end.at(ll)/10),bitlen,CLIENT);
+				s2_y_next_end = circ->PutINGate((uint64_t)round(y_end.at(ll)/10),bitlen,CLIENT);
 
 				s1_x_start = circ->PutDummyINGate( bitlen);
 				s1_y_start = circ->PutDummyINGate( bitlen);
