@@ -150,7 +150,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				/**DIVIDING BY 10 I MANAGE TO REDUCE THE BILENGTH OF THE FINAL DISTANCE
 				AND BE ABLE TO USE UINT64*/ 
 				s1_x_start = circ->PutINGate((uint32_t)round(x_start.at(l)/10),bitlen,SERVER);
-				circ->PutPrintValueGate(s1_x_start, "X SHARE");
+				//circ->PutPrintValueGate(s1_x_start, "X SHARE");
 
 				s1_y_start = circ->PutINGate((uint32_t) round(y_start.at(l)/10),bitlen,SERVER);
 				s1_x_end = circ->PutINGate((uint32_t) round(x_end.at(l)/10),bitlen,SERVER);
@@ -565,11 +565,11 @@ return 0;
 	x_end = circ->PutADDGate(s1_x_end,s2_x_end);
 
 	  y_end = circ->PutADDGate(s1_y_end,s2_y_end);
-	/**
+	
 	  	circ->PutPrintValueGate(x_start, "X START");	
 		circ->PutPrintValueGate(y_start, "Y START");	
 		circ->PutPrintValueGate(x_end, "X END");
-		circ->PutPrintValueGate(y_end, "Y END");*/	
+		circ->PutPrintValueGate(y_end, "Y END");	
 
 	x_next_start = circ->PutADDGate(s1_x_next_start,s2_x_next_start);
 	y_next_start = circ->PutADDGate(s1_y_next_start,s2_y_next_start);
