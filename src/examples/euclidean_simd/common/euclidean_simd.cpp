@@ -604,7 +604,7 @@ for(int i= 0; i< keys.size();i++)
 				for(auto itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++)
 				{
 					std::cout << *itr3 << ' ';
-					lin = lin + " , " +patch::to_string(*itr3);
+					lin = lin + "" +patch::to_string(*itr3)+ ", ";
 		
 				}
 	log << "Cluster no "+ patch::to_string(itr2->first)+": "+ lin+ "\n";
