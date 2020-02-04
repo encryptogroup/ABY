@@ -228,7 +228,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
 			output = s_out->get_clear_value<uint32_t>();
-			distance = (double)output;
+			distance = (long)output*100;
 			if(role == SERVER){
 				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" << distance << std::endl;
 			}
