@@ -285,7 +285,7 @@ for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator
 {
   keys.push_back(it->first);
 }
-//std::random_shuffle ( keys.begin(), keys.end() );
+std::random_shuffle ( keys.begin(), keys.end() );
 
 
 //std::cout <<"JUST SHUFFLED "<<std::endl;
