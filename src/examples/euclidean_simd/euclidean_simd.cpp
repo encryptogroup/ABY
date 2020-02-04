@@ -40,7 +40,7 @@ namespace patch
 			{ { (void*) &int_role, T_NUM, "r", "Role: 0/1", true, false }, {
 					(void*) nvals, T_NUM, "n",
 					"Number of parallel operation elements", false, false }, {
-					(void*) bitlen, T_NUM, "b", "Bit-length, default 32", false,
+					(void*) bitlen, T_NUM, "b", "Bit-length, default 64", false,
 					false }, { (void*) secparam, T_NUM, "s",
 					"Symmetric Security Bits, default: 128", false, false }, {
 					(void*) address, T_STR, "a",
