@@ -619,10 +619,11 @@ return 0;
 	ed1 = circ->PutADDGate(res_x, res_y);
 
 
-	/**circ->PutPrintValueGate(x_start, "X START");
+	
+	circ->PutPrintValueGate(x_start, "X START");
 	circ->PutPrintValueGate(y_start, "Y START");	
 	circ->PutPrintValueGate(x_end, "X END");	
-	circ->PutPrintValueGate(y_end, "Y END");*/	
+	circ->PutPrintValueGate(y_end, "Y END");	
 	//circ->PutPrintValueGate(ed1, "ED 1");	
 	
 	  
@@ -728,7 +729,7 @@ return 0;
 	out = circ->PutADDGate(ed1, ed2);
 	out = circ->PutADDGate(out, ed3);
 	out = circ->PutADDGate(out, ed4);
-	circ->PutPrintValueGate(out, "DISTANCE");	
+	//circ->PutPrintValueGate(out, "DISTANCE");	
 	  
 	  //NOT WORKING
 	//out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
