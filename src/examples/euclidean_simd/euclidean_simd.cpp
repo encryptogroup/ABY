@@ -183,8 +183,8 @@ int main(int argc, char** argv) {
 
 
 	//evaluate addition cirucui using arithmetic
-	//test_circuit(role, address, port, seclvl, 32,
-	//		nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end);           
+	test_circuit(role, address, port, seclvl, 32,
+			nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end);           
 	
 	return 0;
 }
