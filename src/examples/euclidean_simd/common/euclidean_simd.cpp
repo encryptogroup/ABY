@@ -285,7 +285,7 @@ for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator
 {
   keys.push_back(it->first);
 }
-std::random_shuffle ( keys.begin(), keys.end() );
+//std::random_shuffle ( keys.begin(), keys.end() );
 
 
 //std::cout <<"JUST SHUFFLED "<<std::endl;
@@ -320,18 +320,18 @@ for(int i= 0; i< keys.size();i++)
 			// # push each element in the neighborhood of a cluster into a temporary queue
 			// # if a given line segment does not assigned to a cluster
 
-			for(int llls = 0 ; llls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size();llls++)
+			for(int llls = 0 ; llls < neighborhood[key_elem]["neighbors"].size();llls++)
 			{
 				std::cout <<" TEMP ARRAY LOOP "<< llls<<std::endl;
-				std::cout <<" LENGTH NEIGHBOR LLS"<< neighborhood[patch::to_string(keys.at(i))]["neighbors"].size()<<std::endl;
+				std::cout <<" LENGTH NEIGHBOR LLS "<< neighborhood[key_elem]["neighbors"].size()<<std::endl;
 
 						
-				std::string neigh = patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls));
+				std::string neigh = patch::to_string(neighborhood[key_elem]["neighbors"].at(llls));
 				if(neighborhood[neigh]["cluster"].at(0)< 1)
 				{
 					std::cout <<" INSIDE IF TEMP ARRAY LOOP"<< std::endl;
 
-					temp_array.push_back(neighborhood[patch::to_string(i)]["neighbors"].at(llls));
+					temp_array.push_back(neighborhood[key_elem]["neighbors"].at(llls));
 				}
 
 			}
