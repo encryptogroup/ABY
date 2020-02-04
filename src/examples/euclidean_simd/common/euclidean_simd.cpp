@@ -550,7 +550,7 @@ return 0;
 	share* y_next_end;
 
 	uint64_t output;
-	uint64_t bitlen=64;
+	uint32_t bitlen=64;
 
 	share* rando;
 
@@ -589,12 +589,12 @@ return 0;
 	/** Distance metric 1: (x1_start-x2_start)^2 + (y1_start-y2_start)^2*/
 	  
 	/** Following code performs (x2-x1)*(x2-x1) */
-	  res_x->set_bitlength(uint32_t 64);
-	  res_y->set_bitlength(uint32_t 64);
-	  ed1->set_bitlength(uint32_t 64);
-	  ed2->set_bitlength(uint32_t 64);
-	  ed3->set_bitlength(uint32_t 64);
-	  ed4->set_bitlength(uint32_t 64);
+	  res_x->set_bitlength(bitlen);
+	  res_y->set_bitlength(bitlen);
+	  ed1->set_bitlength(bitlen);
+	  ed2->set_bitlength(bitlen);
+	  ed3->set_bitlength(bitlen);
+	  ed4->set_bitlength(bitlen);
 
 	  out->set_bitlength(uint32_t 64);
 
