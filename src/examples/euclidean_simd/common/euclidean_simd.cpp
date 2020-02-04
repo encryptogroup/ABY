@@ -56,7 +56,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		 	 	basis of the role played by this object.
 	*/
 	bitlen = 64;
-	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads,
+	ABYParty* party = new ABYParty(role, address, port, seclvl, 64, nthreads,
 			mt_alg);
 
 
@@ -589,14 +589,14 @@ return 0;
 	/** Distance metric 1: (x1_start-x2_start)^2 + (y1_start-y2_start)^2*/
 	  
 	/** Following code performs (x2-x1)*(x2-x1) */
-	  res_x= circ->set_bitlength(bitlen);
-	  res_y= circ->set_bitlength(bitlen);
-	  ed1= circ->set_bitlength(bitlen);
-	  ed2= circ->set_bitlength(bitlen);
-	  ed3= circ->set_bitlength(bitlen);
-	  ed4= circ->set_bitlength(bitlen);
+	//  res_x= circ->set_bitlength(bitlen);
+	  //res_y= circ->set_bitlength(bitlen);
+	  //ed1= circ->set_bitlength(bitlen);
+	  //ed2= circ->set_bitlength(bitlen);
+	  //ed3= circ->set_bitlength(bitlen);
+	  //ed4= circ->set_bitlength(bitlen);
 
-	  out= circ->set_bitlength(bitlen);
+	  //out= circ->set_bitlength(bitlen);
 
 	check_sel = circ->PutGTGate(x_start, x_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
