@@ -40,7 +40,7 @@ namespace patch
 			{ { (void*) &int_role, T_NUM, "r", "Role: 0/1", true, false }, {
 					(void*) nvals, T_NUM, "n",
 					"Number of parallel operation elements", false, false }, {
-					(void*) bitlen, T_NUM, "b", "Bit-length, default 64", false,
+					(void*) bitlen, T_NUM, "b", "Bit-length, default 32", false,
 					false }, { (void*) secparam, T_NUM, "s",
 					"Symmetric Security Bits, default: 128", false, false }, {
 					(void*) address, T_STR, "a",
@@ -129,7 +129,7 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 int main(int argc, char** argv) {
 
 	e_role role;
-	uint32_t bitlen = 64, nvals = 31, secparam = 128, nthreads = 1;
+	uint32_t bitlen = 32, nvals = 31, secparam = 128, nthreads = 1;
 	uint16_t port = 7766;
 	std::string address = "127.0.0.1";
 	int32_t test_op = -1;
