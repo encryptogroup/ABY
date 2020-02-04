@@ -150,7 +150,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				AND BE ABLE TO USE UINT64*/ 
 				s1_x_start = circ->PutINGate((uint32_t) lround(x_start.at(l)/10),bitlen,SERVER);
 				//circ->PutPrintValueGate(s1_x_start, "X SHARE");
-
+				std::cout<< " ROUNDED " << lround(x_start.at(l)/10) << std::endl
 				s1_y_start = circ->PutINGate((uint32_t)  lround(y_start.at(l)/10),bitlen,SERVER);
 				s1_x_end = circ->PutINGate((uint32_t)  lround(x_end.at(l)/10),bitlen,SERVER);
 				s1_y_end = circ->PutINGate((uint32_t)  lround(y_end.at(l)/10),bitlen,SERVER);
