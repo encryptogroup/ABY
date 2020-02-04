@@ -717,7 +717,7 @@ return 0;
 	out = circ->PutADDGate(ed1, ed2);
 	out = circ->PutADDGate(out, ed3);
 	out = circ->PutADDGate(out, ed4);
-	circ->PutPrintValueGate(ed, "DISTANCE");	
+	circ->PutPrintValueGate(out, "DISTANCE");	
 	  
 	  //NOT WORKING
 	//out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
