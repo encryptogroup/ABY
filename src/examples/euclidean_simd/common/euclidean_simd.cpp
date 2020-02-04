@@ -27,6 +27,7 @@
 #include <chrono>
 #include <stdio.h>
 #include <ios>
+#include <cstdint>
 #include <fstream>
 
 namespace patch
@@ -54,6 +55,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		 	 	operations which are happening.	Operations performed are on the
 		 	 	basis of the role played by this object.
 	*/
+	bitlen = 64;
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads,
 			mt_alg);
 
@@ -75,7 +77,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
 
-	uint64_t output;
+	std::uint64_t output;
 	int n_vals = x_start.size();
 	
 	
