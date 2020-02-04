@@ -93,10 +93,10 @@ def main(argv):
 
 		df = pd.DataFrame(dict1)
 		#print(dict1)
-		df.to_csv(fileOutput1, sep=',',index=None)
+		df.to_csv(fileOutput1, sep=',',index=None, header=None)
 			
 		df = pd.DataFrame(dict2)
-		df.to_csv(fileOutput2, sep=',',index=None)
+		df.to_csv(fileOutput2, sep=',',index=None, header = None)
 
 		
 
