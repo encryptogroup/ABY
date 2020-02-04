@@ -596,7 +596,7 @@ return 0;
 	  ed3->set_bitlength(bitlen);
 	  ed4->set_bitlength(bitlen);
 
-	  out->set_bitlength(uint32_t 64);
+	  out->set_bitlength(bitlen);
 
 	check_sel = circ->PutGTGate(x_start, x_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
