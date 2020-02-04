@@ -553,7 +553,7 @@ for(int i= 0; i< keys.size();i++)
 		}
 	}
 
-for(int i = 0; i < clusters.size();< i++){
+for(int i = 1; i <= clusters.size(); i++){
 	std::cout <<"CLUSTER lines"<< clusters[patch::to_string(i)].at(0)<<std::endl;
 
 
