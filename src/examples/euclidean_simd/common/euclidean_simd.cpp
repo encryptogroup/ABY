@@ -147,15 +147,15 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s2_y_next_start = circ->PutDummyINGate( bitlen);
 				s2_x_next_end = circ->PutDummyINGate( bitlen);
 				s2_y_next_end = circ->PutDummyINGate( bitlen);*/
-				s1_x_start = circ->PutINGate((uint64_t)(x_start.at(l)100),bitlen,SERVER);
-				s1_y_start = circ->PutINGate((uint64_t) (y_start.at(l)100),bitlen,SERVER);
-				s1_x_end = circ->PutINGate((uint64_t) (x_end.at(l)100),bitlen,SERVER);
-				s1_y_end = circ->PutINGate((uint64_t) (y_end.at(l)100),bitlen,SERVER);
+				s1_x_start = circ->PutINGate((uint64_t)(x_start.at(l)/10),bitlen,SERVER);
+				s1_y_start = circ->PutINGate((uint64_t) (y_start.at(l)/10),bitlen,SERVER);
+				s1_x_end = circ->PutINGate((uint64_t) (x_end.at(l)/10),bitlen,SERVER);
+				s1_y_end = circ->PutINGate((uint64_t) (y_end.at(l)/10),bitlen,SERVER);
 				
-				s1_x_next_start = circ->PutINGate((uint64_t) (x_start.at(ll)100),bitlen,SERVER);
-				s1_y_next_start = circ->PutINGate((uint64_t)  (y_start.at(ll)100),bitlen,SERVER);
-				s1_x_next_end = circ->PutINGate((uint64_t)  (x_end.at(ll)100),bitlen,SERVER);
-				s1_y_next_end = circ->PutINGate((uint64_t) (y_end.at(ll)100),bitlen,SERVER);
+				s1_x_next_start = circ->PutINGate((uint64_t) (x_start.at(ll)/10),bitlen,SERVER);
+				s1_y_next_start = circ->PutINGate((uint64_t)  (y_start.at(ll)/10),bitlen,SERVER);
+				s1_x_next_end = circ->PutINGate((uint64_t)  (x_end.at(ll)/10),bitlen,SERVER);
+				s1_y_next_end = circ->PutINGate((uint64_t) (y_end.at(ll)/10),bitlen,SERVER);
 
 				s2_x_start = circ->PutDummyINGate( bitlen);
 				s2_y_start = circ->PutDummyINGate( bitlen);
@@ -189,15 +189,15 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s1_x_next_end = circ->PutDummyINGate(bitlen);
 				s1_y_next_end = circ->PutDummyINGate( bitlen);*/
 				
-				s2_x_start = circ->PutINGate((uint64_t) (x_start.at(l)/100),bitlen,CLIENT);
-				s2_y_start = circ->PutINGate((uint64_t) (y_start.at(l)100),bitlen,CLIENT);
-				s2_x_end = circ->PutINGate((uint64_t) (x_end.at(l)100),bitlen,CLIENT);
-				s2_y_end = circ->PutINGate((uint64_t)(y_end.at(l)100),bitlen,CLIENT);
+				s2_x_start = circ->PutINGate((uint64_t) (x_start.at(l)/10),bitlen,CLIENT);
+				s2_y_start = circ->PutINGate((uint64_t) (y_start.at(l)/10),bitlen,CLIENT);
+				s2_x_end = circ->PutINGate((uint64_t) (x_end.at(l)/10),bitlen,CLIENT);
+				s2_y_end = circ->PutINGate((uint64_t)(y_end.at(l)/10),bitlen,CLIENT);
 				
-				s2_x_next_start = circ->PutINGate((uint64_t) (x_start.at(ll)100),bitlen,CLIENT);
-				s2_y_next_start = circ->PutINGate((uint64_t) (y_start.at(ll)100),bitlen,CLIENT);
-				s2_x_next_end = circ->PutINGate((uint64_t) (x_end.at(ll)100),bitlen,CLIENT);
-				s2_y_next_end = circ->PutINGate((uint64_t)(y_end.at(ll)100),bitlen,CLIENT);
+				s2_x_next_start = circ->PutINGate((uint64_t) (x_start.at(ll)/10),bitlen,CLIENT);
+				s2_y_next_start = circ->PutINGate((uint64_t) (y_start.at(ll)/10),bitlen,CLIENT);
+				s2_x_next_end = circ->PutINGate((uint64_t) (x_end.at(ll)/10),bitlen,CLIENT);
+				s2_y_next_end = circ->PutINGate((uint64_t)(y_end.at(ll)/10),bitlen,CLIENT);
 
 				s1_x_start = circ->PutDummyINGate( bitlen);
 				s1_y_start = circ->PutDummyINGate( bitlen);
@@ -225,7 +225,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
 			output = s_out->get_clear_value<uint64_t>();
-			distance = (double)output*1000;
+			distance = (double)output*100;
 			if(role == SERVER){
 				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" << distance << std::endl;
 			}
