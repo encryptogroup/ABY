@@ -665,7 +665,7 @@ res_y = ac->PutB2AGate(res_y);
 	t_b = circ->PutMUXGate(x_start, x_next_end, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = ac->PutB2AGate(res_y);
+	res_x = ac->PutB2AGate(res_x);
 
 	res_x = ac->PutMULGate(res_x, res_x);
 	/** Following code performs (y2-y1)*(y2-y1) */
