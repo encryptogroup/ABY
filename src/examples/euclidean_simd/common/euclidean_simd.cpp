@@ -322,8 +322,10 @@ for(int i= 0; i< keys.size();i++)
 			{
 							std::cout <<"TEMP ARRAY LOOP"<< std::endl;
 
-				if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls))]["cluster"].at(0) 			< 1)
+				if(neighborhood[patch::to_string(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(llls))]["cluster"].at(0)< 1)
 				{
+											std::cout <<" INSIDE IF TEMP ARRAY LOOP"<< std::endl;
+
 					temp_array.push_back(neighborhood[patch::to_string(i)]["neighbors"].at(llls));
 				}
 
