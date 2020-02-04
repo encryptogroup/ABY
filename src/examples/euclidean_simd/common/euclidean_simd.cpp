@@ -615,7 +615,7 @@ for(int i= 0; i< keys.size();i++)
 	log << "minLns: "+ patch::to_string(minLns)+ "\n";
 	log << "Number of line segments: "+patch::to_string(no_of_lines)+"\n";
 	log << "Epsilon: "+ patch::to_string(epsilon)+"\n";
-	log << "------------------------------------------------------";
+	log << "------------------------------------------------------ \n";
 return 0;
 	}
 	
