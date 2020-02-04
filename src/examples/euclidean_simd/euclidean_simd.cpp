@@ -111,7 +111,7 @@ std::vector<std::vector<std::string> > CSVReader::getData()
 		//REMOVING DOUBLE QUOTES
 		line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
 		//boost::erase_all(line, "\"");
-		std::cout<< line<< " "<<std::endl;
+		//std::cout<< line<< " "<<std::endl;
 		boost::algorithm::split(vec,line, boost::is_any_of(delimeter));
 		//std::cout<< vec.at(0)<< " "<<std::endl;
 		//std::cout<<"maybe good"<< vec.at(0)<< " "<< vec.at(1)<< " "<< vec.at(2)<< "  "<< vec.at(3)<< std::endl;
