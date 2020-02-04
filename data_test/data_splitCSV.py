@@ -7,7 +7,7 @@ import sys, getopt
 
 ## X will be splitted in x1 and x2 where x1+x2=X
 def create_shares_of_value(valueToShare):
-    random = randrange(8)
+    random = randrange(3)
     
     result = []
     oneShare = valueToShare - random
@@ -92,10 +92,11 @@ def main(argv):
 		dict2 = {'X_start': x1_s2, 'Y_START': y1_s2, 'X_END': x2_s2, "Y_END": y2_s2} 
 
 		df = pd.DataFrame(dict1)
-		df.to_csv(fileOutput1, sep=',', index=False, header = 0)
+		#print(dict1)
+		df.to_csv(fileOutput1, sep=',',index=None)
 			
 		df = pd.DataFrame(dict2)
-		df.to_csv(fileOutput2, sep=',', index=False, header =0)
+		df.to_csv(fileOutput2, sep=',',index=None)
 
 		
 
