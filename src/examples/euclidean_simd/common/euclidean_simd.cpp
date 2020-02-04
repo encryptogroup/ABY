@@ -225,9 +225,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
 			output = s_out->get_clear_value<uint64_t>();
-			distance = output;
+			distance = (double)output;
 			if(role == SERVER){
-				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" <<distance << std::endl;
+				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" << distance << std::endl;
 			}
 			
 			
@@ -595,8 +595,9 @@ return 0;
 	t_b = circ->PutMUXGate(x_start, x_next_start, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = circ->PutMULGate(res_x, res_x);
+	res_x = ac->PutB2A(res_y)
 
+	res_x = ac->PutMULGate(res_x, res_x);
 	/** Following code performs (y2-y1)*(y2-y1) */
 	check_sel = circ->PutGTGate(y_start, y_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
@@ -604,10 +605,11 @@ return 0;
 	t_b = circ->PutMUXGate(y_start, y_next_start, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = circ->PutMULGate(res_y, res_y);
+res_y = ac->PutB2A(res_y)
 
+	res_y = ac->PutMULGate(res_y, res_y);
 	/** Following code performs out = res_y + res_x*/
-	ed1 = circ->PutADDGate(res_x, res_y);
+	ed1 = ac->PutADDGate(res_x, res_y);
 
 
 	/**circ->PutPrintValueGate(x_start, "X START");
@@ -634,11 +636,12 @@ return 0;
 	t_a = circ->PutMUXGate(y_end, y_next_end, check_sel);
 	t_b = circ->PutMUXGate(y_end, y_next_end, check_sel_inv);
 
-	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = circ->PutMULGate(res_y, res_y);
+	res_y = ac->PutB2A(res_y)
+
+	res_y = ac->PutMULGate(res_y, res_y);
 
 	/** Following code performs out = res_y + res_x*/
-	ed2 = circ->PutADDGate(res_x, res_y);
+	ed2 = ac->PutADDGate(res_x, res_y);
 
 
 	/**circ->PutPrintValueGate(x_start, "X START");
@@ -659,8 +662,9 @@ return 0;
 	t_b = circ->PutMUXGate(x_start, x_next_end, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = circ->PutMULGate(res_x, res_x);
+	res_x = ac->PutB2A(res_y)
 
+	res_x = ac->PutMULGate(res_x, res_x);
 	/** Following code performs (y2-y1)*(y2-y1) */
 	check_sel = circ->PutGTGate(y_start, y_next_end);
 	check_sel_inv = circ->PutINVGate(check_sel);
@@ -668,10 +672,13 @@ return 0;
 	t_b = circ->PutMUXGate(y_start, y_next_end, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = circ->PutMULGate(res_y, res_y);
+	res_y = ac->PutB2A(res_y)
+
+	res_y = ac->PutMULGate(res_y, res_y);
 
 	/** Following code performs out = res_y + res_x*/
-	ed3 = circ->PutADDGate(res_x, res_y);
+	  
+	ed3 = ac->PutADDGate(res_x, res_y);
 
 
 	/**circ->PutPrintValueGate(x_start, "X START");
@@ -684,15 +691,17 @@ return 0;
 	  
 	  
 	  /** Distance metric 4: (x2_start-x1_end)^2 + (y2_start-y1_end)^2*/
-	  
+	 Circuit* ac = sharings[S_ARITH]->GetCircuitBuildRoutine(): 
 	/** Following code performs (x2-x1)*(x2-x1) */
 	check_sel = circ->PutGTGate(x_end, x_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
 	t_a = circ->PutMUXGate(x_end, x_next_start, check_sel);
 	t_b = circ->PutMUXGate(x_end, x_next_start, check_sel_inv);
 
+	 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = circ->PutMULGate(res_x, res_x);
+	res_x = ac->PutB2A(res_x)
+	res_x = ac->PutMULGate(res_x, res_x);
 
 	/** Following code performs (y2-y1)*(y2-y1) */
 	check_sel = circ->PutGTGate(y_end, y_next_start);
@@ -701,10 +710,12 @@ return 0;
 	t_b = circ->PutMUXGate(y_end, y_next_start, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = circ->PutMULGate(res_y, res_y);
+	res_y = ac->PutB2A(res_y)
+
+	res_y = ac->PutMULGate(res_y, res_y);
 
 	/** Following code performs out = res_y + res_x*/
-	ed4 = circ->PutADDGate(res_x, res_y);
+	ed4 = ac->PutADDGate(res_x, res_y);
 
 
 	/**circ->PutPrintValueGate(x_start, "X START");
@@ -716,10 +727,10 @@ return 0;
 	//circ->PutPrintValueGate(ed4, "ED 4");	
 
 	  
-	out = circ->PutADDGate(ed1, ed2);
-	out = circ->PutADDGate(out, ed3);
-	out = circ->PutADDGate(out, ed4);
-	circ->PutPrintValueGate(out, "DISTANCE");	
+	out = ac->PutADDGate(ed1, ed2);
+	out = ac->PutADDGate(out, ed3);
+	out = ac->PutADDGate(out, ed4);
+	ac->PutPrintValueGate(out, "DISTANCE");	
 	  
 	  //NOT WORKING
 	//out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
