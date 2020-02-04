@@ -146,18 +146,20 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s2_y_next_start = circ->PutDummyINGate( bitlen);
 				s2_x_next_end = circ->PutDummyINGate( bitlen);
 				s2_y_next_end = circ->PutDummyINGate( bitlen);*/
-				s1_x_start = circ->PutINGate((uint64_t)(x_start.at(l)/10),bitlen,SERVER);
-				std::cout<< (uint64_t)(x_start.at(l)/10)<<std::endl;
-				circ->PutPrintValueGate(s1_x_start, "X_START");	
-
-				s1_y_start = circ->PutINGate((uint64_t) (y_start.at(l)/10),bitlen,SERVER);
-				s1_x_end = circ->PutINGate((uint64_t) (x_end.at(l)/10),bitlen,SERVER);
-				s1_y_end = circ->PutINGate((uint64_t) (y_end.at(l)/10),bitlen,SERVER);
 				
-				s1_x_next_start = circ->PutINGate((uint64_t) (x_start.at(ll)/10),bitlen,SERVER);
-				s1_y_next_start = circ->PutINGate((uint64_t)  (y_start.at(ll)/10),bitlen,SERVER);
-				s1_x_next_end = circ->PutINGate((uint64_t)  (x_end.at(ll)/10),bitlen,SERVER);
-				s1_y_next_end = circ->PutINGate((uint64_t) (y_end.at(ll)/10),bitlen,SERVER);
+				/**DIVIDING BY 10 I MANAGE TO REDUCE THE BILENGTH OF THE FINAL DISTANCE
+				AND BE ABLE TO USE UINT64*/ 
+				s1_x_start = circ->PutINGate((uint32_t)(x_start.at(l)/10),bitlen,SERVER);
+				circ->PutPrintValueGate(s1_x_start, "X SHARE");
+
+				s1_y_start = circ->PutINGate((uint32_t) (y_start.at(l)/10),bitlen,SERVER);
+				s1_x_end = circ->PutINGate((uint32_t) (x_end.at(l)/10),bitlen,SERVER);
+				s1_y_end = circ->PutINGate((uint32_t) (y_end.at(l)/10),bitlen,SERVER);
+				
+				s1_x_next_start = circ->PutINGate((uint32_t) (x_start.at(ll)/10),bitlen,SERVER);
+				s1_y_next_start = circ->PutINGate((uint32_t)  (y_start.at(ll)/10),bitlen,SERVER);
+				s1_x_next_end = circ->PutINGate((uint32_t)  (x_end.at(ll)/10),bitlen,SERVER);
+				s1_y_next_end = circ->PutINGate((uint32_t) (y_end.at(ll)/10),bitlen,SERVER);
 
 				s2_x_start = circ->PutDummyINGate( bitlen);
 				s2_y_start = circ->PutDummyINGate( bitlen);
@@ -622,7 +624,7 @@ return 0;
 
 
 	
-	circ->PutPrintValueGate(x_start, "X START");
+	//circ->PutPrintValueGate(x_start, "X START");
 	/**circ->PutPrintValueGate(y_start, "Y START");	
 	circ->PutPrintValueGate(x_end, "X END");	
 	circ->PutPrintValueGate(y_end, "Y END");	
