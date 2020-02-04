@@ -29,6 +29,7 @@
 #include <ios>
 #include <fstream>
 
+
 namespace patch
 {
     template < typename T > std::string to_string( const T& n )
@@ -76,13 +77,13 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
   
   
 
-	std::uint64_t output;
+	double output;
 	int n_vals = x_start.size();
 	
 	
 	
 
-	uint64_t distance;
+	double distance;
 
 	//# initialize epsilon and minLns values
 	double epsilon =135000000;// 13500000000;//eps 
@@ -226,7 +227,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			output = s_out->get_clear_value<uint64_t>();
 			distance = output;
 			if(role == SERVER){
-				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" <<(double)distance << std::endl;
+				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" <<distance << std::endl;
 			}
 			
 			
