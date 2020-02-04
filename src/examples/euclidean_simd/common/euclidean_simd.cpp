@@ -559,7 +559,7 @@ return 0;
 	circ->PutPrintValueGate(y_start, "Y START");	
 
 	x_end = circ->PutADDGate(s1_x_end,s2_x_end);
-	circ->PutPrintValueGate(x_end, "X END);
+	circ->PutPrintValueGate(x_end, "X END)";
 
 	  y_end = circ->PutADDGate(s1_y_end,s2_y_end);
 	circ->PutPrintValueGate(y_end, "Y END");	
