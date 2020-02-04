@@ -89,7 +89,7 @@ def main(argv):
 		fileOutput2= "data2.csv"
 
 		dict1 = {'A': x1_s1, 'B': y1_s1, 'C': x2_s1, "D": y2_s1} 
-		dict2 = {'X_start': x1_s2, 'Y_START': y1_s2, 'X_END': x2_s2, "Y_END": y2_s2} 
+		dict2 = {'A': x1_s2, 'B': y1_s2, 'C': x2_s2, "D": y2_s2} 
 
 		df = pd.DataFrame(dict1)
 		#print(dict1)
