@@ -73,8 +73,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
-  	Circuit* ac = sharings[S_ARITH]->GetCircuitBuildRoutine();
-
+  
   
   
 
@@ -218,7 +217,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 						  s2_x_start,s2_y_start, s2_x_end, s2_y_end,//line 1 Server2
 						  s1_x_next_start, s1_y_next_start, s1_x_next_end,s1_y_next_end, //line 2 server 1
 						  s2_x_next_start,s2_y_next_start, s2_x_next_end, s2_y_next_end, //line 2 server 2
-					(BooleanCircuit*) circ, (ArithmeticCircuit*) ac);
+					(BooleanCircuit*) circ);
 
 			s_out = circ->PutOUTGate(s_out,ALL);
 			party->ExecCircuit();
@@ -538,8 +537,8 @@ return 0;
 			   share* s2_x_start,share* s2_y_start, share*  s2_x_end, share* s2_y_end,
 			   share* s1_x_next_start,  share* s1_y_next_start, share* s1_x_next_end, share* s1_y_next_end, 
 			   share* s2_x_next_start,share* s2_y_next_start, share*  s2_x_next_end, share* s2_y_next_end,
-			   BooleanCircuit* circ, ArithmeticCircuit* ac) {
-
+			   BooleanCircuit* circ) {
+ 
 	//share* out;
 	share* x_start;
 	share* y_start;
@@ -596,9 +595,8 @@ return 0;
 	t_b = circ->PutMUXGate(x_start, x_next_start, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = ac->PutB2AGate(res_y);
+	res_x = circ->PutMULGate(res_x, res_x);
 
-	res_x = ac->PutMULGate(res_x, res_x);
 	/** Following code performs (y2-y1)*(y2-y1) */
 	check_sel = circ->PutGTGate(y_start, y_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
@@ -606,11 +604,10 @@ return 0;
 	t_b = circ->PutMUXGate(y_start, y_next_start, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-res_y = ac->PutB2AGate(res_y);
+	res_y = circ->PutMULGate(res_y, res_y);
 
-	res_y = ac->PutMULGate(res_y, res_y);
 	/** Following code performs out = res_y + res_x*/
-	ed1 = ac->PutADDGate(res_x, res_y);
+	ed1 = circ->PutADDGate(res_x, res_y);
 
 
 	/**circ->PutPrintValueGate(x_start, "X START");
@@ -629,9 +626,7 @@ res_y = ac->PutB2AGate(res_y);
 	t_b = circ->PutMUXGate(x_end, x_next_end, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	  res_x = ac->PutB2AGate(res_x);
-
-	res_x = ac->PutMULGate(res_x, res_x);
+	res_x = circ->PutMULGate(res_x, res_x);
 
 	/** Following code performs (y2-y1)*(y2-y1) */
 	check_sel = circ->PutGTGate(y_end, y_next_end);
@@ -639,12 +634,11 @@ res_y = ac->PutB2AGate(res_y);
 	t_a = circ->PutMUXGate(y_end, y_next_end, check_sel);
 	t_b = circ->PutMUXGate(y_end, y_next_end, check_sel_inv);
 
-	res_y = ac->PutB2AGate(res_y);
-
-	res_y = ac->PutMULGate(res_y, res_y);
+	res_y = circ->PutSUBGate(t_a, t_b);
+	res_y = circ->PutMULGate(res_y, res_y);
 
 	/** Following code performs out = res_y + res_x*/
-	ed2 = ac->PutADDGate(res_x, res_y);
+	ed2 = circ->PutADDGate(res_x, res_y);
 
 
 	/**circ->PutPrintValueGate(x_start, "X START");
@@ -665,9 +659,8 @@ res_y = ac->PutB2AGate(res_y);
 	t_b = circ->PutMUXGate(x_start, x_next_end, check_sel_inv);
 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = ac->PutB2AGate(res_x);
+	res_x = circ->PutMULGate(res_x, res_x);
 
-	res_x = ac->PutMULGate(res_x, res_x);
 	/** Following code performs (y2-y1)*(y2-y1) */
 	check_sel = circ->PutGTGate(y_start, y_next_end);
 	check_sel_inv = circ->PutINVGate(check_sel);
@@ -675,13 +668,10 @@ res_y = ac->PutB2AGate(res_y);
 	t_b = circ->PutMUXGate(y_start, y_next_end, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = ac->PutB2AGate(res_y);
-
-	res_y = ac->PutMULGate(res_y, res_y);
+	res_y = circ->PutMULGate(res_y, res_y);
 
 	/** Following code performs out = res_y + res_x*/
-	  
-	ed3 = ac->PutADDGate(res_x, res_y);
+	ed3 = circ->PutADDGate(res_x, res_y);
 
 
 	/**circ->PutPrintValueGate(x_start, "X START");
@@ -694,6 +684,7 @@ res_y = ac->PutB2AGate(res_y);
 	  
 	  
 	  /** Distance metric 4: (x2_start-x1_end)^2 + (y2_start-y1_end)^2*/
+	 Circuit* ac = sharings[S_ARITH]->GetCircuitBuildRoutine(): 
 	/** Following code performs (x2-x1)*(x2-x1) */
 	check_sel = circ->PutGTGate(x_end, x_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
@@ -702,7 +693,7 @@ res_y = ac->PutB2AGate(res_y);
 
 	 
 	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = ac->PutB2AGate(res_x);
+	res_x = ac->PutB2A(res_x)
 	res_x = ac->PutMULGate(res_x, res_x);
 
 	/** Following code performs (y2-y1)*(y2-y1) */
@@ -712,12 +703,12 @@ res_y = ac->PutB2AGate(res_y);
 	t_b = circ->PutMUXGate(y_end, y_next_start, check_sel_inv);
 
 	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = ac->PutB2AGate(res_y);
+	res_y = ac->PutB2A(res_x)
 
-	res_y = ac->PutMULGate(res_y, res_y);
+	res_y = circ->PutMULGate(res_y, res_y);
 
 	/** Following code performs out = res_y + res_x*/
-	ed4 = ac->PutADDGate(res_x, res_y);
+	ed4 = circ->PutADDGate(res_x, res_y);
 
 
 	/**circ->PutPrintValueGate(x_start, "X START");
@@ -729,10 +720,10 @@ res_y = ac->PutB2AGate(res_y);
 	//circ->PutPrintValueGate(ed4, "ED 4");	
 
 	  
-	out = ac->PutADDGate(ed1, ed2);
-	out = ac->PutADDGate(out, ed3);
-	out = ac->PutADDGate(out, ed4);
-	ac->PutPrintValueGate(out, "DISTANCE");	
+	out = circ->PutADDGate(ed1, ed2);
+	out = circ->PutADDGate(out, ed3);
+	out = circ->PutADDGate(out, ed4);
+	circ->PutPrintValueGate(out, "DISTANCE");	
 	  
 	  //NOT WORKING
 	//out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
