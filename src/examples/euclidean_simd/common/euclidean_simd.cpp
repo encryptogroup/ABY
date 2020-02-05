@@ -28,7 +28,6 @@
 #include <ios>
 #include <fstream>
 
-
 namespace patch
 {
     template < typename T > std::string to_string( const T& n )
@@ -45,7 +44,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		    std::vector<long> x_start,std::vector<long> y_start,
 		    std::vector<long> x_end, std::vector<long> y_end
 		    ) {
-    std::cout << "INDISDE" << std::endl;
+		    
+   	std::cout << "INDISDE" << std::endl;
 
 	auto start = std::chrono::system_clock::now();
 
@@ -71,30 +71,23 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	
 	Circuit* circ = sharings[sharing]->GetCircuitBuildRoutine();
-  
-  
-  
 
 	long output;
-	int n_vals = x_start.size();
-	
-	
-	
-
 	long distance;
+
+	int n_vals = x_start.size();
 
 	//# initialize epsilon and minLns values
 	double epsilon =13500000000;// 13500000000;//eps 
 	int minLns = 3;//m
 
-	//int no_of_lines = len(lines) 
-	int no_of_lines = 500; // in general number of columns 
+	int no_of_lines = 500; //= n_vals; in general number of rows 
 	//# dictionary to store neighborhood information of line segments
 	std::map< std::string, std::map< std::string, std::vector<int> > > neighborhood;
 	
 	int sum_minLns = 0;
 	int max_minLns = -1;
-	//int min_minLns = 70432;
+	int min_minLns = 70432;
 	uint32_t total_distance = 0;
 
   /**
@@ -110,11 +103,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	
 	*s_out;
 
-	
 	auto start1 = std::chrono::high_resolution_clock::now();
 	for(int l = 0; l < no_of_lines; l++){
 		if(neighborhood.count(patch::to_string(l))==0){
 
+			//Not necessary to instantiated a new key now. When doing push_bak already creates a new key
 			//neighborhood[patch::to_string(l)]["neighbors"].push_back(0);
 			neighborhood[patch::to_string(l)]["ncounter"].push_back(0);
 			neighborhood[patch::to_string(l)]["cluster"].push_back(0);
@@ -123,34 +116,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 		for (int ll = l+1; ll < no_of_lines; ll++){
 		
 			if(role == SERVER) {
-
-				// Two consecutive line segments. We need start and end of both
-				/**
-				s1_x_start = circ->PutINGate(x1_start[l],bitlen,SERVER);
-				s1_y_start = circ->PutINGate(y1_start[l],bitlen,SERVER);
-				s1_x_end = circ->PutINGate(x1_end[l],bitlen,SERVER);
-				s1_y_end = circ->PutINGate(y1_end[l],bitlen,SERVER);
-				
-				s1_x_next_start = circ->PutINGate(x1_start[ll],bitlen,SERVER);
-				s1_y_next_start = circ->PutINGate(y1_start[ll],bitlen,SERVER);
-				s1_x_next_end = circ->PutINGate(x1_end[ll],bitlen,SERVER);
-				s1_y_next_end = circ->PutINGate(y1_end[ll],bitlen,SERVER);
-
-				s2_x_start = circ->PutDummyINGate( bitlen);
-				s2_y_start = circ->PutDummyINGate( bitlen);
-				s2_x_end = circ->PutDummyINGate( bitlen);
-				s2_y_end = circ->PutDummyINGate( bitlen);
-				
-				s2_x_next_start = circ->PutDummyINGate( bitlen);
-				s2_y_next_start = circ->PutDummyINGate( bitlen);
-				s2_x_next_end = circ->PutDummyINGate( bitlen);
-				s2_y_next_end = circ->PutDummyINGate( bitlen);*/
 				
 				/**DIVIDING BY 10 I MANAGE TO REDUCE THE BILENGTH OF THE FINAL DISTANCE
 				AND BE ABLE TO USE UINT64*/ 
 				s1_x_start = circ->PutINGate((uint32_t) ceil(x_start.at(l)/10),bitlen,SERVER);
 				//circ->PutPrintValueGate(s1_x_start, "X SHARE");
-				std::cout<< " ROUNDED " << lround(x_start.at(l)/10) << std::endl;
+				//std::cout<< " ROUNDED " << lround(x_start.at(l)/10) << std::endl;
 				s1_y_start = circ->PutINGate((uint32_t)  ceil(y_start.at(l)/10),bitlen,SERVER);
 				s1_x_end = circ->PutINGate((uint32_t)  ceil(x_end.at(l)/10),bitlen,SERVER);
 				s1_y_end = circ->PutINGate((uint32_t)  ceil(y_end.at(l)/10),bitlen,SERVER);
@@ -170,28 +141,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s2_x_next_end = circ->PutDummyINGate( bitlen);
 				s2_y_next_end = circ->PutDummyINGate( bitlen);
 
-			} else { //role == CLIENT
-			/**
-				s2_x_start = circ->PutINGate(x2_start[l],bitlen,CLIENT);
-				s2_y_start = circ->PutINGate(y2_start[l],bitlen,CLIENT);
-				s2_x_end = circ->PutINGate(x2_end[l],bitlen,CLIENT);
-				s2_y_end = circ->PutINGate(y2_end[l],bitlen,CLIENT);
-				
-				s2_x_next_start = circ->PutINGate(x2_start[ll],bitlen,CLIENT);
-				s2_y_next_start = circ->PutINGate(y2_start[ll],bitlen,CLIENT);
-				s2_x_next_end = circ->PutINGate(x2_end[ll],bitlen,CLIENT);
-				s2_y_next_end = circ->PutINGate(y2_end[ll],bitlen,CLIENT);
-				
-				s1_x_start = circ->PutDummyINGate( bitlen);
-				s1_y_start = circ->PutDummyINGate( bitlen);
-				s1_x_end = circ->PutDummyINGate(bitlen);
-				s1_y_end = circ->PutDummyINGate( bitlen);
-
-				s1_x_next_start = circ->PutDummyINGate( bitlen);
-				s1_y_next_start = circ->PutDummyINGate( bitlen);
-				s1_x_next_end = circ->PutDummyINGate(bitlen);
-				s1_y_next_end = circ->PutDummyINGate( bitlen);*/
-				
+			} else { 
 				s2_x_start = circ->PutINGate((uint32_t)  ceil(x_start.at(l)/10),bitlen,CLIENT);
 				s2_y_start = circ->PutINGate((uint32_t) ceil (y_start.at(l)/10),bitlen,CLIENT);
 				s2_x_end = circ->PutINGate((uint32_t)  ceil(x_end.at(l)/10),bitlen,CLIENT);
@@ -210,9 +160,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s1_x_next_start = circ->PutDummyINGate( bitlen);
 				s1_y_next_start = circ->PutDummyINGate( bitlen);
 				s1_x_next_end = circ->PutDummyINGate( bitlen);
-				s1_y_next_end = circ->PutDummyINGate( bitlen);
-				
-				
+				s1_y_next_end = circ->PutDummyINGate( bitlen);				
 			}	
 
 			s_out = BuildFirstCircuit(role, 
@@ -230,13 +178,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			output = s_out->get_clear_value<uint32_t>();
 			distance = (long)output*100;
 			if(role == SERVER){
-				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" << distance << std::endl;
+				//std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" << distance << std::endl;
 			}
-			
 			
 			/** ++++++++++++ ABOVE IS OK ++++++++++++++++++++ */
 
-		/** check whether the second line segment is in the neighborhood dictionary or not
+	/** check whether the second line segment is in the neighborhood dictionary or not
             # this part is used for speed up the distance computation. If we consider distances
             # between every line segment as a matrix, then it is obvious that we will have a 
             # symmetric matrix after we compute all of the distances. therefore, it is faster
@@ -246,7 +193,8 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 
 				neighborhood[patch::to_string(ll)]["ncounter"].push_back(0);
 				neighborhood[patch::to_string(ll)]["cluster"].push_back(0);
-			}// check that whether the resulting distance is less than or equal to epsilon
+			}
+			// check that whether the resulting distance is less than or equal to epsilon
 			if (distance <= epsilon){
 				neighborhood[patch::to_string(l)]["neighbors"].push_back(ll);
     				neighborhood[patch::to_string(l)]["ncounter"].assign(1,neighborhood[patch::to_string(l)]["ncounter"].at(0)+1);
@@ -256,7 +204,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			party -> Reset();
 		}
 	}	
-	/**if(role == SERVER)
+	/**
+	//PRINTING EACH MAP COMPOSED BY KEYS:  NEIGHBORS, CLUSTER, NEIGHBOURS_COUNTER
+	if(role == SERVER)
 	{
 		for(auto itr1 = neighborhood.begin(); itr1 != neighborhood.end(); itr1++)
 		{
@@ -274,12 +224,12 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			std::cout << std::endl;
 		}
 	}*/
+	
 // initialize the first cluster id
 int cluster_id = 1;
 
 //# shuffle the keys of neighborhood dictionary 
 std::vector<std::string> keys ;
-
 std::pair<std::string,std::vector<int> > me; // what a map<int, int> is made of
 for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator it = neighborhood.begin(); it != neighborhood.end(); ++it) 
 {
@@ -288,23 +238,26 @@ for(std::map< std::string, std::map< std::string, std::vector<int> > >::iterator
 std::random_shuffle ( keys.begin(), keys.end() );
 
 
-//std::cout <<"JUST SHUFFLED "<<std::endl;
-    std::cout << "KEYS COMING "<< ' ';
+/** PRINT KEYS
+//std::cout << "KEYS COMING "<< ' ';
 
 for (std::vector<std::string>::const_iterator i = keys.begin(); i != keys.end(); ++i)
 {
     std::cout << *i << ' ';
 }
+*/
     
 int noise_counter = 0;
 
 std::map<std::string,std::vector<int> > clusters;
 std::vector<int> temp_array;
 
-std::cout <<"DISTANCES OK-->"<<keys.size()<< std::endl;
+std::cout <<"DISTANCES OK"<< std::endl;
 
 std::vector<std::string> cluster_labels ;
 std::string key_elem;
+
+//  i = ID of neighbors inside keys
 for(int i= 0; i< keys.size();i++)
 {
 	//# check whether the line segment is assigned to a cluster or not
@@ -315,19 +268,16 @@ for(int i= 0; i< keys.size();i++)
 		if(neighborhood[key_elem]["ncounter"].at(0) < minLns)
 		{
 			neighborhood[key_elem]["status"].push_back(-1);
-
 		}
 		else
 		{
 			// # push each element in the neighborhood of a cluster into a temporary queue
 			// # if a given line segment does not assigned to a cluster
-
 			for(int llls = 0 ; llls < neighborhood[key_elem]["neighbors"].size();llls++)
 			{
 				//std::cout <<" TEMP ARRAY LOOP "<< llls<<std::endl;
 				std::cout <<" LENGTH NEIGHBOR LLS "<< neighborhood[key_elem]["neighbors"].size()<<std::endl;
-
-						
+					
 				std::string neigh = patch::to_string(neighborhood[key_elem]["neighbors"].at(llls));
 				if(neighborhood[neigh]["cluster"].at(0)< 1)
 				{
@@ -357,12 +307,11 @@ for(int i= 0; i< keys.size();i++)
 					clusters[patch::to_string(cluster_id)].push_back(std::stoi(keys.at(i)));
 
 				}
-
 				neighborhood[patch::to_string(keys.at(i))]["cluster"].assign(1,cluster_id);
 				// add every non initialized line segment 
 				for(int ls= 0 ; ls < neighborhood[patch::to_string(keys.at(i))]["neighbors"].size(); ls++)
 				{
-				std::cout <<"NON INITIALIZED LOOP"<< std::endl;
+					std::cout <<"NON INITIALIZED LOOP"<< std::endl;
 
 					if(neighborhood[patch::to_string(neighborhood[keys.at(i)]["neighbors"].at(ls))]["cluster"].at(0)< 1)
 					{
@@ -376,18 +325,18 @@ for(int i= 0; i< keys.size();i++)
 							clusters[patch::to_string(cluster_id)].push_back(neighborhood[patch::to_string(keys.at(i))]["neighbors"].at(ls));
 						}
 					}
-				}//LOOP CHARLIE
+				}
 
 				//from now on the code follows the expand cluster algorithm in the TRACLUS paper
 
 				std::vector<int> queue = neighborhood[keys.at(i)]["neighbors"];
 				//std::cout <<"INITIAL QUEUE "<<queue.size()<< std::endl;
 
-				//TO stop the loop
-				int j = 0;
-				std::cout <<"WHILE LOOP"<< std::endl;
+				//To stop the loop
+				//int j = 0;
+				//std::cout <<"WHILE LOOP"<< std::endl;
 
-				while(queue.size()>0 || j < 3)
+				while(queue.size()>0)// || j < 3)
 				{
 
 					for(int llls = 0 ; llls < neighborhood[patch::to_string(queue.at(0))]["neighbors"].size();llls++)
@@ -426,9 +375,8 @@ for(int i= 0; i< keys.size();i++)
 
 						}
 					}
-				//}
 					queue.erase(queue.begin()+0);
-					j++;
+					//j++;
 				}
 				cluster_id = cluster_id+1;
 			}
@@ -440,9 +388,9 @@ for(int i= 0; i< keys.size();i++)
 	}
 	
 }
-
-			
+		
 		/**	
+		//Print cluster map
 		if(role == SERVER)
 		{
 
@@ -484,44 +432,42 @@ for(int i= 0; i< keys.size();i++)
 
 	}
 
-
-
-
-
-  
-	
+	delete s1_x_start;
+	delete s1_y_start;
+	delete s1_x_end;
+	delete s1_y_end; 
+	delete s2_x_start;
+	delete s2_y_start;
+	delete s2_x_end;
+	delete s2_y_end;
+	delete s1_x_next_start;
+	delete s1_y_next_start;
+	delete s1_x_next_end;
+	delete s1_y_next_end;
+	delete s2_x_next_start;
+	delete s2_y_next_start;
+	delete s2_x_next_end;
+	delete s2_y_next_end;
+	delete s_out;
 	delete party;
+	
+	/**
+	Writing the results with the parameters in a file at the end of the execution
+	
+	*/
 	auto finish = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> elapsed = finish - start1;
 
 	std::cout << "Elapsed time: " << elapsed.count() << " s\n";
 
-	//freopen ("logfile.log","a",stdout);
-	
-    	// Some computation here
     	auto end = std::chrono::system_clock::now();
 	std::chrono::duration<double> elapsed_seconds = end-start;
    	std::time_t end_time = std::chrono::system_clock::to_time_t(end);
 
     	std::cout << "finished computation at " << std::ctime(&end_time)<< "elapsed time: " << elapsed_seconds.count() << "s\n";
 	      
-  	/**printf (system(("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n").c_str()));
-	printf (system(("Execution time: "+ patch::to_string(elapsed_seconds.count())).c_str()));
-	printf(system(("Number of clusters: "+ patch::to_string(clusters.size())+"\n").c_str()));
-	printf(system(("minLns: "+ patch::to_string(minLns)+ "\n").c_str()));
-	printf(system(("Number of line segments: "+patch::to_string(no_of_lines)+"\n").c_str()) );
-	printf(system(("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str() ));
-	printf("-------------------------------------------");
- 	fclose (stdout);*/
 	std::ofstream outfile;
 	std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
-
-	/**log << system(("Starting time: "+patch::to_string(std::ctime(&end_time))+"\n").c_str());
-	log << system(("Execution time: "+ patch::to_string(elapsed_seconds.count())).c_str());
-	log << system(("Number of clusters: "+ patch::to_string(clusters.size())+"\n").c_str());
-	log << system(("minLns: "+ patch::to_string(minLns)+ "\n").c_str());
-	log << system(("Number of line segments: "+patch::to_string(no_of_lines)+"\n").c_str());
-	log << system(("Epsilon: "+ patch::to_string(epsilon)+"\n").c_str());*/
 	std::string role_string;
 	if(role == SERVER){
 	role_string = " SERVER ";
@@ -529,27 +475,21 @@ for(int i= 0; i< keys.size();i++)
 	role_string = " CLIENT " ;
 	}
 	log << "ROLE "+ role_string +"\n";
-
 	log << "Starting time: "+ patch::to_string(std::ctime(&end_time))+"\n";
 	log << "Execution time: "+ patch::to_string(elapsed_seconds.count())+"\n";
 	log << "Number of clusters: "+ patch::to_string(clusters.size())+"\n";
 	for(auto itr2 =clusters.begin (); itr2 != clusters.end (); itr2++)
 	{
-				std::cout <<"Cluster no"<< itr2->first << ": "<< clusters[patch::to_string(itr2->first)].size()<<std::endl ;
-				// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
-				
+				std::cout <<"Cluster no"<< itr2->first << ": "<< clusters[patch::to_string(itr2->first)].size()<<std::endl ;				
 		log << "Cluster no "+ patch::to_string(itr2->first)+": "+ patch::to_string(clusters[patch::to_string(itr2->first)].size())+ "\n";
-
 	}	
 	log << "minLns: "+ patch::to_string(minLns)+ "\n";
 	log << "Number of line segments: "+patch::to_string(no_of_lines)+"\n";
 	log << "Epsilon: "+ patch::to_string(epsilon)+"\n";
 	log << "------------------------------------------------------ \n";
-return 0;
+	return 0;
 	}
 	
-  
-  
   
   share* BuildFirstCircuit(e_role role,
 			   share* s1_x_start,  share* s1_y_start, share* s1_x_end, share* s1_y_end, 
@@ -558,7 +498,6 @@ return 0;
 			   share* s2_x_next_start,share* s2_y_next_start, share*  s2_x_next_end, share* s2_y_next_end,
 			   BooleanCircuit* circ) {
  
-	//share* out;
 	share* x_start;
 	share* y_start;
 	share* x_end;
@@ -574,28 +513,30 @@ return 0;
 	share* rando;
 
 	x_start = circ->PutADDGate(s1_x_start,s2_x_start);
-
 	y_start = circ->PutADDGate(s1_y_start,s2_y_start);
-
 	x_end = circ->PutADDGate(s1_x_end,s2_x_end);
-
-	  y_end = circ->PutADDGate(s1_y_end,s2_y_end);
+	y_end = circ->PutADDGate(s1_y_end,s2_y_end);
 	
-	  	/**circ->PutPrintValueGate(x_start, "X START");	
-		circ->PutPrintValueGate(y_start, "Y START");	
-		circ->PutPrintValueGate(x_end, "X END");
-		circ->PutPrintValueGate(y_end, "Y END");*/	
+	/** 
+	//SOME DEBUG
+	circ->PutPrintValueGate(x_start, "X START");	
+	circ->PutPrintValueGate(y_start, "Y START");	
+	circ->PutPrintValueGate(x_end, "X END");
+	circ->PutPrintValueGate(y_end, "Y END");*/	
 
 	x_next_start = circ->PutADDGate(s1_x_next_start,s2_x_next_start);
 	y_next_start = circ->PutADDGate(s1_y_next_start,s2_y_next_start);
 	x_next_end = circ->PutADDGate(s1_x_next_end,s2_x_next_end);
 	y_next_end = circ->PutADDGate(s1_y_next_end,s2_y_next_end);
-	/**circ->PutPrintValueGate(x_next_start, "X x_next_start");	
-		circ->PutPrintValueGate(y_next_start, "Y y_next_start");	
-		circ->PutPrintValueGate(x_next_end, "X x_next_end");
-		circ->PutPrintValueGate(y_next_end, "Y y_next_end");*/
-	//uint32_t out_bitlen , out_nvals , *out_vals;
 	  
+	/**
+	circ->PutPrintValueGate(x_next_start, "X x_next_start");	
+	circ->PutPrintValueGate(y_next_start, "Y y_next_start");	
+	circ->PutPrintValueGate(x_next_end, "X x_next_end");
+	circ->PutPrintValueGate(y_next_end, "Y y_next_end");*/
+	
+	  
+	  /** Compute Euclidean Distance as in th Example, with boolean circuits*/
 	share* out, *t_a, *t_b, *res_x, *res_y, *check_sel,*check_sel_inv,
 	  *ed1, *ed2, *ed3, *ed4;
 
@@ -608,15 +549,6 @@ return 0;
 	/** Distance metric 1: (x1_start-x2_start)^2 + (y1_start-y2_start)^2*/
 	  
 	/** Following code performs (x2-x1)*(x2-x1) */
-	//  res_x= circ->set_bitlength(bitlen);
-	  //res_y= circ->set_bitlength(bitlen);
-	  //ed1= circ->set_bitlength(bitlen);
-	  //ed2= circ->set_bitlength(bitlen);
-	  //ed3= circ->set_bitlength(bitlen);
-	  //ed4= circ->set_bitlength(bitlen);
-
-	  //out= circ->set_bitlength(bitlen);
-
 	check_sel = circ->PutGTGate(x_start, x_next_start);
 	check_sel_inv = circ->PutINVGate(check_sel);
 	t_a = circ->PutMUXGate(x_start, x_next_start, check_sel);
@@ -637,17 +569,8 @@ return 0;
 	/** Following code performs out = res_y + res_x*/
 	ed1 = circ->PutADDGate(res_x, res_y);
 
-
-	
-	//circ->PutPrintValueGate(x_start, "X START");
-	/**circ->PutPrintValueGate(y_start, "Y START");	
-	circ->PutPrintValueGate(x_end, "X END");	
-	circ->PutPrintValueGate(y_end, "Y END");	
-	//circ->PutPrintValueGate(ed1, "ED 1");	
-	
 	  
-	/** Distance metric 2: (x1_end-x2_end)^2 + (y1_start-y2_start)^2*/
-	  
+	/** Distance metric 2: (x1_end-x2_end)^2 + (y1_start-y2_start)^2*/	  
 	/** Following code performs (x2-x1)*(x2-x1) */
 	check_sel = circ->PutGTGate(x_end, x_next_end);
 	check_sel_inv = circ->PutINVGate(check_sel);
@@ -669,18 +592,8 @@ return 0;
 	/** Following code performs out = res_y + res_x*/
 	ed2 = circ->PutADDGate(res_x, res_y);
 
-
-	/**circ->PutPrintValueGate(x_start, "X START");
-	circ->PutPrintValueGate(y_start, "Y START");	
-	circ->PutPrintValueGate(x_end, "X END");	
-	circ->PutPrintValueGate(y_end, "Y END");*/	
-
-
-	//circ->PutPrintValueGate(ed2, "ED 2");
 	  
-	  
-	  /** Distance metric 3: (x1_start-x2_end)^2 + (y1_start-y2_end)^2*/
-	  
+	/** Distance metric 3: (x1_start-x2_end)^2 + (y1_start-y2_end)^2*/	  
 	/** Following code performs (x2-x1)*(x2-x1) */
 	check_sel = circ->PutGTGate(x_start, x_next_end);
 	check_sel_inv = circ->PutINVGate(check_sel);
@@ -703,15 +616,6 @@ return 0;
 	ed3 = circ->PutADDGate(res_x, res_y);
 
 
-	/**circ->PutPrintValueGate(x_start, "X START");
-	circ->PutPrintValueGate(y_start, "Y START");	
-	circ->PutPrintValueGate(x_end, "X END");	
-	circ->PutPrintValueGate(y_end, "Y END");*/	
-
-
-	//circ->PutPrintValueGate(ed3, "ED 3");	
-	  
-	  
 	  /** Distance metric 4: (x2_start-x1_end)^2 + (y2_start-y1_end)^2*/
 	/** Following code performs (x2-x1)*(x2-x1) */
 	check_sel = circ->PutGTGate(x_end, x_next_start);
@@ -734,28 +638,12 @@ return 0;
 
 	/** Following code performs out = res_y + res_x*/
 	ed4 = circ->PutADDGate(res_x, res_y);
-
-
-	/**circ->PutPrintValueGate(x_start, "X START");
-	circ->PutPrintValueGate(y_start, "Y START");	
-	circ->PutPrintValueGate(x_end, "X END");	
-	circ->PutPrintValueGate(y_end, "Y END");*/	
-
-
-	//circ->PutPrintValueGate(ed4, "ED 4");	
-
 	  
 	out = circ->PutADDGate(ed1, ed2);
 	out = circ->PutADDGate(out, ed3);
 	out = circ->PutADDGate(out, ed4);
 	//circ->PutPrintValueGate(out, "DISTANCE");	
-	  
-	  //NOT WORKING
-	//out->get_clear_value_vec(&out_vals, &out_bitlen, &out_nvals);
-	  
-	  
-	 //	std::cout<< " I AM INSIDE. This Is X " << out_vals[0] << std::endl;
-
+	
 	return out;
 }
   
