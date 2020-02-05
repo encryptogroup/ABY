@@ -84,11 +84,11 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	long distance;
 
 	//# initialize epsilon and minLns values
-	double epsilon =13500000;// 13500000000;//eps 
+	double epsilon =13500000000;// 13500000000;//eps 
 	int minLns = 3;//m
 
 	//int no_of_lines = len(lines) 
-	int no_of_lines = 100; // in general number of columns 
+	int no_of_lines = 1000; // in general number of columns 
 	//# dictionary to store neighborhood information of line segments
 	std::map< std::string, std::map< std::string, std::vector<int> > > neighborhood;
 	
@@ -462,6 +462,7 @@ for(int i= 0; i< keys.size();i++)
 			
 		}*/
 		
+		// JUST TO PRINT THE WHOLE DICTIONARY/MAP
 		if(role == SERVER)
 	{
 		for(auto itr1 = neighborhood.begin(); itr1 != neighborhood.end(); itr1++)
@@ -482,8 +483,16 @@ for(int i= 0; i< keys.size();i++)
 			std::cout <<" CLUSTERS SIZE "<<clusters.size()<<std::endl;
 
 	}
-
-
+	
+	// itr2->second represents vector<string> stored in map<string, vector<string>> which is stored in test.
+				for(auto itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++)
+				{
+					std::cout << *itr3 << ' ';
+				}
+			}
+			std::cout << std::endl;
+		}
+	
 
 
 
