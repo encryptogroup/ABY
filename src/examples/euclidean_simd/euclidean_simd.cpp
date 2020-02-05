@@ -14,12 +14,11 @@
 
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/parse_options.h>
-//ABY Party class
 #include "../../abycore/aby/abyparty.h"
-
 #include "common/euclidean_simd.h"
  
 
+/**To be able to use to_string() method*/
 namespace patch
 {
     template < typename T > std::string to_string( const T& n )
@@ -65,8 +64,6 @@ namespace patch
 		*port = (uint16_t) int_port;
 	}
 
-	//delete options;
-
 	return 1;
 }
 
@@ -100,34 +97,27 @@ std::vector<std::vector<std::string> > CSVReader::getData()
  
 	std::string line = "";
 	// Iterate through each line and split the content using delimeter
-	//  UNCOMMENT if there are HEADERS
+	//  UNCOMMENT if there are HEADERS in order to not include them in the vectors
 	//std::getline(file,line);
-	//std::cout<<"HEADER"<< line<< " "<<std::endl;
 	
 	while ( (std::getline(file, line)) )
-	{
-		
+	{		
 		std::vector<std::string> vec;
-		//REMOVING DOUBLE QUOTES
+		//REMOVING DOUBLE QUOTES IF ANY
 		line.erase(std::remove(line.begin(),line.end(),'\"'),line.end());
 		//boost::erase_all(line, "\"");
 		//std::cout<< line<< " "<<std::endl;
 		boost::algorithm::split(vec,line, boost::is_any_of(delimeter));
-		//std::cout<< vec.at(0)<< " "<<std::endl;
-		//std::cout<<"maybe good"<< vec.at(0)<< " "<< vec.at(1)<< " "<< vec.at(2)<< "  "<< vec.at(3)<< std::endl;
-		dataList.push_back(vec);
-		
+		dataList.push_back(vec);		
 
 	}
 	// Close the File
 	file.close();
- 
 	return dataList;
 }
   
 
 int main(int argc, char** argv) {
-
 	e_role role;
 	uint32_t bitlen = 32, nvals = 31, secparam = 128, nthreads = 1;
 	uint16_t port = 7766;
@@ -140,12 +130,13 @@ int main(int argc, char** argv) {
 
 	seclvl seclvl = get_sec_lvl(secparam);
 	std::string filename;
-	std::vector<long>  x_start;// = reader.getData();
-	std::vector<long> y_start;// = reader.getData();
-	std::vector<long> x_end;// = reader.getData();
-	std::vector<long> y_end;// = reader.getData();
+	std::vector<long>  x_start;
+	std::vector<long> y_start;
+	std::vector<long> x_end;
+	std::vector<long> y_end;
 	int n_columns=0;
 
+	//* 
 	if(role == SERVER){
 		filename = "/root/ABY/data_test/data1.csv";
 	}else {
@@ -157,31 +148,15 @@ int main(int argc, char** argv) {
 	std::vector<std::vector<std::string> > dataList = reader.getData();
 
 	for(std::vector<std::string> vec : dataList){
-		
-		
-			
-
-		// USING FROM INDEX 1 SINCE INDEX 0 IS THE ROW INDEX 
-		// not necessary for files without index
-		//std::cout<< patch::to_string(vec.at(0))<< " "<<vec.at(1)<<std::endl;
-		x_start.push_back(std::stol (vec.at(0),nullptr,10));//std::stoi(vec.at(0)));//.substr(1,vec.at(0).size()-2)));
-		y_start.push_back(std::stol (vec.at(1),nullptr,10));//std::stoi(vec.at(1)));//.substr(1,vec.at(1).size()-2)));
-		x_end.push_back(std::stol (vec.at(2),nullptr,10));//std::stoi(vec.at(2)));//.substr(1,vec.at(2).size()-2)));
-		y_end.push_back(std::stol (vec.at(3),nullptr,10));//std::stoi(vec.at(3)));//.substr(1,vec.at(3).size()-2)));
+		//stol --> string to long
+		x_start.push_back(std::stol (vec.at(0),nullptr,10));
+		y_start.push_back(std::stol (vec.at(1),nullptr,10));
+		x_end.push_back(std::stol (vec.at(2),nullptr,10));
+		y_end.push_back(std::stol (vec.at(3),nullptr,10));
 		n_columns++;
 		
-
-				//long tres = std::stol (vec.at(0)) + std::stol (vec.at(2));
-
-		//std::cout<< tres <<std::endl;
-
 	}
-				std::cout<< "LENGTH "<< n_columns<<std::endl;
-				std::cout<< "X S "<<x_start.at(0)<<" "<< x_end.at(0)<<std::endl;
 				
-
-
-
 	//evaluate addition cirucui using arithmetic
 	test_circuit(role, address, port, seclvl, bitlen,
 			nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end);           
