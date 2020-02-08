@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
 				
 	//evaluate addition cirucui using arithmetic
 	test_circuit(role, address, port, seclvl, bitlen,
-			nthreads, mt_alg, S_BOOL, x_start, y_start,x_end, y_end);           
+			nthreads, mt_alg, S_ARITH, x_start, y_start,x_end, y_end);           
 	
 	return 0;
 }
