@@ -23,7 +23,7 @@
  millionaire's problem
  */
 int32_t test_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing,
+		uint32_t bitlen, uint32_t n_vals, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing,
 		    std::vector<long> x_start, std::vector<long> y_start,
 		    std::vector<long> x_end, std::vector<long> y_end);
 /**
