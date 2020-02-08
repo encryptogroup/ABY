@@ -496,7 +496,7 @@ for(int i= 0; i< keys.size();i++)
 			   share* s2_x_start,share* s2_y_start, share*  s2_x_end, share* s2_y_end,
 			   share* s1_x_next_start,  share* s1_y_next_start, share* s1_x_next_end, share* s1_y_next_end, 
 			   share* s2_x_next_start,share* s2_y_next_start, share*  s2_x_next_end, share* s2_y_next_end,
-			   BooleanCircuit* circ) {
+			   ArithmeticCircuit* circ) {
  
 	share* x_start;
 	share* y_start;
@@ -529,6 +529,8 @@ for(int i= 0; i< keys.size();i++)
 	x_next_end = circ->PutADDGate(s1_x_next_end,s2_x_next_end);
 	y_next_end = circ->PutADDGate(s1_y_next_end,s2_y_next_end);
 	  
+	  
+	  
 	/**
 	circ->PutPrintValueGate(x_next_start, "X x_next_start");	
 	circ->PutPrintValueGate(y_next_start, "Y y_next_start");	
@@ -548,96 +550,46 @@ for(int i= 0; i< keys.size();i++)
 
 	/** Distance metric 1: (x1_start-x2_start)^2 + (y1_start-y2_start)^2*/
 	  
-	/** Following code performs (x2-x1)*(x2-x1) */
-	check_sel = circ->PutGTGate(x_start, x_next_start);
-	check_sel_inv = circ->PutINVGate(check_sel);
-	t_a = circ->PutMUXGate(x_start, x_next_start, check_sel);
-	t_b = circ->PutMUXGate(x_start, x_next_start, check_sel_inv);
-
-	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = circ->PutMULGate(res_x, res_x);
-
-	/** Following code performs (y2-y1)*(y2-y1) */
-	check_sel = circ->PutGTGate(y_start, y_next_start);
-	check_sel_inv = circ->PutINVGate(check_sel);
-	t_a = circ->PutMUXGate(y_start, y_next_start, check_sel);
-	t_b = circ->PutMUXGate(y_start, y_next_start, check_sel_inv);
-
-	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = circ->PutMULGate(res_y, res_y);
-
-	/** Following code performs out = res_y + res_x*/
-	ed1 = circ->PutADDGate(res_x, res_y);
+	  
+	  t_a = circ->PutSUBGate(x_start,x_next_start);
+	  t_a = circ->PutMULGate(t_a,t_a);
+	  t_b = circ->PutSUBGate(y_start,y_next_start);
+	  t_b = circ->PutMULGate(t_b,t_b);
+	  ed1 = circ->PutADDGate(t_a,t_b);
+	
 
 	  
 	/** Distance metric 2: (x1_end-x2_end)^2 + (y1_start-y2_start)^2*/	  
 	/** Following code performs (x2-x1)*(x2-x1) */
-	check_sel = circ->PutGTGate(x_end, x_next_end);
-	check_sel_inv = circ->PutINVGate(check_sel);
-	t_a = circ->PutMUXGate(x_end, x_next_end, check_sel);
-	t_b = circ->PutMUXGate(x_end, x_next_end, check_sel_inv);
-
-	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = circ->PutMULGate(res_x, res_x);
-
-	/** Following code performs (y2-y1)*(y2-y1) */
-	check_sel = circ->PutGTGate(y_end, y_next_end);
-	check_sel_inv = circ->PutINVGate(check_sel);
-	t_a = circ->PutMUXGate(y_end, y_next_end, check_sel);
-	t_b = circ->PutMUXGate(y_end, y_next_end, check_sel_inv);
-
-	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = circ->PutMULGate(res_y, res_y);
-
-	/** Following code performs out = res_y + res_x*/
-	ed2 = circ->PutADDGate(res_x, res_y);
+	  
+	  t_a = circ->PutSUBGate(x_end,x_next_end);
+	  t_a = circ->PutMULGate(t_a,t_a);
+	  t_b = circ->PutSUBGate(y_end,y_next_end);
+	  t_b = circ->PutMULGate(t_b,t_b);
+	  ed2 = circ->PutADDGate(t_a,t_b);
+		 
 
 	  
 	/** Distance metric 3: (x1_start-x2_end)^2 + (y1_start-y2_end)^2*/	  
 	/** Following code performs (x2-x1)*(x2-x1) */
-	check_sel = circ->PutGTGate(x_start, x_next_end);
-	check_sel_inv = circ->PutINVGate(check_sel);
-	t_a = circ->PutMUXGate(x_start, x_next_end, check_sel);
-	t_b = circ->PutMUXGate(x_start, x_next_end, check_sel_inv);
-
-	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = circ->PutMULGate(res_x, res_x);
-
-	/** Following code performs (y2-y1)*(y2-y1) */
-	check_sel = circ->PutGTGate(y_start, y_next_end);
-	check_sel_inv = circ->PutINVGate(check_sel);
-	t_a = circ->PutMUXGate(y_start, y_next_end, check_sel);
-	t_b = circ->PutMUXGate(y_start, y_next_end, check_sel_inv);
-
-	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = circ->PutMULGate(res_y, res_y);
-
-	/** Following code performs out = res_y + res_x*/
-	ed3 = circ->PutADDGate(res_x, res_y);
+	  
+	t_a = circ->PutSUBGate(x_start,x_next_end);
+	  t_a = circ->PutMULGate(t_a,t_a);
+	  t_b = circ->PutSUBGate(y_start,y_next_end);
+	  t_b = circ->PutMULGate(t_b,t_b);
+	  ed3 = circ->PutADDGate(t_a,t_b);
+	
 
 
 	  /** Distance metric 4: (x2_start-x1_end)^2 + (y2_start-y1_end)^2*/
 	/** Following code performs (x2-x1)*(x2-x1) */
-	check_sel = circ->PutGTGate(x_end, x_next_start);
-	check_sel_inv = circ->PutINVGate(check_sel);
-	t_a = circ->PutMUXGate(x_end, x_next_start, check_sel);
-	t_b = circ->PutMUXGate(x_end, x_next_start, check_sel_inv);
-
-	 
-	res_x = circ->PutSUBGate(t_a, t_b);
-	res_x = circ->PutMULGate(res_x, res_x);
-
-	/** Following code performs (y2-y1)*(y2-y1) */
-	check_sel = circ->PutGTGate(y_end, y_next_start);
-	check_sel_inv = circ->PutINVGate(check_sel);
-	t_a = circ->PutMUXGate(y_end, y_next_start, check_sel);
-	t_b = circ->PutMUXGate(y_end, y_next_start, check_sel_inv);
-
-	res_y = circ->PutSUBGate(t_a, t_b);
-	res_y = circ->PutMULGate(res_y, res_y);
-
-	/** Following code performs out = res_y + res_x*/
-	ed4 = circ->PutADDGate(res_x, res_y);
+	  
+	   t_a = circ->PutSUBGate(x_end,x_next_start);
+	  t_a = circ->PutMULGate(t_a,t_a);
+	  t_b = circ->PutSUBGate(y_end,y_next_start);
+	  t_b = circ->PutMULGate(t_b,t_b);
+	  ed4 = circ->PutADDGate(t_a,t_b);
+	
 	  
 	out = circ->PutADDGate(ed1, ed2);
 	out = circ->PutADDGate(out, ed3);
