@@ -81,7 +81,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	double epsilon =13500000000;// 13500000000;//eps 
 	int minLns = 3;//m
 
-	int no_of_lines = 100; //= n_vals; in general number of rows 
+	int no_of_lines = 450; //= n_vals; in general number of rows 
 	//# dictionary to store neighborhood information of line segments
 	std::map< std::string, std::map< std::string, std::vector<int> > > neighborhood;
 	
