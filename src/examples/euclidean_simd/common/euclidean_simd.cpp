@@ -40,7 +40,7 @@ namespace patch
 
 
 int32_t test_circuit(e_role role, const std::string& address, uint16_t port, seclvl seclvl,
-		uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing,
+		uint32_t bitlen, uint32_t nthreads, uint32_t n_vals, e_mt_gen_alg mt_alg, e_sharing sharing,
 		    std::vector<long> x_start,std::vector<long> y_start,
 		    std::vector<long> x_end, std::vector<long> y_end
 		    ) {
@@ -75,13 +75,13 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 	long output;
 	long distance;
 
-	int n_vals = x_start.size();
+	//int n_vals = x_start.size();
 
 	//# initialize epsilon and minLns values
 	double epsilon =13500000000;// 13500000000;//eps 
 	int minLns = 3;//m
 
-	int no_of_lines = 450; //= n_vals; in general number of rows 
+	int no_of_lines = n_vals; //= n_vals; in general number of rows 
 	//# dictionary to store neighborhood information of line segments
 	std::map< std::string, std::map< std::string, std::vector<int> > > neighborhood;
 	
@@ -177,7 +177,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 			//HERE WE HAVE THE 4 DISTANCE METRICS 
 			output = s_out->get_clear_value<uint32_t>();
 			distance = (long)output*100;
-			if(role == SERVER){
+			if(role == SERVER & (ll%300)==1 ) {
 				std::cout<< " DISTANCE BETWEEN " <<l<<" ANS " << ll << "-->" << distance << std::endl;
 			}
 			
