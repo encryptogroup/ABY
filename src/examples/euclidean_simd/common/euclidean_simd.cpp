@@ -168,7 +168,7 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 						  s2_x_start,s2_y_start, s2_x_end, s2_y_end,//line 1 Server2
 						  s1_x_next_start, s1_y_next_start, s1_x_next_end,s1_y_next_end, //line 2 server 1
 						  s2_x_next_start,s2_y_next_start, s2_x_next_end, s2_y_next_end, //line 2 server 2
-					(BooleanCircuit*) circ);
+					(ArithmeticCircuit*) circ);
 
 			s_out = circ->PutOUTGate(s_out,ALL);
 			party->ExecCircuit();
