@@ -1,0 +1,87 @@
+ROLE  SERVER 
+Starting time: Wed Feb  5 19:20:32 2020
+
+Execution time: 2144.1
+Number of clusters: 2
+Cluster no 1: 296
+Cluster no 2: 3
+minLns: 3
+Number of line segments: 300
+Epsilon: 1.35e+10
+------------------------------------------------------ 
+ROLE  SERVER 
+Starting time: Thu Feb  6 08:54:45 2020
+
+Execution time: 5104.5
+Number of clusters: 2
+Cluster no 1: 494
+Cluster no 2: 3
+minLns: 3
+Number of line segments: 500
+Epsilon: 1.35e+10
+------------------------------------------------------ 
+ROLE  SERVER 
+Starting time: Fri Feb  7 15:17:11 2020
+
+Execution time: 7510.14
+Number of clusters: 2
+Cluster no 1: 588
+Cluster no 2: 3
+minLns: 3
+Number of line segments: 600
+Epsilon: 1.35e+10
+------------------------------------------------------ 
+ROLE  SERVER 
+Starting time: Sat Feb  8 11:39:27 2020
+
+Execution time: 10367.4
+Number of clusters: 2
+Cluster no 1: 688
+Cluster no 2: 3
+minLns: 3
+Number of line segments: 700
+Epsilon: 1.35e+10
+------------------------------------------------------ 
+ROLE  SERVER 
+Starting time: Sat Feb  8 20:15:41 2020
+
+Execution time: 708.265
+Number of clusters: 1
+Cluster no 1: 693
+minLns: 3
+Number of line segments: 700
+Epsilon: 1.35e+10
+------------------------------------------------------ 
+ROLE  SERVER 
+Starting time: Sat Feb  8 21:07:56 2020
+
+Execution time: 715.839
+Number of clusters: 2
+Cluster no 1: 690
+Cluster no 2: 4
+minLns: 3
+Number of line segments: 700
+Epsilon: 1.35e+10
+------------------------------------------------------ 
+ROLE  SERVER 
+Starting time: Sun Feb  9 08:30:25 2020
+
+Execution time: 238.466
+Number of clusters: 2
+Cluster no 1: 397
+Cluster no 2: 2
+minLns: 3
+Number of line segments: 400
+Epsilon: 1.35e+10
+------------------------------------------------------ 
+ROLE  SERVER 
+Starting time: Sun Feb  9 19:00:59 2020
+
+Execution time: 1209.68
+Number of clusters: 2
+Cluster no 1: 889
+Cluster no 2: 3
+minLns: 3
+Number of line segments: 900
+Epsilon: 1.35e+10
+------------------------------------------------------ 
