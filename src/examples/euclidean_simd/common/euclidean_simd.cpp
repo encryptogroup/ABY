@@ -122,9 +122,9 @@ int32_t test_circuit(e_role role, const std::string& address, uint16_t port, sec
 				s1_x_start = circ->PutINGate((uint32_t) x_start.at(l),bitlen,SERVER);
 				//circ->PutPrintValueGate(s1_x_start, "X SHARE");
 				//std::cout<< " ROUNDED " << lround(x_start.at(l)/10) << std::endl;
-				s1_y_start = circ->PutINGate((uint32_t)  (y_start.at(l),bitlen,SERVER);
+				s1_y_start = circ->PutINGate((uint32_t)  y_start.at(l),bitlen,SERVER);
 				s1_x_end = circ->PutINGate((uint32_t)  x_end.at(l),bitlen,SERVER);
-				s1_y_end = circ->PutINGate((uint32_t)  (y_end.at(l),bitlen,SERVER);
+				s1_y_end = circ->PutINGate((uint32_t)  y_end.at(l),bitlen,SERVER);
 				
 				s1_x_next_start = circ->PutINGate((uint32_t)  x_start.at(ll),bitlen,SERVER);
 				s1_y_next_start = circ->PutINGate((uint32_t)   y_start.at(ll),bitlen,SERVER);
