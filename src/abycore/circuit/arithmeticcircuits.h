@@ -235,6 +235,8 @@ public:
 
 
 	uint32_t PutINVGate(uint32_t parentid);
+	std::vector<uint32_t> PutINVGate(std::vector<uint32_t> parentid);
+	share* PutINVGate(share* parent);
 	uint32_t PutCONVGate(std::vector<uint32_t> parentids);
 
 	share* PutADDGate(share* ina, share* inb);
