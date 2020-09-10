@@ -23,14 +23,14 @@
 #include <cstring>
 #include <cstdlib>
 
-#if __has_include(<filesystem>)
-#include <filesystem>
-namespace filesystem = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-namespace filesystem = std::experimental::filesystem;
+#if USE_BOOST_FILESYSTEM
+#include <boost/filesystem.hpp>
+namespace filesystem = boost::filesystem;
+typedef boost::system::error_code error_code;
 #else
-#error "C++17 filesystem library not found"
+#include <filesytem>
+namespace filesystem = std::filesystem;
+typedef std::error_code error_code;
 #endif
 
 #include <iostream>
@@ -94,7 +94,7 @@ void Sharing::PreCompFileDelete() {
 		}
 		else {
 			truncation_size = filesystem::file_size(filename) - m_nFilePos;
-			std::error_code ec;
+			error_code ec;
 			filesystem::resize_file(filename, truncation_size, ec);
 			if(ec) {
 				std::cout << "Error occured in truncate:" << ec.message() << std::endl;
