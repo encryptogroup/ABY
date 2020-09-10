@@ -20,12 +20,12 @@ By *Daniel Demmler, Thomas Schneider and Michael Zohner* ([ENCRYPTO](http://www.
             - [Build Options](#build-options)
             - [Cleaning the Build Directory](#cleaning-the-build-directory)
             - [Installation](#installation)
-    - [Developer Guide and Documentation](#developer-guide-and-documentation)
+    - [Building for Android](#building-for-android)
+    - [Developer Guide and Documentation](#developer-guide-and-documentation) 
 - [ABY Applications](#aby-applications)
     - [Included Example Applications](#included-example-applications)
     - [Running Applications](#running-applications)
     - [Creating and Building your own ABY Application](#creating-and-building-your-own-aby-application)
-
 
 ### Features
 ---
@@ -182,12 +182,36 @@ make
 make install
 ```
 
-
 #### Developer Guide and Documentation
 We provide an extensive [developer guide](https://www.informatik.tu-darmstadt.de/media/encrypto/encrypto_code/abydevguide.pdf) with many examples and explanations of how to use ABY.
 
 Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.io/ABY/docs/index.html) for further information and comments on the code.
 
+## Building for Android
+
+1. Clone the ABY git repository by running:
+    ```
+    git clone https://github.com/encryptogroup/ABY.git
+    ```
+
+2. Enter the Framework directory: `cd ABY/`
+
+3. Create and enter the build directory: `mkdir build && cd build`
+
+4. Use CMake to configure the build and setting android variables:
+    ```
+    cmake -DANDROID_NDK=<path/to/ndk> -DANDROID_NATIVE_API_LEVEL=<TargetAPI> -DANDROID_ABI=<TargetABI> ..
+    ```
+    where `<TargetAPI>` is a number between 16 and the latest Android API and `<TargetABI>` is the target platform (one of armeabi-v7a, arm64-v8a, x86 and x86_64 respectively).
+    
+    Please note that when using ABY with Android Studio that `<path/to/ndk>` needs to be the path to the NDK used by Android Studio (often located at $HOME/Android/Sdk/ndk-bundle on Linux).
+    
+
+5. Call `make` in the build directory.
+   You can find the build executables and libraries in the directories `bin/`
+   and `lib/`, respectively.
+
+6. Call `make install` after the build has finished. This will install the libraries into the provided NDK.
 
 ### ABY Applications
 ---
@@ -234,6 +258,8 @@ Also, see the [online doxygen documentation of ABY](http://encryptogroup.github.
 	add_executable(my_application my_application.cpp)
 	target_link_libraries(my_application ABY::aby)
 	```
+* If you are using ABY for Android in Android Studio and you encounter the "library libc++_shared.so not found" error, make sure to pass '-DANDROID_STL=c++_shared' as an argument to cmake within the gradle script. Setting ANDROID_STL within the cmake script won't work.
+
 * Otherwise, setup the include path such that the headers of ABY and its
   dependencies can be found and link your application to the `libaby.a`
   library and the other dependencies (see above).

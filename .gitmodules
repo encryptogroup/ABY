@@ -4,3 +4,6 @@
 [submodule "extern/OTExtension"]
 	path = extern/OTExtension
 	url = https://github.com/encryptogroup/OTExtension.git
+[submodule "extern/boost-cmake"]
+	path = extern/boost-cmake
+	url = https://github.com/Orphis/boost-cmake.git
