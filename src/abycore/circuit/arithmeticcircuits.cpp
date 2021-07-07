@@ -248,6 +248,17 @@ uint32_t ArithmeticCircuit::PutINVGate(uint32_t parentid) {
 	return gateid;
 }
 
+std::vector<uint32_t> ArithmeticCircuit::PutINVGate(std::vector<uint32_t> parentid) {
+	std::vector<uint32_t> out(parentid.size());
+	for (uint32_t i = 0; i < out.size(); i++)
+		out[i] = PutINVGate(parentid[i]);
+	return out;
+}
+
+share* ArithmeticCircuit::PutINVGate(share* parent) {
+	return new arithshare(PutINVGate(parent->get_wires()), this);
+}
+
 uint32_t ArithmeticCircuit::PutCONVGate(std::vector<uint32_t> parentids) {
 	uint32_t gateid = m_cCircuit->PutCONVGate(parentids, 2, S_ARITH, m_nShareBitLen);
 	UpdateInteractiveQueue(gateid);
