@@ -1,6 +1,6 @@
 [submodule "extern/ENCRYPTO_utils"]
 	path = extern/ENCRYPTO_utils
-	url = https://github.com/encryptogroup/ENCRYPTO_utils.git
+	url = https://github.com/edwjchen/ENCRYPTO_utils.git
 [submodule "extern/OTExtension"]
 	path = extern/OTExtension
 	url = https://github.com/encryptogroup/OTExtension.git
