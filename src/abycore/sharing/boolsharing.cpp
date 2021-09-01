@@ -19,14 +19,12 @@
 #include "../aby/abysetup.h"
 #include <cstdlib>
 
-#if __has_include(<filesystem>)
-#include <filesystem>
-namespace filesystem = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-namespace filesystem = std::experimental::filesystem;
+#if USE_BOOST_FILESYSTEM
+#include <boost/filesystem.hpp>
+namespace filesystem = boost::filesystem;
 #else
-#error "C++17 filesystem library not found"
+#include <filesytem>
+namespace filesystem = std::filesystem;
 #endif
 
 

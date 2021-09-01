@@ -1,4 +1,3 @@
-
 find_path(GMPXX_INCLUDE_DIR gmpxx.h)
 
 # TODO: get version
