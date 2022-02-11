@@ -6,11 +6,11 @@
 #include "../../../../../../EZPC/ezpc.h"
 
 enum op {
-	ADDD
+	ADD_
 };
 
 op op_hash(std::string o) {
-    if (o == "ADD") return ADDD;
+    if (o == "ADD") return ADD_;
     throw std::invalid_argument("Unknown mode: "+o);
 }
 
@@ -68,7 +68,7 @@ share* process_instruction(
 	share* wire1 = get_from_cache(cache, input_wires[0]);
 	share* wire2 = get_from_cache(cache, input_wires[1]);
 	switch(op_hash(op)) {
-		case ADD: {
+		case ADD_: {
 			result = circ->PutADDGate(wire1, wire2);
 		}
 	}
