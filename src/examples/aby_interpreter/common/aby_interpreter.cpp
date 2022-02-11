@@ -34,6 +34,16 @@ share* get_from_cache(std::unordered_map<std::string, share*> cache, std::string
 	}
 }
 
+std::string get_from_params(std::unordered_map<std::string, std::string> params, std::string key) {
+	std::unordered_map<std::string, std::string>::const_iterator p = params.find(key);
+	if (p == params.end()){
+		throw std::invalid_argument("Unknown wire: " + key);
+	}
+	else {
+		return p->second;
+	}
+}
+
 Circuit* get_circuit(Circuit* acirc, Circuit* bcirc, Circuit* ycirc, std::string circuit_type) {
 	Circuit* circ;
 	if (circuit_type == "a") {
