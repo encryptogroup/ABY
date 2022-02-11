@@ -6,15 +6,15 @@
 #include "../../../../../../EZPC/ezpc.h"
 
 enum op {
-	ADD
+	ADDD
 };
 
-op op_hash(std::string op) {
-    if (op == "ADD") return ADD;
-    throw std::invalid_argument("Unknown mode: "+op);
+op op_hash(std::string o) {
+    if (o == "ADD") return ADDD;
+    throw std::invalid_argument("Unknown mode: "+o);
 }
 
-std::vector<std::string> split(std::string str, char delimiter) {
+std::vector<std::string> split_(std::string str, char delimiter) {
     std::vector<std::string> result;
     std::istringstream ss(str);
     std::string word; 
@@ -86,7 +86,7 @@ share* process_bytecode(
 
 	std::string str;
 	while (std::getline(file, str)) {
-        std::vector<std::string> line = split(str, ' ');
+        std::vector<std::string> line = split_(str, ' ');
 		if (line.size() < 4) continue;
 		int num_inputs = std::stoi(line[0]);
 		int num_outputs = std::stoi(line[1]);

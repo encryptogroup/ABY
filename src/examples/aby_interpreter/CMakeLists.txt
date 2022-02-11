@@ -1,3 +1,3 @@
 
-add_executable(aby_test aby_test.cpp common/aby_test.cpp)
-target_link_libraries(aby_test ABY::aby ENCRYPTO_utils::encrypto_utils)
+add_executable(aby_interpreter aby_interpreter.cpp common/aby_interpreter.cpp)
+target_link_libraries(aby_interpreter ABY::aby ENCRYPTO_utils::encrypto_utils)

@@ -24,7 +24,6 @@ std::vector<std::string> split(std::string str, char delimiter) {
     return result;
 }
 
-
 std::unordered_map<std::string, std::pair<uint32_t, std::string>> parse_mpc_inputs(std::string test_file_path) {
     std::unordered_map<std::string, std::pair<uint32_t, std::string>> input_map;
 
@@ -113,7 +112,7 @@ int main(int argc, char** argv) {
         }
     }
 
-	std::unordered_map<std::string, std::pair<int, std::string>> params;
+	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params;
     std::unordered_map<std::string, std::string> mapping;	
 
 	switch(hash(m)) {
