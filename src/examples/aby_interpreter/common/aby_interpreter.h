@@ -13,5 +13,15 @@
 #include <vector>
 #include <bits/stdc++.h>
 
-int32_t test_aby_test_circuit(std::string bytecode_file_path, std::unordered_map<std::string, int> params, e_role role, const std::string& address, 
-		uint16_t port, seclvl seclvl, uint32_t bitlen, uint32_t nthreads, e_mt_gen_alg mt_alg, e_sharing sharing);
+int32_t test_aby_test_circuit(
+	std::string bytecode_file_path, 
+	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params, 
+	std::unordered_map<std::string, std::string> mapping,
+	e_role role, const std::string& address, 
+	uint16_t port, 
+	seclvl seclvl, 
+	uint32_t bitlen, 
+	uint32_t nthreads, 
+	e_mt_gen_alg mt_alg, 
+	e_sharing sharing
+);

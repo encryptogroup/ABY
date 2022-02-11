@@ -25,44 +25,68 @@ std::vector<std::string> split(std::string str, char delimiter) {
 }
 
 
-std::unordered_map<std::string, int> parse_mpc_inputs(std::string test_file_path, int role) {
-    std::unordered_map<std::string, int> input_map;
+std::unordered_map<std::string, std::pair<uint32_t, std::string>> parse_mpc_inputs(std::string test_file_path) {
+    std::unordered_map<std::string, std::pair<uint32_t, std::string>> input_map;
 
     std::ifstream file(test_file_path);
     assert(("Test file exists.", file.is_open()));
 
     std::string str;
-    bool role_flag = false;
+    bool server_flag = false;
+    bool client_flag = false;
     while (std::getline(file, str)) {
         std::vector<std::string> line = split(str, ' ');
         if (line.size() == 0) continue;
         if (line[0].rfind("//", 0) == 0) {
-            role_flag = false;
+            server_flag = false;
+            client_flag = false;
         }
         if (line[0].rfind("//", 0) == 0 && line[1] == "server") {
-            if (role == 0) role_flag = true;
-            if (role == 1) role_flag = false;
+            server_flag = true;
+            client_flag = false;
             continue;
         }
         if (line[0].rfind("//", 0) == 0 && line[1] == "client") {
-            if (role == 1) role_flag = true;
-            if (role == 0) role_flag = false;
+            server_flag = false;
+            client_flag = true;
             continue;
         }
-        if (role_flag) {
+        if (server_flag || client_flag) {
+            std::string flag = server_flag ? "server" : "client";
             if (line.size() == 2) {
-                input_map[line[0]] = std::stoi(line[1]);
+                input_map[line[0]] = std::pair{(uint32_t)std::stoi(line[1]),flag};
             } else if (line.size() > 2) {
                 // Vector input, key_idx: value
                 for (int i = 1; i < line.size(); i++) {
                     std::string key = line[0] + "_" + std::to_string(i-1);
-                    input_map[key] = std::stoi(line[i]);
+                    input_map[key] = std::pair{(uint32_t)std::stoi(line[i]),flag};
                 }
             }
         }
     }
     return input_map;
 }
+
+
+std::unordered_map<std::string, std::string> parse_mapping_file(std::string mapping_file_path) {
+    std::unordered_map<std::string, std::string> mapping_map;
+
+    std::ifstream file(mapping_file_path);
+    assert(("Mapping file exists.", file.is_open()));
+
+    std::string str;
+    bool role_flag = false;
+    while (std::getline(file, str)) {
+        std::vector<std::string> line = split(str, ' ');
+        if (line.size() == 0) continue;
+        if (line.size() == 2) {
+            mapping_map[line[0]] = line[1];
+        }
+    }
+    return mapping_map;
+}
+
+
 
 int main(int argc, char** argv) {
 	e_role role; 
@@ -74,7 +98,7 @@ int main(int argc, char** argv) {
 	seclvl seclvl = get_sec_lvl(secparam);
 
 	std::vector<std::string> args(argv + 1, argv + argc);
-    std::string m, bytecode_file_path, test_file_path;
+    std::string m, bytecode_file_path, test_file_path, mapping_file_path;
     for (auto i = args.begin(); i != args.end(); ++i) {
         if (*i == "-m" || *i == "--mode") {
             m = *++i;
@@ -82,21 +106,25 @@ int main(int argc, char** argv) {
             role = (e_role) std::stoi(*++i);
         } else if (*i == "-t" || *i == "--test_file") {
             test_file_path = *++i;
-        } else if (*i == "-f" || *i == "--file") {
+        } else if (*i == "-b" || *i == "--bytecode_file") {
             bytecode_file_path = *++i;
+        } else if (*i == "-m" || *i == "--mapping_file") {
+            mapping_file_path = *++i;
         }
     }
 
-	std::unordered_map<std::string, int> params;
-	
+	std::unordered_map<std::string, std::pair<int, std::string>> params;
+    std::unordered_map<std::string, std::string> mapping;	
+
 	switch(hash(m)) {
         case mpc: {
-            params = parse_mpc_inputs(test_file_path, (int) role);
+            params = parse_mpc_inputs(test_file_path);
+            mapping = parse_mapping_file(mapping_file_path);
         }
         break;
     }
 
-	test_aby_test_circuit(bytecode_file_path, params, role, address, port, seclvl, 32,
+	test_aby_test_circuit(bytecode_file_path, params, mapping, role, address, port, seclvl, 32,
 			nthreads, mt_alg, S_BOOL);
 
 	return 0;

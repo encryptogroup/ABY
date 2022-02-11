@@ -34,13 +34,13 @@ share* get_from_cache(std::unordered_map<std::string, share*> cache, std::string
 	}
 }
 
-std::string get_from_params(std::unordered_map<std::string, std::string> params, std::string key) {
-	std::unordered_map<std::string, std::string>::const_iterator p = params.find(key);
-	if (p == params.end()){
+std::string get(std::unordered_map<std::string, std::string> map, std::string key) {
+	std::unordered_map<std::string, std::string>::const_iterator m = map.find(key);
+	if (m == map.end()){
 		throw std::invalid_argument("Unknown wire: " + key);
 	}
 	else {
-		return p->second;
+		return m->second;
 	}
 }
 
@@ -58,8 +58,12 @@ Circuit* get_circuit(Circuit* acirc, Circuit* bcirc, Circuit* ycirc, std::string
 	return circ;
 }
 
-share* process_instruction(Circuit* circ, std::unordered_map<std::string, share*> cache, 
-	std::vector<std::string> input_wires, std::vector<std::string> output_wires, std::string op) {
+share* process_instruction(
+	Circuit* circ, 
+	std::unordered_map<std::string, share*> cache, 
+	std::vector<std::string> input_wires, 
+	std::vector<std::string> output_wires, 
+	std::string op) {
 	share* result;
 	share* wire1 = get_from_cache(cache, input_wires[0]);
 	share* wire2 = get_from_cache(cache, input_wires[1]);
@@ -71,9 +75,12 @@ share* process_instruction(Circuit* circ, std::unordered_map<std::string, share*
 	return result;
 }
 
-void process_bytecode(std::string bytecode_file_path, 
+share* process_bytecode(
+	std::string bytecode_file_path, 
 	std::unordered_map<std::string, share*> cache,
-	Circuit* acirc, Circuit* bcirc, Circuit* ycirc) {
+	Circuit* acirc, 
+	Circuit* bcirc, 
+	Circuit* ycirc) {
 	std::ifstream file(bytecode_file_path);
     assert(("Test file exists.", file.is_open()));
 
@@ -101,33 +108,38 @@ void process_bytecode(std::string bytecode_file_path,
 	}
 }
 
-std::unordered_map<std::string, share*> process_input_params(
-	std::string params_file_path, 
-	std::unordered_map<std::string, int> params,
-	Circuit* acirc, Circuit* bcirc, Circuit* ycirc) {
-	std::ifstream file(params_file_path);
-    assert(("Test file exists.", file.is_open()));
-	int count = 0;
-	std::string str;
-	while (std::getline(file, str)) {
-		std::vector<std::string> line = split(str, ' ');
-		
-		// Add share to map
-		std::string wire_name = line[0];
-		std::string share_str = line[1];
-		std::string circuit_type = line[2];
-		Circuit* circ = get_circuit(acirc, bcirc, ycirc, circuit_type);
-		
-		// get value from wire name 
-		// PutInGate 
-		// add share to cache 
+void process_input_params(
+	std::unordered_map<std::string, share*> cache,
+	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params,
+	std::unordered_map<std::string, std::string> mapping,
+	e_role role,
+	uint32_t bitlen,
+	Circuit* acirc, 
+	Circuit* bcirc, 
+	Circuit* ycirc) {
+	std::string role_str = (role == 0) ? "server" : "client";
+	for (auto p: params) {
+		std::string param_name = p.first;
+		uint32_t param_value = p.second.first;
+		std::string param_role = p.second.second;
+
+		std::string circuit_type = get(mapping, param_name);
+		Circuit* circ = get_circuit(acirc, bcirc, ycirc, circuit_type);\
+		share* param_share;
+		if (param_role == role_str) {
+			param_share = circ->PutINGate(param_value, bitlen, role);
+		} else {
+			param_share = circ->PutDummyINGate(bitlen);
+		}
+		cache[param_name] = param_share;
 	}
 }
 
 
 int32_t test_aby_test_circuit(
 	std::string bytecode_file_path, 
-	std::unordered_map<std::string, int> params, 
+	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params, 
+	std::unordered_map<std::string, std::string> mapping,
 	e_role role, 
 	const std::string& address, 
 	uint16_t port, 
@@ -145,6 +157,16 @@ int32_t test_aby_test_circuit(
 	Circuit* ycirc = sharings[S_YAO]->GetCircuitBuildRoutine();
 	output_queue out_q;
 
+	// share cache
+	std::unordered_map<std::string, share*> cache;
+
+	// process input params
+	process_input_params(cache, params, mapping, role, bitlen, acirc, bcirc, ycirc);
+
+	// process bytecode
+	share* out_share = process_bytecode(bytecode_file_path, cache, acirc, bcirc, ycirc);
+	
+	add_to_output_queue(out_q, out_share, role, std::cout);
 	party->ExecCircuit();
 	flush_output_queue(out_q, role, bitlen);
 	delete party;
