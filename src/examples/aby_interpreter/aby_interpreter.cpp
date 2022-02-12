@@ -86,6 +86,28 @@ std::unordered_map<std::string, std::string> parse_mapping_file(std::string mapp
 }
 
 
+void check_inputs(std::string m, std::string bytecode_file_path, std::string test_file_path, std::string mapping_file_path) {
+    if (m.empty()) {
+        std::cout << "Please specify the mode: mpc" << std::endl;
+        exit(1);
+    }
+    
+    if (bytecode_file_path.empty()) {
+        std::cout << "Please specify the bytecode file path." << std::endl;
+        exit(1);
+    }
+
+    if (test_file_path.empty()) {
+        std::cout << "Please specify the test file path." << std::endl;
+        exit(1);
+    }
+
+    if (mapping_file_path.empty()) {
+        std::cout << "Please specify the mapping file path." << std::endl;
+        exit(1);
+    }
+}
+
 
 int main(int argc, char** argv) {
 	e_role role; 
@@ -111,6 +133,8 @@ int main(int argc, char** argv) {
             mapping_file_path = *++i;
         }
     }
+
+    check_inputs(m, bytecode_file_path, test_file_path, mapping_file_path);
 
 	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params;
     std::unordered_map<std::string, std::string> mapping;	
