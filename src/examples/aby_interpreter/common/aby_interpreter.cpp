@@ -24,9 +24,9 @@ std::vector<std::string> split_(std::string str, char delimiter) {
     return result;
 }
 
-share* get_from_cache(std::unordered_map<std::string, share*> cache, std::string key) {
-	std::unordered_map<std::string, share*>::const_iterator wire = cache.find(key);
-	if (wire == cache.end()){
+share* get_from_cache(std::unordered_map<std::string, share*>* cache, std::string key) {
+	std::unordered_map<std::string, share*>::const_iterator wire = cache->find(key);
+	if (wire == cache->end()){
 		throw std::invalid_argument("Unknown wire: " + key);
 	}
 	else {
@@ -34,9 +34,9 @@ share* get_from_cache(std::unordered_map<std::string, share*> cache, std::string
 	}
 }
 
-std::string get(std::unordered_map<std::string, std::string> map, std::string key) {
-	std::unordered_map<std::string, std::string>::const_iterator m = map.find(key);
-	if (m == map.end()){
+std::string get(std::unordered_map<std::string, std::string>* map, std::string key) {
+	std::unordered_map<std::string, std::string>::const_iterator m = map->find(key);
+	if (m == map->end()){
 		throw std::invalid_argument("Unknown wire: " + key);
 	}
 	else {
@@ -46,11 +46,11 @@ std::string get(std::unordered_map<std::string, std::string> map, std::string ke
 
 Circuit* get_circuit(Circuit* acirc, Circuit* bcirc, Circuit* ycirc, std::string circuit_type) {
 	Circuit* circ;
-	if (circuit_type == "a") {
+	if (circuit_type == "A") {
 		circ = acirc;
-	} else if (circuit_type == "b") {
+	} else if (circuit_type == "B") {
 		circ = bcirc;
-	} else if (circuit_type == "y") {
+	} else if (circuit_type == "Y") {
 		circ = ycirc;
 	} else {
 		throw std::invalid_argument("Unknown circuit type: " + circuit_type);
@@ -60,7 +60,7 @@ Circuit* get_circuit(Circuit* acirc, Circuit* bcirc, Circuit* ycirc, std::string
 
 share* process_instruction(
 	Circuit* circ, 
-	std::unordered_map<std::string, share*> cache, 
+	std::unordered_map<std::string, share*>* cache, 
 	std::vector<std::string> input_wires, 
 	std::vector<std::string> output_wires, 
 	std::string op) {
@@ -77,7 +77,8 @@ share* process_instruction(
 
 share* process_bytecode(
 	std::string bytecode_file_path, 
-	std::unordered_map<std::string, share*> cache,
+	std::unordered_map<std::string, share*>* cache,
+	std::unordered_map<std::string, std::string>* mapping,
 	Circuit* acirc, 
 	Circuit* bcirc, 
 	Circuit* ycirc) {
@@ -85,13 +86,17 @@ share* process_bytecode(
     assert(("Test file exists.", file.is_open()));
 
 	std::string str;
+	share* output;
+	Circuit* circ;
 	while (std::getline(file, str)) {
         std::vector<std::string> line = split_(str, ' ');
+
 		if (line.size() < 4) continue;
 		int num_inputs = std::stoi(line[0]);
 		int num_outputs = std::stoi(line[1]);
 		std::vector<std::string> input_wires = std::vector<std::string>(num_inputs);
 		std::vector<std::string> output_wires = std::vector<std::string>(num_outputs);
+
 		for (int i = 0; i < num_inputs; i++) {
 			input_wires[i] = line[2+i];
 		}
@@ -99,47 +104,50 @@ share* process_bytecode(
 			output_wires[i] = line[2+num_inputs+i];
 		}
 		std::string op = line[2+num_inputs+num_outputs];
-		std::string circuit_type = line[2+num_inputs+num_outputs+1];
-		Circuit* circ = get_circuit(acirc, bcirc, ycirc, circuit_type);
-		share* output = process_instruction(circ, cache, input_wires, output_wires, op);
+		std::string circuit_type = get(mapping, output_wires[0]);
+		
+		circ = get_circuit(acirc, bcirc, ycirc, circuit_type);
+		output = process_instruction(circ, cache, input_wires, output_wires, op);
 		for (auto o: output_wires) {
-			cache[o] = output;
+			(*cache)[o] = output;
 		}
 	}
+	return circ->PutOUTGate(output, ALL)
+;
 }
 
 void process_input_params(
-	std::unordered_map<std::string, share*> cache,
-	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params,
-	std::unordered_map<std::string, std::string> mapping,
+	std::unordered_map<std::string, share*>* cache,
+	std::unordered_map<std::string, std::tuple<std::string, uint32_t, uint32_t>>* params,
+	std::unordered_map<std::string, std::string>* mapping,
 	e_role role,
 	uint32_t bitlen,
 	Circuit* acirc, 
 	Circuit* bcirc, 
 	Circuit* ycirc) {
 	std::string role_str = (role == 0) ? "server" : "client";
-	for (auto p: params) {
+	for (auto p: *params) {
 		std::string param_name = p.first;
-		uint32_t param_value = p.second.first;
-		std::string param_role = p.second.second;
-
-		std::string circuit_type = get(mapping, param_name);
-		Circuit* circ = get_circuit(acirc, bcirc, ycirc, circuit_type);\
+		std::string param_role = std::get<0>(p.second);
+		uint32_t param_value = std::get<1>(p.second);
+		uint32_t param_index = std::get<2>(p.second);
+		std::string circuit_type = get(mapping, std::to_string(param_index));
+		Circuit* circ = get_circuit(acirc, bcirc, ycirc, circuit_type);
 		share* param_share;
 		if (param_role == role_str) {
 			param_share = circ->PutINGate(param_value, bitlen, role);
 		} else {
 			param_share = circ->PutDummyINGate(bitlen);
 		}
-		cache[param_name] = param_share;
+		(*cache)[std::to_string(param_index)] = param_share;
 	}
 }
 
 
 int32_t test_aby_test_circuit(
 	std::string bytecode_file_path, 
-	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params, 
-	std::unordered_map<std::string, std::string> mapping,
+	std::unordered_map<std::string, std::tuple<std::string, uint32_t, uint32_t>>* params, 
+	std::unordered_map<std::string, std::string>* mapping,
 	e_role role, 
 	const std::string& address, 
 	uint16_t port, 
@@ -148,6 +156,7 @@ int32_t test_aby_test_circuit(
 	uint32_t nthreads, 
 	e_mt_gen_alg mt_alg, 
 	e_sharing sharing) {
+
 
 	// setup
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
@@ -158,14 +167,14 @@ int32_t test_aby_test_circuit(
 	output_queue out_q;
 
 	// share cache
-	std::unordered_map<std::string, share*> cache;
+	std::unordered_map<std::string, share*>* cache = new std::unordered_map<std::string, share*>();
 
 	// process input params
 	process_input_params(cache, params, mapping, role, bitlen, acirc, bcirc, ycirc);
 
 	// process bytecode
-	share* out_share = process_bytecode(bytecode_file_path, cache, acirc, bcirc, ycirc);
-	
+	share* out_share = process_bytecode(bytecode_file_path, cache, mapping, acirc, bcirc, ycirc);
+
 	add_to_output_queue(out_q, out_share, role, std::cout);
 	party->ExecCircuit();
 	flush_output_queue(out_q, role, bitlen);

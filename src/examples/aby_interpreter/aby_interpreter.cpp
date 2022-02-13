@@ -24,8 +24,8 @@ std::vector<std::string> split(std::string str, char delimiter) {
     return result;
 }
 
-std::unordered_map<std::string, std::pair<uint32_t, std::string>> parse_mpc_inputs(std::string test_file_path) {
-    std::unordered_map<std::string, std::pair<uint32_t, std::string>> input_map;
+std::unordered_map<std::string, std::tuple<std::string, uint32_t, uint32_t>> parse_mpc_inputs(std::string test_file_path) {
+    std::unordered_map<std::string, std::tuple<std::string, uint32_t, uint32_t>> input_map;
 
     std::ifstream file(test_file_path);
     assert(("Test file exists.", file.is_open()));
@@ -33,6 +33,7 @@ std::unordered_map<std::string, std::pair<uint32_t, std::string>> parse_mpc_inpu
     std::string str;
     bool server_flag = false;
     bool client_flag = false;
+    uint32_t num_params = 0;
     while (std::getline(file, str)) {
         std::vector<std::string> line = split(str, ' ');
         if (line.size() == 0) continue;
@@ -51,14 +52,17 @@ std::unordered_map<std::string, std::pair<uint32_t, std::string>> parse_mpc_inpu
             continue;
         }
         if (server_flag || client_flag) {
-            std::string flag = server_flag ? "server" : "client";
+            std::string role = server_flag ? "server" : "client";
+            uint32_t value = (uint32_t)std::stoi(line[1]);
+            uint32_t index = num_params;
+            num_params++;
             if (line.size() == 2) {
-                input_map[line[0]] = std::pair{(uint32_t)std::stoi(line[1]),flag};
+                input_map[line[0]] = std::tuple{role, value, index};
             } else if (line.size() > 2) {
                 // Vector input, key_idx: value
                 for (int i = 1; i < line.size(); i++) {
                     std::string key = line[0] + "_" + std::to_string(i-1);
-                    input_map[key] = std::pair{(uint32_t)std::stoi(line[i]),flag};
+                    input_map[key] = std::tuple{role, value, index};
                 }
             }
         }
@@ -129,14 +133,14 @@ int main(int argc, char** argv) {
             test_file_path = *++i;
         } else if (*i == "-b" || *i == "--bytecode_file") {
             bytecode_file_path = *++i;
-        } else if (*i == "-m" || *i == "--mapping_file") {
+        } else if (*i == "--mapping_file") {
             mapping_file_path = *++i;
         }
     }
 
     check_inputs(m, bytecode_file_path, test_file_path, mapping_file_path);
 
-	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params;
+	std::unordered_map<std::string, std::tuple<std::string, uint32_t, uint32_t>> params;
     std::unordered_map<std::string, std::string> mapping;	
 
 	switch(hash(m)) {
@@ -147,7 +151,7 @@ int main(int argc, char** argv) {
         break;
     }
 
-	test_aby_test_circuit(bytecode_file_path, params, mapping, role, address, port, seclvl, 32,
+	test_aby_test_circuit(bytecode_file_path, &params, &mapping, role, address, port, seclvl, 32,
 			nthreads, mt_alg, S_BOOL);
 
 	return 0;

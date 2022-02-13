@@ -15,8 +15,8 @@
 
 int32_t test_aby_test_circuit(
 	std::string bytecode_file_path, 
-	std::unordered_map<std::string, std::pair<uint32_t, std::string>> params, 
-	std::unordered_map<std::string, std::string> mapping,
+	std::unordered_map<std::string, std::tuple<std::string, uint32_t, uint32_t>>* params, 
+	std::unordered_map<std::string, std::string>* mapping,
 	e_role role, const std::string& address, 
 	uint16_t port, 
 	seclvl seclvl, 
