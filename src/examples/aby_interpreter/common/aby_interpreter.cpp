@@ -50,6 +50,10 @@ op op_hash(std::string o) {
     throw std::invalid_argument("Unknown operator: "+o);
 }
 
+bool is_bv_op(op o) {
+	return o == ADD_ || o == SUB_ || o == MUL_ || o == EQ_bv || o == EQ_bool || o == GT_ || o == LT_ || o == GE_ || o == LE_ || o == REM_ || o == DIV_ || o == AND_ || o == OR_ || o == XOR_;
+}
+
 std::vector<std::string> split_(std::string str, char delimiter) {
     std::vector<std::string> result;
     std::istringstream ss(str);
@@ -94,129 +98,158 @@ Circuit* get_circuit(Circuit* acirc, Circuit* bcirc, Circuit* ycirc, std::string
 	return circ;
 }
 
+share* add_conv_gate(
+	std::string from, 
+	std::string to, 
+	share* wire, 
+	Circuit* acirc,
+	Circuit* bcirc,
+	Circuit* ycirc) {
+	if (from == "a" && to == "b") {
+		return bcirc->PutY2BGate(ycirc->PutA2YGate(wire));
+	} else if (from == "a" && to == "y") {
+		return ycirc->PutA2YGate(wire);
+	} else if (from == "b" && to == "a") {
+		return acirc->PutB2AGate(wire);
+	}  else if (from == "b" && to == "y") {
+		return ycirc->PutB2YGate(wire);
+	} else if (from == "y" && to == "a") {
+		return acirc->PutB2AGate(bcirc->PutY2BGate(wire));
+	} else if (from == "y" && to == "b") {
+		return bcirc->PutY2BGate(wire);
+	} else {
+		return wire;
+	}
+}
+
 share* process_instruction(
-	Circuit* circ, 
+	Circuit* acirc, 
+	Circuit* bcirc, 
+	Circuit* ycirc, 
+	std::string circuit_type,
 	std::unordered_map<std::string, share*>* cache, 
+	std::unordered_map<std::string, std::string>* mapping,
 	std::vector<std::string> input_wires, 
 	std::vector<std::string> output_wires, 
 	std::string op) {
-	
+
+	Circuit* circ = get_circuit(acirc, bcirc, ycirc, circuit_type);
 	share* result;
-	switch(op_hash(op)) {
-		case ADD_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = circ->PutADDGate(wire1, wire2);
-			break;
+
+	if (is_bv_op(op_hash(op))) {
+		share* wire1 = get_from_cache(cache, input_wires[0]);
+		share* wire2 = get_from_cache(cache, input_wires[1]);
+
+		// add conversion gates
+		std::string share_type_1 = get(mapping, input_wires[0]);
+		std::string share_type_2 = get(mapping, input_wires[1]);
+		wire1 = add_conv_gate(share_type_1, circuit_type, wire1, acirc, bcirc, ycirc);
+		wire2 = add_conv_gate(share_type_2, circuit_type, wire2, acirc, bcirc, ycirc);
+
+		switch(op_hash(op)) {
+			case ADD_: {
+				result = circ->PutADDGate(wire1, wire2);
+				break;
+			}
+			case SUB_: {
+				result = circ->PutSUBGate(wire1, wire2);
+				break;
+			}
+			case MUL_: {
+				result = circ->PutMULGate(wire1, wire2);
+				break;
+			}
+			case GT_: {
+				result = circ->PutGTGate(wire1, wire2);
+				break;
+			}
+			case LT_: {
+				result = circ->PutGTGate(wire2, wire1);
+				break;
+			}
+			case GE_: {
+				result = ((BooleanCircuit *)circ)->PutINVGate(circ->PutGTGate(wire2, wire1));
+				break;
+			}
+			case LE_: {
+				result = ((BooleanCircuit *)circ)->PutINVGate(circ->PutGTGate(wire1, wire2));
+				break;
+			}
+			case REM_: {
+				result = signedmodbl(circ, wire1, wire2);
+				break;
+			}
+			case AND_: {
+				result = circ->PutANDGate(wire1, wire2);
+				break;
+			}
+			case OR_: {
+				result = ((BooleanCircuit *)circ)->PutORGate(wire1, wire2);
+				break;
+			}
+			case XOR_: {
+				result = circ->PutXORGate(wire1, wire2);
+				break;
+			}
+			case DIV_: {
+				result = signeddivbl(circ, wire1, wire2);
+				break;
+			} 
+			case EQ_bv: {
+				share* one = put_cons32_gate(bcirc, 1);
+				one = add_conv_gate("b", circuit_type, one, acirc, bcirc, ycirc);
+				result = circ->PutXORGate(circ->PutXORGate(circ->PutGTGate(wire1, wire2), circ->PutGTGate(wire2, wire1)), one);
+				break;
+			}
+			case EQ_bool: {
+				share* one = put_cons32_gate(bcirc, 1);
+				one = add_conv_gate("b", circuit_type, one, acirc, bcirc, ycirc);
+				result = circ->PutXORGate(circ->PutXORGate(wire1, wire2), one);
+				break;
+			}
 		}
-		case SUB_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = circ->PutSUBGate(wire1, wire2);
-			break;
-		}
-		case MUL_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = circ->PutMULGate(wire1, wire2);
-			break;
-		}
-		case EQ_bv: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			share* one = put_cons32_gate(circ, 1);
-			result = circ->PutXORGate(circ->PutXORGate(circ->PutGTGate(wire1, wire2), circ->PutGTGate(wire2, wire1)), one);
-			break;
-		}
-		case EQ_bool: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			share* one = put_cons1_gate(circ, 1);
-			result = circ->PutXORGate(circ->PutXORGate(wire1, wire2), one);
-			break;
-		}
-		case GT_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = circ->PutGTGate(wire1, wire2);
-			break;
-		}
-		case LT_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = circ->PutGTGate(wire2, wire1);
-			break;
-		}
-		case GE_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = ((BooleanCircuit *)circ)->PutINVGate(circ->PutGTGate(wire2, wire1));
-			break;
-		}
-		case LE_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = ((BooleanCircuit *)circ)->PutINVGate(circ->PutGTGate(wire1, wire2));
-			break;
-		}
-		case REM_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = signedmodbl(circ, wire1, wire2);
-			break;
-		}
-		case AND_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = circ->PutANDGate(wire1, wire2);
-			break;
-		}
-		case OR_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = ((BooleanCircuit *)circ)->PutORGate(wire1, wire2);
-			break;
-		}
-		case XOR_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = circ->PutXORGate(wire1, wire2);
-			break;
-		}
-		case CONS_bv: {
-			int value = std::stoi(input_wires[0]);
-			result = put_cons64_gate(circ, value);
-			break;
-		}
-		case CONS_bool: {
-			int value = std::stoi(input_wires[0]);
-			result = put_cons1_gate(circ, value);
-			break;
-		}
-		case MUX_: {
-			share* sel = get_from_cache(cache, input_wires[0]);
-			share* wire1 = get_from_cache(cache, input_wires[1]);
-			share* wire2 = get_from_cache(cache, input_wires[2]);
-			result = circ->PutMUXGate(wire1, wire2, sel);
-			break;
-		}
-		case NOT_: {
-			share* wire = get_from_cache(cache, input_wires[0]);
-			result = ((BooleanCircuit *)circ)->PutINVGate(wire);
-			break;
-		}
-		case DIV_: {
-			share* wire1 = get_from_cache(cache, input_wires[0]);
-			share* wire2 = get_from_cache(cache, input_wires[1]);
-			result = signeddivbl(circ, wire1, wire2);
-			break;
-		}
-		case OUT_: {
-			share* wire = get_from_cache(cache, input_wires[0]);
- 			result = circ->PutOUTGate(wire, ALL);
-			break;
+	} else {
+		switch(op_hash(op)) {
+			case CONS_bv: {
+				int value = std::stoi(input_wires[0]);
+				if (circuit_type == "y") {
+					result = put_cons64_gate(bcirc, value);
+					result = add_conv_gate("b", circuit_type, result, acirc, bcirc, ycirc);
+				} else {
+					result = put_cons64_gate(circ, value);
+				}
+				break;
+			}
+			case CONS_bool: {
+				int value = std::stoi(input_wires[0]);
+				if (circuit_type == "y") {
+					result = put_cons1_gate(bcirc, value);
+					result = add_conv_gate("b", circuit_type, result, acirc, bcirc, ycirc);
+				} else {
+					result = put_cons1_gate(circ, value);
+				}
+				break;
+			}
+			case MUX_: {
+				share* sel = get_from_cache(cache, input_wires[0]);
+				share* wire1 = get_from_cache(cache, input_wires[1]);
+				share* wire2 = get_from_cache(cache, input_wires[2]);
+				result = circ->PutMUXGate(wire1, wire2, sel);
+				break;
+			}
+			case NOT_: {
+				share* wire = get_from_cache(cache, input_wires[0]);
+				result = ((BooleanCircuit *)circ)->PutINVGate(wire);
+				break;
+			}
+			case OUT_: {
+				share* wire = get_from_cache(cache, input_wires[0]);
+				result = circ->PutOUTGate(wire, ALL);
+				break;
+			}
 		}
 	}
+	
 	return result;
 }
 
@@ -257,9 +290,8 @@ share* process_bytecode(
 		} else {
 			circuit_type = get(mapping, input_wires[0]);
 		}
-		
-		circ = get_circuit(acirc, bcirc, ycirc, circuit_type);
-		last_instr = process_instruction(circ, cache, input_wires, output_wires, op);
+		last_instr = process_instruction(acirc, bcirc, ycirc, circuit_type, cache, mapping, input_wires, output_wires, op);
+
 		for (auto o: output_wires) {
 			(*cache)[o] = last_instr;
 		}
