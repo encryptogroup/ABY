@@ -38,7 +38,7 @@ uint32_t get_from_param_map(std::unordered_map<std::string, uint32_t>* map, std:
 
 std::unordered_map<std::string, std::tuple<std::string, uint32_t, uint32_t>> parse_mpc_inputs(std::string test_path, std::string param_map_path) {
     std::ifstream param_file(param_map_path);
-    assert(("Param map file exists.", file.is_open()));
+    assert(("Param map file exists.", param_file.is_open()));
     if (!param_file.is_open()) throw std::runtime_error("Param map file doesn't exist. -- " + param_map_path);
     
     std::unordered_map<std::string, uint32_t> param_map;

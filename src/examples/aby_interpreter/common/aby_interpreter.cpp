@@ -9,8 +9,7 @@ enum op {
 	ADD_,
 	SUB_,
 	MUL_,
-	EQ_bv,
-	EQ_bool,
+	EQ_,
 	GT_,
 	LT_,
 	GE_,
@@ -31,8 +30,7 @@ op op_hash(std::string o) {
     if (o == "ADD") return ADD_;
 	if (o == "SUB") return SUB_;
 	if (o == "MUL") return MUL_;
-	if (o == "EQ_bv") return EQ_bv;
-	if (o == "EQ_bool") return EQ_bool;
+	if (o == "EQ") return EQ_;
 	if (o == "GT") return GT_;
 	if (o == "LT") return LT_;
 	if (o == "GE") return GE_;
@@ -51,7 +49,7 @@ op op_hash(std::string o) {
 }
 
 bool is_bv_op(op o) {
-	return o == ADD_ || o == SUB_ || o == MUL_ || o == EQ_bv || o == EQ_bool || o == GT_ || o == LT_ || o == GE_ || o == LE_ || o == REM_ || o == DIV_ || o == AND_ || o == OR_ || o == XOR_;
+	return o == ADD_ || o == SUB_ || o == MUL_ || o == EQ_ || o == GT_ || o == LT_ || o == GE_ || o == LE_ || o == REM_ || o == DIV_ || o == AND_ || o == OR_ || o == XOR_;
 }
 
 std::vector<std::string> split_(std::string str, char delimiter) {
@@ -106,7 +104,7 @@ share* add_conv_gate(
 	Circuit* bcirc,
 	Circuit* ycirc) {
 	if (from == "a" && to == "b") {
-		return bcirc->PutY2BGate(ycirc->PutA2YGate(wire));
+		return bcirc->PutA2BGate(wire, ycirc);
 	} else if (from == "a" && to == "y") {
 		return ycirc->PutA2YGate(wire);
 	} else if (from == "b" && to == "a") {
@@ -114,7 +112,7 @@ share* add_conv_gate(
 	}  else if (from == "b" && to == "y") {
 		return ycirc->PutB2YGate(wire);
 	} else if (from == "y" && to == "a") {
-		return acirc->PutB2AGate(bcirc->PutY2BGate(wire));
+		return acirc->PutY2AGate(wire, bcirc);
 	} else if (from == "y" && to == "b") {
 		return bcirc->PutY2BGate(wire);
 	} else {
@@ -143,6 +141,7 @@ share* process_instruction(
 		// add conversion gates
 		std::string share_type_1 = get(mapping, input_wires[0]);
 		std::string share_type_2 = get(mapping, input_wires[1]);
+
 		wire1 = add_conv_gate(share_type_1, circuit_type, wire1, acirc, bcirc, ycirc);
 		wire2 = add_conv_gate(share_type_2, circuit_type, wire2, acirc, bcirc, ycirc);
 
@@ -195,17 +194,12 @@ share* process_instruction(
 				result = signeddivbl(circ, wire1, wire2);
 				break;
 			} 
-			case EQ_bv: {
-				share* one = put_cons32_gate(bcirc, 1);
-				one = add_conv_gate("b", circuit_type, one, acirc, bcirc, ycirc);
-				result = circ->PutXORGate(circ->PutXORGate(circ->PutGTGate(wire1, wire2), circ->PutGTGate(wire2, wire1)), one);
+			case EQ_: {
+				result = circ->PutEQGate(wire1, wire2);
 				break;
 			}
-			case EQ_bool: {
-				share* one = put_cons32_gate(bcirc, 1);
-				one = add_conv_gate("b", circuit_type, one, acirc, bcirc, ycirc);
-				result = circ->PutXORGate(circ->PutXORGate(wire1, wire2), one);
-				break;
+			default: {
+				throw std::invalid_argument("Unknown binop: " + op);
 			}
 		}
 	} else {
@@ -234,11 +228,26 @@ share* process_instruction(
 				share* sel = get_from_cache(cache, input_wires[0]);
 				share* wire1 = get_from_cache(cache, input_wires[1]);
 				share* wire2 = get_from_cache(cache, input_wires[2]);
+
+				// add conversion gates
+				std::string share_type_sel = get(mapping, input_wires[0]);
+				std::string share_type_1 = get(mapping, input_wires[1]);
+				std::string share_type_2 = get(mapping, input_wires[2]);
+
+				sel = add_conv_gate(share_type_sel, circuit_type, sel, acirc, bcirc, ycirc);
+				wire1 = add_conv_gate(share_type_1, circuit_type, wire1, acirc, bcirc, ycirc);
+				wire2 = add_conv_gate(share_type_2, circuit_type, wire2, acirc, bcirc, ycirc);
+
 				result = circ->PutMUXGate(wire1, wire2, sel);
 				break;
 			}
 			case NOT_: {
 				share* wire = get_from_cache(cache, input_wires[0]);
+
+				// add conversion gates
+				std::string share_type = get(mapping, input_wires[0]);
+				wire = add_conv_gate(share_type, circuit_type, wire, acirc, bcirc, ycirc);
+				
 				result = ((BooleanCircuit *)circ)->PutINVGate(wire);
 				break;
 			}
@@ -246,6 +255,9 @@ share* process_instruction(
 				share* wire = get_from_cache(cache, input_wires[0]);
 				result = circ->PutOUTGate(wire, ALL);
 				break;
+			}
+			default: {
+				throw std::invalid_argument("Unknown non binop: " + op);
 			}
 		}
 	}
