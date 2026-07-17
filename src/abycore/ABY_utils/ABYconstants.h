@@ -165,6 +165,19 @@ enum e_operation {
 	OP_YSWITCH, /**< Enum for transferring roles in YAO sharing */
 	OP_IO, /**< Enum for performing a SHARING followed by a RECONSTRUCT operation */
 	OP_SBOX, /**< Enum for evaluating the AES S-box on an 8-bit input*/
+
+	OP_GE,
+	OP_GT,
+	OP_LE,
+	OP_LT,
+	OP_NEQ,
+	OP_OR,
+	OP_DIV,
+	OP_REM,
+	OP_BASE,
+	OP_SHL,
+	OP_SHR,
+
 	OP_PRINT_VAL = 0x40,/**< Enum for printing the plaintext output of a gate */
 	OP_ASSERT = 0x41, /**< Enum for checking the plaintext output of a gate to a reference value */
 	OP_COMBINE = 0x80, /**< Enum for COMBINING multiple single-value gates into one multi-gate */

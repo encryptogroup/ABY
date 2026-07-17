@@ -501,16 +501,19 @@ BOOL ABYParty::ThreadReceiveValues() {
 
 
 void ABYParty::PrintPerformanceStatistics() {
-	std::cout << "Complexities: " << std::endl;
-	m_vSharings[S_BOOL]->PrintPerformanceStatistics();
-	m_vSharings[S_YAO]->PrintPerformanceStatistics();
-	m_vSharings[S_YAO_REV]->PrintPerformanceStatistics();
-	m_vSharings[S_ARITH]->PrintPerformanceStatistics();
-	m_vSharings[S_SPLUT]->PrintPerformanceStatistics();
-	std::cout << "Total number of gates: " << m_pCircuit->GetGateHead() << " Total depth: " << m_pCircuit->GetTotalDepth() << std::endl;
+	// std::cout << "Complexities: " << std::endl;
+	// m_vSharings[S_BOOL]->PrintPerformanceStatistics();
+	// m_vSharings[S_YAO]->PrintPerformanceStatistics();
+	// m_vSharings[S_YAO_REV]->PrintPerformanceStatistics();
+	// m_vSharings[S_ARITH]->PrintPerformanceStatistics();
+	// m_vSharings[S_SPLUT]->PrintPerformanceStatistics();
+	// std::cout << "Total number of gates: " << m_pCircuit->GetGateHead() << " Total depth: " << m_pCircuit->GetTotalDepth() << std::endl;
+	std::cout << "LOG: Total number of gates: " << m_pCircuit->GetGateHead() << std::endl;
+	std::cout << "LOG: Total depth: " << m_pCircuit->GetTotalDepth() << std::endl;
 	PrintTimings();
-	std::cout << std::endl;
+	// std::cout << std::endl;
 }
+
 
 void ABYParty::bench_aes() const {
 	timespec bench_start, bench_end;
