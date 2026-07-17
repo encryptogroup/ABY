@@ -29,30 +29,50 @@ mode hash_mode(std::string m) {
 
 /** Get bytecode paths for each function
 *
-* @param path base path 
+* @param path base path
 *
-* @return map of function to bytecode path 
+* @return map of function to bytecode path
 */
 std::unordered_map<std::string, std::string> get_bytecode_paths(std::string path) {
     std::unordered_map<std::string, std::string> map;
     auto path_list = split(path, "/");
     auto dirname = path_list[path_list.size() - 1];
     for (const auto & entry : std::filesystem::directory_iterator(path)) {
-        std::string file_path{entry.path().u8string()};
+        std::string file_path{entry.path().string()};
         if (file_path.find("share_map.txt") != std::string::npos) {
+            continue;
+        }
+        if (file_path.find("_const.txt") != std::string::npos) {
+            continue;
+        }
+        if (file_path == "assignments") {
             continue;
         }
         auto file_path_list = split(file_path, "/");
         auto filename = file_path_list[file_path_list.size() - 1];
-        auto function_name = std::regex_replace(std::regex_replace(filename, std::regex(dirname+"_"), ""), std::regex("_bytecode.txt"), ""); 
-        map[function_name] =  file_path;
+        // auto function_name = std::regex_replace(std::regex_replace(filename, std::regex(dirname+"_"), ""), std::regex("_bytecode.txt"), "");
+        if (file_path.find("_main_bytecode.txt") != std::string::npos) {
+          auto function_name = "main"; // XXX we only ever inline
+          map[function_name] =  file_path;
+        }
     }
     return map;
 }
 
+std::string get_const_path(std::string path) {
+    std::unordered_map<std::string, std::string> map;
+    for (const auto & entry : std::filesystem::directory_iterator(path)) {
+        std::string file_path{entry.path().string()};
+        if (file_path.find("_const.txt") != std::string::npos) {
+          return file_path;
+        }
+    }
+    assert(false);
+}
+
 /** Get assignment paths for each function
 *
-* @param share_map_path base path 
+* @param share_map_path base path
 *
 * @return map of function to assignment path
 */
@@ -73,9 +93,9 @@ std::unordered_map<std::string, std::string> parse_share_map_file(std::string sh
     return share_map;
 }
 
-/** Get inputs 
+/** Get inputs
 *
-* @param test_path test case path 
+* @param test_path test case path
 *
 * @return map of input variables to test inputs
 */
@@ -95,7 +115,7 @@ std::unordered_map<std::string, uint32_t> parse_mpc_inputs(std::string test_path
             uint32_t value = (uint32_t)std::stoi(line[1]);
             map[key] = value;
         } else if (line.size() > 2) {
-            // Input arrays 
+            // Input arrays
             for (int i = 1; i < line.size(); i++) {
                 std::string key = line[0] + "_" + std::to_string(i-1);
                 uint32_t value = (uint32_t)std::stoi(line[i]);
@@ -110,45 +130,46 @@ int main(int argc, char** argv) {
     // add timing code
 	high_resolution_clock::time_point start_total_time = high_resolution_clock::now();
 
-    // initial parameters 
-	e_role role; 
+    // initial parameters
+	e_role role;
 	uint32_t bitlen = 32, nvals = 31, secparam = 128, nthreads = 1;
 	int32_t test_op = -1;
 	e_mt_gen_alg mt_alg = MT_OT;
 	seclvl seclvl = get_sec_lvl(secparam);
 
-    // parse cmdline args 
+    // parse cmdline args
     argparse::ArgumentParser program("aby_interpreter");
     program.add_argument("-m", "--mode").required().help("Mode for parsing test inputs");
     program.add_argument("-r", "--role").required().help("Role: <Server:0 / Client:1>").scan<'i', int>();
     program.add_argument("-f", "--file").required().help("File");
-    program.add_argument("-t", "--test").required().help("Test inputs");
+    program.add_argument("-s", "--share-file").required().help("Share assignment file");
+    // program.add_argument("-t", "--test").required().help("Test inputs");
     program.add_argument("-a", "--address").required().help("Address").default_value(std::string{"127.0.0.1"});
     program.add_argument("-p", "--port").required().help("Port").scan<'i', int>().default_value(7766);;
     program.parse_args(argc, argv);    // Example: ./main --color orange
-    
+
     std::string m, path, test_path;
-    m = program.get<std::string>("--mode");  
+    m = program.get<std::string>("--mode");
     role = !program.get<int>("--role") ? SERVER : CLIENT;
     path = program.get<std::string>("--file");
-    test_path = program.get<std::string>("--test");
+    // test_path = program.get<std::string>("--test");
 	std::string address = program.get<std::string>("--address");
     uint16_t port = program.get<int>("--port");
 
-    // initialize param, share_map, and bytecode_paths maps 
+    // initialize param, share_map, and bytecode_paths maps
 	std::unordered_map<std::string, uint32_t> params;
     std::unordered_map<std::string, std::string> share_map;
     std::unordered_map<std::string, std::string> bytecode_paths;
 
-    // get paths 
-    auto share_map_path = get_path(path, "_share_map.txt");
-    auto const_path = get_path(path, "_const.txt");
+    // get paths
+    auto share_map_path = program.get<std::string>("--share-file");
+    auto const_path = get_const_path(path);
     bytecode_paths = get_bytecode_paths(path);
-    
+
     // parse inputs
 	switch(hash_mode(m)) {
         case mpc: {
-            params = parse_mpc_inputs(test_path);
+            // params = parse_mpc_inputs(test_path);
             share_map = parse_share_map_file(share_map_path);
         }
         break;
@@ -166,4 +187,3 @@ int main(int argc, char** argv) {
 
 	return 0;
 }
-

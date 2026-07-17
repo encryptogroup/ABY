@@ -224,12 +224,12 @@ public:
 
 	share* PutTruthTableGate(share*, uint64_t*) {
 		std::cerr << "PutTruthTableGate not implemented in ArithmeticCircuit!!" << std::endl;
-		return NULL;
+                std::abort();
 	}
 
 	share* PutTruthTableMultiOutputGate(share*, uint32_t, uint64_t*) {
 		std::cerr << "PutTruthTableMultiOutputGate not implemented in ArithmeticCircuit!!" << std::endl;
-		return NULL;
+                std::abort();
 	}
 
 
@@ -242,15 +242,15 @@ public:
 	share* PutSUBGate(share* ina, share* inb);
 	share* PutANDGate(share*, share*) {
                 std::cerr << "AND not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutXORGate(share*, share*) {
           std::cerr << "XOR not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutSubGate(share*, share*) {
 		std::cerr << "Sub not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutMULGate(share* ina, share* inb);
 
@@ -259,42 +259,42 @@ public:
 
 	share* PutGTGate(share*, share*) {
 		std::cerr << "GT not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutEQGate(share*, share*) {
 		std::cerr << "EQ not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutMUXGate(share*, share*, share*) {
 		std::cerr << "MUX not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share** PutCondSwapGate(share*, share*, share*, BOOL) {
 		share** s_out = (share**) malloc(sizeof(share*) *2);
 		s_out[0] = new arithshare(this);
 		s_out[1] = new arithshare(this);
 		std::cerr << "X not implemented in arithmetic sharing" << std::endl;
-		return s_out;
+                std::abort();
 	}
 	share* PutUniversalGate(share*, share*, uint32_t) {
 		std::cerr << "UNIV not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutY2BGate(share*) {
 		std::cerr << "Y2B not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutB2YGate(share*) {
 		std::cerr << "B2Y not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutA2YGate(share*) {
 		std::cerr << "A2Y not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	share* PutANDVecGate(share*, share*) {
           std::cerr << "ANDVec Gate not implemented in arithmetic sharing" << std::endl;
-		return new arithshare(this);
+                std::abort();
 	}
 	uint32_t PutB2AGate(std::vector<uint32_t> ina);
 	share* PutB2AGate(share* ina);

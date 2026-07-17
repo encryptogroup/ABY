@@ -16,7 +16,7 @@
 
 using namespace std::chrono;
 
-// Constants 
+// Constants
 const int PUBLIC = 2;
 const string ARITHMETIC = "a";
 const string BOOLEAN = "b";
@@ -25,17 +25,17 @@ const string YAO = "y";
 // env maps all share ids to share*
 std::unordered_map<std::string, std::vector<share*>>* env = new std::unordered_map<std::string, std::vector<share*>>();
 
-// const_env maps all constant ids to constant values 
+// const_env maps all constant ids to constant values
 std::unordered_map<std::string, uint32_t>* const_env = new std::unordered_map<std::string, uint32_t>();
 
 // share_type-env maps all share* to assignment
 std::unordered_map<share*, std::string>* assignment_env = new std::unordered_map<share*, std::string>();
 
 /**
- * Lazy caches store previously used share values respective to their 
+ * Lazy caches store previously used share values respective to their
  * assignments. If a wire value is reused, we can save on using additional
  * conversion gates by accessing the value from this cache.
- */ 
+ */
 std::unordered_map<share*, share*>* lazy_assign_cache_a = new std::unordered_map<share*, share*>();
 std::unordered_map<share*, share*>* lazy_assign_cache_b = new std::unordered_map<share*, share*>();
 std::unordered_map<share*, share*>* lazy_assign_cache_y = new std::unordered_map<share*, share*>();
@@ -44,16 +44,16 @@ std::unordered_map<share*, share*>* lazy_assign_cache_y = new std::unordered_map
 *
 * @param from source primitive
 * @param to destination primitive
-* @param input_share share pointer 
+* @param input_share share pointer
 * @param party ABY party
 *
-* @return new share pointer of the `input_share` with (potential) conversion 
-* gate 
+* @return new share pointer of the `input_share` with (potential) conversion
+* gate
 */
 share* add_conv_gate(
-	std::string from, 
-	std::string to, 
-	share* input_share, 
+	std::string from,
+	std::string to,
+	share* input_share,
 	ABYParty* party) {
 	std::vector<Sharing*>& sharings = party->GetSharings();
 	Circuit* acirc = sharings[S_ARITH]->GetCircuitBuildRoutine();
@@ -125,7 +125,7 @@ share* add_conv_gate(
 * @param circuit_type string of circuit_type
 * @param party ABY party
 *
-* @return Circuit* used to construct circuits of a particular primitive 
+* @return Circuit* used to construct circuits of a particular primitive
 *
 */
 Circuit* get_circuit(std::string circuit_type, ABYParty* party) {
@@ -144,14 +144,14 @@ Circuit* get_circuit(std::string circuit_type, ABYParty* party) {
 /** Process a single instruction (statement) from bytecode
 *
 * @param circuit_type string of circuit_type
-* @param rewire_inputs deque of shares to rewire arguments to functions 
-* @param rewire_outputs deque of strings to rewire return values from functions 
-* @param params test arguments 
+* @param rewire_inputs deque of shares to rewire arguments to functions
+* @param rewire_outputs deque of strings to rewire return values from functions
+* @param params test arguments
 * @param input_wires names (vec<string>) of input wires
 * @param output_wires names (vec<string>) of output wires
-* @param out vector of output shares 
-* @param op operator 
-* @param role server or client 
+* @param out vector of output shares
+* @param op operator
+* @param role server or client
 * @param bitlen circuit bitlen
 * @param party ABY party
 *
@@ -161,11 +161,11 @@ void process_instruction(
 	std::deque<share*>* rewire_inputs,
 	std::deque<string>* rewire_outputs,
 	std::unordered_map<std::string, uint32_t>* params,
-	std::vector<std::string> input_wires, 
-	std::vector<std::string> output_wires, 
-	std::vector<share*>* out, 
+	std::vector<std::string> input_wires,
+	std::vector<std::string> output_wires,
+	std::vector<share*>* out,
 	std::string op,
-	e_role role, 
+	e_role role,
 	uint32_t bitlen,
 	ABYParty* party) {
 
@@ -178,9 +178,9 @@ void process_instruction(
 	// end result of op
 	share* result;
 
-	
-	if (is_bin_op(op_hash(op))) {	
-		Circuit* circ = get_circuit(circuit_type, party);	
+
+	if (is_bin_op(op_hash(op))) {
+		Circuit* circ = get_circuit(circuit_type, party);
 
 		// get binary operands
 		share* wire1 = env->at(input_wires[0])[0];
@@ -251,7 +251,7 @@ void process_instruction(
 			case DIV_: {
 				result = signeddivbl(circ, wire1, wire2);
 				break;
-			} 
+			}
 			case EQ_: {
 				result = circ->PutEQGate(wire1, wire2);
 				break;
@@ -301,8 +301,8 @@ void process_instruction(
 			case MUX_: {
 				assert(("input_wires len is odd", input_wires.size() % 2 == 1));
 				Circuit* circ = get_circuit(circuit_type, party);
-				
-				// get conditional 
+
+				// get conditional
 				share* sel = env->at(input_wires[0])[0];
 				std::string share_type_sel = assignment_env->at(sel);
 				sel = add_conv_gate(share_type_sel, circuit_type, sel, party);
@@ -312,12 +312,12 @@ void process_instruction(
 				// true wires
 				auto start = 1;
 				std::vector<std::string> t_strs(len);
-				std::copy(input_wires.begin() + start, input_wires.begin() + len + start, t_strs.begin()); 
+				std::copy(input_wires.begin() + start, input_wires.begin() + len + start, t_strs.begin());
 
 				// false wires
 				start += len;
 				std::vector<std::string> f_strs(len);
-				std::copy(input_wires.begin() + start, input_wires.begin() + len + start, f_strs.begin()); 
+				std::copy(input_wires.begin() + start, input_wires.begin() + len + start, f_strs.begin());
 
 				for (int i = 0; i < len; i++) {
 					auto t_wire = env->at(t_strs[i])[0];
@@ -363,7 +363,7 @@ void process_instruction(
 					(*env)[o] = {result};
 				}
 				break;
-			} 
+			}
 			case LSHR_: {
 				Circuit* circ = get_circuit(circuit_type, party);
 				share* wire = env->at(input_wires[0])[0];
@@ -376,7 +376,7 @@ void process_instruction(
 					(*env)[o] = {result};
 				}
 				break;
-			} 
+			}
 			case SELECT_: {
 				assert(("Select circuit type not supported in arithmetic sharing", circuit_type != ARITHMETIC));
 				Circuit* circ = get_circuit(circuit_type, party);
@@ -387,14 +387,14 @@ void process_instruction(
 				index_wire = add_conv_gate(assignment_env->at(index_wire), circuit_type, index_wire, party);
 
 				// Rather than linear pairwise comparisons in the target vector,
-				// we can get amoritized savings by transforming this linear 
+				// we can get amoritized savings by transforming this linear
 				// scan into a log-tree structure.
                 std::vector<std::vector<share*>> columns;
                 for (int i = 0; i < 32; i++) {
                     std::vector<share*> cols;
                     columns.push_back(cols);
                 }
-				
+
 				// initialize input values
                 for (int i = 0; i < input_wires.size()-1; i++) {
                     share* wire = env->at(input_wires[i])[0];
@@ -404,7 +404,7 @@ void process_instruction(
                     }
                 }
 
-				// tree based comparisons 
+				// tree based comparisons
                 std::vector<uint32_t> outputs;
                 for (int i = 0; i < columns.size(); i++) {
                     auto inputs = columns[i];
@@ -433,8 +433,8 @@ void process_instruction(
 				auto value = input_wires[input_wires.size()-1];
 				auto value_wire = env->at(value)[0];
 				value_wire = add_conv_gate(assignment_env->at(value_wire), circuit_type, value_wire, party);
-				
-				// get index share 
+
+				// get index share
 				auto index = input_wires[input_wires.size()-2];
 				auto index_wire = env->at(index)[0];
 				index_wire = add_conv_gate(assignment_env->at(index_wire), circuit_type, index_wire, party);
@@ -452,7 +452,7 @@ void process_instruction(
 				break;
 			}
 			case IN_: {
-				// rewire arguments into function call 
+				// rewire arguments into function call
 				if (rewire_inputs->size() > 0) {
 					share* rewire_share = rewire_inputs->front();
 					std::string share_type_from = assignment_env->at(rewire_share);
@@ -466,7 +466,8 @@ void process_instruction(
 					}
 					Circuit* circ = get_circuit(circuit_type, party);
 					std::string var_name = input_wires[0];
-					uint32_t value = params->at(var_name);
+					// uint32_t value = params->at(var_name);
+					uint32_t value = 0;
 					int vis = std::stoi(input_wires[1]);
 					if (vis == (int) role) {
 						result = circ->PutINGate(value, bitlen, role);
@@ -479,7 +480,7 @@ void process_instruction(
 						}
 					} else {
 						result = circ->PutDummyINGate(bitlen);
-					} 
+					}
 					(*assignment_env)[result] = circuit_type;
 				}
 				for (auto o: output_wires) {
@@ -493,17 +494,17 @@ void process_instruction(
 					std::vector<share*> wires = env->at(input_wires[0]);
 					for (auto wire: wires) {
 						std::string output_str = rewire_outputs->front();
-						(*env)[output_str] = {wire};	
+						(*env)[output_str] = {wire};
 						rewire_outputs->pop_front();
-					}	
+					}
 				} else {
 					std::vector<share*> wires = env->at(input_wires[0]);
 					for (auto wire: wires) {
 						std::string share_type_from = assignment_env->at(wire);
 						Circuit* circ = get_circuit(share_type_from, party);
-						result = circ->PutOUTGate(wire, ALL);		
-						out->push_back(result);			
-					}				
+						result = circ->PutOUTGate(wire, ALL);
+						out->push_back(result);
+					}
 				}
 				break;
 			}
@@ -512,26 +513,26 @@ void process_instruction(
 			}
 		}
 	}
-	
+
 }
 
 /** Process bytecode file
 *
 * @param fn function name
 * @param bytecode_paths map of bytecode file paths
-* @param rewire_inputs deque of shares to rewire arguments to functions 
-* @param rewire_outputs deque of strings to rewire return values from functions 
-* @param params test arguments 
+* @param rewire_inputs deque of shares to rewire arguments to functions
+* @param rewire_outputs deque of strings to rewire return values from functions
+* @param params test arguments
 * @param share_map map of assignment decisions for each wire id
-* @param role server or client 
+* @param role server or client
 * @param bitlen circuit bitlen
 * @param party ABY party
 *
-* @return return share* from bytecode 
+* @return return share* from bytecode
 *
 */
 std::vector<share*> process_bytecode(
-	std::string fn, 
+	std::string fn,
 	std::unordered_map<std::string, std::string>* bytecode_paths,
 	std::deque<share*> rewire_inputs,
 	std::deque<std::string> rewire_outputs,
@@ -545,7 +546,7 @@ std::vector<share*> process_bytecode(
 	std::ifstream file(path);
 	assert(("Bytecode file exists.", file.is_open()));
 	if (!file.is_open()) throw std::runtime_error("Bytecode file doesn't exist -- "+path);
-	
+
 	std::vector<share*> out;
 	std::string str;
 	while (std::getline(file, str)) {
@@ -567,7 +568,7 @@ std::vector<share*> process_bytecode(
 		std::string circuit_type;
 
 		if (num_outputs) {
-			// set circuit_type if function returns value 
+			// set circuit_type if function returns value
 			circuit_type = share_map->at(output_wires[0]);
 		} else {
 			if (share_map->find(input_wires[0]) != share_map->end()) {
@@ -585,7 +586,7 @@ std::vector<share*> process_bytecode(
 		}
 
 		if (is_call_op(op)) { // process function and handle rewiring
-			// input and output wires are concatenated into a vector and then used for 
+			// input and output wires are concatenated into a vector and then used for
 			// rewiring the input and output wires of the function
 			std::deque<share*> rewire_inputs;
 			std::deque<std::string> rewire_outputs;
@@ -594,10 +595,10 @@ std::vector<share*> process_bytecode(
 				rewire_inputs.insert(rewire_inputs.end(), wires.begin(), wires.end());
 			}
 			rewire_outputs.insert(rewire_outputs.end(), output_wires.begin(), output_wires.end());
-			
+
 			// recursively call process bytecode on function body
 			auto fn =  parse_fn_name(op);
-			std::vector<share*> out_shares = process_bytecode(fn, bytecode_paths, rewire_inputs, rewire_outputs, params, share_map, role, bitlen, party);	
+			std::vector<share*> out_shares = process_bytecode(fn, bytecode_paths, rewire_inputs, rewire_outputs, params, share_map, role, bitlen, party);
 
 			assert(("Out_shares and output_wires are the same size", out_shares.size() == output_wires.size()));
 			for (int i = 0; i < out_shares.size(); i++) {
@@ -605,7 +606,7 @@ std::vector<share*> process_bytecode(
 			}
 		} else { // process single instruction
 			process_instruction(circuit_type, &rewire_inputs, &rewire_outputs, params, input_wires, output_wires, &out, op, role, bitlen, party);
-			assert(("Len of output_wires should be at most 1", output_wires.size() <= 1));
+			// assert(("Len of output_wires should be at most 1", output_wires.size() <= 1));
 		}
 	}
 	return out;
@@ -615,13 +616,13 @@ std::vector<share*> process_bytecode(
 *
 * @param const_path path to constants
 * @param share_map map of assignment decisions for each wire id
-* @param role server or client 
+* @param role server or client
 * @param bitlen circuit bitlen
 * @param party ABY party
 *
 */
 void process_const(
-	std::string const_path, 
+	std::string const_path,
 	std::unordered_map<std::string, std::string>* share_map,
 	e_role role,
 	uint32_t bitlen,
@@ -661,11 +662,11 @@ void process_const(
 	}
 }
 
-/** Interpret circuit 
+/** Interpret circuit
 *
 * @param bytecode_paths map of bytecode file paths
 * @param const_path path to constants
-* @param params test arguments 
+* @param params test arguments
 * @param share_map map of assignment decisions for each wire id
 * @param role server or client
 * @param address address to connect to
@@ -676,38 +677,38 @@ void process_const(
 * @param e_mt_gen_alg mt_alg
 * @param e_sharing sharing
 *
-* @return execution time  
+* @return execution time
 *
 */
 double interpret_circuit(
-	std::unordered_map<std::string, std::string>* bytecode_paths, 
+	std::unordered_map<std::string, std::string>* bytecode_paths,
 	std::string const_path,
-	std::unordered_map<std::string, uint32_t>* params, 
+	std::unordered_map<std::string, uint32_t>* params,
 	std::unordered_map<std::string, std::string>* share_map,
-	e_role role, 
-	const std::string& address, 
-	uint16_t port, 
-	seclvl seclvl, 
+	e_role role,
+	const std::string& address,
+	uint16_t port,
+	seclvl seclvl,
 	uint32_t bitlen,
-	uint32_t nthreads, 
-	e_mt_gen_alg mt_alg, 
+	uint32_t nthreads,
+	e_mt_gen_alg mt_alg,
 	e_sharing sharing) {
 
 	// setup
 	ABYParty* party = new ABYParty(role, address, port, seclvl, bitlen, nthreads, mt_alg);
 	output_queue out_q;
 
-	// process consts 
+	// process consts
 	process_const(const_path, share_map, role, bitlen, party);
 
 	// process bytecode
-	vector<share*> out_shares = process_bytecode("main", bytecode_paths, {}, {}, params, share_map, role, bitlen, party);	
+	vector<share*> out_shares = process_bytecode("main", bytecode_paths, {}, {}, params, share_map, role, bitlen, party);
 
 	// multiple outputs
 	for (auto s: out_shares) {
 		add_to_output_queue(out_q, s, role, std::cout);
 	}
-	
+
 	// add timing code
 	high_resolution_clock::time_point start_exec_time = high_resolution_clock::now();
 	party->ExecCircuit();
@@ -715,10 +716,11 @@ double interpret_circuit(
 	duration<double> exec_time = duration_cast<duration<double>>(end_exec_time - start_exec_time);
 
 	std::cout << "LOG: " << (role == SERVER ? "Server exec time: " : "Client exec time: ") << exec_time.count() << std::endl;
+        std::cout << "Comm: " << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) << std::endl;
 
 	// print result of computation
 	flush_output_queue(out_q, role, bitlen);
-	
+
 	delete env;
 	delete const_env;
 	delete assignment_env;
