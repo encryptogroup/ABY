@@ -1,3 +1,6 @@
+// Copyright (c) 2023 Edward Chen, Andrew Park, and Jinhao Zhu 
+// Licensed under LGPL 3.0
+
 #include <ENCRYPTO_utils/crypto/crypto.h>
 #include <ENCRYPTO_utils/parse_options.h>
 #include "../../abycore/aby/abyparty.h"

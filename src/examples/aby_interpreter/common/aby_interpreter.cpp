@@ -1,3 +1,5 @@
+// Copyright (c) 2023 Edward Chen, Andrew Park, and Jinhao Zhu 
+// Licensed under LGPL 3.0
 #include "aby_interpreter.h"
 #include "../../../abycore/circuit/booleancircuits.h"
 #include "../../../abycore/circuit/arithmeticcircuits.h"
