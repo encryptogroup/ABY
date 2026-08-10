@@ -6,7 +6,6 @@ include(CMakeFindDependencyMacro)
 
 find_dependency(OTExtension)
 find_dependency(ENCRYPTO_utils)
-find_dependency(MIRACL)
 find_dependency(GMP)
 find_dependency(Threads)
 
