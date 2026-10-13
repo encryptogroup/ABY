@@ -104,8 +104,8 @@ std::unordered_map<std::string, std::string> parse_share_map_file(std::string sh
 */
 std::unordered_map<std::string, uint32_t> parse_mpc_inputs(std::string test_path) {
     std::ifstream file(test_path);
-    assert(("Test file exists.", file.is_open()));
-    if (!file.is_open()) throw std::runtime_error("Test file doesn't exist.");
+    assert(("Input file exists.", file.is_open()));
+    if (!file.is_open()) throw std::runtime_error("Input file doesn't exist.");
     std::unordered_map<std::string, uint32_t> map;
     std::string str;
     uint32_t num_params = 0;
@@ -146,17 +146,17 @@ int main(int argc, char** argv) {
     program.add_argument("-r", "--role").required().help("Role: <Server:0 / Client:1>").scan<'i', int>();
     program.add_argument("-f", "--file").required().help("File");
     program.add_argument("-s", "--share-file").required().help("Share assignment file");
-    // program.add_argument("-t", "--test").required().help("Test inputs");
+    program.add_argument("-i", "--input").help("Test inputs");
     program.add_argument("-a", "--address").required().help("Address").default_value(std::string{"127.0.0.1"});
     program.add_argument("-p", "--port").required().help("Port").scan<'i', int>().default_value(7766);
     program.add_argument("-o", "--output").help("Output result").scan<'i', int>().default_value(0);
     program.parse_args(argc, argv);    // Example: ./main --color orange
 
-    std::string m, path, test_path;
+    std::string m, path, input_path;
     m = program.get<std::string>("--mode");
     role = !program.get<int>("--role") ? SERVER : CLIENT;
     path = program.get<std::string>("--file");
-    // test_path = program.get<std::string>("--test");
+    input_path = program.get<std::string>("--input");
 	std::string address = program.get<std::string>("--address");
     uint16_t port = program.get<int>("--port");
 
@@ -172,11 +172,11 @@ int main(int argc, char** argv) {
     auto const_path = get_const_path(path);
     bytecode_paths = get_bytecode_paths(path);
 
+    share_map = parse_share_map_file(share_map_path);
     // parse inputs
 	switch(hash_mode(m)) {
         case mpc: {
-            // params = parse_mpc_inputs(test_path);
-            share_map = parse_share_map_file(share_map_path);
+            params = parse_mpc_inputs(input_path);
         }
         break;
     }

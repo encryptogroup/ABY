@@ -468,8 +468,8 @@ void process_instruction(
 					}
 					Circuit* circ = get_circuit(circuit_type, party);
 					std::string var_name = input_wires[0];
-					// uint32_t value = params->at(var_name);
-					uint32_t value = 0;
+					uint32_t value = params->at(var_name);
+					std::cout << "Set input \"" << var_name << "\" to " << value << "\n";
 					int vis = std::stoi(input_wires[1]);
 					if (vis == (int) role) {
 						result = circ->PutINGate(value, bitlen, role);
