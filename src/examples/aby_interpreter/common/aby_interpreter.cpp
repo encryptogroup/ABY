@@ -687,6 +687,7 @@ double interpret_circuit(
 	std::string const_path,
 	std::unordered_map<std::string, uint32_t>* params,
 	std::unordered_map<std::string, std::string>* share_map,
+	bool output_result,
 	e_role role,
 	const std::string& address,
 	uint16_t port,
@@ -721,8 +722,10 @@ double interpret_circuit(
         std::cout << "Comm: " << party->GetSentData(P_TOTAL) + party->GetReceivedData(P_TOTAL) << std::endl;
 
 	// print result of computation
-	flush_output_queue(out_q, role, bitlen);
-
+	if(output_result)
+	{
+		flush_output_queue(out_q, role, bitlen);
+	}
 	delete env;
 	delete const_env;
 	delete assignment_env;

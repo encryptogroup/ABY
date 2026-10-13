@@ -23,6 +23,7 @@ double interpret_circuit(
 	std::string const_path,
 	std::unordered_map<std::string, uint32_t>* params, 
 	std::unordered_map<std::string, std::string>* share_map,
+	bool output_result,
 	e_role role, const std::string& address, 
 	uint16_t port, 
 	seclvl seclvl, 

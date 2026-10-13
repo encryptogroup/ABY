@@ -148,7 +148,8 @@ int main(int argc, char** argv) {
     program.add_argument("-s", "--share-file").required().help("Share assignment file");
     // program.add_argument("-t", "--test").required().help("Test inputs");
     program.add_argument("-a", "--address").required().help("Address").default_value(std::string{"127.0.0.1"});
-    program.add_argument("-p", "--port").required().help("Port").scan<'i', int>().default_value(7766);;
+    program.add_argument("-p", "--port").required().help("Port").scan<'i', int>().default_value(7766);
+    program.add_argument("-o", "--output").help("Output result").scan<'i', int>().default_value(0);
     program.parse_args(argc, argv);    // Example: ./main --color orange
 
     std::string m, path, test_path;
@@ -158,6 +159,8 @@ int main(int argc, char** argv) {
     // test_path = program.get<std::string>("--test");
 	std::string address = program.get<std::string>("--address");
     uint16_t port = program.get<int>("--port");
+
+    bool output_result = (bool) program.get<int>("--output");
 
     // initialize param, share_map, and bytecode_paths maps
 	std::unordered_map<std::string, uint32_t> params;
@@ -179,7 +182,7 @@ int main(int argc, char** argv) {
     }
 
     // interpret circuit
-	double exec_time = interpret_circuit(&bytecode_paths, const_path, &params, &share_map, role, address, port, seclvl, 32,
+	double exec_time = interpret_circuit(&bytecode_paths, const_path, &params, &share_map, output_result, role, address, port, seclvl, 32,
 			nthreads, mt_alg, S_BOOL);
 
     // add timing code
